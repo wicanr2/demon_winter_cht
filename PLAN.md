@@ -158,20 +158,26 @@ Eregore(97)、Guardian(98)等劇情角色都對得上攻略描述的場景。這
 
 ### 階段 0 — 基礎建設
 
-- [ ] `git init` + 接遠端 + `.gitignore`(原版資料不入版控) ✅ 已完成
-- [ ] Docker 建置環境(Go + Ebiten;Python 用 docker uv.venv)
-- [ ] DOSBox 容器可跑原版，可截圖 → **這是全專案的 reference oracle**
+- [x] `git init` + 接遠端 + `.gitignore`(原版資料不入版控)
+- [x] Ghidra 反組譯環境(docker),見 `docs/re/00-ghidra-setup.md`
+- [ ] Go + Ebiten 建置環境(引擎開工前再建)
+- [ ] DOSBox 容器可跑原版，可截圖 → **這是全專案的 reference oracle**(進行中)
 - [ ] `CONTEXT.md` 建立詞彙表(EGA plane / SHP / 事件表 / rune 等術語統一)
 
-**驗收**:`docker compose run dosbox` 能跑出開場畫面並輸出 PNG。
+**驗收**:DOSBox 容器能跑出開場畫面並輸出 PNG。
 
 ### 階段 1 — 反組譯當 oracle
 
-- [ ] Ghidra 載入 `DEMON.INT`(16-bit real mode，載入基址依 MZ header)
-- [ ] 以字串錨定關鍵函式:`Cast what spell:`、`Hour %d, Day %d`、`is hit for %d damage`
+- [x] Ghidra 載入 `DEMON.INT` → 353 個函式,位址換算公式已驗證
+- [x] 字串錨定路徑驗證可行(`Cast what spell:` → `FUN_1000_293d` 施法選單邏輯)
 - [ ] 抽出核心演算法:RNG、命中/傷害、法術效果、時間推進、隨機遭遇
-- [ ] 定位檔案載入函式 → 解出 V2~V6 的格式語意
-- [ ] 定位聲音輸出點 → 解 V1
+- [ ] 定位檔案載入函式 → 解出剩餘的格式語意(進行中)
+- [ ] 定位聲音輸出點 → 解 V1(進行中)
+
+> **位址換算公式**(已實測驗證,後續反組譯一律沿用):
+> `file_offset = (segment − 0x1000) × 16 + offset + 0x3C00`
+> 陷阱:MZ header 的 entry `2037:0009` 是連結期相對值,Ghidra 載入基準為 segment `0x1000`,
+> 真正 entry 在 `3037:0009`。別把 header 原始 CS/SS 當 Ghidra 位址。
 
 **驗收**:每個抽出的演算法寫成 `docs/re/*.md`，含反組譯片段 + 重述的規則 + 對應原始 offset。
 斷言任何機制前先在 DOSBox 實跑確認(rulebook/62 靜態溯源、rulebook/65 對 reference 驗收)。
@@ -181,10 +187,15 @@ Eregore(97)、Guardian(98)等劇情角色都對得上攻略描述的場景。這
 - [ ] `.FNE` / `.FNT` 字型 → PNG 字表
 - [ ] `.PIE` / `.PIC` 畫面圖 → PNG(驗證 320×350 4-plane 假設)
 - [ ] `.SHE` / `.SHP` 精靈圖 → PNG sprite sheet
-- [ ] `.MAP` 地圖 → tile 陣列 + tileset 對應
-- [ ] `MONSTER.DAT` / `ITEMS.DAT` / `TOWN*.DAT` / `EXITS.DAT` → 結構化 JSON
-- [ ] `PARTY.DAT` 存檔格式 → 可讀可寫(角色屬性欄位全解)
-- [ ] `DATA*.TXT` 事件表 → 語法定義(這是「VM bytecode」在本作的真身)
+- [x] `.MAP` 地圖 → 64×64 tile 陣列(ASCII 算繪確認),tileset 對應待解
+- [x] `MONSTER.DAT`(99 隻)/ `ITEMS.DAT`(30 件)→ 解析器完成,部分欄位語意待驗
+- [x] `TOWN*.DAT` 17-byte 記錄結構;設施代碼映射待反組譯
+- [x] `DATA*.TXT` 事件表結構(V5 已結案,見 §3.1);trailer 語意待反組譯
+- [x] `FILES.DTT` 主字串池(501 字串)
+- [ ] `PARTY.DAT` 存檔格式 → 可讀可寫(已解姓名/種族/屬性/道具欄邊界;
+      職業、已學技能、朝向、遊戲內時間仍未解 → 待 DOSBox 動態 diff)
+- [ ] `FILES.DAT` 各分段語意、`SUM.MAP` 結構(進行中)
+- [ ] `EXITS.DAT` 座標對應哪張地圖
 
 **驗收**:每種格式的解碼輸出**肉眼比對 DOSBox 截圖**，不接受「程式沒報錯」當通過。
 解碼器同時實作 encode，`decode(encode(x)) == x` 對全部原檔成立。
@@ -225,11 +236,12 @@ Eregore(97)、Guardian(98)等劇情角色都對得上攻略描述的場景。這
 
 ### 階段 6 — 攻略與文件
 
-- [x] 統一譯名表 `translations/glossary.md`(種族/職業/技能/法術/裝備/神祇/地名/介面指令)
-- [ ] 官方遊戲手冊繁中版 `docs/manual/`(16 張掃描跨頁,視覺轉錄 + 翻譯)
-- [ ] 社群攻略繁中版 `docs/walkthrough/`(1,914 行,含附魔表與存檔欄位表)
+- [x] 統一譯名表 `translations/glossary.md`(426 條,涵蓋 21 節)
+- [x] 官方遊戲手冊繁中版 `docs/manual/`(16 張掃描跨頁全數轉錄翻譯)
+- [x] 社群攻略繁中版 `docs/walkthrough/`(1,914 行,含附魔表與存檔欄位表)
+- [x] SSI 引擎架構研究報告 `docs/research/ssi-engine-architecture.md`
 - [ ] 整理既有《遊戲攻略:冬之魔》PDF 為繁中電子攻略
-- [ ] 資料格式規格書(`docs/formats/*.md`)— 這份文件本身就是保存成果
+- [ ] 資料格式規格書 `docs/formats/*.md`(4 份已完成,尚有未解項待補)
 
 > 手冊與攻略的繁中化不只是「附加資料」:手冊定義了所有規則與數值,攻略提供可破關鏈與
 > 部分存檔欄位位移,兩者是階段 1 反組譯的**文件層 oracle**(優先序低於 DOSBox 實跑,
