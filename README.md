@@ -1,0 +1,128 @@
+# Demon's Winter 冬之魔 — 繁體中文化
+
+SSI《Demon's Winter》（1988, DOS）的引擎逆向與繁體中文化專案。
+
+目標有兩層：先透過反組譯理解原版引擎的行為，在 Go / Ebiten 上重寫一套跨平台可執行的引擎；
+再基於這套引擎完成介面與劇情文本的中文化，讓這款 1988 年的 CRPG 能用中文玩完。
+
+原版遊戲的執行檔、資料檔、美術與音樂都不在本專案散布範圍內，玩家需自備合法副本。
+
+---
+
+## 現況
+
+| 項目 | 狀態 |
+|---|---|
+| 專案計畫 [`PLAN.md`](PLAN.md) | 已定案 |
+| 統一譯名表 [`translations/glossary.md`](translations/glossary.md) | 已建立 |
+| 官方手冊繁中版 | 已完成（全 28 頁 + 附錄 + 封面保固頁） |
+| 社群攻略繁中版 | 已完成（全 1,914 行） |
+| 資料格式破解 | 進行中 |
+| Ghidra 反組譯環境 | 進行中 |
+| Go / Ebiten 引擎 | 未開始 |
+| 遊戲內文字中文化 | 未開始 |
+
+---
+
+## 文件索引
+
+### 官方遊戲手冊（繁體中文）
+
+SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊戲機制的權威來源。
+
+| 檔案 | 內容 | 對應原書頁碼 |
+|---|---|---|
+| [`docs/manual/part-0.md`](docs/manual/part-0.md) | 封面、法術速查表、有限保固、瑕疵磁片處理、目錄 | 封面與附錄摺頁 |
+| [`docs/manual/part-1.md`](docs/manual/part-1.md) | 前言、開始遊戲、建立角色 | 1–4 |
+| [`docs/manual/part-2.md`](docs/manual/part-2.md) | 探索、神殿與教堂、學院、城鎮、市集、紮營、商人 | 5–12 |
+| [`docs/manual/part-3.md`](docs/manual/part-3.md) | 地底、物品、海域、戰鬥、戰鬥結束後、魔法 | 13–20 |
+| [`docs/manual/part-4.md`](docs/manual/part-4.md) | 吟唱、學識、靈視、物品、遊戲提示、附錄 A–E、製作團隊 | 21–28 |
+
+附錄 A–E 分別是：各職業技能點數表、種族屬性上限、魔法道具、法術一覽、標準裝備清單。
+
+### 社群攻略（繁體中文）
+
+2022 年版的玩家 FAQ 全譯，含完整破關流程與大量實測數據表。
+
+| 檔案 | 內容 |
+|---|---|
+| [`docs/walkthrough/part-1.md`](docs/walkthrough/part-1.md) | 序言、基本機制、經驗值表 |
+| [`docs/walkthrough/part-2.md`](docs/walkthrough/part-2.md) | 種族、技能（武器／戰鬥／符文／吟唱），含五系法術 SP 表 |
+| [`docs/walkthrough/part-3.md`](docs/walkthrough/part-3.md) | 職業（31 技能 × 10 職業成本表）、護甲裝備表、雜項提示 |
+| [`docs/walkthrough/part-4.md`](docs/walkthrough/part-4.md) | 破關流程：狗頭人營地 → 加穆爾神殿 → 庫瑞克 → 寒冰大教堂 → 白騎士地窖 → 馬利馮大神殿 → 最終對決 |
+| [`docs/walkthrough/part-5.md`](docs/walkthrough/part-5.md) | 附魔系統：武器、護甲、道具，共 26 張對照表 |
+| [`docs/walkthrough/part-6.md`](docs/walkthrough/part-6.md) | 最佳裝備清單、存檔十六進位編輯（含 `PARTY.DAT` 欄位位移表） |
+
+### 翻譯基礎建設
+
+| 檔案 | 內容 |
+|---|---|
+| [`translations/glossary.md`](translations/glossary.md) | 統一譯名表。種族、職業、技能、法術、裝備、附魔、神祇、城鎮、介面指令等。全專案唯一的譯名真相來源 |
+
+譯名以 `DEMON.INT` 內的實際字串為準，因此收錄的是原版拼字（`Shamen`、`Xorcise`、`Small ax`），
+而非手冊上的正確拼法。手冊與遊戲用語不同處（例如 Apple II 版 `Sense magic` 對 DOS 版 `Detect aura`）
+兩者都收，並註明各自屬於哪個版本。
+
+### 技術文件
+
+| 檔案 | 內容 |
+|---|---|
+| [`PLAN.md`](PLAN.md) | 專案計畫：偵查事實、待驗證假設、架構決策、階段分解、驗收準則、風險 |
+| `docs/formats/` | 資料格式規格書（建置中） |
+| `docs/re/` | 反組譯筆記與 Ghidra 環境說明（建置中） |
+
+---
+
+## 技術路線
+
+### 執行檔結構
+
+| 檔案 | 大小 | 角色 |
+|---|---|---|
+| `DEMON.EXE` | 6 KB | loader。檢查 8087 協同處理器，載入開場畫面後啟動 `DEMON.INT` |
+| `DEMON.INT` | 173 KB | 引擎本體。MZ 格式 16 位元 real mode，3,807 個 relocation，無 overlay |
+
+`.INT` 是 SSI 的「interpreter」命名慣例，但檔案內容是**原生 8086 機器碼**，不是 bytecode。
+本作沒有 SCUMM / AGI / SCI 那樣的虛擬機。資料驅動的那一層在 `DATA*.TXT`、`TOWN*.DAT`、
+`EXITS.DAT` 的事件與定義表，那才是本專案要重建成腳本直譯器的對象。
+
+### 架構決策
+
+- **反組譯只當行為真值（oracle），程式碼乾淨重寫**。直接沿用反編出的 `FUN_xxx` 會纏繞
+  8086 runtime、無型別、不可維護，也無法中文化。
+- **素材兩套都收**。`.PIE/.SHE/.FNE`（EGA）優先，`.PIC/.SHP/.FNT`（CGA）隨後。
+  CGA 素材不是砍掉的選項，只是排序在後。
+- **中文排版拉畫布到 640×400**。中文需 16×16 點陣才可讀，英文 8×8 字型放大兩倍後與中文同高。
+
+### 已破解的線索
+
+CGA 與 EGA 素材檔的大小呈精確 3.5 倍對應（1728→6048、2048→7168、2816→9856、
+6528→22848、15360→53760）。3.5 = 2（2bpp→4bpp 色深）× 1.75（200→350 掃描線），
+指向 EGA 版素材為 320×350 four-plane。`.PIC`→`.PIE` 是 3.5 倍再加 16 bytes，
+推測多出的是 16 色調色盤。此假設待解碼器實作驗證。
+
+---
+
+## 授權與出處
+
+### 程式碼
+
+本專案自行撰寫的引擎程式碼與工具，授權方式待引擎開工後確定。
+
+### 原版遊戲
+
+《Demon's Winter》© 1988 Strategic Simulations, Inc.
+遊戲執行檔、資料檔、美術與音樂的著作權歸原權利人所有，**不在本專案散布範圍內**，
+已全數排除於版本控制之外。使用本專案的引擎需自備合法的原版遊戲副本。
+
+### 手冊譯文
+
+原文為 SSI 隨盒手冊，著作權歸 Strategic Simulations, Inc. 所有。
+本專案的繁體中文譯本屬非商業性質的數位保存與研究用途，不作商業散布。
+
+### 攻略譯文
+
+原文為 2022 年 8 月 19 日版的玩家 FAQ（作者未於文中署名，文中向 Andrew Schultz
+致謝並提及其 FAQ 與地圖）。著作權歸原作者所有。本專案譯本同屬非商業保存用途。
+
+若原權利人對上述任一項有疑慮，請開 issue 告知，本專案會配合處理。
