@@ -25,10 +25,22 @@
 | Ildryn | 伊爾德林 | 開場被毀的村莊 |
 | Malifon | 馬利馮 | 最終魔王 |
 | Xeres | 澤瑞斯 | 哥布林/狗頭人所奉的主 |
-| The Ancient One | 遠古者 | 遊戲內字串 `Ancient One casts` |
+| The Ancient One | 遠古者 | 遊戲內字串 `Ancient One casts`；**單數個體**，與下方 `the Ancients`（複數種族）是不同指涉，勿混淆 |
+| the Ancients | 遠古種族 | **複數**，指遠古種族整體，非單一個體；`TOWN.TXT` 城鎮描述文字出現 "With the Ancients gone and Malifon imprisoned…"、"the Ancients became angry at Malifon"，確認為複數集合用法，與「The Ancient One 遠古者」（單數）需區分譯詞（2026-07 彙整裁決） |
 | White Knights | 白騎士團 | |
 | Orb of Evertime | 恆世寶珠 | `T2C.TXT` 劇情物品 |
 | Shard of Spring | 春之碎片 | SSI 前作，手冊有提及 |
+
+### 劇情道具（攻略新增）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Scryer | 占卜器 | 庫瑞克三樓 |
+| Ouiji board | 通靈板 | 庫瑞克三樓 |
+| faceted mirror | 多面鏡 | 馬利馮大神殿章節關鍵劇情道具 |
+| Black Wand | 黑色魔杖 | 庫瑞克三樓 |
+| demon crystal | 惡魔水晶 | 庫瑞克三樓／四樓，反覆出現的關鍵詞 |
+| heavy amulet | 沉重護符 | 擊敗傑斯瑞克（Jesric）掉落 |
 
 ## 2. 屬性（Traits）
 
@@ -58,6 +70,12 @@
 
 > 手冊（Apple II 版）用 `Sense magic` / `See in dark`，DOS 版改為 `Detect aura` / `Dark vision`。
 > 翻譯手冊時保留手冊用語並加譯註說明 DOS 版名稱。
+> 兩個版本的譯名皆已收錄於第 5 節技能表（`Sense magic`／`See in dark` 為 Apple II 版用語，
+> `Detect aura`／`Dark vision` 為 DOS 版用語），因為手冊譯文用 Apple II 用語、遊戲內文字用 DOS 用語，
+> 兩邊都要能查到（2026-07 彙整裁決）。
+>
+> `Dwarf`（本表「矮人」，種族）與 `Dwarven`（第 8 節「矮人打造」，武器材質／潛伏能力）是**兩個不同詞**，
+> 語境不同——矮人是可選種族，矮人打造是武器材質的附魔描述，勿混淆。
 
 ## 4. 職業（Classes）
 
@@ -104,16 +122,23 @@
 | Potion Lore | 藥劑學識 | 學識 |
 | Item Lore | 物品學識 | 學識 |
 | Monster Lore | 怪物學識 | 學識 |
+| Lore（目錄泛稱，未細分武器/藥劑/物品/怪物） | 學識 | 目錄中泛稱用法，沿用上列細分詞的譯字，不另創新詞 |
 | Detect Traps | 察覺陷阱 | 雜項 |
 | Disarm Traps | 解除陷阱 | 雜項 |
 | Hunting | 狩獵 | 雜項 |
 | Persuasiveness | 說服 | 雜項 |
 | Priesthood | 司祭 | 雜項 |
 | Shaman | 薩滿 | 雜項；遊戲內誤拼為 `Shamen` |
-| Detect aura | 察覺靈光 | 種族 |
-| Dark vision | 黑暗視覺 | 種族 |
+| Detect aura | 察覺靈光 | 種族（DOS 版） |
+| Dark vision | 黑暗視覺 | 種族（DOS 版） |
+| Sense magic | 感知魔法 | 種族（**Apple II 版**）；即 DOS 版「Detect aura 察覺靈光」的手冊原始用語，勿混用 |
+| See in dark | 黑暗視物 | 種族（**Apple II 版**）；即 DOS 版「Dark vision 黑暗視覺」的手冊原始用語。譯名裁決：manual/part-1 建議「夜視」、walkthrough/part-2 建議「黑暗視物」，兩者衝突；選「黑暗視物」以維持與 DOS 版「黑暗視覺」同字根、一望即知是同一能力的兩個版本用語（2026-07 彙整裁決，「夜視」列為備案） |
 | Power leech | 汲取法力 | 種族 |
 | Regeneration | 再生 | 種族 |
+| Chants（章節／分類標題） | 吟唱 | 統轄 Illusion／Summoning／Possession 三技能（見上方分類欄已是「吟唱」）。**已由專案主持人裁定統一為「吟唱」，不再更動** |
+
+> `Berserking`（本表「狂暴」，技能）與 `Berserker`（第 8 節「狂戰士」，武器潛伏能力）是**兩個不同詞**，
+> 刻意譯成不同字以區分——狂暴是可學技能，狂戰士是武器隨機觸發的附魔效果，勿混淆。
 
 ## 6. 法術（Spells）
 
@@ -177,6 +202,15 @@
 | Still Air | 凝滯之氣 | 11 |
 | Freedom | 自由之風 | 13 |
 
+### 其他法術／附魔用語（攻略、手冊新增）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| glyph | 符印 | 與既有「rune＝符文」刻意區分為兩個不同詞。`TOWN.TXT` 城鎮描述文字亦提及「三個緋紅符印（three crimson Glyphs）」使人靠近即腐化，確認為遊戲內實際存在的獨立物件，非泛稱（2026-07 彙整裁決） |
+| Rune Magic | 符文魔法 | 法術體系總稱，職業章節巫師描述用語 |
+| Uncurse | 解咒 | 處理受詛咒裝備／符印用 |
+| Imprison | 禁錮 | 觸發好結局關鍵動作 |
+
 ## 7. 幻術／召喚生物（Illusion / Summon）
 
 | 原文 | 繁中 | 幻術 SP | 召喚 SP |
@@ -193,6 +227,8 @@
 | Wind Elemental | 風元素 | 20 | 40 |
 | Ice Elemental | 冰元素 | 20 | 40 |
 | Spirit Elemental | 靈魂元素 | 20 | 40 |
+
+> `Elemental`（泛稱，不指特定元素）→「元素」，五種元素生物的個別譯名見上表，此為攻略中泛稱用法沿用同一譯字。
 
 ## 8. 武器與護甲
 
@@ -217,17 +253,38 @@
 
 ### 附魔材質／品質詞
 
-| 原文 | 繁中 |
-|---|---|
-| Well made | 精工 |
-| Silver | 銀製 |
-| Jade | 玉製 |
-| Crystal | 水晶 |
-| Gold | 黃金 |
-| Platinum | 白金 |
-| Jewel encrusted | 寶石鑲嵌 |
-| Flaming | 燃焰 |
-| None / Minimal / Average / Potent | 無／微弱／中等／強效 |
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Well made | 精工 | |
+| Silver | 銀製 | |
+| Jade | 玉製 | |
+| Crystal | 水晶 | |
+| Gold | 黃金 | |
+| Platinum | 白金 | |
+| Jewel encrusted | 寶石鑲嵌 | |
+| Flaming | 燃焰 | |
+| None / Minimal / Average / Potent | 無／微弱／中等／強效 | |
+| Normal（材質等級） | 一般 | 原表只列到「精工」以上，缺這個最低階基準，補上 |
+| Mithril | 秘銀 | 古代矮人偏愛的武器材質 |
+| Dwarven（材質，武器潛伏能力類型） | 矮人打造 | 矮人鐵匠鍛造的武器材質。**與種族「Dwarf 矮人」（見第 3 節）是不同語境的詞，勿混淆**；譯名裁決見下方「武器潛伏能力」表 |
+| Bloodstone | 血石 | 附魔材質／技法專有名詞，用來附加特殊能力的素材 |
+| Plus（附魔類型／道具類別泛稱） | 加成 | 「+1」武器／護甲／道具的統稱詞根；具體用法見下方「加成武器」與第 18 節「加成道具」 |
+| Plus Weapons | 加成武器 | 如「+1 斧」。譯名裁決：manual/part-3 建議「附加武器」、manual/part-4 對同一「Plus」詞根建議「加成道具」，兩者用字不一致；統一改用「加成」詞根，與「加成道具」（第 18 節）同組（2026-07 彙整裁決） |
+| Flaming Weapons | 燃焰武器 | 沿用既有「Flaming＝燃焰」詞根 |
+
+### 武器潛伏能力（Dormant Weapon Powers，攻略新增）
+
+> 武器隨機自動觸發的特殊效果類型，機制說明見第 18 節「附魔類型與機制」。以下為各效果類型的譯名。
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Unholy | 邪惡 | |
+| Life Stealing | 奪命 | 譯名裁決：manual/part-4、walkthrough/part-5 皆建議「奪命」，walkthrough/part-6 對同一詞另建議「汲取生命」（呼應既有「Power leech＝汲取法力」的命名方式）。維持「奪命」——與同組其他潛伏能力譯名（秘銀／邪惡／斬首／鋒銳／狂戰士／靜滯／詛咒）同為短促的 2 字效果標籤，風格一致；「汲取生命」列為備案（2026-07 彙整裁決） |
+| Vorpal | 斬首 | 譯名裁決：manual/part-4 建議「斬殺」、walkthrough/part-5 建議「斬首」。D&D 系列「vorpal sword」的通行中譯即為「斬首劍」（源自《愛麗絲鏡中奇緣》vorpal blade 的典故），選「斬首」（2026-07 彙整裁決） |
+| Sharpness | 鋒銳 | |
+| Berserker（武器潛伏能力） | 狂戰士 | **與技能「Berserking／狂暴」（見第 5 節）是不同詞，故意譯不同字以區分，勿混淆**——两位譯者皆刻意做此區分，已確認正確並收錄 |
+| Stasis | 靜滯 | 譯名裁決：manual/part-4 建議「靜止」、walkthrough/part-5 建議「靜滯」。選「靜滯」，較能傳達「被定住／懸置」的魔法狀態感，不只是單純的「停止」（2026-07 彙整裁決） |
+| Cursed | 詛咒 | 穿戴前建議先鑑定 |
 
 ## 9. 神祇（Gods）
 
@@ -243,6 +300,9 @@
 | Acisc | 阿奇斯克 | 薩滿 | 提升技巧 |
 | Volobews | 沃洛比斯 | 薩滿 | 提升速度 |
 | Theryni | 賽芮妮 | 薩滿 | 提升法力值 |
+
+> 手冊職業章節用「Priestly gods（司祭系神祇）」「barbaric gods（薩滿系神祇）」統稱上表的「司祭」「薩滿」兩個陣營，
+> 對應聖騎士／蠻族的職業描述段落。
 
 ## 10. 城鎮（`TOWN.TXT` 原始順序）
 
@@ -271,19 +331,39 @@
 | 21 | Loven | 洛文 |
 | 22 | Mojured | 莫朱瑞德 |
 | 23 | Lumisle Island | 盧米索島 |
+| 24 | Land's Edge | 待確認 |
+| 25 | Pirate's Cove | 海盜灣 |
 
-> 剩餘城鎮名待從 `TOWN.TXT` 完整解出後補齊。
+> 25 座城鎮已全數解出（2026-07-24）。來源是 `DEM_DATA/TOWN.TXT`：以 NUL 分隔的前 25 個字串
+> 依序對應 25 座城鎮，第 26 個字串起是城鎮傳聞旁白文字而非城鎮名。城鎮數量與
+> `TOWN1.DAT`..`TOWN25.DAT` 的檔案數一致，可互相印證。
+>
+> - **# 24 Land's Edge（待確認）**：已確認為正式城鎮名，但譯名本身尚無定案——walkthrough/part-3
+>   出現此地名時保留原文未翻譯，並建議「音譯『蘭德邊境』或保留原文，待更多脈絡再定案」。
+>   候選：蘭德邊境（音譯＋意譯）／天涯鎮（意譯，呼應城鎮描述旁白「Do not sail near the edge of
+>   the world…」的「世界邊緣」語境，且與 Dragontooth＝龍牙鎮、Woodhaven＝林蔭港等既有城鎮的
+>   意譯慣例一致）。**待專案主持人裁定，此表暫記原文**。
+> - **# 25 Pirate's Cove → 海盜灣**：walkthrough/part-6 正文已多處使用「海盜灣」（如裝備清單），
+>   原本擔心是攻略作者自行簡稱，本次確認其為 `TOWN.TXT` 第 25 座正式城鎮，非簡稱，予以正式收錄。
 
 ## 11. 主要地點（攻略章節）
 
-| 原文 | 繁中 |
-|---|---|
-| Kobold Camp | 狗頭人營地 |
-| Temple of Gamur | 加穆爾神殿 |
-| Qoorik | 庫瑞克 |
-| The Ice Cathedral | 寒冰大教堂 |
-| The Vault of the White Knights | 白騎士地窖 |
-| The High Temple of Malifon | 馬利馮大神殿 |
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Kobold Camp | 狗頭人營地 | |
+| Temple of Gamur | 加穆爾神殿 | |
+| Qoorik | 庫瑞克 | |
+| The Ice Cathedral | 寒冰大教堂 | |
+| The Vault of the White Knights | 白騎士地窖 | |
+| The High Temple of Malifon | 馬利馮大神殿 | |
+| Hall of Bones | 骸骨廳 | 狗頭人營地北側洞窟通往的地方 |
+| Silver Palace | 銀色宮殿 | 庫瑞克三樓，靠近的地點 |
+| Study | 書房 | 庫瑞克三樓內的房間 |
+| Amber Vaults | 琥珀地窖 | 庫瑞克四樓 |
+| Dwarven Workshop | 矮人工坊 | 附魔裝備的地方，位於世界西側、長滿葛藤的大陸上 |
+| dark chapel | 黑暗禮拜堂 | 馬利馮火山附近 |
+| Hall of Illusion | 幻術廳 | 沿用既有「Illusion＝幻術」組成地名 |
+| river Styx | 冥河 | 西方神話冥界之河，通用譯名，遊戲敘事中提及 |
 
 ## 12. 介面指令（`DEMON.INT` 字串）
 
@@ -336,21 +416,41 @@
 | Sound on / Sound off | 音效開／音效關 |
 | End of round | 回合結束 |
 | All monsters dead | 敵人已全滅 |
+| Deity Call | 神祇呼喚 |
+
+> `Deity Call`（對應本表熱鍵 P／Pray）譯名裁決：manual/part-2 建議「神祇呼喚」（手冊「神祇呼喚」一節標題）、
+> manual/part-3 對同一詞建議「呼喚神明」（描述戰鬥選單機制時）。兩者是同一機制的不同語境敘述，
+> 統一採「神祇呼喚」（維持章節標題慣用的名詞短語風格），「呼喚神明」列為備案（2026-07 彙整裁決）。
 
 ### 城鎮設施
 
 | 原文 | 繁中 |
 |---|---|
 | Go to marketplace | 前往市集 |
+| Marketplace（機構本身） | 市集 |
 | Healers | 治療所 |
 | Rest in the Inn | 客棧休息 |
+| Inn（機構本身） | 客棧 |
 | Town guild | 城鎮公會 |
 | Church | 教堂 |
+| College | 學院 |
 | Docks | 碼頭 |
 | Pub | 酒館 |
 | Inspect character | 查看角色 |
 | Pray | 祈禱 |
 | Convert | 改宗 |
+
+> `College`：教學機構，手冊描述中 master 譯為「大師」。
+
+### 航海／船隻（攻略新增）
+
+| 原文 | 繁中 |
+|---|---|
+| Ship | 船 |
+| Buying a Ship | 購買船隻 |
+| Ship Repairs | 船隻維修 |
+| Boarding / Unboarding | 上船／下船 |
+| Sea Combat | 海戰 |
 
 ### 角色工具
 
@@ -383,3 +483,183 @@
 | 遊戲內格式 | 繁中格式 |
 |---|---|
 | `Hour %d, Day %d in the Month of the %s` | 〈寶石名〉之月 第 %d 日 %d 時 |
+
+### 距離單位
+
+| 原文 | 繁中 |
+|---|---|
+| League | 里格 |
+
+---
+
+> 以下第 15–21 節為本次（2026-07）彙整 11 份譯稿末尾「新增譯名建議」時，發現在原有 14 節結構裡找不到
+> 歸屬的新類別，依內容邏輯新增章節收錄。編號接續在第 14 節之後、不插入原有章節之間，
+> 是為了不變動任何既有章節的編號——`docs/manual/part-0.md`、`docs/walkthrough/part-2.md`、
+> `docs/walkthrough/part-3.md`、`docs/walkthrough/part-5.md`、`docs/walkthrough/part-6.md`
+> 的「新增譯名建議」或核對段落都直接寫「glossary 第 X 節」引用原編號，插入式重編號會讓這些既有
+> 引用全部錯位，故一律採「附加在尾端」而非「插入到邏輯鄰近位置」。各節內文的備註欄會標明
+> 與哪個既有章節概念相關（例如武器潛伏能力與第 8 節、附魔機制與第 8 節材質表相關）。
+
+## 15. 陷阱類型（攻略新增）
+
+| 原文 | 繁中 |
+|---|---|
+| Poison needle | 毒針陷阱 |
+| Punji pit | 竹籤陷阱 |
+| Darts（陷阱） | 飛鏢陷阱 |
+| Spears（陷阱） | 長矛陷阱 |
+| Pool（陷阱） | 水池陷阱 |
+| Acid pool | 酸液池 |
+| Alarm（陷阱） | 警報陷阱 |
+
+## 16. 地形（Terrain，手冊新增）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Plains | 平原 | |
+| Forest | 森林 | |
+| Swamp | 沼澤 | |
+| Hills | 丘陵 | |
+| Tundra | 凍原 | |
+| Kudzu（地形） | 葛藤地 | 伊諾斯（Ynoth，見第 10 節）所在地形 |
+| Desert | 沙漠 | |
+| kudzu（植物本身） | 葛藤 | 現實植物名，手冊借用為地理描述；矮人工坊（見第 11 節）據說就藏身在一片廣袤的葛藤叢林中 |
+
+> `kudzu area`（**待確認**）：walkthrough/part-3 用來稱呼隊伍可紮營尋找流動商人的西方區域
+> （鄰近 `Land's Edge`，見第 10 節），建議譯「葛藤地帶」，但是否為正式地名（相對於通用地形描述）
+> 待後續章節或更多資料確認，本次先照收建議譯名，不視為定案。
+
+## 17. 怪物／NPC（手冊、攻略新增）
+
+### 怪物
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Dervish | 迴旋魔 | 沙漠生物 |
+| Salamander | 火蜥蜴 | 沙漠／地下城生物 |
+| Shambling Mound | 蹣跚植怪 | 沼澤特有生物 |
+| Will o' the Wisp / will'o wisp | 鬼火 | 沼澤特有生物；兩處拼法不同，皆指同一生物 |
+| Cave Bear | 洞穴熊 | 丘陵生物 |
+| Yeti | 雪怪 | 凍原生物，即 abominable snowman |
+| Timber wolf / Timber Wolf | 林狼 | 森林動物。譯名裁決：manual/part-2 建議「灰狼」、manual/part-3 對同一生物建議「林狼」。選「林狼」，與同樣以棲地命名的姊妹生物「Winter wolf＝寒冬狼」（凍原）構成一致的「棲地＋狼」命名家族，「灰狼」（真實物種俗名，與棲地命名邏輯無關）列為備案（2026-07 彙整裁決） |
+| Winter wolf | 寒冬狼 | 凍原動物 |
+| Snow giant | 雪巨人 | 凍原生物 |
+| Stalker | 潛伏者 | 森林特殊生物；與盜賊技能無關，純怪物名 |
+| Skeleton | 骷髏 | 不死系 |
+| Cobra | 眼鏡蛇 | |
+| Bugem | 巴格姆 | 遊戲原創怪物名，音譯；直立雙足昆蟲型生物 |
+| Swarm | 蟲群 | 以剩餘蟲數計算，非生命值 |
+| Great Dragon | 巨龍 | |
+| Fire dragon / Wind dragon / Ice dragon | 火龍／風龍／冰龍 | |
+| Elemental（泛稱） | 元素 | 五種元素生物譯名見第 7 節，此為泛稱用法 |
+| Manes | 屍靈奴 | 最低階惡魔，無魂死屍苦力 |
+| Slavers | 奴役惡魔 | 持晨星鎚、監管屍靈奴的惡魔 |
+| Gargoyle | 石像鬼 | |
+| Devil | 魔鬼 | 與「惡魔（Demon）」區分的更高階存在 |
+| Demon lord | 惡魔領主 | |
+| hill giant | 丘陵巨人 | |
+| mountain giant | 山地巨人 | |
+| titan | 泰坦 | |
+| HobGoblin | 大鬼哥布林 | 與下方「Goblin＝哥布林」同一命名家族 |
+| Gravekeeper | 墓地看守者 | |
+| Kobold（單獨作種族名詞） | 狗頭人 | 第 11 節已有複合詞「Kobold Camp 狗頭人營地」，此為正式收錄單詞 |
+| Goblin | 哥布林 | 第 1 節 Xeres 備註曾提及「哥布林/狗頭人」，此為正式收錄單詞 |
+
+### NPC
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Remondadin | 雷蒙達丁 | 加穆爾神殿地下墓穴頭目 |
+| Jesric | 傑斯瑞克 | 馬利馮的僕從，同時是進入馬利馮大神殿的通關密語 |
+| Eregore | 艾瑞戈爾 | 馬利馮大神殿內的頭目 |
+| Brolor | 布洛勒 | 傳說中矮人鍛造工坊（見第 11 節 Dwarven Workshop）的地名／人名，**待確認**兩者何者為正確指涉 |
+| Andrew Schultz | Andrew Schultz | 真實人名，保留原文不譯 |
+
+## 18. 魔法道具類別與附魔機制（手冊、攻略新增）
+
+### 道具類別
+
+| 原文 | 繁中 |
+|---|---|
+| Vial | 藥瓶 |
+| Ring | 戒指 |
+| Wand | 魔杖 |
+| Staff | 法杖 |
+| Rod | 權杖 |
+| Gem | 寶石 |
+| Amulet | 護身符 |
+| Medallion | 徽章 |
+| Talisman | 護符 |
+| Figurine | 塑像 |
+| Salve | 藥膏 |
+| Crown | 王冠 |
+
+> `Rod` 譯名裁決：manual/part-4 建議「短杖」、walkthrough/part-5 建議「權杖」。選「權杖」——
+> 「短杖」與同表「Staff＝法杖」、「Wand＝魔杖」的字形／字義都太接近，容易混淆；「權杖」在其他
+> D&D 系奇幻譯名中也是 Rod 類魔法道具的通行譯法（2026-07 彙整裁決）。
+>
+> `Crown` 譯名裁決：manual/part-4 建議「王冠」、walkthrough/part-5 建議「皇冠」。選「王冠」，
+> 語感較中性泛用，不特指「帝王」等級（2026-07 彙整裁決）。
+
+### 附魔機制
+
+> 三種基本附魔類型 + 武器專屬的「特殊能力」欄位，武器潛伏能力的**具體效果類型清單**
+> （Mithril／Unholy／Vorpal…）已收錄在第 8 節「武器潛伏能力」。
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Constant（Powers） | 恆常（能力） | 裝備即持續生效，不需主動觸發。譯名裁決：manual/part-4、walkthrough/part-4 建議「恆常」、walkthrough/part-6 建議「常駐」（walkthrough/part-6 正文的裝備清單已大量使用「常駐」一詞）。統一採「恆常」，與「潛伏」「觸發」並列的三個附魔類型維持同語感風格；**walkthrough/part-6 既有正文用字暫不回頭改動**，僅在此記錄分歧供之後統一（2026-07 彙整裁決） |
+| Dormant（Powers） | 潛伏（能力） | 武器隨機自動觸發。manual/part-3 對同一概念另譯「潛藏能力」，其餘四處來源（manual/part-4、walkthrough/part-4/5/6）都是「潛伏」，多數且與正文用字一致，故採「潛伏」（2026-07 彙整裁決） |
+| Invoked（Powers） / Invoke | 觸發（能力） | 靠「使用」指令觸發。譯名裁決（四方衝突）：manual/part-4 建議「賦予能力」（其正文亦使用「賦予能力」）、walkthrough/part-4 建議「喚醒」、walkthrough/part-5 建議「賦能力量」（其正文亦使用「賦能力量」）、walkthrough/part-6 建議「觸發」（其正文的裝備清單已大量使用「觸發」）。選「觸發」——與「潛伏」皆表達某種觸發機制，但「觸發」明確傳達「玩家主動使用指令觸發」而非「隨機自動」，「喚醒」易與「潛伏」（沉睡／喚醒的對立聯想）混淆，「賦予」「賦能」則偏向「授予」語感、不傳達觸發動作本身；manual/part-4、walkthrough/part-5 正文既有用字暫不回頭改動，僅在此記錄（2026-07 彙整裁決，本節是彙整過程中發現、非譯者已標出的既知衝突） |
+| Special Power | 特殊能力 | 武器專屬、攻擊時機率觸發的待發動附魔欄位，與 Dormant Powers 概念相同但用詞不同（walkthrough 用語，manual 未單獨區分此詞）。譯名裁決：walkthrough/part-5 建議「特殊力量」（其正文亦使用「特殊力量」）、walkthrough/part-6 建議「特殊能力」（其正文亦使用「特殊能力」）。選「特殊能力」，與「恆常能力／潛伏能力／觸發能力」統一用「能力」字尾（2026-07 彙整裁決） |
+| Dormant Effect | 潛伏效果 | Special Power／潛伏能力觸發時實際發生的法術效果本身 |
+| Charges | 充能次數 | 魔杖／法杖／短杖類物品的使用次數 |
+| Breakable | 易碎 | 物品是否會損壞的性質標示 |
+| Breakable % | 損壞率 | 損壞機率的百分比數值 |
+| Enchantment | 附魔 | 矮人工坊提供的訂製武器服務（動詞／服務名） |
+| Plus（item type，一般泛稱） | 加成道具 | 涵蓋武器、護甲等所有「+N」道具的統稱；武器專屬用法「Plus Weapons＝加成武器」見第 8 節 |
+
+## 19. 戰鬥與遊戲機制用語（攻略新增）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| hack | 會心一擊 | 遊戲原文對「critical hit」的稱呼（攻略原文："critical hits (or hacks as they call it here)"） |
+| Position（命中修正） | 位置 | 例如背後攻擊 +3 |
+| Exit dots / exit icon | 離場點／離場圖示 | 戰場邊緣的逃跑觸發點 |
+| save scumming | 存讀檔 | 靠存讀檔重複嘗試取得好結果的玩家戰術 |
+| save or die | 豁免失敗即死 | D&D 系桌遊術語，指某些法術效果「一次豁免（抵抗）檢定失敗即死」，**此處 save 指豁免檢定，不是遊戲存檔，勿混淆**。譯名裁決：walkthrough/part-2 正文已使用「一擊必殺（豁免失敗即死）」、walkthrough/part-3 正文已使用「抵抗失敗即死」，兩篇已發布內文用字不同。glossary 統一以「豁免失敗即死」為未來標準譯法（採 D&D 標準術語「豁免檢定」而非「抵抗檢定」，且比「一擊必殺」更明確點出「豁免」性質），**兩篇既有攻略正文不在本次修改範圍內，維持原樣**，此處記錄供之後回頭統一時參考（2026-07 彙整裁決） |
+| no save | 不予豁免 | 「不給豁免機會」的效果分類，同樣是 save-or-die 家族的變體。walkthrough/part-3 正文以「無法豁免抵抗」描述同一概念（非正式術語，行文中的描述性說法）。glossary 收「不予豁免」為標準譯法 |
+
+## 20. 系統選單／開場畫面（手冊新增）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Title screen | 標題畫面 | |
+| Disk Drives | 磁碟機設定 | 標題畫面五選項之一 |
+| Make Disks | 製作磁片 | 標題畫面選項 |
+| Alternate Character Set | 替代字元集 | 標題畫面選項 |
+| Master disk | 母片 | |
+| Backup disk(s) | 備份磁片 | |
+| Starter disk | 啟動磁片 | |
+| Move Forward（移動鍵說明） | 前進 | 指令表 |
+| Turn left / Turn right / Turn around | 左轉／右轉／轉身 | 指令表 |
+
+## 21. 文件與雜項用語（手冊、攻略章節標題）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Rule Book | 規則手冊 | |
+| Caveat Emptor | 買者自慎 | 拉丁法律用語「let the buyer beware」，「商人」章節標題。譯名裁決：manual/part-0（目錄提及）建議「購物風險自負」、manual/part-2（章節本文標題）建議「買者自慎」。選章節本文自己採用的「買者自慎」，比目錄的意譯轉述更貼近原標題的簡潔語感，字數也更符合標題慣例（2026-07 彙整裁決） |
+| Introduction | 序言 | 攻略章節標題 |
+| Tips | 攻略要點 | 攻略章節標題 |
+| Walkthrough | 全流程攻略 | 攻略章節標題 |
+| Fundamental Mechanics | 基本機制 | 攻略章節標題 |
+| Miscellaneous | 雜項 | 攻略章節標題 |
+| The Showdown with Malifon | 決戰馬利馮 | 攻略章節標題 |
+| Enchanting（章節標題） | 附魔 | 與第 18 節「Enchantment＝附魔」同一詞根 |
+| Best Equipment | 最佳裝備 | 攻略章節標題 |
+| Hex Editing Your Party | 隊伍資料十六進位編輯 | 攻略章節標題 |
+| Experience Chart | 經驗值表 | 攻略章節標題 |
+| How Encounters Are Chosen | 遭遇的產生方式 | 手冊章節標題 |
+| The Battlefield | 戰場 | 手冊章節標題 |
+| Monster List | 怪物列表 | 手冊章節標題 |
