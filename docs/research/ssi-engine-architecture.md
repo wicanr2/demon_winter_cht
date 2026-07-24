@@ -106,7 +106,7 @@ mov  ax, 0FFFFh
 3. **EXEC 主程式**。
 
 字串 `vagyok` 是匈牙利文的「我是」`[推論]`。位置緊接在 `\demon.int` 之後，
-不像是功能性字串，較可能是開發者留下的簽名或標記。此線索尚未追出對應的程式碼路徑。
+不像是功能性字串，較可能是開發者留下的簽名或標記。**此線索在 DOSBox 實跑後解開，見 §1.5。**
 
 ### 1.4 為什麼要拆成兩個檔 `[推論]`
 
@@ -120,6 +120,38 @@ mov  ax, 0FFFFh
 - **loader 可能是 SSI 的共用元件**。若多款遊戲共用同一份 loader 邏輯
   （偵測硬體 → 顯示開場圖 → EXEC），拆分就有工程上的複用價值。
   這一條是本研究對 Gold Box 系列最有價值的假設，驗證方法見 §4。
+
+### 1.5 移植鏈：Apple II 原版 → Novotrade（匈牙利）移植成 IBM PC 版 `[實證]`
+
+DOSBox 實跑原版，開場畫面（`workplace/dosbox/shots/01-ega-opening.png`）底部印著：
+
+```
+Adapted for the IBM by Judit Burczolich and Laszlo Fazekas
+NOVOTRADE          STRATEGIC SIMULATIONS INC.
+```
+
+這一張畫面把先前三條分散的線索接成一條完整的移植鏈：
+
+| 線索 | 出處 | 指向 |
+|---|---|---|
+| `vagyok`（匈牙利文「我是」） | `DEMON.EXE` 字串 `[實證]` | 移植者的母語簽名 |
+| Applesoft BASIC 殘留（Town Maker、`PEEK(-16384)`） | `TOWN*.DAT` 未初始化緩衝區 `[實證]`（§2.5） | 原始製作平台是 Apple II |
+| `Adapted for the IBM by … NOVOTRADE` | 開場畫面 `[實證]` | IBM PC 版由 Novotrade 移植 |
+
+**Novotrade 是匈牙利布達佩斯的遊戲公司**，`Judit Burczolich`、`Laszlo Fazekas` 是匈牙利人名，
+與 `vagyok` 的匈牙利文完全吻合。因此結論是：
+
+> **Demon's Winter 的原始開發平台是 Apple II（SSI 本部），IBM PC / DOS 版是外包給匈牙利的
+> Novotrade 移植的。** `vagyok` 是 Novotrade 程式設計師留在 loader 裡的簽名，
+> `TOWN*.DAT` 裡的 Applesoft BASIC 殘留則是資料檔從 Apple II 版原封搬移的證據。
+
+這條移植鏈也修正了 §1.4 的一個假設：DOS 版的 loader **不一定是 SSI 的共用元件**，
+也可能是 Novotrade 為這次移植另寫的。判斷 loader 出自誰手，要比對其他 SSI 自製 DOS 版
+（非 Novotrade 移植者）的 loader，這併入 §4 對 Gold Box 的檢查。
+
+> **對 Gold Box 的意義**：若某款 SSI 遊戲的 DOS 版也帶有非英語的開發者簽名或他廠 logo，
+> 就要先確認它是 SSI 自製還是外包移植——兩者的技術血緣不同，
+> 從一款外包移植版反推出的結論不能直接套到 SSI 自製版上。這是 §4 檢查時的一個陷阱。
 
 ---
 
@@ -354,7 +386,7 @@ SSI 的 Gold Box 系列（*Pool of Radiance*、*Curse of the Azure Bonds*、
 | 5 | EGA 素材 320×350 four-plane 假設 | 依假設寫解碼器輸出 PNG，肉眼比對 DOSBox 截圖 |
 | 6 | `SUM.MAP` 15,743 B 是否壓縮 | 熵值分析 + 反組譯載入函式 |
 | 7 | 8087 浮點運算實際用在哪 | 反組譯找 x87 指令的使用點 |
-| 8 | `vagyok` 字串的來由 | 追出引用該字串的程式碼路徑 |
+| ~~8~~ | ~~`vagyok` 字串的來由~~ | **已解**（§1.5）：Novotrade 匈牙利程式設計師的簽名 |
 
 ---
 

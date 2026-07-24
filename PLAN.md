@@ -180,11 +180,20 @@ Eregore(97)、Guardian(98)等劇情角色都對得上攻略描述的場景。這
 
 - [x] `git init` + 接遠端 + `.gitignore`(原版資料不入版控)
 - [x] Ghidra 反組譯環境(docker),見 `docs/re/00-ghidra-setup.md`
+- [x] DOSBox reference 環境(docker + Xvfb + xdotool),見 `docs/re/01-dosbox-reference.md`。
+      **EGA 全鏈路跑通**(開機→選單→進遊戲→移動→存檔),可自動化送鍵 + 截圖。
+      交叉驗證:進遊戲畫面的指令選單與我們從 DEMON.INT 抽出的字串一字不差。
 - [ ] Go + Ebiten 建置環境(引擎開工前再建)
-- [ ] DOSBox 容器可跑原版，可截圖 → **這是全專案的 reference oracle**(進行中)
 - [ ] `CONTEXT.md` 建立詞彙表(EGA plane / SHP / 事件表 / rune 等術語統一)
 
-**驗收**:DOSBox 容器能跑出開場畫面並輸出 PNG。
+**驗收:已達成**。DOSBox 跑出開場畫面(`workplace/dosbox/shots/01-ega-opening.png`,
+可見 Novotrade 移植署名)並完整進入遊戲。
+
+> **⚠ 完整性待辦(CGA 缺檔)**:這份 `Demons Winter (1988).zip` **缺少 `GOT.FNT`**
+> (CGA 版裝飾字型),只有 EGA 版的 `GOT.FNE`。CGA 模式讀到 `GOT.FNT` 會卡死,
+> 開場美術(`OPEN.PIC`)本身渲染正常。依完整性原則(rulebook/83),這不是「CGA 不做」的
+> 理由,而是**素材缺檔待補**——需另尋完整版遊戲檔補 `GOT.FNT`。在此之前 CGA 標記為
+> 「美術可用、互動不可用」,邏輯層驗證一律走 EGA(兩者共用同一份 `DEMON.INT`)。
 
 ### 階段 1 — 反組譯當 oracle
 
@@ -213,7 +222,8 @@ Eregore(97)、Guardian(98)等劇情角色都對得上攻略描述的場景。這
 - [x] `DATA*.TXT` 事件表結構(V5 已結案,見 §3.1);trailer 語意待反組譯
 - [x] `FILES.DTT` 主字串池(501 字串)
 - [ ] `PARTY.DAT` 存檔格式 → 可讀可寫(已解姓名/種族/屬性/道具欄邊界;
-      職業、已學技能、朝向、遊戲內時間仍未解 → 待 DOSBox 動態 diff)
+      DOSBox 動態 diff 已解 X/Y 座標與朝向,時間欄位有候選待複核;
+      職業、已學技能仍未解 → 待下一輪 DOSBox 實驗)
 - [ ] `FILES.DAT` 各分段語意、`SUM.MAP` 結構(進行中)
 - [ ] `EXITS.DAT` 座標對應哪張地圖
 
