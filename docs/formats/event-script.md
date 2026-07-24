@@ -1,5 +1,12 @@
 # DEM_DATA 事件腳本格式（DATA*.TXT 系列）
 
+> **⚠ 2026-07-24 反組譯修正**：本文以純資料分析建立的「trailer（0~3 個數字）語意未解」模型
+> **已被反組譯推翻**。讀取函式 `FUN_25be_0e77`（`25be:0e77`）的實際 parse 流程證實：
+> 所謂「trailer」不是變長欄位，而是兩個固定單值槽 + 下一筆記錄的 leading picture ID
+> 被線性 tokenize 誤歸給前一筆。完整結論（含反組譯證據與獨立模擬器驗證）見
+> **[`docs/re/02-data-loading-functions.md`](../re/02-data-loading-functions.md)**。
+> 本文以下的「未解」段落請以該文件為準。
+
 > 分析對象：`workplace/orig/demwin/DEM_DATA/` 底下的 `DATA1~5.TXT`、`T.TXT`、`T2C.TXT`、`T2D.TXT`、
 > `EREGORE.TXT`、`WIN.TXT`、`TOWN.TXT`。
 > 解析工具：`tools/parse_datatxt.py`（可重跑，見檔案內 docstring 用法）。

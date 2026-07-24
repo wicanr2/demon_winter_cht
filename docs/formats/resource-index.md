@@ -1,5 +1,9 @@
 # FILES.DAT / FILES.DTT / nSS.DAT / ALL_SS.DAT 格式分析
 
+> **⚠ 2026-07-24 反組譯補充**：`FILES.DAT` / `FILES.DTT` 與 `PARTY.DAT`、`ITEMLOCB.DAT`、
+> `DEMON.SHP`、`WINTER.SHP` 同屬一份資源清單（指標表 + 檔名字面清單）。但「消費這張表的程式碼」
+> 尚未定位到，各分段的精確語意仍未解。細節見 [`docs/re/03-audio-and-resources.md`](../re/03-audio-and-resources.md)。
+
 分析目標：`workplace/orig/demwin/DEM_DATA/` 底下的 `FILES.DAT`、`FILES.DTT`（原本懷疑是資源索引），
 以及 `1SS.DAT`～`5SS.DAT`、`ALL_SS.DAT`（開場序列資料）。
 

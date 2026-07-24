@@ -1,5 +1,14 @@
 # 城鎮定義與地圖資料格式
 
+> **⚠ 2026-07-24 反組譯修正**（兩處，均見 [`docs/re/02`](../re/02-data-loading-functions.md)
+> 與 [`docs/re/03`](../re/03-audio-and-resources.md)）：
+> 1. **SUM.MAP 已完全解開**：它是 23 個 sub-map segment 的串接（RLE 壓縮），
+>    由 `FUN_222f_28d0` 依 map ID 載入。size 表（`31f0:24b6`，23 筆）加總**恰為 15,743**，
+>    等於檔案大小（已獨立複核）。這也解答了本文「ITEMLOCB 引用 `map_id=2/4` 卻無對應檔案」之謎
+>    ——那些 map 就在 SUM.MAP 裡。本文對 SUM.MAP「是否壓縮／結構未解」的判斷以 `docs/re/03` 為準。
+> 2. **城鎮 28 個 type_code 與 7 個設施字串無關**：設施顯示由記錄 29 的固定 payload 欄位決定
+>    （`FUN_278d_0098`），不是 type_code 查表。28 個 code 的真正語意仍未解，見 `docs/re/02`。
+
 > 分析對象：`workplace/orig/demwin/DEM_DATA/` 底下的 `TOWN1.DAT`–`TOWN25.DAT`、`EXITS.DAT`、
 > `MAP1.MAP`/`MAP3.MAP`/`MAP5.MAP`、`SUM.MAP`、`ITEMLOCB.DAT`/`ITEMLOCX.DAT`。
 > 解析工具：`tools/parse_town.py`、`tools/parse_map.py`（純標準庫，可重跑）。

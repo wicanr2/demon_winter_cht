@@ -77,12 +77,12 @@ CGA→EGA 檔案大小精確 3.5 倍，可分解為:
 
 | # | 問題 | 驗證方法 |
 |---|---|---|
-| V1 | 原版到底有沒有配樂?還是只有 PC speaker 音效? | `DEMON.INT` 只出現 `Sound on/off`，無 AdLib/MIDI 字串。用 DOSBox 實跑 + 反組譯找 port 0x42/0x61 存取 |
+| ~~V1~~ | ~~原版有沒有配樂?~~ | **已解 2026-07-24**:只有 PC speaker。反組譯確認 AdLib(0x388/9)、MIDI(0x330/1)零命中,只有 8253+speaker(0x42/43/61)。有 note-sequencer(INT 1Ch)播離散音效,無背景音樂。見 `docs/re/03`。**影響「音樂還原」目標,見 §3.2** |
 | V2 | EGA 素材是否真為 320×350 4-plane? | 依假設寫解碼器，輸出 PNG 肉眼比對 DOSBox 截圖 |
 | V3 | `OPEN.PIE` 102,160 B 為何不符 3.5× 比例? | 檢查是否為多幀開場動畫或含壓縮 |
-| V4 | `SUM.MAP` 15,743 B 是否壓縮? | 熵值分析 + 反組譯載入函式 |
-| ~~V5~~ | ~~`DATA*.TXT` 的數字欄位語意~~ | **已解 2026-07-24**,見 §3.1 |
-| V6 | `FILES.DAT` / `FILES.DTT` 的角色 | 同上 |
+| ~~V4~~ | ~~`SUM.MAP` 15,743 B 是否壓縮?~~ | **已解 2026-07-24**:是 RLE 壓縮的 23 個 sub-map 串接,size 表加總=15,743(已複核)。含 map_id 2/4(無獨立 .MAP 檔者)。見 `docs/re/03` |
+| ~~V5~~ | ~~`DATA*.TXT` 的數字欄位語意~~ | **已解 2026-07-24**,見 §3.1、`docs/re/02` |
+| V6 | `FILES.DAT` / `FILES.DTT` 的角色 | 部分解:同屬一份資源清單,但消費該表的程式碼未定位。見 `docs/re/03` |
 | V7 | 8087 協同處理器實際用在哪(戰鬥計算?) | 反組譯找浮點指令使用點 |
 
 ### 3.1 V5 已解:事件表結構(2026-07-24)
@@ -108,10 +108,30 @@ CGA→EGA 檔案大小精確 3.5 倍，可分解為:
 文字敘述、怪物種類、隻數三者完全吻合,且 Xeres(91)、Remondadin(93)、Jesric(96)、
 Eregore(97)、Guardian(98)等劇情角色都對得上攻略描述的場景。這是實證,不是推測。
 
-**仍未解**:`255` 終止符後的 0~3 個 trailer 數字語意不明(可能是出口/傳送目標索引),
-以及檔頭統一的 `255` 用途。下一步走反組譯溯源(找 `DATA%d.TXT` 的讀取函式)。
+**trailer 之謎已於反組譯後解開**(2026-07-24):`FUN_25be_0e77` 的實際 parse 流程證實
+所謂「trailer」不是變長欄位,而是兩個固定單值槽 + 下一筆記錄的 leading picture ID
+被線性 tokenize 誤歸給前一筆。value 3 觸發自動接續重繪、`%` 觸發 rune-glyph 繪製。
+完整結論見 `docs/re/02-data-loading-functions.md`。
 
-詳見 `docs/formats/event-script.md`,解析器 `tools/parse_datatxt.py`。
+詳見 `docs/formats/event-script.md`(已加修正 callout)、`docs/re/02`,解析器 `tools/parse_datatxt.py`。
+
+### 3.2 V1 已解:原版無配樂,只有 PC speaker 音效(2026-07-24)
+
+反組譯確認(已獨立複核 port I/O):
+
+- **無任何 FM/MIDI 硬體支援**。AdLib(port `0x388`/`0x389`)、MIDI(`0x330`/`0x331`)在整個
+  `DEMON.INT` 反組譯中**零命中**;唯一的聲音 I/O 是 8253 timer channel 2 + speaker gate
+  (`0x42`/`0x43`/`0x61`),全部落在音效引擎 segment `1d9f`。
+- **有 note-sequencer,但只播離散音效,不是背景音樂**。INT 1Ch(timer tick)handler 走一張
+  4-byte/record 的表(除頻值 + 持續時間)。effect `-1` 是 8 音符死亡旋律,`1`~`8` 是精確的
+  C 大調音階單音,`0` 是靜音。觸發點是命中/落空/傷害/死亡等戰鬥事件。
+
+**對專案目標的影響**:CLAUDE.md 原列「音樂/音效都要還原」。**原版根本沒有音樂可還原**——
+所以這條目標的正確範圍是:**忠實重現 PC speaker 音效序列**(那張 4-byte 表 + C 大調音階 + 死亡旋律),
+而**不是**自製配樂填補。自製配樂會違反保存的本意(見 rulebook/93 素材鐵則、83 完整性)。
+`audio/` 模組據此定位為 PC speaker 合成,不是 music player。
+
+詳見 `docs/re/03-audio-and-resources.md`。
 
 ---
 
