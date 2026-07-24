@@ -256,7 +256,16 @@ python3 tools/parse_town.py town-all workplace/orig/demwin/DEM_DATA
 
 ---
 
-## 3. EXITS.DAT — 假設：165 筆 (X,Y) 座標對，中信心度
+## 3. EXITS.DAT — ~~假設：165 筆 (X,Y) 座標對~~ → 已由反組譯修正為 110 筆 3-byte 記錄
+
+> **⚠ 2026-07-24 反組譯修正**：本節「165 筆 2-byte 座標對」的假設**已被推翻**。
+> 讀取函式 `FUN_222f_1321`（`222f:1321`）的 stride 證實記錄是 **3-byte `[X, Y, type_byte]`**，
+> 共 330÷3 = **110 筆**。獨立複核：3-byte 分組下 X/Y 全落在 1–62（吻合 64×64 地圖）；
+> 若按 2-byte 分組，X 會出現 64（超出 0–63 的有效座標），故 2-byte 假設不成立。
+> `type_byte // 32` 是類別（0–7），類別 4 = 傳送點（讀第二組座標覆寫玩家位置，已驗證）。
+> `EXITS.DAT` 不是靜態全域表，跨 dataset（地城）時會被整份覆寫。
+> 完整分析見 **[`docs/re/05-event-triggering.md`](../re/05-event-triggering.md)**。
+> 一個未解矛盾：類別 0 佔 94/110 卻被觸發閘門排除，見該文件 §4。
 
 330 bytes。**已驗證的客觀事實**：
 - 全檔案 **沒有任何一個 0x00 byte**（min=1）。
