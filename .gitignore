@@ -1,11 +1,9 @@
 # 原版遊戲資料 / 執行檔:一律不入版控(玩家自備合法副本)
 *.zip
-workplace/orig/
-workplace/dump/
+workplace/
 *.pdf
 
 # 反組譯中間產物
-workplace/ghidra/
 *.gpr
 *.rep
 
