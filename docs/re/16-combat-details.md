@@ -452,10 +452,16 @@ for (slot = 0; slot < 15; slot++) {
 `FUN_138d_3c81` 的 `effect_type==8` handler（`138d:3d98`）與 `effect_type==9`
 handler（`138d:3dcf`）已用原始位元組讀出：
 
+> **2026-07-25 修正**：下方原本寫 `spell_school_id(0x4e2c) == 0x11`，是**誤植**。
+> 跳表修好後（`docs/re/18`）可直接核對，程式碼是 `*(int *)0x4e2e != 0x11`，
+> 判的是 **`effect_type`**（`0x4e2e`）不是符文系（`0x4e2c`）。
+> `0x11`(17) = 御風而行／傳送，與 `docs/re/15` 的 `effect_type` 對照表一致；
+> 而 `0x4e2c` 全檔只跟 `1`/`4`/`6`/`8` 比較，值域根本到不了 `0x11`。
+
 ```c
 // 已驗證（原始位元組核對），但語意不明確，見下方警語
 // effect_type==8：
-if (sub_mode(bp+0xc) == 3 && spell_school_id(0x4e2c) == 0x11)
+if (sub_mode(bp+0xc) == 3 && effect_type(0x4e2e) == 0x11)   // ← 修正：原寫 0x4e2c，是誤植
     goto shared_with_type9;
 if (sub_mode(bp+0xc) == 3) {
     combat[target].sp_field(0x4ec2) += value;   // 直接加值到某個「類SP」欄位
