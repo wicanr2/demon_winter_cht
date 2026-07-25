@@ -79,7 +79,15 @@
 
 | 規格 | 狀態 | 來源 |
 |---|---|---|
-| （尚未建立，等 `docs/re/07`~`10` 這輪反組譯回來後開始收攏） | — | — |
+| [`01-rng.md`](01-rng.md) — 亂數產生器 | **READY** | `docs/re/06` |
+| [`02-combat.md`](02-combat.md) — 戰鬥系統 | **DRAFT**（框架與普通攻擊 READY；法術缺 K/M 常數表） | `docs/re/06`、`09` |
+| 03 事件觸發與腳本 | 待寫 | `docs/re/02`、`05` |
+| 04 移動與模式切換 | 待寫（等 DOSBox 驗證朝向 enum） | `docs/re/08` |
+| 05 角色建立與升級 | 待寫（等 DOSBox 驗證裝備欄位移） | `docs/re/10` |
+| 06 時間系統 | 待寫（等 DOSBox 驗證日長 26 vs 38） | `docs/re/04`、`08` |
+| 07 素材格式與渲染 | 待寫 | `docs/formats/graphics.md` |
+| 08 城鎮與經濟 | **BLOCKED** — 程式碼落在 Ghidra 未發現區域 | `docs/re/10` |
+| 09 字型與中文化 | **BLOCKED** — `.FNT`/`.FNE` 解碼仍是雜訊 | `docs/formats/graphics.md` |
 
 ---
 
