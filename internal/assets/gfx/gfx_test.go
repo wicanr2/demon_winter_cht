@@ -157,25 +157,29 @@ func TestDecodeCGASprites(t *testing.T) {
 }
 
 // --- EGA 精靈圖 sprite sheet ---
-// 假設:CGA frame 16x32 套用「高度 1.75x、4bpp」-> 16x56(CYPHER 是 8x56),
-// 且 4 個 plane 是整個檔案等級分塊(不是逐 frame 各自四平面——這個
-// 逐-frame 版本已用肉眼比對排除,見 TestDecodeEGASpritesPerFrameControl)。
+// 已驗證（2026-07-25，見 docs/re/07-sprite-blit.md）：直接反組譯
+// FUN_217b_07cf（217b 段 EGA 單一 sprite blit 常式）讀出真實佈局是
+// 32x28、EGAPlanesRowBlocks（frame 內逐列排列、每列 4 個 plane 各自連續
+// 一塊 rowBytes)，不是先前用位元組數整除猜測的 16x56 或整檔四平面分塊。
+// COMBAT/SHIP/DEMON/WINTER/MONSTER 都是 448 bytes/frame，跟 07cf/06f9
+// 硬編碼的 frame stride 0x1c0=448 完全對上。CYPHER.SHE 是 224 bytes/frame
+// （非 448），不受 07cf 直接驗證，用同一種佈局公式外推 16x28（見下方
+// TestDecodeEGASpriteCypher 與 docs/re/07-sprite-blit.md 的「假設」標記）。
 func TestDecodeEGASprites(t *testing.T) {
 	dir := origDataDir(t)
 	cases := []struct {
 		name           string
 		frameW, frameH int
 	}{
-		{"COMBAT.SHE", 16, 56},
-		{"SHIP.SHE", 16, 56},
-		{"DEMON.SHE", 16, 56},
-		{"WINTER.SHE", 16, 56},
-		{"MONSTER.SHE", 16, 56},
-		{"CYPHER.SHE", 8, 56},
+		{"COMBAT.SHE", 32, 28},
+		{"SHIP.SHE", 32, 28},
+		{"DEMON.SHE", 32, 28},
+		{"WINTER.SHE", 32, 28},
+		{"MONSTER.SHE", 32, 28},
 	}
 	for _, c := range cases {
 		data := readAsset(t, dir, c.name)
-		frames, err := DecodeEGASpriteSheetGlobalPlanes(data, c.frameW, c.frameH)
+		frames, err := DecodeEGASpriteSheet(data, c.frameW, c.frameH, EGAPlanesRowBlocks)
 		if err != nil {
 			t.Fatalf("%s 解碼失敗(frame %dx%d): %v", c.name, c.frameW, c.frameH, err)
 		}
@@ -186,10 +190,54 @@ func TestDecodeEGASprites(t *testing.T) {
 			t.Fatalf("存 PNG 失敗: %v", err)
 		}
 		t.Logf("%s: %d frames, %dx%d each -> %s", c.name, len(frames), c.frameW, c.frameH, out)
+
+		// 放大單一 frame(第 0 張)方便肉眼細看、跟 CGA 版對照。
+		if len(frames) > 0 {
+			zoomed := zoomImage(frames[0], 8)
+			zoomOut := filepath.Join(dumpDir(t), "zoom-ega-"+c.name+"-frame0.png")
+			_ = SavePNG(zoomOut, zoomed)
+			t.Logf("%s frame0 放大 -> %s", c.name, zoomOut)
+		}
 	}
 }
 
-// 對照組:逐-frame 各自四平面的版本(已證明是雜訊,留著讓人對比)。
+// CYPHER.SHE frame 是 224 bytes(不是 448)，FUN_217b_07cf 的硬編碼 stride
+// 0x1c0=448 不適用，這裡只是用同一個 EGAPlanesRowBlocks 公式外推
+// 16x28(16/8=2 bytes/row * 28 rows * 4 planes = 224)，**假設**，未經
+// 反組譯直接證實，見 docs/re/07-sprite-blit.md。
+func TestDecodeEGASpriteCypher(t *testing.T) {
+	dir := origDataDir(t)
+	data := readAsset(t, dir, "CYPHER.SHE")
+	frames, err := DecodeEGASpriteSheet(data, 16, 28, EGAPlanesRowBlocks)
+	if err != nil {
+		t.Fatalf("解碼失敗: %v", err)
+	}
+	out := filepath.Join(dumpDir(t), "ega-sprites-CYPHER.SHE.png")
+	if err := SavePNG(out, TileSpriteSheet(frames, 10)); err != nil {
+		t.Fatalf("存 PNG 失敗: %v", err)
+	}
+	t.Logf("CYPHER.SHE(假設 16x28): %d frames -> %s", len(frames), out)
+}
+
+// 交叉比對用：CGA MONSTER.SHP frame0(已驗證正確的 16x32)放大 8 倍，
+// 拿來跟 EGA MONSTER.SHE frame0(32x28)並排肉眼核對是不是同一隻怪物。
+func TestDecodeCGAMonsterFrame0Zoom(t *testing.T) {
+	dir := origDataDir(t)
+	data := readAsset(t, dir, "MONSTER.SHP")
+	frames, err := DecodeCGASpriteSheet(data, 16, 32)
+	if err != nil {
+		t.Fatalf("解碼失敗: %v", err)
+	}
+	zoomed := zoomImage(frames[0], 8)
+	out := filepath.Join(dumpDir(t), "zoom-cga-MONSTER.SHP-frame0-correct.png")
+	if err := SavePNG(out, zoomed); err != nil {
+		t.Fatalf("存 PNG 失敗: %v", err)
+	}
+	t.Logf("CGA frame0(16x32,已驗證) -> %s", out)
+}
+
+// 對照組：先前試過的「逐-frame 四平面各自整塊 sequential」在 32x28 尺寸下
+// 一樣是雜訊(已排除的假設，尺寸猜對佈局仍猜錯的案例，留著讓人對比)。
 func TestDecodeEGASpritesPerFrameControl(t *testing.T) {
 	dir := origDataDir(t)
 	data := readAsset(t, dir, "MONSTER.SHE")

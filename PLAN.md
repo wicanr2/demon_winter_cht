@@ -271,7 +271,9 @@ state = (state × 125) mod 2796203
 - [x] `.PIC` 畫面圖 → PNG(CGA 全解,與 DOSBox 截圖肉眼比對一致)
 - [x] `.PIE` 畫面圖/人像框 → PNG(4-plane + 內嵌調色盤,已驗證)
 - [x] `.SHP` 精靈圖 → PNG sprite sheet(CGA 全解,frame 16×32)
-- [ ] `.SHE` 精靈圖(**plane 佈局未解**,八種假設皆雜訊)
+- [x] `.SHE` 精靈圖 → **已解 2026-07-25**:32×28 4-plane,列內 plane 分塊
+      (`row×16 + plane×4 + col`),無壓縮。反組譯 `217b:07cf` 常數 + 肉眼驗收
+      (`CYPHER.SHE` 224B frame 為外推假設)
 - [ ] `OPEN.PIE`(102,160 B,不符 3.5× 規律,未解)
 - [x] `.MAP` 地圖 → 64×64 tile 陣列(ASCII 算繪確認),tileset 對應待解
 - [x] `MONSTER.DAT`(99 隻)/ `ITEMS.DAT`(30 件)→ 解析器完成,部分欄位語意待驗
