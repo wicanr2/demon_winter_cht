@@ -72,6 +72,8 @@ type app struct {
 
 	// town 非 nil 時遊戲在城鎮畫面，地圖與戰鬥輸入都停止。
 	town *townScreen
+	// title 非 nil 時停在開場標題畫面。
+	title *ebiten.Image
 	// create 非 nil 時遊戲在建角畫面。
 	create *createScreen
 	// spells 非 nil 時戰鬥中的施法選單開著。
@@ -127,6 +129,9 @@ var keyFacing = []struct {
 func (a *app) Update() error {
 	if handled, err := a.updateQuitDialog(); handled || err != nil {
 		return err
+	}
+	if a.title != nil {
+		return a.updateTitle()
 	}
 	if a.create != nil {
 		return a.updateCreate()
@@ -208,6 +213,16 @@ func (a *app) Update() error {
 
 func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
+	if a.title != nil {
+		a.drawTitle(a.canvas)
+		if a.quitting {
+			a.drawQuitDialog(a.canvas)
+		}
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
 	if a.create != nil {
 		a.drawCreate(a.canvas)
 		if a.quitting {
@@ -598,6 +613,7 @@ func main() {
 		winter:     loadSet(gfx.WinterTiles),
 		font:       font,
 		speaker:    ui.NewSpeaker(*volume),
+		title:      loadTitle(*dataDir),
 		save:       save,
 		savePath:   *savePath,
 	}

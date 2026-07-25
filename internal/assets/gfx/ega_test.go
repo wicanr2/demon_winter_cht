@@ -72,3 +72,43 @@ func TestTitleScreen_RowCoherence(t *testing.T) {
 		}
 	}
 }
+
+// 人像框走 plane-major，與標題畫面的 row-blocks 不同。
+//
+// 兩種佈局互換會得到雜訊，而且看起來像「尺寸猜錯」——
+// 這條測試順便把「兩種佈局不能互換」釘住。
+func TestDecodePortrait(t *testing.T) {
+	for _, name := range []string{"PIC1.PIE", "PRIEST.PIE", "THANATOS.PIE"} {
+		data, err := os.ReadFile(filepath.Join(origDataDir(t), name))
+		if err != nil {
+			t.Skipf("找不到 %s：%v", name, err)
+		}
+		img, err := DecodePortrait(data)
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if b := img.Bounds(); b.Dx() != PortraitWidth || b.Dy() != PortraitHeight {
+			t.Errorf("%s 解出 %d×%d，預期 %d×%d",
+				name, b.Dx(), b.Dy(), PortraitWidth, PortraitHeight)
+		}
+	}
+}
+
+// 標題畫面的尺寸不能拿去套人像框，反之亦然 —— 長度就對不上。
+func TestPIELayouts_AreNotInterchangeable(t *testing.T) {
+	title, err := os.ReadFile(filepath.Join(origDataDir(t), "OPEN.PIE"))
+	if err != nil {
+		t.Skipf("找不到 OPEN.PIE：%v", err)
+	}
+	portrait, err := os.ReadFile(filepath.Join(origDataDir(t), "PIC1.PIE"))
+	if err != nil {
+		t.Skipf("找不到 PIC1.PIE：%v", err)
+	}
+
+	if _, err := DecodePortrait(title); err == nil {
+		t.Error("用人像框的尺寸解標題畫面應該失敗")
+	}
+	if _, err := DecodeTitleScreen(portrait); err == nil {
+		t.Error("用標題畫面的尺寸解人像框應該失敗")
+	}
+}

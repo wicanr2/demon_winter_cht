@@ -83,7 +83,8 @@ func DecodeEGAPlanar(data []byte, width, height int, layout EGAPlaneLayout, pale
 				x := col*8 + bit
 				var rgba = EGAPalette[idx]
 				if palette != nil {
-					rgba = EGAPalette[palette[idx]&0x0f]
+					// 調色盤值是 6 bit，不能遮成 4 bit 去索引 16 色表。
+					rgba = EGAColor(palette[idx])
 				}
 				img.SetRGBA(x, row, rgba)
 			}
@@ -228,6 +229,31 @@ const (
 	TitleScreenWidth  = 608
 	TitleScreenHeight = 336
 )
+
+// 人像框（`PIC1–6.PIE`／`PRIEST.PIE`／`SHAMEN.PIE`／`THANATOS.PIE`，18,160 B）。
+//
+// **佈局與標題畫面不同。** 人像框是 plane-major（四個 plane 各自連續一大塊），
+// 標題畫面是每列 4 個 plane 各一小塊。同一個副檔名兩種佈局 ——
+// 拿其中一種去解另一種會得到雜訊，而且看起來像「尺寸猜錯」。
+const (
+	PortraitWidth  = 144
+	PortraitHeight = 252
+)
+
+// DecodePortrait 解人像框。
+func DecodePortrait(data []byte) (*image.RGBA, error) {
+	pal, body, err := ParsePIEPalette(data)
+	if err != nil {
+		return nil, err
+	}
+	want := PortraitWidth / 8 * PortraitHeight * 4
+	if len(body) != want {
+		return nil, fmt.Errorf("gfx: 人像框去掉表頭後 %d bytes，預期 %d（%d×%d）",
+			len(body), want, PortraitWidth, PortraitHeight)
+	}
+	return DecodeEGAPlanar(body, PortraitWidth, PortraitHeight,
+		EGAPlanesSequential, pal)
+}
 
 // DecodeTitleScreen 解開場標題畫面（`OPEN.PIE`）。
 //

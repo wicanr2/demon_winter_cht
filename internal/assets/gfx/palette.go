@@ -44,3 +44,35 @@ var CGAPalette1High = [4]color.RGBA{
 	{0xff, 0x55, 0xff, 0xff}, // 2 高亮洋紅 light magenta
 	{0xff, 0xff, 0xff, 0xff}, // 3 白
 }
+
+// EGAColor 把 6-bit EGA 調色盤暫存器的值換成 RGB。
+//
+// **調色盤值是 6 bit，不是 4 bit。** EGA 的 Attribute Controller 每個
+// 調色盤暫存器存 `r g b R G B` 六個位元：低三位是主要色（各 2/3 強度），
+// 高三位是次要色（各 1/3 強度）。合起來是 64 色裡的一色。
+//
+//	R = 主R×170 + 次r×85
+//	G = 主G×170 + 次g×85
+//	B = 主B×170 + 次b×85
+//
+// 先前的實作把值 `&0x0f` 之後拿去索引 16 色標準色盤 —— 那會把高三位
+// 整組丟掉。最好認的症狀是**棕色變紅色**：EGA 的棕（色號 6）是 `0x14`，
+// 遮成 4 bit 變 `0x04` = 紅。`.PIE` 美術的膚色與土色就是這樣整片偏成洋紅。
+func EGAColor(v byte) color.RGBA {
+	c := func(primary, secondary uint) uint8 {
+		var n uint
+		if primary != 0 {
+			n += 170
+		}
+		if secondary != 0 {
+			n += 85
+		}
+		return uint8(n)
+	}
+	return color.RGBA{
+		R: c(uint(v>>2)&1, uint(v>>5)&1),
+		G: c(uint(v>>1)&1, uint(v>>4)&1),
+		B: c(uint(v>>0)&1, uint(v>>3)&1),
+		A: 0xff,
+	}
+}
