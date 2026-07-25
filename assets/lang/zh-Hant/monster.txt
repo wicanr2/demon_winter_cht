@@ -1,0 +1,597 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ MONSTER.DAT
+
+## 0
+:: en
+Lvl 1 fighter
+:: zh
+1 級戰士
+
+## 1
+:: en
+Lvl 1 mage
+:: zh
+1 級法師
+
+## 2
+:: en
+Orc
+:: zh
+獸人
+
+## 3
+:: en
+Spider
+:: zh
+蜘蛛
+
+## 4
+:: en
+Rat
+:: zh
+巨鼠
+
+## 5
+:: en
+Bat
+:: zh
+蝙蝠
+
+## 6
+:: en
+Bugem
+:: zh
+巴格姆
+
+## 7
+:: en
+Skeleton
+:: zh
+骷髏
+
+## 8
+:: en
+Skeleton mage
+:: zh
+骷髏法師
+
+## 9
+:: en
+Cobra
+:: zh
+眼鏡蛇
+
+## 10
+:: en
+Hill giant
+:: zh
+丘陵巨人
+
+## 11
+:: en
+Evil spirit
+:: zh
+邪靈
+
+## 12
+:: en
+Death adder
+:: zh
+死亡蝮蛇
+
+## 13
+:: en
+Lvl 2 fighter
+:: zh
+2 級戰士
+
+## 14
+:: en
+Lvl 2 mage
+:: zh
+2 級法師
+
+## 15
+:: en
+Lvl 3 fighter
+:: zh
+3 級戰士
+
+## 16
+:: en
+Lvl 3 mage
+:: zh
+3 級法師
+
+## 17
+:: en
+Zombie
+:: zh
+殭屍
+
+## 18
+:: en
+Cobra mage
+:: zh
+眼鏡蛇法師
+
+## 19
+:: en
+Spellbinder
+:: zh
+縛咒者
+
+## 20
+:: en
+Lvl 4 fighter
+:: zh
+4 級戰士
+
+## 21
+:: en
+Lvl 4 mage
+:: zh
+4 級法師
+
+## 22
+:: en
+Ghost
+:: zh
+幽魂
+
+## 23
+:: en
+Ghoul
+:: zh
+食屍鬼
+
+## 24
+:: en
+Goblin
+:: zh
+哥布林
+
+## 25
+:: en
+Spectre
+:: zh
+幽影
+
+## 26
+:: en
+Kobold
+:: zh
+狗頭人
+
+## 27
+:: en
+Hobgoblin
+:: zh
+大鬼哥布林
+
+## 28
+:: en
+Lvl 6 fighter
+:: zh
+6 級戰士
+
+## 29
+:: en
+Lvl 6 mage
+:: zh
+6 級法師
+
+## 30
+:: en
+Gargoyle
+:: zh
+石像鬼
+
+## 31
+:: en
+Lvl 8 fighter
+:: zh
+8 級戰士
+
+## 32
+:: en
+Lvl 8 mage
+:: zh
+8 級法師
+
+## 33
+:: en
+Lvl 10 fighter
+:: zh
+10 級戰士
+
+## 34
+:: en
+Lvl 10 mage
+:: zh
+10 級法師
+
+## 35
+:: en
+Lvl 12 fighter
+:: zh
+12 級戰士
+
+## 36
+:: en
+Lvl 13 mage
+:: zh
+13 級法師
+
+## 37
+:: en
+Lvl 15 fighter
+:: zh
+15 級戰士
+
+## 38
+:: en
+Lvl 16 wizard
+:: zh
+16 級巫師
+
+## 39
+:: en
+Fire elemental
+:: zh
+火元素
+
+## 40
+:: en
+Metal elemental
+:: zh
+金屬元素
+
+## 41
+:: en
+Wind elemental
+:: zh
+風元素
+
+## 42
+:: en
+Ice elemental
+:: zh
+冰元素
+
+## 43
+:: en
+Spirit elemental
+:: zh
+靈魂元素
+
+## 44
+:: en
+Fire demon
+:: zh
+火惡魔
+
+## 45
+:: en
+Ice demon
+:: zh
+冰惡魔
+
+## 46
+:: en
+Demon lord
+:: zh
+惡魔領主
+
+## 47
+:: en
+Devil
+:: zh
+魔鬼
+
+## 48
+:: en
+Wraith
+:: zh
+怨靈
+
+## 49
+:: en
+Swarm
+:: zh
+蟲群
+
+## 50
+:: en
+Baby dragon
+:: zh
+幼龍
+
+## 51
+:: en
+Small dragon
+:: zh
+小龍
+
+## 52
+:: en
+Large dragon
+:: zh
+大龍
+
+## 53
+:: en
+Great dragon
+:: zh
+巨龍
+
+## 54
+:: en
+Titan
+:: zh
+泰坦
+
+## 55
+:: en
+Ogre
+:: zh
+食人魔
+
+## 56
+:: en
+Warrior king
+:: zh
+戰士王
+
+## 57
+:: en
+Arch mage
+:: zh
+大法師
+
+## 58
+:: en
+Pit viper
+:: zh
+窟蝮蛇
+
+## 59
+:: en
+Rattlesnake
+:: zh
+響尾蛇
+
+## 60
+:: en
+Giant spider
+:: zh
+巨蜘蛛
+
+## 61
+:: en
+Giant snake
+:: zh
+巨蛇
+
+## 62
+:: en
+Mountain giant
+:: zh
+山地巨人
+
+## 63
+:: en
+Shambling mound
+:: zh
+蹣跚植怪
+
+## 64
+:: en
+Brown bear
+:: zh
+棕熊
+
+## 65
+:: en
+Grizzly bear
+:: zh
+灰熊
+
+## 66
+:: en
+Arctic bear
+:: zh
+極地熊
+
+## 67
+:: en
+Cave bear
+:: zh
+洞穴熊
+
+## 68
+:: en
+Coyote
+:: zh
+郊狼
+
+## 69
+:: en
+Timber wolf
+:: zh
+林狼
+
+## 70
+:: en
+Winter wolf
+:: zh
+寒冬狼
+
+## 71
+:: en
+Devil dog
+:: zh
+地獄犬
+
+## 72
+:: en
+Yeti
+:: zh
+雪怪
+
+## 73
+:: en
+Snow giant
+:: zh
+雪巨人
+
+## 74
+:: en
+Fire dragon
+:: zh
+火龍
+
+## 75
+:: en
+Wind dragon
+:: zh
+風龍
+
+## 76
+:: en
+Ice dragon
+:: zh
+冰龍
+
+## 77
+:: en
+Stalker
+:: zh
+潛伏者
+
+## 78
+:: en
+Will o wisp
+:: zh
+鬼火
+
+## 79
+:: en
+Thug
+:: zh
+惡棍
+
+## 80
+:: en
+Rogue
+:: zh
+盜賊
+
+## 81
+:: en
+Brigand
+:: zh
+強盜
+
+## 82
+:: en
+Highwayman
+:: zh
+攔路賊
+
+## 83
+:: en
+Master thief
+:: zh
+盜賊大師
+
+## 84
+:: en
+Assassin
+:: zh
+刺客
+
+## 85
+:: en
+Uffuspgot
+:: zh
+烏夫斯普戈
+
+## 86
+:: en
+Mane
+:: zh
+屍靈奴
+
+## 87
+:: en
+Slaver
+:: zh
+奴役惡魔
+
+## 88
+:: en
+Imp
+:: zh
+小惡魔
+
+## 89
+:: en
+Grave keeper
+:: zh
+墓地看守者
+
+## 90
+:: en
+Salamander
+:: zh
+火蜥蜴
+
+## 91
+:: en
+Xeres
+:: zh
+塞瑞斯
+
+## 92
+:: en
+Silver snake
+:: zh
+銀蛇
+
+## 93
+:: en
+Remondadin
+:: zh
+雷蒙達丁
+
+## 94
+:: en
+Dervish
+:: zh
+迴旋魔
+
+## 95
+:: en
+Karate master
+:: zh
+空手道大師
+
+## 96
+:: en
+Jesric
+:: zh
+傑斯瑞克
+
+## 97
+:: en
+Eregore
+:: zh
+艾瑞戈爾
+
+## 98
+:: en
+Guardian
+:: zh
+守衛者

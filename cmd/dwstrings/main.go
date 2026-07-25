@@ -45,6 +45,8 @@ func main() {
 		dumpSpells(os.Args[2:])
 	case "items":
 		dumpItems(os.Args[2:])
+	case "monsters":
+		dumpMonsters(os.Args[2:])
 	case "check":
 		check(os.Args[2:])
 	default:
@@ -53,7 +55,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|ui|check [選項]")
+	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|monsters|ui|check [選項]")
 	os.Exit(2)
 }
 
@@ -196,6 +198,39 @@ func dumpItems(args []string) {
 	}
 	fmt.Printf("%-10s %3d 個道具名（新增 %d、原文變動 %d）→ %s\n",
 		itemSource, len(merged.Entries), added, drifted, out)
+}
+
+// monsterSource 是怪物名稱的來源檔，同時也是翻譯目錄的 key。
+const monsterSource = "MONSTER.DAT"
+
+// dumpMonsters 把 99 個怪物名稱抽成翻譯目錄。
+//
+// 索引就是 MONSTER.DAT 的記錄索引，也是遭遇表與事件表引用怪物的方式。
+func dumpMonsters(args []string) {
+	fs := flag.NewFlagSet("monsters", flag.ExitOnError)
+	dataDir := fs.String("data", "workplace/orig/demwin/DEM_DATA", "原版資料目錄")
+	outDir := fs.String("out", "assets/lang/zh-Hant", "翻譯目錄輸出位置")
+	_ = fs.Parse(args)
+
+	tbl, err := gamedata.LoadMonsterTable(filepath.Join(*dataDir, monsterSource))
+	if err != nil {
+		fatal(err)
+	}
+	cat := &i18n.Catalog{Source: monsterSource}
+	for i, m := range tbl.All() {
+		cat.Entries = append(cat.Entries, i18n.Entry{Index: i, Source: m.Name})
+	}
+
+	if err := os.MkdirAll(*outDir, 0o755); err != nil {
+		fatal(err)
+	}
+	out := filepath.Join(*outDir, i18n.CatalogFileName(monsterSource))
+	merged, added, drifted := mergeInto(out, cat)
+	if err := i18n.WriteCatalog(out, merged); err != nil {
+		fatal(err)
+	}
+	fmt.Printf("%-11s %3d 個怪物名（新增 %d、原文變動 %d）→ %s\n",
+		monsterSource, len(merged.Entries), added, drifted, out)
 }
 
 // spellNames 讀出 43 個法術的英文名稱。

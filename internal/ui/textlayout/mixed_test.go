@@ -1,6 +1,7 @@
 package textlayout
 
 import (
+	"unicode/utf8"
 	"strings"
 	"testing"
 )
@@ -258,6 +259,48 @@ func TestWrapMixed_KerningPreservesText(t *testing.T) {
 		got := strings.Join(WrapMixed(in, cells*CellWidthCJK), "")
 		if got != in {
 			t.Errorf("寬 %d 格時內容改變：\n得到 %q\n預期 %q", cells, got, in)
+		}
+	}
+}
+
+// 固定欄寬對齊：中文名不能被切在字元中間，也不能因為位元組數多就少補空白。
+//
+// 這條擋的是 `s[:8]` 與 `%-8s` 兩個寫法 —— 前者會生出半個字，
+// 後者會讓中文那一列的數字欄整個往左跑。實際踩過：戰鬥名冊接上怪物譯名
+// 之後「火蜥蜴」被切成「火蜥」。
+func TestPadCells(t *testing.T) {
+	for _, c := range []struct {
+		in   string
+		n    int
+		want string
+	}{
+		{"Rat", 6, "Rat   "},
+		{"火蜥蜴", 6, "火蜥蜴   "},
+		{"火蜥蜴", 3, "火蜥蜴"},
+		{"火蜥蜴", 2, "火蜥"},
+		{"", 3, "   "},
+		{"火蜥蜴", 0, ""},
+		{"火蜥蜴", -1, ""},
+	} {
+		got := PadCells(c.in, c.n)
+		if got != c.want {
+			t.Errorf("PadCells(%q, %d) = %q，預期 %q", c.in, c.n, got, c.want)
+		}
+		// 截斷後的字串必須仍是合法 UTF-8（不能切在字元中間）。
+		if !utf8.ValidString(got) {
+			t.Errorf("PadCells(%q, %d) 產生了不合法的 UTF-8", c.in, c.n)
+		}
+	}
+}
+
+// 補完之後每一列的像素寬都相同 —— 這才是欄位對得齊的實際條件。
+func TestPadCells_UniformPixelWidth(t *testing.T) {
+	const cells = 8
+	names := []string{"Rat", "火蜥蜴", "16 級巫師", "Lvl 16 wizard", "巨龍"}
+	want := TextWidth(PadCells(names[0], cells))
+	for _, n := range names[1:] {
+		if got := TextWidth(PadCells(n, cells)); got != want {
+			t.Errorf("%q 補到 %d 格是 %d 像素，與基準 %d 不同", n, cells, got, want)
 		}
 	}
 }

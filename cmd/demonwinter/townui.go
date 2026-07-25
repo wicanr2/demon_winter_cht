@@ -10,6 +10,7 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
+	"github.com/wicanr2/demon_winter_cht/internal/ui/textlayout"
 )
 
 // townScreen 是城鎮畫面的狀態。
@@ -202,7 +203,8 @@ func (a *app) drawTownPicker(dst *ebiten.Image, line func(string)) {
 		if town.SellsShips() {
 			docks = "　碼頭"
 		}
-		line(fmt.Sprintf("%s%-16s 物價 %2d%s", mark, town.Name, town.Economy, docks))
+		line(fmt.Sprintf("%s%s 物價 %2d%s", mark,
+			textlayout.PadCells(town.Name, 16), town.Economy, docks))
 	}
 	line("")
 	line("↑↓：選擇　Enter：進城　Esc：取消")
@@ -250,10 +252,11 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		for _, c := range a.members {
 			svc, cost := e.HealerQuote(game.StatusNormal, c.Level, c.MaxHP-c.CurrentHP)
 			if svc == game.HealerNone {
-				line(fmt.Sprintf("%-8s 狀態良好", c.Name))
+				line(fmt.Sprintf("%s 狀態良好", textlayout.PadCells(c.Name, 8)))
 				continue
 			}
-			line(fmt.Sprintf("%-8s %s %d 金", c.Name, healerServiceName(svc), cost))
+			line(fmt.Sprintf("%s %s %d 金",
+				textlayout.PadCells(c.Name, 8), healerServiceName(svc), cost))
 		}
 
 	case game.FacilityPub:
@@ -275,14 +278,16 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		line("捐獻　1 金換 1 點經驗")
 		line("")
 		for _, c := range a.members {
-			line(fmt.Sprintf("%-8s 祈禱 %d 金", c.Name, game.PrayCost(c.Level)))
+			line(fmt.Sprintf("%s 祈禱 %d 金",
+				textlayout.PadCells(c.Name, 8), game.PrayCost(c.Level)))
 		}
 
 	case game.FacilityGuild:
 		line("升級　免費")
 		line("")
 		for _, c := range a.members {
-			line(fmt.Sprintf("%-8s %d 級　經驗 %d", c.Name, c.Level, c.Experience))
+			line(fmt.Sprintf("%s %d 級　經驗 %d",
+				textlayout.PadCells(c.Name, 8), c.Level, c.Experience))
 		}
 
 	case game.FacilityInn:
@@ -327,11 +332,11 @@ func (a *app) drawMarket(t *townScreen, line func(string)) {
 		// 被觸怒後的商品不能顯示價格。HagglePrice 對 s >= 1000 會算出
 		// 下限 2 金 —— 那個數字看起來像「跳樓大拍賣」，實際上是商人拒賣。
 		if t.visit.HaggleState(i).Refused() {
-			line(fmt.Sprintf("%s%-14s %5s  %5d", mark, name, "拒賣",
+			line(fmt.Sprintf("%s%s %5s  %5d", mark, textlayout.PadCells(name, 14), "拒賣",
 				t.visit.Economy.SellPrice(item.Price)))
 			continue
 		}
-		line(fmt.Sprintf("%s%-14s %5d  %5d", mark, name,
+		line(fmt.Sprintf("%s%s %5d  %5d", mark, textlayout.PadCells(name, 14),
 			t.visit.Price(i, item.Price), t.visit.Economy.SellPrice(item.Price)))
 	}
 	line("")

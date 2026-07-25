@@ -12,6 +12,8 @@ package textlayout
 // **英文不是半形。** 8 像素格配 16 像素寬的字模會疊字；
 // 要半形就得把字模橫向不放大、縱向放大兩倍，那會讓原版字形變形。
 // 依 rulebook/81「底圖整數倍放大、CJK 原生直繪」，這裡選不變形。
+import "strings"
+
 const (
 	CellHeight   = 16
 	CellWidthCJK = 16
@@ -167,4 +169,21 @@ func WrapMixed(s string, pixelWidth int) []string {
 // NewMixedTextBox 建立一個中英混排的可翻頁文字視窗。
 func NewMixedTextBox(s string, pixelWidth int) *TextBox {
 	return &TextBox{pages: Paginate(WrapMixed(s, pixelWidth), PageLines)}
+}
+
+// PadCells 把 s 截到最多 n 個排版格，不足的用空白補到剛好 n 格。
+//
+// **這是給固定欄寬的表格用的，不要用 `%-Ns`。** Go 的 `%-Ns` 依**位元組**
+// 計數，一個中文字佔 3 bytes，欄位會歪掉；`s[:n]` 更糟，會切在字元中間
+// 生出半個字。本專案所有字元的排版格寬相同（見 CellWidth），
+// 所以「格」就等於「rune」。
+func PadCells(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
+	rs := []rune(s)
+	if len(rs) > n {
+		return string(rs[:n])
+	}
+	return s + strings.Repeat(" ", n-len(rs))
 }

@@ -409,7 +409,8 @@ func (a *app) drawSpellMenu(dst *ebiten.Image) {
 		if m.caster.CurrentSP < e.spell.M {
 			note = "  法力不足"
 		}
-		line(fmt.Sprintf("%s%-14s %5d%s", mark, e.name, e.spell.M, note))
+		line(fmt.Sprintf("%s%s %5d%s", mark,
+			textlayout.PadCells(e.name, 14), e.spell.M, note))
 	}
 	line("")
 	line("↑↓：選擇　Enter：施放　Esc：取消")
@@ -580,7 +581,8 @@ func (a *app) drawItemMenu(dst *ebiten.Image) {
 		if !e.Item.Identified {
 			state = "（未鑑定）"
 		}
-		line(fmt.Sprintf("%s%-14s%s", mark, a.itemLabel(e.Item), state))
+		line(fmt.Sprintf("%s%s%s", mark,
+			textlayout.PadCells(a.itemLabel(e.Item), 14), state))
 	}
 	line("")
 	line("↑↓：選擇　Enter：使用　Esc：取消")
@@ -1055,11 +1057,10 @@ func (a *app) drawBattle(dst *ebiten.Image) {
 		if !u.Alive() {
 			state = " 陣亡"
 		}
-		name := u.Name
-		if len(name) > 8 {
-			name = name[:8]
-		}
-		line(fmt.Sprintf("%s%-8s%3d/%-3d%s", tag, name, u.HP, u.MaxHP, state))
+		// 中文名要按「格」截、按「格」補 —— `name[:8]` 會切在字元中間，
+		// `%-8s` 依位元組補會讓數字欄歪掉（見 textlayout.PadCells）。
+		line(fmt.Sprintf("%s%s%3d/%-3d%s", tag,
+			textlayout.PadCells(u.Name, 8), u.HP, u.MaxHP, state))
 	}
 	if hidden > 0 {
 		line(fmt.Sprintf(" …另有 %d 個單位", hidden))

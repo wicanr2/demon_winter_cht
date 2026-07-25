@@ -568,6 +568,9 @@ func (a *app) battleLight() game.LightLevel {
 	return game.DungeonLight(int(a.torch))
 }
 
+// monsterSourceFile 是怪物名稱翻譯目錄的 key，與 dwstrings 產生時一致。
+const monsterSourceFile = "MONSTER.DAT"
+
 // startBattle 依事件記錄的怪物清單布置戰場。
 //
 // 怪物的速度與生命在 MONSTER.DAT 的基礎值上做進場擾動。
@@ -584,7 +587,7 @@ func (a *app) startBattle(ids []int) {
 		}
 		speed, hp := game.RollMonsterStats(a.rng, m.Speed, m.HP)
 		units = append(units, &game.Unit{
-			Slot: i, Name: m.Name,
+			Slot: i, Name: a.tr.Event(monsterSourceFile, id, m.Name),
 			X: 2, Y: i + 1, Facing: int(game.East),
 			Speed: speed, Strength: m.Strength, Skill: m.Skill,
 			Level: m.Level, Intellect: m.Level,
