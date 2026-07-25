@@ -14,20 +14,9 @@ const (
 
 	offPassability = 0x040 // 101 bytes，索引 = tile 值 0..100
 
-	// 0x0a5–0x157（179 bytes）是一張還沒解開的表，夾在可通行性表與技能
-	// 學費表中間。已知的部分：byte 遮掉最高位之後值域幾乎都落在 0–80，
-	// 而 81 = 9×9 正好是戰場網格（game.BattleGridWidth/Height）；把最高位
-	// 當「這一組的最後一個元素」來切，切出來的集合大多是網格上的矩形，
-	// 其中九個 3×3 方塊（{0,1,2,9,10,11,18,19,20} 那組等等）完整出現。
-	//
-	// 所以它很可能是戰場的範圍模板（群體法術的波及範圍之類），但**記錄
-	// 結構還沒釘死**：用「最高位當結尾」去切只有約 74% 的組是矩形，
-	// 換起點掃過 0x90–0xc0 也沒有出現明顯的最佳解，代表這個切法不完全對。
-	//
-	// 下一步照 rulebook/62 走靜態溯源：找讀取 FILES.DAT + 0xa5 的程式碼，
-	// 看它的 stride，而不是繼續在資料上做統計。**在那之前不要拿它去改
-	// 群體法術的範圍**——目前 game.CastAOE 用的是自己的半徑規則。
-	offUnknownGrid = 0x0a5
+	// 0x0a8 起 176 bytes 是戰場視線遮蔽表，見 sight.go。
+	// （起點是 0x0a8 不是 0x0a5：可通行性那一段在 arena 裡佔 104 bytes，
+	// 只有前 101 個是有效 tile。）
 
 	offSkillCost = 0x158 // 31 技能 × 10 職業，1 byte／格
 	offRaceMax     = 0x422 // 5 種族 × 6 words
@@ -174,7 +163,11 @@ type Tables struct {
 	raceBonus   [NumRaces]SkillID
 	summons     [numSummons]SummonEntry
 	spells      [numSpells]Spell
+	sight       *SightShadow
 }
+
+// Sight 回傳戰場視線遮蔽表（見 sight.go）。
+func (t *Tables) Sight() *SightShadow { return t.sight }
 
 // LoadTables 從 FILES.DAT 解出全部四張表。
 func LoadTables(path string) (*Tables, error) {
@@ -196,6 +189,12 @@ func ParseTables(data []byte) (*Tables, error) {
 	for i := 0; i < numTiles; i++ {
 		t.passability[i] = Passability(data[offPassability+i])
 	}
+
+	sight, err := parseSightShadow(data)
+	if err != nil {
+		return nil, err
+	}
+	t.sight = sight
 
 	for s := 0; s < NumSkills; s++ {
 		for c := 0; c < NumClasses; c++ {
