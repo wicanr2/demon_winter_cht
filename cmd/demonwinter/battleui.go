@@ -331,10 +331,12 @@ func (a *app) applySpell(caster, target *game.Unit, e spellEntry, sp int) {
 	default:
 		// 數值增減類走通式。走不通的 effect_type 才是真的沒實作。
 		//
-		// 治療類（K > 0）預設對自己，傷害類對正前方 —— 原版是讓玩家用游標
-		// 選格子，那個游標還沒做。**這是本作的簡化，不是原版行為。**
+		// **目標一律照呼叫端指定的**。這裡原本有一句「K > 0 就改成對自己」，
+		// 那是還沒有選目標游標時的權宜；游標做好之後它變成一個安靜的 bug ——
+		// 玩家用游標指了隊友要治療，卻被改成治療自己，畫面上還看不出來。
+		// 只有在完全沒有目標時才退回施法者。
 		who := target
-		if e.spell.K > 0 {
+		if who == nil {
 			who = caster
 		}
 		delta, ok := game.CastMagnitudeEffect(a.rng, sp, e.spell, who)
@@ -710,9 +712,16 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 
 // monsterTurn 讓一隻怪物行動。
 //
-// AI 很簡單：前方有人就打，沒有就轉向最近的敵人，都不行就結束回合。
-// 這不是原版行為 —— 原版的怪物 AI 尚未反組譯，這裡先讓戰鬥能跑完。
+// 順序照原版的決策樹（見 game 套件的 ai.go）：先看要不要施法，
+// 再走近戰。**噴吐那一支還沒接**：波及範圍已解（game.BreathTargets），
+// 但傷害計算還沒從原版讀出來，接上去就得自己編一個公式。
+//
+// 近戰的走位（轉向、逼近）是本作自己的補充 —— 原版那一段還沒讀，
+// 這裡先讓怪物走得到玩家面前，戰鬥才跑得完。
 func (a *app) monsterTurn(u *game.Unit) {
+	if a.monsterCast(u) {
+		return
+	}
 	if target := a.battle.TargetInFront(u); target != nil {
 		if _, ok := a.battle.Spend(game.ActionAttack); ok {
 			a.reportAttack(u, target, a.battle.ResolveAttack(u, target, 0))
@@ -736,6 +745,46 @@ func (a *app) monsterTurn(u *game.Unit) {
 		return
 	}
 	a.battle.Spend(game.ActionEndTurn)
+}
+
+// monsterCast 讓會法術的怪物有機會施法，回報這一回合是否已經用掉。
+//
+// 原版（0x799a–0x7978）：法力 > 0 且 rnd(10) > 4 才進 AI 選法術。
+// 選法本身照 game.AISpellChoice（兩層擲點 + 區間表）。
+//
+// 技能檢查傳 nil：原版只在 `unit+0x20 == 2` 那一支查符文系技能，
+// 而那個欄位語意未定案（見 game/ai.go），怪物又沒有技能旗標可查。
+func (a *app) monsterCast(u *game.Unit) bool {
+	if u.CurrentSP <= 0 || a.rng.Roll(10) <= 4 {
+		return false
+	}
+	id, ok := game.AISpellChoice(a.rng, a.tables, u.CurrentSP, nil)
+	if !ok {
+		return false
+	}
+	sp, err := a.tables.Spell(id)
+	if err != nil {
+		return false
+	}
+	target := a.battle.AITarget(u)
+	if target == nil {
+		return false
+	}
+	if _, ok := a.battle.Spend(game.ActionCast); !ok {
+		return false
+	}
+
+	// 原版讓施法者投入手上的法力；怪物沒有「投入多少」的介面，全投。
+	invested := u.CurrentSP
+	u.CurrentSP = 0
+
+	name, err := a.strings.SpellName(id)
+	if err != nil {
+		name = fmt.Sprintf("法術 %d", id)
+	}
+	e := spellEntry{index: id, name: a.tr.Event(spellSourceFile, id, name), spell: sp}
+	a.applySpell(u, target, e, invested)
+	return true
 }
 
 // stepToward 回傳朝目標靠近該面向哪一邊。差距大的那個軸優先。

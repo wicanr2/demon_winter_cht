@@ -444,8 +444,10 @@ func (a *app) checkEvent(tile byte) {
 }
 
 // debugBattleMonsters 是 B 鍵開的測試戰鬥用的怪物（MONSTER.DAT 索引）。
-// 挑三隻低階的，夠驗畫面又不會一回合把隊伍打光。
-var debugBattleMonsters = []int{2, 3, 4}
+//
+// 三隻低階的（夠驗畫面又不會一回合把隊伍打光），外加索引 1
+// 「Lvl 1 mage」—— 它有法力，AI 施法那條路徑才驗得到。
+var debugBattleMonsters = []int{2, 3, 4, 1}
 
 // terrainForBattle 切出這場戰鬥腳下的地形，並套用視線遮蔽。
 //
