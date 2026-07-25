@@ -201,3 +201,49 @@ func ParsePIEPalette(data []byte) (*[16]byte, []byte, error) {
 	copy(pal[:], data[:16])
 	return &pal, data[16:], nil
 }
+
+// 開場標題畫面 `OPEN.PIE` 的尺寸（2026-07-26 解出）。
+//
+// 這是本專案最後一個未解的素材，先前記錄是「不符 3.5× 規律、6 種候選尺寸
+// 全部雜訊」。解法不是再猜一輪尺寸，而是**窮舉每一種可能的列寬，
+// 用「相鄰列的位元組差異」量測哪一種最像圖**：
+//
+//	每列 304 bytes → 43.2   ← 尖銳極小值
+//	每列 303 bytes → 72.8
+//	每列 305 bytes → 73.5
+//
+// 43.2 與兩個已知正確的對照組同級（`OPEN.PIC` 44.9、`PIC1.PIE` 55.6），
+// 而左右鄰居立刻跳到 73 —— 這是「找到正確 stride」的特徵，不是碰巧。
+//
+// 102144 ÷ 304 = 336 列整除。每列 4 個 plane 各 76 bytes（`EGAPlanesRowBlocks`）。
+//
+// **它不是半寬圖。** `docs/formats/graphics.md` 記「EGA 素材一律檔案存半寬、
+// 顯示時寬度 ×2」—— 全螢幕標題是例外：608×2 = 1216 超過任何 EGA 模式，
+// 而且照 608 直接解出來的字母比例正常（半寬圖會橫向擠成一半）。
+//
+// 肉眼驗收：解出來是「DEMON'S WINTER」標題、惡魔、SSI 與 NOVOTRADE 標誌，
+// 與 CGA 版 `OPEN.PIC`（320×200）是同一張美術。兩版都有大量抖色雜點，
+// 那是美術本身，不是解碼問題。
+const (
+	TitleScreenWidth  = 608
+	TitleScreenHeight = 336
+)
+
+// DecodeTitleScreen 解開場標題畫面（`OPEN.PIE`）。
+//
+// ⚠ 這個檔**沒有被任何執行檔引用**。`DEMON.INT` 的檔名表列的是
+// `TITLE.PIC`，而那個檔不在這份 dump 裡（見 docs/formats/graphics.md §5）。
+// 解得出來、也確實是這款遊戲的標題畫面，但原版怎麼載入它仍是未解的。
+func DecodeTitleScreen(data []byte) (*image.RGBA, error) {
+	pal, body, err := ParsePIEPalette(data)
+	if err != nil {
+		return nil, err
+	}
+	want := TitleScreenWidth / 8 * 4 * TitleScreenHeight
+	if len(body) != want {
+		return nil, fmt.Errorf("gfx: OPEN.PIE 去掉表頭後 %d bytes，預期 %d（%d×%d，每列 4 個 plane）",
+			len(body), want, TitleScreenWidth, TitleScreenHeight)
+	}
+	return DecodeEGAPlanar(body, TitleScreenWidth, TitleScreenHeight,
+		EGAPlanesRowBlocks, pal)
+}
