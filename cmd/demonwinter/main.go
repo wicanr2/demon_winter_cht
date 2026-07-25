@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -42,6 +43,12 @@ type app struct {
 	party *game.Party
 	clock *game.Clock
 	tiles *world.Map
+
+	// drawTiles 是「拿來畫」的那份 tile 陣列：與 tiles 相同，但海面已經
+	// 隨機摻過另一種浪花（見 world.OceanDither）。原版是在載入時就地改寫
+	// 地圖緩衝區，這裡另存一份，讓 tiles 保持檔案解出來的原樣 —— 替換是
+	// 純外觀的（兩個海面 tile 可通行性相同），規則判定一律走 tiles。
+	drawTiles []byte
 
 	// canvas 是邏輯解析度的離屏畫布。所有東西先畫在這裡，
 	// 最後用 nearest 整數放大貼到視窗 —— 點陣字與 16×16 圖塊
@@ -275,6 +282,41 @@ func (a *app) Draw(screen *ebiten.Image) {
 	screen.DrawImage(a.canvas, op)
 }
 
+// loadMapArg 解讀 -map：純數字當成 SUM.MAP 的子地圖編號，其餘當檔名。
+//
+// 世界地圖（含 25 座城鎮裡的 24 座）全部打包在 SUM.MAP 裡，只認檔名的話
+// 玩家根本走不到大陸上，自動進城也就沒地方驗。
+func loadMapArg(dataDir, arg string) (*world.Map, error) {
+	id, err := strconv.Atoi(arg)
+	if err != nil {
+		return world.LoadMap(filepath.Join(dataDir, arg))
+	}
+	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
+	if err != nil {
+		return nil, err
+	}
+	m, ok := sm.Segment(id)
+	if !ok {
+		return nil, fmt.Errorf("SUM.MAP 沒有子地圖 %d，可用的是 %v", id, sm.IDs())
+	}
+	return m, nil
+}
+
+// ditheredTiles 產生「拿來畫」的那份 tile 陣列（見 app.drawTiles）。
+//
+// seed 為 0 時用原版的初始種子；`-seed` 有指定就拿它當浪花種子，
+// 讓截圖比對可重現。
+func ditheredTiles(m *world.Map, seed uint16) []byte {
+	src := m.Tiles()
+	out := append([]byte(nil), src[:]...)
+	d := world.NewOceanDither()
+	if seed != 0 {
+		d = world.NewOceanDitherSeed(seed)
+	}
+	d.Apply(out)
+	return out
+}
+
 func (a *app) drawWorld(dst *ebiten.Image) {
 	ts := a.tileset()
 	halfX, halfY := layout.ViewTilesX/2, layout.ViewTilesY/2
@@ -285,11 +327,7 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 			if mx < 0 || mx >= game.MapWidth || my < 0 || my >= game.MapHeight {
 				continue
 			}
-			v, err := a.tiles.TileAt(mx, my)
-			if err != nil {
-				continue
-			}
-			img := ts.Tile(v & 0x7f)
+			img := ts.Tile(a.drawTiles[my*game.MapWidth+mx] & 0x7f)
 			if img == nil {
 				continue
 			}
@@ -494,7 +532,9 @@ func main() {
 		"原版資料目錄（玩家自備合法副本）")
 	etenDir := flag.String("eten", "workplace/eten",
 		"倚天中文字型目錄，需含 STDFONT.15 與 SPCFONT.15（自備）")
-	mapFile := flag.String("map", "MAP1.MAP", "要載入的地圖檔")
+	mapFile := flag.String("map", "MAP1.MAP",
+		"要載入的地圖：檔名（MAP1.MAP／MAP3.MAP／MAP5.MAP）或 SUM.MAP 的子地圖編號"+
+			"（如 34 = 起始大陸，見 docs/formats/town-and-map.md §2.5）")
 	dataFile := flag.String("events", "DATA1.TXT", "要載入的事件表")
 	seed := flag.Uint("seed", 0,
 		"亂數種子。0 = 依時間。指定固定值可讓截圖驗收重跑得到同一結果")
@@ -517,7 +557,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入 FILES.DAT：%v", err)
 	}
-	m, err := world.LoadMap(filepath.Join(*dataDir, *mapFile))
+	m, err := loadMapArg(*dataDir, *mapFile)
 	if err != nil {
 		log.Fatalf("載入地圖：%v", err)
 	}
@@ -606,6 +646,7 @@ func main() {
 		party:      game.NewParty(*startX, *startY, game.South, 0),
 		clock:      game.NewClock(),
 		tiles:      m,
+		drawTiles:  ditheredTiles(m, uint16(*seed)),
 		exits:      exits,
 		events:     events,
 		tr:         tr,
