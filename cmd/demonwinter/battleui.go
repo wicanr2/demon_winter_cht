@@ -157,24 +157,28 @@ func (a *app) castSelected(u *game.Unit) {
 	}
 }
 
-// castWithSP 是玩家在輸入框確認投入點數之後真正施法。
+// castWithSP 是玩家在輸入框確認投入點數之後進入選目標。
+//
+// **行動點與法力都還沒扣** —— 選目標的游標按 Esc 可以反悔，反悔不該
+// 算掉一次行動。真正的結算在 commitSpell。
 func (a *app) castWithSP(u *game.Unit, e spellEntry, sp int) {
-	if _, ok := a.battle.Spend(game.ActionCast); !ok {
-		a.logf("%s 行動點不足", u.Name)
-		return
-	}
 	a.spells = nil
-	u.CurrentSP -= sp
 
-	// 範圍法術要先選中心點。原版也是先跳游標（FUN_138d_3fc9）再套效果。
-	if e.spell.Effect == game.EffectAOE {
-		a.aoe = &aoeCursor{caster: u, entry: e, sp: sp}
-		a.aoeX, a.aoeY = u.X, u.Y
+	// 範圍法術選中心點，其餘選單一目標。原版兩者都會跳游標
+	// （單體用 FUN_138d_3fc9，回傳目標槽位，-5 代表取消）。
+	a.aoe = &aoeCursor{caster: u, entry: e, sp: sp,
+		area: e.spell.Effect == game.EffectAOE}
+	a.aoeX, a.aoeY = u.X, u.Y
+}
+
+// commitSpell 扣行動點與法力並套用效果。游標確認之後才會走到這裡。
+func (a *app) commitSpell(c *aoeCursor, target *game.Unit) {
+	if _, ok := a.battle.Spend(game.ActionCast); !ok {
+		a.logf("%s 行動點不足", c.caster.Name)
 		return
 	}
-
-	target := a.battle.TargetInFront(u)
-	a.applySpell(u, target, e, sp)
+	c.caster.CurrentSP -= c.sp
+	a.applySpell(c.caster, target, c.entry, c.sp)
 }
 
 // spPrompt 是「投入多少法力」的輸入框畫面。
@@ -407,9 +411,13 @@ type aoeCursor struct {
 	caster *game.Unit
 	entry  spellEntry
 	sp     int
+
+	// area 為真代表這是範圍法術，游標選的是中心點；否則是選單一目標，
+	// 必須指到某個單位身上才成立。
+	area bool
 }
 
-// updateAOECursor 讓玩家用方向鍵挪動 5×5 的中心點。
+// updateAOECursor 讓玩家用方向鍵挪動游標（範圍法術是中心點，其餘是目標）。
 func (a *app) updateAOECursor() error {
 	for _, kf := range keyFacing {
 		if !inpututil.IsKeyJustPressed(kf.key) {
@@ -423,11 +431,28 @@ func (a *app) updateAOECursor() error {
 		}
 		return nil
 	}
+	// Esc 取消：行動點與法力都還沒扣，什麼都沒發生（原版的游標回 -5）。
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		a.aoe = nil
+		a.logf("取消施法")
+		return nil
+	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) ||
 		inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 		c := a.aoe
+		if c.area {
+			a.aoe = nil
+			a.commitSpell(c, nil)
+			return nil
+		}
+		// 單體法術要真的指到一個人身上才算數。
+		target := a.battle.UnitAt(a.aoeX, a.aoeY)
+		if target == nil {
+			a.logf("那一格沒有人")
+			return nil
+		}
 		a.aoe = nil
-		a.applySpell(c.caster, nil, c.entry, c.sp)
+		a.commitSpell(c, target)
 	}
 	return nil
 }
@@ -809,10 +834,12 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 	}
 
 	if a.aoe != nil {
-		// 5×5 的效果範圍畫出來，玩家才知道會掃到誰（包含自己人）。
-		r := game.AOERadius
-		ui.StrokeRect(dst, (a.aoeX-r)*cell, (a.aoeY-r)*cell,
-			(2*r+1)*cell, (2*r+1)*cell, aoeColor)
+		if a.aoe.area {
+			// 5×5 的效果範圍畫出來，玩家才知道會掃到誰（包含自己人）。
+			r := game.AOERadius
+			ui.StrokeRect(dst, (a.aoeX-r)*cell, (a.aoeY-r)*cell,
+				(2*r+1)*cell, (2*r+1)*cell, aoeColor)
+		}
 		ui.StrokeRect(dst, a.aoeX*cell, a.aoeY*cell, cell, cell, aoeColor)
 	}
 
@@ -901,11 +928,13 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 		return
 	}
 	if a.aoe != nil {
-		a.font.Draw(dst, fmt.Sprintf(
-			"%s：選 5×5 的中心　方向鍵：移動　Enter：施放",
-			a.aoe.entry.name), layout.BoxPadX, y)
-		a.font.Draw(dst, "※ 法力已扣，範圍內敵我都會被波及",
-			layout.BoxPadX, y+ui.LineHeight)
+		what, note := "選目標", "※ 指到誰就對誰施放，Esc 可以反悔"
+		if a.aoe.area {
+			what, note = "選 5×5 的中心", "※ 範圍內敵我都會被波及，Esc 可以反悔"
+		}
+		a.font.Draw(dst, fmt.Sprintf("%s：%s　方向鍵：移動　Enter：施放　Esc：取消",
+			a.aoe.entry.name, what), layout.BoxPadX, y)
+		a.font.Draw(dst, note, layout.BoxPadX, y+ui.LineHeight)
 		return
 	}
 	if cur == nil || !cur.IsPlayer {
