@@ -113,12 +113,20 @@ const (
 	ldFlagsOffset = 0x0e
 	ldFlagsLen    = 7
 
+	// hourOffset：**時辰**（已驗證，反組譯）。0x164f7 對它 `inc`，同一段
+	// 程式把 stepCounter（+0xa0）歸 1 —— 走滿一小時的步數就進位。
+	// 戰場的視野內縮量拿它當索引查 DEMON.INT 的時辰表
+	// （見 gamedata.LightInsetAt），所以它確實是「幾點」而不是別的計數。
+	hourOffset = 0x9f
+
 	// unknown9COffset：**待複核**，低信心。DOSBox 動態 diff 顯示移動時每步 -1，
 	// 與 timeCounterOffset 反向連動，候選是口糧／體力，未對到遊戲內 UI 確認。
 	unknown9COffset = 0x9c
 
-	// timeCounterOffset：**待複核**，中信心。DOSBox 動態 diff 顯示移動時每步
-	// +1，候選是遊戲內時間／回合計數，尚未對到遊戲內實際顯示的時/日/月。
+	// timeCounterOffset：**一小時之內的步數計數**（已升級為已驗證）。
+	// DOSBox 動態 diff 早就看到「移動時每步 +1」；反組譯補上了另一半 ——
+	// 0x164ed 把它設回 1、同時把 hourOffset `inc`，所以它是進位到時辰的
+	// 那個計數器，不是遊戲內時間本身。
 	timeCounterOffset = 0xa0
 
 	// positionXOffset/positionYOffset：**待複核**（反組譯/動態 diff 推得，

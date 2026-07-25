@@ -712,8 +712,18 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 	cell := gfx.TileWidth * layout.TileScale
 	cur := a.battle.Current()
 
+	// 先鋪地形，格線疊在上面。地形是大地圖的局部放大，看不到的格子是空的
+	// （夜間視野縮小、被樹石擋住），那些地方就只剩格線。
+	ts := a.tileset()
 	for gy := 0; gy < layout.MapHeight/cell; gy++ {
 		for gx := game.BattleGridMinX; gx < layout.MapWidth/cell; gx++ {
+			if a.battleTerrain != nil {
+				if v := a.battleTerrain.TileAt(gx, gy); v != 0 {
+					if img := ts.Tile(v & 0x7f); img != nil {
+						ui.DrawImageScaled(dst, img, gx*cell, gy*cell, layout.TileScale)
+					}
+				}
+			}
 			ui.StrokeRect(dst, gx*cell, gy*cell, cell, cell, gridColor)
 		}
 	}

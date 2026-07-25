@@ -106,6 +106,11 @@ type app struct {
 
 	// battle 非 nil 時遊戲進入戰鬥模式，地圖輸入停止。
 	battle     *game.Battle
+
+	// battleTerrain 是這場戰鬥腳下的地形，已套用視線遮蔽 ——
+	// 看不到的格子是空白的。原版的戰場就是大地圖的局部放大，
+	// 看得到多大一塊由時辰決定（見 game.NewBattleTerrain）。
+	battleTerrain *game.BattleTerrain
 	log        []string
 	pendingIDs []int
 
@@ -204,6 +209,11 @@ func (a *app) Update() error {
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyT) {
 		a.openTownPicker()
+	}
+	// B 是偵錯用的「就地開打」，和 T 鍵直接進城同一個性質：戰鬥只在
+	// 特定事件格才觸發，沒有這個就沒辦法在任意地形上驗戰場畫面。
+	if inpututil.IsKeyJustPressed(ebiten.KeyB) {
+		a.startBattle(debugBattleMonsters)
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 		a.openCreate()
@@ -393,6 +403,28 @@ func (a *app) checkEvent(tile byte) {
 	}
 }
 
+// debugBattleMonsters 是 B 鍵開的測試戰鬥用的怪物（MONSTER.DAT 索引）。
+// 挑三隻低階的，夠驗畫面又不會一回合把隊伍打光。
+var debugBattleMonsters = []int{2, 3, 4}
+
+// terrainForBattle 切出這場戰鬥腳下的地形，並套用視線遮蔽。
+//
+// 看得到多大一塊由時辰決定：正午整個 9×9 都畫得出來，深夜只剩中央 3×3。
+// 切不出來（不該發生）就回 nil，畫面退回沒有地形的樣子，不讓戰鬥開不起來。
+func (a *app) terrainForBattle() *game.BattleTerrain {
+	t, err := game.NewBattleTerrain(a.tiles, a.party.X(), a.party.Y(),
+		gamedata.LightInsetAt(a.clock.Hour()))
+	if err != nil {
+		a.message = fmt.Sprintf("戰場地形切不出來：%v", err)
+		return nil
+	}
+	vis, err := t.Visible(a.tables.Sight())
+	if err != nil {
+		return t
+	}
+	return vis
+}
+
 // startBattle 依事件記錄的怪物清單布置戰場。
 //
 // 怪物的速度與生命在 MONSTER.DAT 的基礎值上做進場擾動。
@@ -430,6 +462,7 @@ func (a *app) startBattle(ids []int) {
 
 	a.battle = game.NewBattle(a.rng, units)
 	a.battle.BeginRound()
+	a.battleTerrain = a.terrainForBattle()
 	// 祈禱成功率跨戰鬥保留、每次祈禱永久遞減；初值 20% 來自手冊
 	// （反組譯只確認了遞減量 −5，初始化位置未逐指令追出）。
 	if a.prayChance == 0 {
@@ -464,6 +497,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"Tab：切換季節",
 		"P：隊伍名冊",
 		"T：進入城鎮",
+		"B：測試戰鬥（偵錯）",
 		"C：建立角色",
 		"S：存檔",
 		"空白鍵：翻頁",
