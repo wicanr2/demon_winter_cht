@@ -723,13 +723,15 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 
 // monsterTurn 讓一隻怪物行動。
 //
-// 順序照原版的決策樹（見 game 套件的 ai.go）：先看要不要施法，
-// 再走近戰。**噴吐那一支還沒接**：波及範圍已解（game.BreathTargets），
-// 但傷害計算還沒從原版讀出來，接上去就得自己編一個公式。
+// 順序照原版的決策樹（見 game 套件的 ai.go）：先看噴吐、再看施法，
+// 最後走近戰。
 //
 // 近戰的走位（轉向、逼近）是本作自己的補充 —— 原版那一段還沒讀，
 // 這裡先讓怪物走得到玩家面前，戰鬥才跑得完。
 func (a *app) monsterTurn(u *game.Unit) {
+	if a.monsterBreathe(u) {
+		return
+	}
 	if a.monsterCast(u) {
 		return
 	}
@@ -756,6 +758,39 @@ func (a *app) monsterTurn(u *game.Unit) {
 		return
 	}
 	a.battle.Spend(game.ActionEndTurn)
+}
+
+// monsterBreathe 讓會噴吐的怪物有機會噴吐，回報這一回合是否已經用掉。
+//
+// 原版（0x7939–0x7959）：種族／元素類型落在 8–12 且 `rnd(10) < 4` 才走這一支。
+// 誤傷太多時原版會整個放棄（game.BreathPlan.Veto），那一回合就改做別的事。
+func (a *app) monsterBreathe(u *game.Unit) bool {
+	if u.RaceOrElement < 8 || u.RaceOrElement > 12 || a.rng.Roll(10) >= 4 {
+		return false
+	}
+	if a.battle.BreathPlan(u).Veto() {
+		return false
+	}
+	if _, ok := a.battle.Spend(game.ActionAttack); !ok {
+		return false
+	}
+	hits := a.battle.Breathe(u)
+	if len(hits) == 0 {
+		return false
+	}
+	a.speaker.Play(pcspeaker.EffectDeath)
+	a.logf("%s 噴出吐息（波及 %d 人）", u.Name, len(hits))
+	for _, h := range hits {
+		switch {
+		case h.Killed:
+			a.logf("　%s 倒下了", h.Unit.Name)
+		case h.Damage == 0:
+			a.logf("　%s 免疫", h.Unit.Name)
+		default:
+			a.logf("　%s 受到 %d 點傷害", h.Unit.Name, h.Damage)
+		}
+	}
+	return true
 }
 
 // monsterCast 讓會法術的怪物有機會施法，回報這一回合是否已經用掉。

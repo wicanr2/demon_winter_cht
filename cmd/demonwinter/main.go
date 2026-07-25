@@ -19,7 +19,8 @@
 //
 //   - **版面不是原版版面**。這裡是自訂的 640×400（中文需要 16×16 點陣才可讀），
 //     不是原版 320×200 的復刻。
-//   - 怪物 AI 是自己寫的簡易版，原版的還沒反組譯。
+//   - 怪物 AI 的決策樹、選法術、挑目標與噴吐都照原版（見 docs/re/23），
+//     但走位（轉向、逼近）那一段原版還沒讀，目前是自己補的。
 //
 // 完整的未解清單見 CONTEXT.md 與各 docs/spec 檔案末尾。
 package main
@@ -32,6 +33,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -648,6 +650,8 @@ func main() {
 	// B 鍵那條偵錯路徑在 headless 截圖底下不好按（xdotool 送的鍵不一定
 	// 進得了 ebiten 的輸入佇列）。開一個旗標走同一條路，讓截圖驗收可重跑。
 	startBattle := flag.Bool("battle", false, "啟動後直接開一場測試戰鬥（偵錯）")
+	battleMonsters := flag.String("battle-monsters", "",
+		"測試戰鬥要放哪幾隻怪（MONSTER.DAT 索引，逗號分隔）。留空用預設那組")
 	flag.Parse()
 
 	if _, err := os.Stat(*dataDir); err != nil {
@@ -774,7 +778,18 @@ func main() {
 	a.canvas = ebiten.NewImage(layout.CanvasWidth, layout.CanvasHeight)
 
 	if *startBattle {
-		a.startBattle(debugBattleMonsters)
+		picks := debugBattleMonsters
+		if *battleMonsters != "" {
+			picks = nil
+			for _, f := range strings.Split(*battleMonsters, ",") {
+				n, err := strconv.Atoi(strings.TrimSpace(f))
+				if err != nil {
+					log.Fatalf("-battle-monsters 認不得 %q：%v", f, err)
+				}
+				picks = append(picks, n)
+			}
+		}
+		a.startBattle(picks)
 	}
 
 	ebiten.SetWindowSize(layout.CanvasWidth*scale, layout.CanvasHeight*scale)

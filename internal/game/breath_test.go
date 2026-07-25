@@ -149,3 +149,132 @@ func TestBreathTargets_SkipsDead(t *testing.T) {
 		}
 	}
 }
+
+// 傷害 = rnd(施放者當前HP ÷ 3)，整數除法。
+//
+// 這條的重點是「只看施放者剩多少血」—— 受傷的龍噴得比較弱，
+// 與投入、等級、目標護甲都無關。
+func TestBreathDamage(t *testing.T) {
+	for _, c := range []struct{ hp, roll, want int }{
+		{30, 1, 1}, {30, 10, 10},
+		{29, 9, 9},  // 29/3 = 9
+		{5, 1, 1},   // 5/3 = 1
+		{2, 1, 0},   // 不到 3：商 0，原版會拿 0 去擲
+		{0, 1, 0},
+	} {
+		got := BreathDamage(&fixedRolls{vals: []int{c.roll}}, c.hp)
+		if got != c.want {
+			t.Errorf("HP %d、擲 %d：傷害 %d，預期 %d", c.hp, c.roll, got, c.want)
+		}
+	}
+	// 上界：不會超過 HP/3。
+	r := rng.NewWithSeed(7)
+	for i := 0; i < 500; i++ {
+		if d := BreathDamage(r, 31); d < 1 || d > 10 {
+			t.Fatalf("HP 31 的傷害 %d 落在 [1,10] 之外", d)
+		}
+	}
+}
+
+// 種族 → 元素：8→6、9→7、10→8、11→rnd(3)+5，12 沒有對應。
+func TestBreathElement(t *testing.T) {
+	for race, want := range map[int]int{8: 6, 9: 7, 10: 8} {
+		got, ok := BreathElement(nil, race)
+		if !ok || got != want {
+			t.Errorf("種族 %d → (%d, %v)，預期 (%d, true)", race, got, ok, want)
+		}
+	}
+	// 種族 11 三種都可能，而且只會是 6／7／8。
+	seen := map[int]bool{}
+	r := rng.NewWithSeed(5)
+	for i := 0; i < 300; i++ {
+		got, ok := BreathElement(r, 11)
+		if !ok || got < 6 || got > 8 {
+			t.Fatalf("種族 11 → (%d, %v)，預期落在 6–8", got, ok)
+		}
+		seen[got] = true
+	}
+	if len(seen) != 3 {
+		t.Errorf("種族 11 只擲出 %v，三個值應該都會出現", seen)
+	}
+	// 種族 12 落在 AI 的噴吐區間（8–12）裡卻沒有對應分支，不過 MONSTER.DAT
+	// 落在區間內的只有四隻龍（8/9/10/11），12 打不到。
+	if _, ok := BreathElement(rng.NewWithSeed(1), 12); ok {
+		t.Error("種族 12 不該有元素")
+	}
+}
+
+// 否決：一個敵人都沒打到，或己方命中 × 2 > 敵方命中。
+func TestBreathPlan_Veto(t *testing.T) {
+	for _, c := range []struct {
+		own, enemy int
+		veto       bool
+	}{
+		{0, 0, true}, {1, 0, true},
+		{0, 1, false}, {1, 1, true}, {1, 2, false}, {1, 3, false},
+		{2, 3, true}, {2, 4, false},
+	} {
+		got := BreathPlan{Own: c.own, Enemy: c.enemy}.Veto()
+		if got != c.veto {
+			t.Errorf("己方 %d 敵方 %d：否決 = %v，預期 %v",
+				c.own, c.enemy, got, c.veto)
+		}
+	}
+}
+
+// 打到自己人太多就整個放棄，一滴血都不扣。
+func TestBreathe_VetoLeavesEveryoneAlone(t *testing.T) {
+	b := breathBattle(t)
+	dragon := b.Unit(0)
+	// 塞兩個同伴進錐形裡：敵方 3、己方 2 → 2×2 = 4 > 3 → 否決。
+	for i, y := range []int{4, 3} {
+		b.units[1+i] = &Unit{Slot: 1 + i, Name: "同伴", X: 3 + i, Y: y,
+			HP: 10, MaxHP: 10, Side: SideMonster}
+	}
+	before := map[*Unit]int{}
+	for _, u := range b.Units() {
+		before[u] = u.HP
+	}
+	if hits := b.Breathe(dragon); hits != nil {
+		t.Fatalf("誤傷太多應該放棄，卻打了 %d 人", len(hits))
+	}
+	for u, hp := range before {
+		if u.HP != hp {
+			t.Errorf("%s 的 HP 從 %d 變成 %d", u.Name, hp, u.HP)
+		}
+	}
+}
+
+// 正常情形：錐形內三人都扣血。
+func TestBreathe_DamagesEveryoneInCone(t *testing.T) {
+	b := breathBattle(t)
+	hits := b.Breathe(b.Unit(0))
+	if len(hits) != 3 {
+		t.Fatalf("打到 %d 人，預期 3", len(hits))
+	}
+	for _, h := range hits {
+		if h.Damage < 1 || h.Damage > 10 { // 龍 30 HP → rnd(10)
+			t.Errorf("%s 受到 %d 點傷害，超出 rnd(30/3) 的範圍", h.Unit.Name, h.Damage)
+		}
+		if !h.Killed && h.Unit.HP != 10-h.Damage {
+			t.Errorf("%s 的 HP 是 %d，預期 %d", h.Unit.Name, h.Unit.HP, 10-h.Damage)
+		}
+	}
+}
+
+// 傷害 >= HP 就死（原版 0x1bb5 的 JG：HP > 傷害 才活）。
+func TestBreathe_ExactDamageKills(t *testing.T) {
+	b := breathBattle(t)
+	dragon := b.Unit(0)
+	dragon.HP = 3 // rnd(1) 恆為 1
+	victim := b.Unit(PlayerSlotStart)
+	victim.HP = 1
+
+	hits := b.Breathe(dragon)
+	if len(hits) == 0 {
+		t.Fatal("沒有打到任何人")
+	}
+	if hits[0].Unit != victim || !hits[0].Killed {
+		t.Errorf("HP 1 吃 1 點傷害應該倒下，得到 %+v", hits[0])
+	}
+}
