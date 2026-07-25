@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
+	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
 	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
@@ -25,6 +26,7 @@ var playerCommands = []struct {
 	action game.Action
 }{
 	{ebiten.KeyA, "A 攻擊", game.ActionAttack},
+	{ebiten.KeyC, "C 施法", game.ActionCast},
 	{ebiten.KeyT, "T 驅散不死", game.ActionTurnUndead},
 	{ebiten.KeyP, "P 祈禱", game.ActionPray},
 	{ebiten.KeyL, "L 汲取法力", game.ActionLeech},
@@ -68,8 +70,231 @@ func (a *app) updateBattle() error {
 	return nil
 }
 
+// spellMenu 是施法選單的狀態。
+type spellMenu struct {
+	caster *game.Unit
+	// entries 是這名施法者付得起、且不是佔位記錄的法術。
+	entries []spellEntry
+	cursor  int
+}
+
+// spellEntry 是選單上的一項。
+type spellEntry struct {
+	index int
+	name  string
+	spell gamedata.Spell
+}
+
+// openSpellMenu 列出施法者目前選得到的法術。
+//
+// **只列付得起的**：原版在選單外先檢查 SP 是否 >= M，不足就顯示
+// 「not enough points」。列出來又不能選比較容易讓玩家困惑，
+// 但完全藏起來又看不到目標，所以列出全部、把付不起的標灰。
+func (a *app) openSpellMenu(u *game.Unit) {
+	m := &spellMenu{caster: u}
+	for i := 0; i < a.tables.NumSpells(); i++ {
+		sp, err := a.tables.Spell(i)
+		if err != nil || sp.Empty() {
+			continue
+		}
+		name, err := a.strings.SpellName(i)
+		if err != nil {
+			continue
+		}
+		m.entries = append(m.entries, spellEntry{
+			index: i,
+			name:  a.tr.Event(spellSourceFile, i, name),
+			spell: sp,
+		})
+	}
+	a.spells = m
+}
+
+// spellSourceFile 是法術名稱翻譯目錄的 key，與 dwstrings 產生時一致。
+const spellSourceFile = "FILES.DTT"
+
+// updateSpellMenu 處理施法選單的按鍵。
+func (a *app) updateSpellMenu(u *game.Unit) error {
+	m := a.spells
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
+		a.spells = nil
+	case inpututil.IsKeyJustPressed(ebiten.KeyDown):
+		m.cursor = (m.cursor + 1) % len(m.entries)
+	case inpututil.IsKeyJustPressed(ebiten.KeyUp):
+		m.cursor = (m.cursor - 1 + len(m.entries)) % len(m.entries)
+	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
+		a.castSelected(u)
+	}
+	return nil
+}
+
+// castSelected 施放游標指的法術。
+func (a *app) castSelected(u *game.Unit) {
+	e := a.spells.entries[a.spells.cursor]
+
+	// 原版的順序：先看法力夠不夠（SP < M → not enough points），
+	// 再看行動點。兩個都不足時顯示法力那一則 —— 玩家先想知道的是那個。
+	if u.CurrentSP < e.spell.M {
+		a.logf("%s 的法力不足以施放%s（需要 %d 點）", u.Name, e.name, e.spell.M)
+		return
+	}
+	if _, ok := a.battle.Spend(game.ActionCast); !ok {
+		a.logf("%s 行動點不足", u.Name)
+		return
+	}
+	a.spells = nil
+
+	// 全部投入目前法力。原版讓玩家指定投入多少（「How many S.P.」），
+	// 那個輸入框還沒做 —— 先全投，並在畫面上寫明。
+	sp := u.CurrentSP
+	u.CurrentSP = 0
+
+	target := a.battle.TargetInFront(u)
+	a.applySpell(u, target, e, sp)
+}
+
+// applySpell 套用一個法術的效果。
+//
+// 只實作 spec 標 READY 的四類特殊效果與通式；其餘 effect_type
+// 顯示「尚未實作」而不是靜默沒反應 —— 看不出有沒有生效比沒有功能更糟。
+func (a *app) applySpell(caster, target *game.Unit, e spellEntry, sp int) {
+	switch e.spell.Effect {
+	case game.EffectInstantDeath:
+		if target == nil {
+			a.logf("%s 正前方沒有目標", caster.Name)
+			return
+		}
+		if game.CastInstantDeath(a.rng, sp, e.spell, target) {
+			a.battle.Kill(target)
+			a.speaker.Play(pcspeaker.EffectDeath)
+			a.logf("%s 的%s殺死了 %s", caster.Name, e.name, target.Name)
+		} else {
+			a.logf("%s 的%s沒有奏效", caster.Name, e.name)
+		}
+
+	case game.EffectBindApply:
+		if target == nil {
+			a.logf("%s 正前方沒有目標", caster.Name)
+			return
+		}
+		res := game.CastBind(a.rng, sp, e.spell, target)
+		switch {
+		case res.Applied:
+			a.logf("%s 用%s束縛了 %s（%d 回合）",
+				caster.Name, e.name, target.Name, res.Rounds)
+		case res.AlreadyBound:
+			a.logf("%s 已經被束縛住了", target.Name)
+		default:
+			a.logf("%s 抵抗了%s", target.Name, e.name)
+		}
+
+	case game.EffectBindRelease:
+		if target == nil {
+			target = caster
+		}
+		if game.CastBindRelease(sp, e.spell, target) {
+			a.logf("%s 的束縛被%s解開", target.Name, e.name)
+		} else {
+			a.logf("%s 的力度不足以解開束縛", e.name)
+		}
+
+	case game.EffectWither:
+		if target == nil {
+			a.logf("%s 正前方沒有目標", caster.Name)
+			return
+		}
+		if game.CastWither(a.rng, sp, e.spell, target) {
+			a.logf("%s 的%s讓 %s 衰朽", caster.Name, e.name, target.Name)
+		} else {
+			a.logf("%s 的%s沒有奏效", caster.Name, e.name)
+		}
+
+	case game.EffectAOE:
+		// AOE 的判定另有一套（docs/re/16 的 AOE handler），還沒收攏成規格。
+		a.logf("%s 施放%s —— 範圍法術尚未實作", caster.Name, e.name)
+
+	default:
+		// 數值增減類走通式。走不通的 effect_type 才是真的沒實作。
+		//
+		// 治療類（K > 0）預設對自己，傷害類對正前方 —— 原版是讓玩家用游標
+		// 選格子，那個游標還沒做。**這是本作的簡化，不是原版行為。**
+		who := target
+		if e.spell.K > 0 {
+			who = caster
+		}
+		delta, ok := game.CastMagnitudeEffect(a.rng, sp, e.spell, who)
+		if !ok {
+			a.logf("%s 施放%s —— 這類效果尚未實作", caster.Name, e.name)
+			return
+		}
+		if who == nil {
+			a.logf("%s 正前方沒有目標", caster.Name)
+			return
+		}
+		switch {
+		case delta > 0:
+			a.logf("%s 的%s讓 %s 增加 %d", caster.Name, e.name, who.Name, delta)
+		case delta < 0:
+			a.logf("%s 的%s讓 %s 減少 %d", caster.Name, e.name, who.Name, -delta)
+			if !who.Alive() {
+				a.battle.Kill(who)
+				a.speaker.Play(pcspeaker.EffectDeath)
+				a.logf("%s 倒下了", who.Name)
+			}
+		default:
+			a.logf("%s 的%s沒有明顯效果", caster.Name, e.name)
+		}
+	}
+}
+
+// drawSpellMenu 畫施法選單。
+func (a *app) drawSpellMenu(dst *ebiten.Image) {
+	m := a.spells
+	y := layout.StatusY
+	line := func(s string) {
+		a.font.Draw(dst, s, layout.BoxPadX, y)
+		y += ui.LineHeight
+	}
+
+	line(fmt.Sprintf("%s 施法　法力 %d", m.caster.Name, m.caster.CurrentSP))
+	line("")
+	line("   法術            最低法力")
+
+	const window = 14
+	start := m.cursor - window/2
+	if start < 0 {
+		start = 0
+	}
+	if start+window > len(m.entries) {
+		start = len(m.entries) - window
+	}
+	if start < 0 {
+		start = 0
+	}
+	for i := start; i < start+window && i < len(m.entries); i++ {
+		e := m.entries[i]
+		mark := "   "
+		if i == m.cursor {
+			mark = " > "
+		}
+		note := ""
+		if m.caster.CurrentSP < e.spell.M {
+			note = "  法力不足"
+		}
+		line(fmt.Sprintf("%s%-14s %5d%s", mark, e.name, e.spell.M, note))
+	}
+	line("")
+	line("↑↓：選擇　Enter：施放　Esc：取消")
+	line("※ 目前一律投入全部法力（原版可指定點數，輸入框未做）")
+}
+
 // updatePlayerTurn 處理玩家單位的一次按鍵。
 func (a *app) updatePlayerTurn(u *game.Unit) error {
+	if a.spells != nil {
+		return a.updateSpellMenu(u)
+	}
+
 	// 轉向與前進：方向鍵轉到該面向（每次轉一格），Enter 前進。
 	for _, kf := range keyFacing {
 		if !inpututil.IsKeyJustPressed(kf.key) {
@@ -126,6 +351,13 @@ func (a *app) faceToward(u *game.Unit, want game.Facing) {
 // 都應該是「什麼都沒發生」而不是「白花三點」。
 func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 	switch act {
+	case game.ActionCast:
+		if u.CurrentSP <= 0 {
+			a.logf("%s 沒有法力", u.Name)
+			return
+		}
+		a.openSpellMenu(u)
+
 	case game.ActionAttack:
 		target := a.battle.TargetInFront(u)
 		if target == nil {

@@ -117,3 +117,72 @@ func TestLoadStringPool_MissingFile(t *testing.T) {
 		t.Error("檔案不存在時 LoadStringPool 應回傳 error")
 	}
 }
+
+// 法術名稱與 FILES.DAT 法術表同序。
+//
+// 這個對應是「法術選單顯示什麼」的基礎：錯位的話每個法術都會顯示成
+// 隔壁那一個的名字，而且每一項單看都像正常的法術名，肉眼很難發現。
+func TestStringPool_SpellNames(t *testing.T) {
+	p := loadPool(t)
+
+	want := map[int]string{
+		0:  "COLUMN OF FIRE",
+		1:  "FLAME STRIKE",
+		2:  "FIRE STORM",
+		3:  "FLAME SHIELD",
+		4:  "SWORD",
+		5:  "CHAINS",
+		6:  "DEATH BLADE",
+		7:  "STRENGTH",
+		8:  "ARMOR",
+		9:  "RUST ARMOR",
+		42: "THE END",
+	}
+	for idx, w := range want {
+		got, err := p.SpellName(idx)
+		if err != nil {
+			t.Fatalf("SpellName(%d): %v", idx, err)
+		}
+		if got != w {
+			t.Errorf("法術 %d 名稱 = %q，預期 %q", idx, got, w)
+		}
+	}
+}
+
+// 名稱區的結尾必須正好接上技能名 —— 5 + 43×2 = 91。
+//
+// 這條等式是「法術有 43 筆、成對排列」的獨立佐證：
+// 少一筆或多一筆，技能名的起點就對不上。
+func TestStringPool_SpellBlockEndsWhereSkillsBegin(t *testing.T) {
+	p := loadPool(t)
+
+	if got := spellPairsStart + NumSpellRecords*2; got != 91 {
+		t.Errorf("法術區結束於 %d，技能名從 91 起", got)
+	}
+	skills := p.SkillNames()
+	if len(skills) == 0 || skills[0] != "Fencing" {
+		t.Errorf("技能名第一項 = %q，預期 Fencing", skills)
+	}
+}
+
+func TestStringPool_SpellIndexBounds(t *testing.T) {
+	p := loadPool(t)
+	for _, i := range []int{-1, NumSpellRecords} {
+		if _, err := p.SpellName(i); err == nil {
+			t.Errorf("法術索引 %d 應回傳錯誤", i)
+		}
+		if _, err := p.SpellMessage(i); err == nil {
+			t.Errorf("法術索引 %d 的訊息應回傳錯誤", i)
+		}
+	}
+}
+
+// loadPool 載入真實的 FILES.DTT。
+func loadPool(t *testing.T) *StringPool {
+	t.Helper()
+	p, err := LoadStringPool(filepath.Join(origDataDir(t), "FILES.DTT"))
+	if err != nil {
+		t.Fatalf("LoadStringPool: %v", err)
+	}
+	return p
+}

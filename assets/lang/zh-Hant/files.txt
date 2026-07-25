@@ -1,0 +1,219 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ FILES.DTT
+
+## 0
+:: en
+COLUMN OF FIRE
+:: zh
+烈焰之柱
+## 1
+:: en
+FLAME STRIKE
+:: zh
+烈焰打擊
+## 2
+:: en
+FIRE STORM
+:: zh
+火焰風暴
+## 3
+:: en
+FLAME SHIELD
+:: zh
+烈焰護盾
+## 4
+:: en
+SWORD
+:: zh
+劍刃術
+## 5
+:: en
+CHAINS
+:: zh
+鎖鏈束縛
+## 6
+:: en
+DEATH BLADE
+:: zh
+死亡之刃
+## 7
+:: en
+STRENGTH
+:: zh
+力量術
+## 8
+:: en
+ARMOR
+:: zh
+護甲術
+## 9
+:: en
+RUST ARMOR
+:: zh
+鏽蝕護甲
+## 10
+:: en
+TEMPEST
+:: zh
+暴風
+## 11
+:: en
+STILL AIR
+:: zh
+凝滯之氣
+## 12
+:: en
+WINGS OF VICTORY
+:: zh
+勝利之翼
+## 13
+:: en
+WINGS
+:: zh
+羽翼
+## 14
+:: en
+HAIL STORM
+:: zh
+冰雹風暴
+## 15
+:: en
+CHILL
+:: zh
+寒顫
+## 16
+:: en
+SLOW
+:: zh
+緩速
+## 17
+:: en
+FREEZE
+:: zh
+冰封
+## 18
+:: en
+ICE SHIELD
+:: zh
+寒冰護盾
+## 19
+:: en
+SPIRIT WRACK
+:: zh
+靈魂折磨
+## 20
+:: en
+WEAKEN
+:: zh
+衰弱
+## 21
+:: en
+CLUMSINESS
+:: zh
+笨拙
+## 22
+:: en
+SANCTUARY
+:: zh
+聖域
+## 23
+:: en
+WITHER STRIKE
+:: zh
+枯萎打擊
+## 24
+:: en
+SUMMON
+:: zh
+召喚
+## 25
+:: en
+ILLUSION
+:: zh
+幻術
+## 26
+:: en
+POSSESSION
+:: zh
+附身
+## 27
+:: en
+WIND WALK
+:: zh
+御風而行
+## 28
+:: en
+MELT
+:: zh
+熔解
+## 29
+:: en
+BREAK BONDS
+:: zh
+掙脫束縛
+## 30
+:: en
+FREEDOM
+:: zh
+自由之風
+## 31
+:: en
+BREATH OF LIFE
+:: zh
+生命之息
+## 32
+:: en
+HEAL
+:: zh
+治療
+## 33
+:: en
+CURE POISON
+:: zh
+解毒
+## 34
+:: en
+TRANSFERENCE
+:: zh
+法力轉移
+## 35
+:: en
+MAGIC TORCH
+:: zh
+魔法火炬
+## 36
+:: en
+CRYSTALIGHT
+:: zh
+晶光
+## 37
+:: en
+RESURRECT
+:: zh
+復活
+## 38
+:: en
+ET CETERA
+:: zh
+其他
+## 39
+:: en
+POISON
+:: zh
+中毒
+## 40
+:: en
+YOUTH
+:: zh
+回春
+## 41
+:: en
+POWER LEECH
+:: zh
+汲取法力
+## 42
+:: en
+THE END
+:: zh
+終結

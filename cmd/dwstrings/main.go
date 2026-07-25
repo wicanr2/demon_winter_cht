@@ -12,6 +12,7 @@
 //
 //	dwstrings events -data <資料目錄> -out <輸出目錄>
 //	dwstrings ui     -int  <DEMON.INT> -out <輸出檔>
+//	dwstrings spells -data <資料目錄> -out <輸出目錄>
 //	dwstrings check  -data <資料目錄> -lang <翻譯目錄>
 package main
 
@@ -23,6 +24,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/i18n"
 )
@@ -39,6 +41,8 @@ func main() {
 		dumpEvents(os.Args[2:])
 	case "ui":
 		dumpUI(os.Args[2:])
+	case "spells":
+		dumpSpells(os.Args[2:])
 	case "check":
 		check(os.Args[2:])
 	default:
@@ -47,7 +51,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "用法：dwstrings events|ui|check [選項]")
+	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|ui|check [選項]")
 	os.Exit(2)
 }
 
@@ -122,6 +126,57 @@ func mergeInto(path string, fresh *i18n.Catalog) (merged *i18n.Catalog, added, d
 		out.Entries = append(out.Entries, e)
 	}
 	return out, added, drifted
+}
+
+// spellSource 是法術名稱的來源檔，同時也是翻譯目錄的 key。
+const spellSource = "FILES.DTT"
+
+// dumpSpells 把 43 個法術名稱抽成翻譯目錄。
+//
+// 名稱與 FILES.DAT 法術表同序，索引就是法術 id —— 與事件敘述用同一套
+// （來源檔, 索引）機制，不另立格式。
+func dumpSpells(args []string) {
+	fs := flag.NewFlagSet("spells", flag.ExitOnError)
+	dataDir := fs.String("data", "workplace/orig/demwin/DEM_DATA", "原版資料目錄")
+	outDir := fs.String("out", "assets/lang/zh-Hant", "翻譯目錄輸出位置")
+	_ = fs.Parse(args)
+
+	names, err := spellNames(*dataDir)
+	if err != nil {
+		fatal(err)
+	}
+	cat := &i18n.Catalog{Source: spellSource}
+	for i, n := range names {
+		cat.Entries = append(cat.Entries, i18n.Entry{Index: i, Source: n})
+	}
+
+	if err := os.MkdirAll(*outDir, 0o755); err != nil {
+		fatal(err)
+	}
+	out := filepath.Join(*outDir, i18n.CatalogFileName(spellSource))
+	merged, added, drifted := mergeInto(out, cat)
+	if err := i18n.WriteCatalog(out, merged); err != nil {
+		fatal(err)
+	}
+	fmt.Printf("%-10s %3d 個法術名（新增 %d、原文變動 %d）→ %s\n",
+		spellSource, len(merged.Entries), added, drifted, out)
+}
+
+// spellNames 讀出 43 個法術的英文名稱。
+func spellNames(dataDir string) ([]string, error) {
+	pool, err := gamedata.LoadStringPool(filepath.Join(dataDir, spellSource))
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, gamedata.NumSpellRecords)
+	for i := 0; i < gamedata.NumSpellRecords; i++ {
+		n, err := pool.SpellName(i)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, n)
+	}
+	return out, nil
 }
 
 func dumpUI(args []string) {

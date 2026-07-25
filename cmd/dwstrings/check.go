@@ -112,6 +112,32 @@ func check(args []string) {
 		}
 	}
 
+	// 法術名稱走同一套（來源檔, 索引）機制，一併驗。
+	if names, err := spellNames(*dataDir); err == nil {
+		path := filepath.Join(*langDir, i18n.CatalogFileName(spellSource))
+		if cat, err := i18n.LoadCatalog(path); err == nil {
+			done, review, todo := cat.Stats()
+			totalDone += done
+			totalAll += len(cat.Entries)
+			fmt.Printf("%s：%d 已翻 / %d 待複查 / %d 未翻（共 %d）\n",
+				spellSource, done, review, todo, len(cat.Entries))
+
+			for _, e := range cat.Entries {
+				switch {
+				case e.Index < 0 || e.Index >= len(names):
+					report("%s #%d：索引超出法術表範圍", spellSource, e.Index)
+				case e.Source != names[e.Index]:
+					report("%s #%d：原文與 %s 對不上", spellSource, e.Index, spellSource)
+				case e.Target != "":
+					if bad := nonBig5(e.Target); len(bad) > 0 {
+						report("%s #%d：以下字元不在 Big5：%s",
+							spellSource, e.Index, string(bad))
+					}
+				}
+			}
+		}
+	}
+
 	if totalAll > 0 {
 		fmt.Printf("\n進度：%d/%d（%.0f%%）\n",
 			totalDone, totalAll, 100*float64(totalDone)/float64(totalAll))

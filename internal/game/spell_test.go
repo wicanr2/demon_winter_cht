@@ -354,3 +354,90 @@ func TestCastBindRelease_SchoolOneAliasesToFour(t *testing.T) {
 		t.Error("重映射後系別為 4，不應解除狀態 1")
 	}
 }
+
+// 通式效果落到正確的欄位，而且方向由 K 的正負決定。
+func TestCastMagnitudeEffect_Routing(t *testing.T) {
+	cases := []struct {
+		name   string
+		effect int
+		get    func(*Unit) int
+	}{
+		{"生命", EffectHP, func(u *Unit) int { return u.HP }},
+		{"法力", EffectSPMod, func(u *Unit) int { return u.CurrentSP }},
+		{"技巧", EffectSkillMod, func(u *Unit) int { return u.Skill }},
+		{"力量", EffectStrengthMod, func(u *Unit) int { return u.Strength }},
+		{"速度", EffectSpeedMod, func(u *Unit) int { return u.Speed }},
+		{"護甲", EffectArmorMod, func(u *Unit) int { return u.Armor }},
+	}
+	for _, c := range cases {
+		// K 為正 = 增益。
+		u := &Unit{HP: 20, MaxHP: 60, CurrentSP: 10, MaxSP: 60,
+			Skill: 10, Strength: 10, Speed: 10, Armor: 10}
+		before := c.get(u)
+		delta, ok := CastMagnitudeEffect(rng.NewWithSeed(3), 10,
+			gamedata.Spell{Effect: c.effect, K: 3, M: 1}, u)
+		if !ok {
+			t.Fatalf("%s 應走通式", c.name)
+		}
+		if delta <= 0 || c.get(u) != before+delta {
+			t.Errorf("%s：K 為正應增加，delta=%d，%d → %d",
+				c.name, delta, before, c.get(u))
+		}
+	}
+}
+
+// 屬性下限是 3，生命與法力不套那個下限 —— 套了角色會永遠死不了。
+func TestCastMagnitudeEffect_FloorsDiffer(t *testing.T) {
+	spell := func(effect, k int) gamedata.Spell {
+		return gamedata.Spell{Effect: effect, K: k, M: 1}
+	}
+
+	u := &Unit{HP: 5, MaxHP: 60, Strength: 5, Skill: 5, Speed: 5, Armor: 5}
+	CastMagnitudeEffect(rng.NewWithSeed(1), 40, spell(EffectHP, -30), u)
+	if u.HP != 0 {
+		t.Errorf("大量傷害後生命 = %d，預期歸零（不套屬性的下限 3）", u.HP)
+	}
+
+	u2 := &Unit{Strength: 5, HP: 10, MaxHP: 10}
+	CastMagnitudeEffect(rng.NewWithSeed(1), 40, spell(EffectStrengthMod, -30), u2)
+	if u2.Strength != traitEffectFloor {
+		t.Errorf("大量削弱後力量 = %d，預期鉗在下限 %d", u2.Strength, traitEffectFloor)
+	}
+}
+
+// 治療不能超過上限。
+func TestCastMagnitudeEffect_Caps(t *testing.T) {
+	u := &Unit{HP: 55, MaxHP: 60, CurrentSP: 55, MaxSP: 60}
+	CastMagnitudeEffect(rng.NewWithSeed(2), 40,
+		gamedata.Spell{Effect: EffectHP, K: 30, M: 1}, u)
+	if u.HP != u.MaxHP {
+		t.Errorf("治療後生命 = %d，預期封在上限 %d", u.HP, u.MaxHP)
+	}
+
+	CastMagnitudeEffect(rng.NewWithSeed(2), 40,
+		gamedata.Spell{Effect: EffectSPMod, K: 30, M: 1}, u)
+	if u.CurrentSP != u.MaxSP {
+		t.Errorf("回復後法力 = %d，預期封在上限 %d", u.CurrentSP, u.MaxSP)
+	}
+}
+
+// 不走通式的 effect_type 要明確回報，不能靜默當成有效果。
+func TestCastMagnitudeEffect_RejectsSpecialTypes(t *testing.T) {
+	u := &Unit{HP: 20, MaxHP: 20}
+	for _, effect := range []int{
+		EffectAOE, EffectInstantDeath, EffectBindApply,
+		EffectBindRelease, EffectWither,
+	} {
+		if _, ok := CastMagnitudeEffect(rng.NewWithSeed(1), 10,
+			gamedata.Spell{Effect: effect, K: 5, M: 1}, u); ok {
+			t.Errorf("effect_type %d 有自己的判定，不該走通式", effect)
+		}
+	}
+}
+
+func TestCastMagnitudeEffect_NilTarget(t *testing.T) {
+	if _, ok := CastMagnitudeEffect(rng.NewWithSeed(1), 10,
+		gamedata.Spell{Effect: EffectHP, K: 3, M: 1}, nil); ok {
+		t.Error("沒有目標時應回傳 ok=false")
+	}
+}

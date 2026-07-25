@@ -74,7 +74,11 @@ type app struct {
 	town *townScreen
 	// create 非 nil 時遊戲在建角畫面。
 	create *createScreen
-	rng    *rng.RNG
+	// spells 非 nil 時戰鬥中的施法選單開著。
+	spells *spellMenu
+	// strings 是 FILES.DTT 字串池，法術名稱從這裡來。
+	strings *gamedata.StringPool
+	rng     *rng.RNG
 
 	// prayChance 是祈禱的成功率，會隨每次祈禱變動，跨戰鬥保留。
 	prayChance int
@@ -225,6 +229,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawWorld(a.canvas)
 	}
 	switch {
+	case a.battle != nil && a.spells != nil:
+		a.drawSpellMenu(a.canvas)
 	case a.battle != nil:
 		a.drawBattlefield(a.canvas)
 		a.drawBattle(a.canvas)
@@ -233,7 +239,7 @@ func (a *app) Draw(screen *ebiten.Image) {
 	default:
 		a.drawStatus(a.canvas)
 	}
-	if a.battle != nil && !a.box.Active() {
+	if a.battle != nil && a.spells == nil && !a.box.Active() {
 		a.drawBattleCommands(a.canvas)
 	}
 	ui.DrawMixedTextBox(a.canvas, a.box, a.font, 0, layout.TextBoxTop, markerColor)
@@ -496,6 +502,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入怪物表：%v", err)
 	}
+	strs, err := gamedata.LoadStringPool(filepath.Join(*dataDir, "FILES.DTT"))
+	if err != nil {
+		log.Fatalf("載入字串池：%v", err)
+	}
 	towns, err := gamedata.LoadTownTable(*dataDir)
 	if err != nil {
 		log.Fatalf("載入城鎮表：%v", err)
@@ -572,6 +582,7 @@ func main() {
 		members:    members,
 		monsters:   monsters,
 		towns:      towns,
+		strings:    strs,
 		items:      items,
 		rng:        rng.New(),
 		normal:     loadSet(gfx.NormalTiles),

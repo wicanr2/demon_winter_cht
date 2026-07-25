@@ -20,6 +20,86 @@ const (
 	EffectWither = 14
 )
 
+// 走通式（Magnitude）的數值增減效果。K 的正負決定增益或傷害方向。
+//
+// 對照表見 docs/re/15 §2 的 type 欄。
+const (
+	// EffectAOE 範圍傷害。判定另有一套（docs/re/16 的 AOE handler），不走這裡。
+	EffectAOE = 1
+	// EffectSkillMod 技巧增減。
+	EffectSkillMod = 3
+	// EffectStrengthMod 力量增減。
+	EffectStrengthMod = 4
+	// EffectHP 生命值增減。K 為負是傷害、為正是治療。
+	EffectHP = 5
+	// EffectSpeedMod 速度增減。
+	EffectSpeedMod = 6
+	// EffectArmorMod 護甲增減。
+	EffectArmorMod = 7
+	// EffectSPMod 法力增減。
+	EffectSPMod = 13
+)
+
+// CastMagnitudeEffect 套用「數值增減」類法術，回傳實際變動量。
+//
+// 走通式 SpellMagnitude，再依 effect_type 落到對應欄位。
+// 回傳 ok=false 代表這個 effect_type 不走通式（呼叫端該改走特殊判定）。
+//
+// **屬性類鉗制在 [3,255]，生命與法力不套那個下限** ——
+// 下限 3 是屬性的規則（攻略記載「屬性不會低於 3」），
+// 拿去鉗生命值會讓角色永遠死不了。
+func CastMagnitudeEffect(r *rng.RNG, sp int, s gamedata.Spell, target *Unit) (int, bool) {
+	if target == nil {
+		return 0, false
+	}
+	mag := SpellMagnitude(r, sp, s)
+
+	switch s.Effect {
+	case EffectHP:
+		before := target.HP
+		target.HP += mag
+		if target.HP > target.MaxHP {
+			target.HP = target.MaxHP
+		}
+		if target.HP < 0 {
+			target.HP = 0
+		}
+		return target.HP - before, true
+
+	case EffectSPMod:
+		before := target.CurrentSP
+		target.CurrentSP += mag
+		if target.CurrentSP > target.MaxSP {
+			target.CurrentSP = target.MaxSP
+		}
+		if target.CurrentSP < 0 {
+			target.CurrentSP = 0
+		}
+		return target.CurrentSP - before, true
+
+	case EffectSkillMod:
+		before := target.Skill
+		target.Skill = ApplyTraitEffect(target.Skill, mag)
+		return target.Skill - before, true
+
+	case EffectStrengthMod:
+		before := target.Strength
+		target.Strength = ApplyTraitEffect(target.Strength, mag)
+		return target.Strength - before, true
+
+	case EffectSpeedMod:
+		before := target.Speed
+		target.Speed = ApplyTraitEffect(target.Speed, mag)
+		return target.Speed - before, true
+
+	case EffectArmorMod:
+		before := target.Armor
+		target.Armor = ApplyTraitEffect(target.Armor, mag)
+		return target.Armor - before, true
+	}
+	return 0, false
+}
+
 // 非 HP 屬性的鉗制範圍。下限 3 恰好對上攻略記載的「屬性不會低於 3」。
 const (
 	traitEffectFloor = 3

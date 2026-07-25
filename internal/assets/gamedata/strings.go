@@ -72,6 +72,35 @@ func (p *StringPool) slice(start, end int) []string {
 // translations/glossary.md 第 3 節「種族」5 項順序完全吻合。
 func (p *StringPool) RaceNames() []string { return p.slice(0, 5) }
 
+// NumSpellRecords 是法術表的記錄數，與 FILES.DAT 0x45e 起的 43 筆一致。
+const NumSpellRecords = 43
+
+// spellPairsStart 是法術「名稱＋訊息」成對字串的起點。
+//
+// 佈局：0–4 是五個種族名，接著 43 組 (名稱, 訊息)，然後 91 起是技能名。
+// 5 + 43×2 = 91 —— 這條等式由 SkillNames 的起點反向印證，
+// 而且名稱順序與 FILES.DAT 法術表逐筆對得上（0 = COLUMN OF FIRE、
+// 1 = FLAME STRIKE、2 = FIRE STORM…，見 docs/re/15 §1）。
+const spellPairsStart = 5
+
+// SpellName 依法術索引（0–42）回傳原版英文名稱。
+//
+// 這個索引與 FILES.DAT 法術參數表（0x45e）的記錄編號是**同一個空間**。
+func (p *StringPool) SpellName(i int) (string, error) {
+	if i < 0 || i >= NumSpellRecords {
+		return "", fmt.Errorf("gamedata: 法術索引 %d 超出範圍 [0,%d)", i, NumSpellRecords)
+	}
+	return p.At(spellPairsStart + i*2)
+}
+
+// SpellMessage 依法術索引回傳命中訊息（例如 `burnt for`）。
+func (p *StringPool) SpellMessage(i int) (string, error) {
+	if i < 0 || i >= NumSpellRecords {
+		return "", fmt.Errorf("gamedata: 法術索引 %d 超出範圍 [0,%d)", i, NumSpellRecords)
+	}
+	return p.At(spellPairsStart + i*2 + 1)
+}
+
 // SkillNames 回傳 32 個技能名稱（索引 [91:123)）。已驗證：與
 // translations/glossary.md 第 5 節「技能」數量與內容完全吻合，且保留遊戲
 // 原始拼字 "Shamen"（glossary.md 備註明確記載此為遊戲內誤拼）。
