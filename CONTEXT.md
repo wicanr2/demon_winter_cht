@@ -36,7 +36,7 @@
 | 社群攻略繁中版 | 全 1,914 行，`docs/walkthrough/` |
 | 統一譯名表 | 426 條，`translations/glossary.md` |
 | 資料格式 | 事件表／地圖／怪物／道具／存檔／CGA 與 EGA 素材，全解 |
-| 反組譯 | 主迴圈、事件觸發、戰鬥、音效、移動、建角升級 |
+| 反組譯 | 主迴圈、事件觸發、戰鬥、音效、移動、建角升級、**字型渲染** |
 | Go 解碼器 | `internal/assets/{gamedata,world,scenario,gfx}` + `internal/rng` |
 | Ghidra 環境 | docker 化，含跳表 override 修復 |
 | DOSBox 環境 | docker 化，可自動送鍵與截圖 |
@@ -47,7 +47,6 @@
 |---|---|
 | 即死／束縛／枯萎法術的判定邏輯 | 未解（K/M 已有，缺豁免與狀態儲存） |
 | 召喚生物機制 | 未解（`effect_type 8/9` 在 Cast 與 Use 路徑行為不一致） |
-| 字型 `.FNT`/`.FNE` | **解碼仍是雜訊** — 這是中文化的前提 |
 | `OPEN.PIE` | 未解（102,160 B，不符 3.5× 規律） |
 | 城鎮經濟 | 程式碼落在 Ghidra 未發現區域 |
 | 一天幾小時（26 vs 38） | DOSBox 實測未完成（隊伍被困小中庭） |
@@ -90,6 +89,7 @@
 | [`14-rng-float-equivalence.md`](docs/re/14-rng-float-equivalence.md) | RNG 浮點等價性證明 |
 | [`15-spell-constants.md`](docs/re/15-spell-constants.md) | **法術 K/M 參數表**（在 `FILES.DAT`，不在 `DEMON.INT`） |
 | [`16-combat-details.md`](docs/re/16-combat-details.md) | 命中修正、爆擊、戰敗判定、AOE |
+| [`17-font-format.md`](docs/re/17-font-format.md) | **字型格式**（CGA 8×8 bit-plane、EGA 16×14）與繪字函式鏈 |
 
 ### 資料格式 `docs/formats/`
 
@@ -144,6 +144,7 @@
 | **slot（道具）** | 角色道具欄的 10 格，每格 17 bytes，從記錄內 `0x1a` 起 |
 | **trailer** | `PARTY.DAT` 尾端 194 bytes 的隊伍共用資料區，從 `0x514` 起 |
 | **frame（sprite）** | `.SHP`/`.SHE` 的單張圖。CGA 16×32、EGA 32×28 |
+| **glyph** | 字型單字。CGA `.FNT` 8×8 2bpp（16 B）、EGA `.FNE` 16×14 1bpp（28 B），皆 96 字（0x20–0x7F） |
 | **plane** | EGA 的位元平面。`.SHE` 是「列內 4 個 plane 各佔連續 4 bytes」 |
 
 ### 逆向工程
@@ -244,9 +245,10 @@ row-major、`.SHE` 尺寸 32×28 vs 16×56。**四次裡三次的錯誤版本都
 
 按目前的 SDD 進度，優先序是：
 
-1. **字型 `.FNT`/`.FNE`** — 中文化的前提，目前解碼仍是雜訊
-2. **第三張跳表 override** — `FUN_138d_3c81`，解開後 `Use` 道具效果套用就通了
-3. **即死／束縛／召喚三類法術的判定邏輯** — K/M 常數已有，缺判定
+1. **第三張跳表 override** — `FUN_138d_3c81`（18 項，邊界檢查 `cmpw $0x11,0x4e2e` 已複核）。
+   即死／束縛／枯萎的判定很可能就藏在它後面讀不到的 case body 裡，一修可能解開三到四項
+2. **城鎮經濟** — 買賣／治療／升級全在城鎮，沒有它玩家卡在第一關。跳表修好後值得重試
+3. **種族存在存檔哪裡** — 原以為 `0x0c`，已推翻，建角流程缺一塊
 4. **城鎮經濟** — 程式碼在 Ghidra 未發現區，跳表修復後值得重試
 5. 補齊規格：事件觸發、移動、建角升級（證據等級已夠，尚未收攏成 spec）
 

@@ -1,6 +1,7 @@
 package gfx
 
 import (
+	"image/color"
 	"os"
 	"path/filepath"
 	"testing"
@@ -319,33 +320,100 @@ func itoa(n int) string {
 }
 
 // --- 字型 ---
+// 已驗證（2026-07-25，見 docs/re/17-font-format.md）：反組譯 FUN_217b_025a
+// （CGA 路徑）與 FUN_217b_097c（EGA 路徑）逐指令核對出真實佈局——
+// CGA 8x8 2bpp「同列 2 個 byte 是 bit0/bit1 兩個平面」（不是先前假設的
+// 8x12 1bpp VGA BIOS 格式）、EGA 16x14 1bpp。肉眼比對：整個 ASCII
+// 字母表清楚可讀，GOT.FNE 呈現花體(blackletter)風格，跟
+// workplace/dosbox/shots/smoke-01.png 主選單、03-ega-ingame.png
+// 遊戲內選單的花體字一致。
 func TestDecodeFonts(t *testing.T) {
 	dir := origDataDir(t)
+	white := color.RGBA{0xff, 0xff, 0xff, 0xff}
+	black := color.RGBA{0x00, 0x00, 0x00, 0xff}
 
+	// --- CGA ASC.FNT：8x8、2bpp 逐列雙平面 ---
 	ascFnt := readAsset(t, dir, "ASC.FNT")
-	// 假設:1 byte header + 256 字元 x 12 rows。
-	img, err := DecodeMonoFont8x12(ascFnt[1:], 256, 16)
+	cgaGlyphs, err := DecodeCGAFont(ascFnt)
 	if err != nil {
 		t.Fatalf("ASC.FNT 解碼失敗: %v", err)
 	}
-	out := filepath.Join(dumpDir(t), "font-asc-fnt.png")
-	if err := SavePNG(out, img); err != nil {
+	t.Logf("ASC.FNT: %d 個字元(從 0x20 起)", len(cgaGlyphs))
+	atlasCGA := TileSpriteSheet(cgaGlyphs, 16)
+	outAtlas := filepath.Join(dumpDir(t), "font-asc-fnt-atlas.png")
+	if err := SavePNG(outAtlas, atlasCGA); err != nil {
 		t.Fatalf("存 PNG 失敗: %v", err)
 	}
-	t.Logf("ASC.FNT -> %s", out)
+	t.Logf("ASC.FNT atlas -> %s", outAtlas)
+	zoomCGA := zoomImage(atlasCGA, 4)
+	outZoom := filepath.Join(dumpDir(t), "font-asc-fnt-atlas-zoom4x.png")
+	if err := SavePNG(outZoom, zoomCGA); err != nil {
+		t.Fatalf("存 PNG 失敗: %v", err)
+	}
+	t.Logf("ASC.FNT atlas 放大4倍 -> %s", outZoom)
 
+	// --- EGA ASC.FNE / GOT.FNE：16x14、1bpp ---
 	for _, name := range []string{"ASC.FNE", "GOT.FNE"} {
 		data := readAsset(t, dir, name)
-		// 假設:無 header,224 字元 x 12 rows (2688 = 224*12)。
-		img, err := DecodeMonoFont8x12(data, 224, 16)
+		glyphs, err := DecodeEGAFont(data, white, black)
 		if err != nil {
 			t.Fatalf("%s 解碼失敗: %v", name, err)
 		}
-		out := filepath.Join(dumpDir(t), "font-"+name+".png")
+		t.Logf("%s: %d 個字元(從 0x20 起)", name, len(glyphs))
+		atlas := TileSpriteSheet(glyphs, 16)
+		out := filepath.Join(dumpDir(t), "font-"+name+"-atlas.png")
+		if err := SavePNG(out, atlas); err != nil {
+			t.Fatalf("存 PNG 失敗: %v", err)
+		}
+		t.Logf("%s atlas -> %s", name, out)
+		zoom := zoomImage(atlas, 3)
+		outZ := filepath.Join(dumpDir(t), "font-"+name+"-atlas-zoom3x.png")
+		if err := SavePNG(outZ, zoom); err != nil {
+			t.Fatalf("存 PNG 失敗: %v", err)
+		}
+		t.Logf("%s atlas 放大3倍 -> %s", name, outZ)
+	}
+
+	// --- 直接渲染實際 UI 字串，跟 DOSBox 截圖並排比對 ---
+	// smoke-01.png 主選單、03-ega-ingame.png 遊戲內選單都是花體(GOT.FNE)。
+	gotData := readAsset(t, dir, "GOT.FNE")
+	gotGlyphs, err := DecodeEGAFont(gotData, white, black)
+	if err != nil {
+		t.Fatalf("GOT.FNE 解碼失敗(渲染字串用): %v", err)
+	}
+	strings := []string{
+		"DEMON'S WINTER",
+		"Go adventuring",
+		"Character Utilities",
+		"Alternate Character Set",
+		"Walk",
+		"Party info",
+		"Save Game",
+		"Camp",
+	}
+	for i, s := range strings {
+		img := RenderText(gotGlyphs, s, egaGlyphWidth, egaGlyphHeight, black)
+		out := filepath.Join(dumpDir(t), "font-render-got-"+itoa(i)+".png")
 		if err := SavePNG(out, img); err != nil {
 			t.Fatalf("存 PNG 失敗: %v", err)
 		}
-		t.Logf("%s -> %s", name, out)
+		t.Logf("GOT.FNE 渲染 %q -> %s", s, out)
+	}
+
+	// 同一批字串也用 ASC.FNE(平頭字)渲染一份對照，供肉眼確認兩種字型
+	// 的差異(GOT=花體、ASC=平頭)不是解碼錯誤造成的假差異。
+	ascData := readAsset(t, dir, "ASC.FNE")
+	ascGlyphs, err := DecodeEGAFont(ascData, white, black)
+	if err != nil {
+		t.Fatalf("ASC.FNE 解碼失敗(渲染字串用): %v", err)
+	}
+	for i, s := range strings {
+		img := RenderText(ascGlyphs, s, egaGlyphWidth, egaGlyphHeight, black)
+		out := filepath.Join(dumpDir(t), "font-render-asc-"+itoa(i)+".png")
+		if err := SavePNG(out, img); err != nil {
+			t.Fatalf("存 PNG 失敗: %v", err)
+		}
+		t.Logf("ASC.FNE 渲染 %q -> %s", s, out)
 	}
 }
 
