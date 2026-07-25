@@ -84,7 +84,7 @@
 | [`03-events.md`](03-events.md) — 事件觸發 | **READY** | `docs/re/02`、`05`、`08`、`22` |
 | [`04-movement.md`](04-movement.md) — 移動與模式切換 | **READY** | `docs/re/08`、`04`、`22` |
 | [`05-character.md`](05-character.md) — 角色建立與升級 | **READY**（基礎骰分佈標假設）| `docs/re/10`、`19`、`21` |
-| 06 時間系統 | 待寫（等 DOSBox 驗證日長 26 vs 38）| `docs/re/04`、`08` |
+| [`06-time.md`](06-time.md) — 時間系統 | **READY** | `docs/re/04`、`08` + 手冊原文 |
 | 07 素材格式與渲染 | 待寫 | `docs/formats/graphics.md` |
 | [`08-town-economy.md`](08-town-economy.md) — 城鎮與經濟 | **READY** | `docs/re/19`、`21` |
 | 09 字型與中文化 | 待寫 —— `.FNT`/`.FNE` 已解（`docs/re/17`），尚未收攏成規格 | `docs/re/17` |
