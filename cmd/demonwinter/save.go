@@ -1,0 +1,113 @@
+package main
+
+import (
+	"fmt"
+	"image"
+	"image/color"
+	"os"
+	"path/filepath"
+
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+
+	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
+	"github.com/wicanr2/demon_winter_cht/internal/ui"
+	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
+)
+
+// 離開與存檔。
+//
+// 照 esc-cancel-f10-quit-autosave 鐵則：
+//
+//   - **ESC 只取消**，退回上一層，永遠不會結束遊戲。
+//     按錯 ESC 就噴掉一小時進度是設計失誤，不是玩家的錯。
+//   - **F10 才是離開**，而且先跳 Yes／No，選 Yes 才自動存檔並退出。
+//
+// 存檔路徑預設**不是**原版資料目錄。玩家的原版 `PARTY.DAT` 是他自己的
+// 合法副本，把遊玩進度寫回去等於改壞人家的東西。
+
+// loadSave 讀取存檔：優先讀玩家的進度檔，沒有就拿原版存檔當起始狀態。
+//
+// 回傳的第二個值是「這是不是全新開始」，用來決定要不要在畫面上提示。
+func loadSave(savePath, dataDir string) (*scenario.SaveGame, bool, error) {
+	if _, err := os.Stat(savePath); err == nil {
+		s, err := scenario.LoadSaveGame(savePath)
+		return s, false, err
+	}
+	s, err := scenario.LoadSaveGame(filepath.Join(dataDir, "PARTY.DAT"))
+	return s, true, err
+}
+
+// writeSave 把目前的隊伍狀態寫回存檔檔案。
+func (a *app) writeSave() error {
+	for i := range a.members {
+		if i >= len(a.save.Characters) {
+			break
+		}
+		a.members[i].ApplyTo(&a.save.Characters[i])
+	}
+	a.save.PositionX = byte(a.party.X())
+	a.save.PositionY = byte(a.party.Y())
+	a.save.Facing = byte(a.party.Facing())
+
+	if err := os.MkdirAll(filepath.Dir(a.savePath), 0o755); err != nil {
+		return fmt.Errorf("建立存檔目錄失敗: %w", err)
+	}
+	return a.save.SaveTo(a.savePath)
+}
+
+// saveNow 存檔並把結果寫進狀態訊息。
+func (a *app) saveNow() {
+	if err := a.writeSave(); err != nil {
+		a.message = fmt.Sprintf("存檔失敗：%v", err)
+		return
+	}
+	a.message = fmt.Sprintf("已存檔 → %s", a.savePath)
+}
+
+// updateQuitDialog 處理離開確認。回傳 true 代表這一幀已被對話框吃掉。
+func (a *app) updateQuitDialog() (bool, error) {
+	if !a.quitting {
+		// F10 是唯一的離開手勢，刻意與 ESC 在鍵盤上分得很開。
+		if inpututil.IsKeyJustPressed(ebiten.KeyF10) {
+			a.quitting = true
+			return true, nil
+		}
+		return false, nil
+	}
+
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeyY):
+		if err := a.writeSave(); err != nil {
+			// 存不進去就別走 —— 直接退出等於把進度丟了還不告訴人。
+			a.quitting = false
+			a.message = fmt.Sprintf("存檔失敗，沒有離開：%v", err)
+			return true, nil
+		}
+		return true, ebiten.Termination
+	case inpututil.IsKeyJustPressed(ebiten.KeyN):
+		return true, ebiten.Termination
+	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
+		a.quitting = false
+	}
+	return true, nil
+}
+
+// drawQuitDialog 畫離開確認框。
+func (a *app) drawQuitDialog(dst *ebiten.Image) {
+	const w, h = 400, 6 * ui.LineHeight
+	x := (layout.CanvasWidth - w) / 2
+	y := (layout.CanvasHeight - h) / 2
+
+	dst.SubImage(image.Rect(x, y, x+w, y+h)).(*ebiten.Image).Fill(quitDialogBG)
+	ui.StrokeRect(dst, x, y, w, h, markerColor)
+
+	tx, ty := x+ui.LineHeight, y+ui.LineHeight
+	a.font.Draw(dst, "要離開遊戲嗎？", tx, ty)
+	a.font.Draw(dst, "Y：存檔後離開", tx, ty+ui.LineHeight*3/2)
+	a.font.Draw(dst, "N：不存檔直接離開", tx, ty+ui.LineHeight*5/2)
+	a.font.Draw(dst, "Esc：繼續玩", tx, ty+ui.LineHeight*7/2)
+}
+
+// quitDialogBG 是確認框的底色。刻意不透明 —— 蓋住底下的畫面才看得清楚在問什麼。
+var quitDialogBG = color.RGBA{0, 0, 0, 0xff}

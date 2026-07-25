@@ -234,3 +234,40 @@ func min(a, b int) int {
 	}
 	return b
 }
+
+// ApplyTo 把規則層的角色狀態寫回存檔記錄。
+//
+// **只覆蓋 FromSave 讀進來的那些欄位。** 存檔還有一大片未解區域
+// （道具槽內部語意、戰鬥旗標、Unknown103 等），那些一律留原值 ——
+// 規則層根本不知道它們代表什麼，寫進去等於亂猜。
+//
+// 這是 FromSave 的反向操作，兩者必須成對維護：FromSave 多讀一個欄位，
+// 這裡就要多寫一個，否則那個欄位會在存檔時悄悄退回舊值。
+func (c Character) ApplyTo(rec *scenario.Character) {
+	rec.Name = c.Name
+	rec.RaceByte = byte(c.Race)
+	rec.ClassByte = byte(c.Class)
+	rec.Level = byte(c.Level)
+	rec.Experience = CapValue(c.Experience)
+	rec.MaxHP = byte(c.MaxHP)
+	rec.CurrentHP = byte(c.CurrentHP)
+	rec.MaxSPBonus = byte(c.MaxSP)
+	rec.CurrentSP = byte(c.CurrentSP)
+
+	rec.SpeedNatural = byte(c.Traits[gamedata.Speed])
+	rec.StrengthNatural = byte(c.Traits[gamedata.Strength])
+	rec.Intellect = byte(c.Traits[gamedata.Intellect])
+	rec.Endurance = byte(c.Traits[gamedata.Endurance])
+	rec.SkillNatural = byte(c.Traits[gamedata.Skill])
+
+	for i := range rec.SkillFlags {
+		if i >= gamedata.NumSkills {
+			break
+		}
+		if c.Skills[i] {
+			rec.SkillFlags[i] = 1
+		} else {
+			rec.SkillFlags[i] = 0
+		}
+	}
+}

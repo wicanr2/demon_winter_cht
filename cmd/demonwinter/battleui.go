@@ -36,10 +36,6 @@ var playerCommands = []struct {
 // 玩家單位輪到時等玩家下指令；怪物與召喚物由簡單 AI 代打，按空白鍵逐步執行，
 // 方便肉眼核對每一步。
 func (a *app) updateBattle() error {
-	if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
-		return ebiten.Termination
-	}
-
 	if out := a.battle.Outcome(); out != game.Ongoing {
 		if !inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 			return nil
@@ -386,7 +382,7 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 		return
 	}
 	if cur == nil || !cur.IsPlayer {
-		a.font.Draw(dst, "空白鍵：讓對方行動　Q：離開", layout.BoxPadX, y)
+		a.font.Draw(dst, "空白鍵：讓對方行動", layout.BoxPadX, y)
 		return
 	}
 
@@ -403,6 +399,6 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 		}
 		x = a.font.Draw(dst, label+"  ", x, y)
 	}
-	a.font.Draw(dst, "方向鍵：轉向／前進　Enter：前進　Q：離開",
+	a.font.Draw(dst, "方向鍵：轉向／前進　Enter：前進",
 		layout.BoxPadX, y+ui.LineHeight)
 }

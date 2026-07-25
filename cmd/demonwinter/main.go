@@ -74,6 +74,13 @@ type app struct {
 	// prayChance 是祈禱的成功率，會隨每次祈禱變動，跨戰鬥保留。
 	prayChance int
 
+	// save／savePath 是進度存檔。savePath 預設不是原版資料目錄 ——
+	// 玩家的原版 PARTY.DAT 是他自己的合法副本，不該被遊玩進度蓋掉。
+	save     *scenario.SaveGame
+	savePath string
+	// quitting 為真時畫面停在離開確認框。
+	quitting bool
+
 	// battle 非 nil 時遊戲進入戰鬥模式，地圖輸入停止。
 	battle     *game.Battle
 	log        []string
@@ -104,6 +111,9 @@ var keyFacing = []struct {
 }
 
 func (a *app) Update() error {
+	if handled, err := a.updateQuitDialog(); handled || err != nil {
+		return err
+	}
 	if a.town != nil {
 		return a.updateTown()
 	}
@@ -123,8 +133,12 @@ func (a *app) Update() error {
 				a.pendingIDs = nil
 			}
 		}
+		// ESC 只關掉文字視窗，不結束遊戲。
 		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-			return ebiten.Termination
+			for a.box.Active() {
+				a.box.Advance()
+			}
+			a.pendingIDs = nil
 		}
 		return nil
 	}
@@ -162,8 +176,12 @@ func (a *app) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyT) {
 		a.openTownPicker()
 	}
+	// ESC 只收起名冊。離開遊戲一律走 F10（見 save.go）。
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		return ebiten.Termination
+		a.showRoster = false
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyS) {
+		a.saveNow()
 	}
 	return nil
 }
@@ -172,6 +190,9 @@ func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
 	if a.town != nil {
 		a.drawTown(a.canvas)
+		if a.quitting {
+			a.drawQuitDialog(a.canvas)
+		}
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 		op.GeoM.Scale(scale, scale)
 		screen.DrawImage(a.canvas, op)
@@ -195,6 +216,10 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawBattleCommands(a.canvas)
 	}
 	ui.DrawMixedTextBox(a.canvas, a.box, a.font, 0, layout.TextBoxTop, markerColor)
+
+	if a.quitting {
+		a.drawQuitDialog(a.canvas)
+	}
 
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 	op.GeoM.Scale(scale, scale)
@@ -357,8 +382,9 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"Tab：切換季節",
 		"P：隊伍名冊",
 		"T：進入城鎮",
+		"S：存檔",
 		"空白鍵：翻頁",
-		"Esc：離開",
+		"F10：離開遊戲",
 	}
 	a.font.DrawLines(dst, lines, layout.StatusX, layout.StatusY)
 }
@@ -412,6 +438,8 @@ func main() {
 		"倚天中文字型目錄，需含 STDFONT.15 與 SPCFONT.15（自備）")
 	mapFile := flag.String("map", "MAP1.MAP", "要載入的地圖檔")
 	dataFile := flag.String("events", "DATA1.TXT", "要載入的事件表")
+	savePath := flag.String("save", "workplace/save/PARTY.DAT",
+		"進度存檔路徑。刻意不預設在原版資料目錄，免得蓋掉玩家的原版存檔")
 	langDir := flag.String("lang", "assets/lang/zh-Hant",
 		"翻譯目錄。指向不存在的路徑即為原文模式")
 	startX := flag.Int("x", 32, "起始 X")
@@ -452,9 +480,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入道具表：%v", err)
 	}
-	save, err := scenario.LoadSaveGame(filepath.Join(*dataDir, "PARTY.DAT"))
+	save, fresh, err := loadSave(*savePath, *dataDir)
 	if err != nil {
 		log.Fatalf("載入隊伍存檔：%v", err)
+	}
+	if fresh {
+		log.Printf("沒有進度存檔，用原版 PARTY.DAT 當起始狀態。存檔會寫到 %s", *savePath)
 	}
 	members := make([]game.Character, 0, len(save.Characters))
 	for _, sc := range save.Characters {
@@ -522,6 +553,8 @@ func main() {
 		normal:     loadSet(gfx.NormalTiles),
 		winter:     loadSet(gfx.WinterTiles),
 		font:       font,
+		save:       save,
+		savePath:   *savePath,
 	}
 
 	a.canvas = ebiten.NewImage(layout.CanvasWidth, layout.CanvasHeight)

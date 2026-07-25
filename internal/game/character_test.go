@@ -287,3 +287,66 @@ func TestLevelUp_AllocatesThreePointsWithinCaps(t *testing.T) {
 		}
 	}
 }
+
+// FromSave 與 ApplyTo 必須成對：讀進來再寫回去，讀得到的欄位都不能變。
+//
+// 兩支函式分開維護時最容易出的錯是「FromSave 多讀一個欄位、ApplyTo 忘了寫」，
+// 那個欄位會在存檔時悄悄退回舊值 —— 玩家升級完存檔，回來發現等級沒了。
+func TestCharacter_FromSaveApplyToRoundTrip(t *testing.T) {
+	orig := scenario.Character{
+		Name: "Wopple", RaceByte: 1, ClassByte: 6, Level: 3,
+		Experience: 12345, MaxHP: 24, CurrentHP: 20,
+		MaxSPBonus: 29, CurrentSP: 17,
+		SpeedNatural: 11, StrengthNatural: 9, Intellect: 18,
+		Endurance: 12, SkillNatural: 14,
+	}
+	orig.SkillFlags[gamedata.SkillPersuasion] = 1
+	orig.SkillFlags[gamedata.SkillBerserking] = 1
+
+	back := orig
+	FromSave(orig).ApplyTo(&back)
+
+	if back.Name != orig.Name || back.RaceByte != orig.RaceByte ||
+		back.ClassByte != orig.ClassByte || back.Level != orig.Level ||
+		back.Experience != orig.Experience {
+		t.Errorf("基本欄位走樣：\n得到 %+v\n預期 %+v", back, orig)
+	}
+	if back.MaxHP != orig.MaxHP || back.CurrentHP != orig.CurrentHP ||
+		back.MaxSPBonus != orig.MaxSPBonus || back.CurrentSP != orig.CurrentSP {
+		t.Error("生命／法力走樣")
+	}
+	if back.SpeedNatural != orig.SpeedNatural ||
+		back.StrengthNatural != orig.StrengthNatural ||
+		back.Intellect != orig.Intellect || back.Endurance != orig.Endurance ||
+		back.SkillNatural != orig.SkillNatural {
+		t.Error("屬性走樣")
+	}
+	if back.SkillFlags != orig.SkillFlags {
+		t.Errorf("技能旗標走樣：%v vs %v", back.SkillFlags, orig.SkillFlags)
+	}
+}
+
+// 規則層不認識的欄位一個都不能動。
+func TestCharacter_ApplyToLeavesUnknownFields(t *testing.T) {
+	rec := scenario.Character{
+		Name: "X", WeaponSlotIndex: 3, ArmorSlotIndex: 8,
+		CombatStatusFlags: 0x21, Unknown103: 0x5a,
+		StrengthBonus: 99, SkillBonus: 98, SpeedBonus: 97, MaxSPNatural: 96,
+	}
+	before := rec
+	FromSave(rec).ApplyTo(&rec)
+
+	if rec.WeaponSlotIndex != before.WeaponSlotIndex ||
+		rec.ArmorSlotIndex != before.ArmorSlotIndex ||
+		rec.CombatStatusFlags != before.CombatStatusFlags ||
+		rec.Unknown103 != before.Unknown103 {
+		t.Error("裝備槽／戰鬥旗標／未知欄位被改寫了")
+	}
+	// 「含裝備加成」的欄位由裝備推導，規則層不該直接寫。
+	if rec.StrengthBonus != before.StrengthBonus ||
+		rec.SkillBonus != before.SkillBonus ||
+		rec.SpeedBonus != before.SpeedBonus ||
+		rec.MaxSPNatural != before.MaxSPNatural {
+		t.Error("含加成欄位被改寫了")
+	}
+}

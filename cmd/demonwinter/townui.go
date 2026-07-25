@@ -45,10 +45,6 @@ func (a *app) openTownPicker() {
 func (a *app) updateTown() error {
 	t := a.town
 
-	if inpututil.IsKeyJustPressed(ebiten.KeyQ) {
-		return ebiten.Termination
-	}
-
 	if t.picking {
 		return a.updateTownPicker(t)
 	}
