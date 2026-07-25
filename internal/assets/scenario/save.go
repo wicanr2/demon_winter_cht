@@ -22,24 +22,38 @@ const (
 	numCharacters = 5
 	// nameFieldLen 是姓名欄位保留的長度（NUL 結尾字串）。
 	nameFieldLen = 12
-	// raceOffset 是種族欄位在角色記錄內的相對位移。0xFF = 尚未設定種族
-	// （PARTY.BAK，角色創建早期存檔全部是 0xFF；PARTY.DAT 創建完成後是 0-4）。
-	raceOffset = 0x0c
-	// unknown0DOffset/unknown0DLen 是種族之後、裝備欄之前的未知區段，本次分析的
-	// 存檔裡 5 名角色全部是 0，懷疑放職業或其他角色創建旗標，無法從這份存檔驗證。
-	unknown0DOffset = 0x0d
-	unknown0DLen    = 13
-	// inventoryStart/inventorySlotLen/inventorySlotCount 是裝備／道具欄，
-	// 結構（slot 邊界、數量）已用 0xFF/0x0a 出現位置的週期性 + PARTY.DAT vs
-	// PARTY.BAK diff 交叉驗證過；slot 內部欄位語意未解，保留原始 bytes。
-	inventoryStart     = 0x1a
+	// inventoryStart/inventorySlotLen/inventorySlotCount 是裝備／道具欄。
+	//
+	// **起點是 0x0c，不是先前記載的 0x1a**（見 docs/formats/game-data-tables.md）。
+	// 兩者都能讓 10 個 slot 剛好接到 EXP 欄位（0x1a + 170 = 0xc4），所以
+	// 「邊界對得上」不足以區分；定案依據是 DOSBox 實驗中改動的四個 byte，
+	// 只有 0x0c 起算能全部解釋。
+	//
+	// 這個位移先前被誤當成種族欄位（見 raceOffset）。
+	inventoryStart     = 0x0c
 	inventorySlotLen   = 17
 	inventorySlotCount = 10
 	inventoryRegionLen = inventorySlotLen * inventorySlotCount // 170
-	// expOffset 是經驗值欄位（3 bytes little-endian）在角色記錄內的相對位移。
-	// 攻略原文已明講位址；本次分析用 5 名角色位址間距交叉驗證過位置無誤。
+	// expOffset 是經驗值欄位在角色記錄內的相對位移。
+	//
+	// **儲存寬度是 4 bytes**（0xc4–0xc7），數值封頂在 0x00FFFFFF ——
+	// 先前記載的「3 bytes」是把封頂值當成了欄位寬度。技能旗標從 0xc8 起，
+	// 正好接在 4 bytes 之後。
 	expOffset = 0xc4
+	expLen    = 4
 
+	// skillFlagsOffset/skillFlagsLen 是已學技能旗標陣列，每項 1 byte（0/1），
+	// 索引就是遊戲內部技能 id（見 docs/re/21-skills-races-and-files-dat.md）。
+	skillFlagsOffset = 0xc8
+	skillFlagsLen    = 31
+
+	// levelOffset/raceOffset/classOffset 是三個 1-byte 欄位。
+	//
+	// 種族**在 0xf5**，不是先前記載的 0x0c —— 那個位移其實是道具槽陣列的起點。
+	// 職業（0–9）是技能學費表的欄索引，兩個獨立呼叫點都這樣用。
+	levelOffset = 0xf4
+	raceOffset  = 0xf5
+	classOffset = 0xf6
 	// attrXxxOffset 全部是「相對於 expOffset 的位移」，沿用 docs/walkthrough
 	// 與 tools/parse_party.py 已驗證的寫法，1 byte，不含加成/含加成分開存放。
 	attrStrengthNaturalOffset = 0x24
@@ -132,22 +146,27 @@ type Character struct {
 	// Name 是角色姓名（已驗證）。
 	Name string
 
-	// RaceByte 是種族索引原始值。0xFF = 尚未設定（角色創建早期存檔）。
-	// **待複核**：索引 0-4 對應到哪個種族名稱是假設（依手冊列表順序
-	// 人類0/精靈1/矮人2/黑暗精靈3/巨魔4），本存檔只出現過 0-2，
-	// 索引 3、4 完全未經驗證。索引到名稱的對照刻意不在本套件內建，
-	// 呼叫端如需顯示名稱請自行依 docs/formats/game-data-tables.md §1.2 對照，
-	// 避免把未驗證的猜測寫死成「看似已驗證」的具名欄位。
+	// Level 是角色等級（0xf4）。
+	Level byte
+
+	// RaceByte 是種族索引（0xf5）：0 人類、1 精靈、2 矮人、3 黑暗精靈、4 巨魔。
+	// 對照已由 FILES.DAT 0x422 的種族上限表與手冊附錄 B 交叉驗證（25/25 全對）。
 	RaceByte byte
 
-	// Unknown0D 是種族之後、裝備欄之前的 13 bytes，語意未知（保留原始值）。
-	Unknown0D []byte
+	// ClassByte 是職業索引（0xf6，0–9）：0 遊俠、1 聖騎士、2 蠻族、3 武僧、
+	// 4 牧師、5 盜賊、6 巫師、7 術士、8 靈視者、9 學者。
+	// 這個值同時是技能學費表（FILES.DAT 0x158）的欄索引。
+	ClassByte byte
+
+	// SkillFlags 是 31 項技能的已學旗標，索引即遊戲內部技能 id
+	// （0 劍擊 … 30 硬化皮膚，見 docs/re/21）。值為 1 表示已學。
+	SkillFlags [skillFlagsLen]byte
 
 	// InventorySlotsRaw 是 10 個裝備／道具欄位，每個 17 bytes，語意未解
 	// （只驗證了 slot 邊界與數量），保留原始 bytes。
 	InventorySlotsRaw [inventorySlotCount][]byte
 
-	// Experience 是經驗值（已驗證，3 bytes little-endian）。
+	// Experience 是經驗值（4 bytes little-endian，數值封頂 0x00FFFFFF）。
 	Experience int
 
 	// 屬性區（已驗證，見 docs/formats/game-data-tables.md §1.2）：
@@ -285,8 +304,8 @@ func parseCharacter(rec []byte) (Character, error) {
 		slots[i] = slot
 	}
 
-	unknown0D := make([]byte, unknown0DLen)
-	copy(unknown0D, rec[unknown0DOffset:unknown0DOffset+unknown0DLen])
+	var skills [skillFlagsLen]byte
+	copy(skills[:], rec[skillFlagsOffset:skillFlagsOffset+skillFlagsLen])
 
 	raw := make([]byte, recordLen)
 	copy(raw, rec)
@@ -295,10 +314,12 @@ func parseCharacter(rec []byte) (Character, error) {
 
 	return Character{
 		Name:              string(name),
+		Level:             rec[levelOffset],
 		RaceByte:          rec[raceOffset],
-		Unknown0D:         unknown0D,
+		ClassByte:         rec[classOffset],
+		SkillFlags:        skills,
 		InventorySlotsRaw: slots,
-		Experience:        le3(rec[expOffset : expOffset+3]),
+		Experience:        le4(rec[expOffset : expOffset+expLen]),
 		StrengthNatural:   attr(attrStrengthNaturalOffset),
 		SkillNatural:      attr(attrSkillNaturalOffset),
 		MaxSPNatural:      attr(attrMaxSPNaturalOffset),
@@ -320,8 +341,13 @@ func parseCharacter(rec []byte) (Character, error) {
 	}, nil
 }
 
-// le3 把 3 bytes 讀成 little-endian 無號整數（PARTY.DAT 經驗值／金幣欄位的
-// 共用格式，攻略稱「反序」）。
+// le3 把 3 bytes 讀成 little-endian 無號整數（trailer 的金幣欄位；
+// 該欄位實際寬度未定，見 goldOffset 註解）。
 func le3(b []byte) int {
 	return int(b[0]) | int(b[1])<<8 | int(b[2])<<16
+}
+
+// le4 把 4 bytes 讀成 little-endian 無號整數（角色經驗值欄位）。
+func le4(b []byte) int {
+	return int(b[0]) | int(b[1])<<8 | int(b[2])<<16 | int(b[3])<<24
 }

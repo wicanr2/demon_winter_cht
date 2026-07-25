@@ -10,6 +10,17 @@ func partyDatPath() string {
 	return filepath.Join(dataDir, "PARTY.DAT")
 }
 
+func loadTestSave(t *testing.T) *SaveGame {
+	t.Helper()
+	path := partyDatPath()
+	skipIfMissing(t, path)
+	sg, err := LoadSaveGame(path)
+	if err != nil {
+		t.Fatalf("LoadSaveGame(%s) 失敗: %v", path, err)
+	}
+	return sg
+}
+
 func TestLoadSaveGame_FiveReadableCharacters(t *testing.T) {
 	path := partyDatPath()
 	skipIfMissing(t, path)
@@ -162,6 +173,96 @@ func TestLoadSaveGame_NeverWritesOrigFile(t *testing.T) {
 	for i := range before {
 		if before[i] != after[i] {
 			t.Fatalf("%s 在 LoadSaveGame 前後內容不一致，offset 0x%x: %d -> %d", path, i, before[i], after[i])
+		}
+	}
+}
+
+// 把 docs/formats/game-data-tables.md §1.6 那張「五名角色完整解碼」表釘進測試。
+//
+// 這張表是整份欄位表最強的一次交叉驗證：技能與職業相稱、武器與技能相稱、
+// 護甲與職業限制相稱。任何一個欄位偏移判錯，這裡就會紅。
+//
+// 先前的測試只驗 Raw[raceOffset] == RaceByte 這類自我一致性，
+// 換成錯的偏移一樣會過 —— 那種測試給不了信心。
+func TestLoadSaveGame_MatchesVerifiedDecodeTable(t *testing.T) {
+	sg := loadTestSave(t)
+
+	want := []struct {
+		name   string
+		race   byte
+		class  byte
+		level  byte
+		skills []int
+	}{
+		{"Wopple", 1, 6, 3, []int{17, 21}}, // 精靈 巫師：火焰符文 + 靈魂符文
+		{"Stumpy", 0, 7, 3, []int{12, 14}}, // 人類 術士：幻術 + 召喚
+		{"Podgom", 0, 5, 3, []int{1, 10}},  // 人類 盜賊：劍術 + 察覺陷阱
+		{"Norman", 0, 1, 3, []int{1, 29}},  // 人類 聖騎士：劍術 + 讀心
+		{"Menhir", 0, 0, 3, []int{1, 8}},   // 人類 遊俠：劍術 + 狩獵
+	}
+
+	for i, w := range want {
+		ch := sg.Characters[i]
+
+		if ch.Name != w.name {
+			t.Errorf("角色 %d 姓名 = %q，預期 %q", i, ch.Name, w.name)
+		}
+		if ch.RaceByte != w.race {
+			t.Errorf("%s 種族 = %d，預期 %d", w.name, ch.RaceByte, w.race)
+		}
+		if ch.ClassByte != w.class {
+			t.Errorf("%s 職業 = %d，預期 %d", w.name, ch.ClassByte, w.class)
+		}
+		if ch.Level != w.level {
+			t.Errorf("%s 等級 = %d，預期 %d", w.name, ch.Level, w.level)
+		}
+
+		var got []int
+		for id, on := range ch.SkillFlags {
+			if on == 1 {
+				got = append(got, id)
+			}
+		}
+		if len(got) != len(w.skills) {
+			t.Errorf("%s 已學技能 = %v，預期 %v", w.name, got, w.skills)
+			continue
+		}
+		for k := range w.skills {
+			if got[k] != w.skills[k] {
+				t.Errorf("%s 已學技能 = %v，預期 %v", w.name, got, w.skills)
+				break
+			}
+		}
+	}
+}
+
+// 手冊「角色剛創建時只能選兩項技能」—— 五個人都必須恰好兩項。
+// 技能旗標偏移若判錯，這裡會讀到一堆隨機的 1。
+func TestLoadSaveGame_EachCharacterHasExactlyTwoSkills(t *testing.T) {
+	sg := loadTestSave(t)
+
+	for i, ch := range sg.Characters {
+		n := 0
+		for _, on := range ch.SkillFlags {
+			if on != 0 && on != 1 {
+				t.Errorf("角色 %d(%s) 技能旗標出現非 0/1 的值 %d，偏移可能判錯", i, ch.Name, on)
+			}
+			if on == 1 {
+				n++
+			}
+		}
+		if n != 2 {
+			t.Errorf("角色 %d(%s) 已學 %d 項技能，預期恰好 2 項", i, ch.Name, n)
+		}
+	}
+}
+
+// 職業值必須落在 0–9（技能學費表的欄索引）。
+func TestLoadSaveGame_ClassWithinRange(t *testing.T) {
+	sg := loadTestSave(t)
+	for i, ch := range sg.Characters {
+		if ch.ClassByte > 9 {
+			t.Errorf("角色 %d(%s) 職業 = %d，超出 0–9", i, ch.Name, ch.ClassByte)
 		}
 	}
 }

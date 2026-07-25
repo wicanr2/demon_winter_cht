@@ -30,7 +30,7 @@ const (
 	viewTilesX  = 11
 	viewTilesY  = 11
 	statusWidth = 216
-	scale       = 3
+	scale       = 2
 )
 
 var markerColor = color.RGBA{0xff, 0xff, 0x55, 0xff}
@@ -52,6 +52,10 @@ type app struct {
 
 	exits  *world.ExitTable
 	events *scenario.EventTable
+	tables *gamedata.Tables
+
+	members    []game.Character
+	showRoster bool
 
 	box *ui.TextBox
 
@@ -118,6 +122,9 @@ func (a *app) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
 		a.useWinter = !a.useWinter
 	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
+		a.showRoster = !a.showRoster
+	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		return ebiten.Termination
 	}
@@ -127,7 +134,11 @@ func (a *app) Update() error {
 func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
 	a.drawWorld(a.canvas)
-	a.drawStatus(a.canvas)
+	if a.showRoster {
+		a.drawRoster(a.canvas)
+	} else {
+		a.drawStatus(a.canvas)
+	}
 	ui.DrawTextBox(a.canvas, a.box, a.font, 0, textBoxTop, markerColor)
 
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
@@ -218,6 +229,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"",
 		"Arrows: move",
 		"Tab:    season",
+		"P:      party",
 		"Space:  page text",
 		"Esc:    quit",
 	}
@@ -237,7 +249,50 @@ func logicalSize() (int, int) {
 		w = min
 	}
 	h := textBoxTop + (ui.TextBoxPageLines+2)*(ui.CGAGlyphHeight+2)
+	// 名冊一次列五個人、每人三行，比地圖高，畫布要容得下。
+	if rosterH := (3*5 + 4) * (ui.CGAGlyphHeight + 2); h < rosterH {
+		h = rosterH
+	}
 	return w, h
+}
+
+var raceName = []string{"Human", "Elf", "Dwarf", "DarkElf", "Troll"}
+
+var className = []string{
+	"Ranger", "Paladin", "Barbarian", "Monk", "Cleric",
+	"Thief", "Wizard", "Sorcerer", "Visionary", "Scholar",
+}
+
+func nameOf(list []string, i int) string {
+	if i < 0 || i >= len(list) {
+		return "?"
+	}
+	return list[i]
+}
+
+// drawRoster 顯示隊伍五人的基本資料。
+//
+// 屬性顯示的是天生值（不含裝備加成），與存檔欄位一致。
+func (a *app) drawRoster(dst *ebiten.Image) {
+	x := viewTilesX*gfx.TileWidth + 8
+	y := 6
+	line := func(s string) {
+		a.font.Draw(dst, s, x, y)
+		y += a.font.Height() + 2
+	}
+
+	line("PARTY")
+	for _, c := range a.members {
+		pts, err := c.RemainingSkillPoints(a.tables)
+		if err != nil {
+			pts = -1
+		}
+		line(fmt.Sprintf("%-7s L%-2d %-8s", c.Name, c.Level, nameOf(className, int(c.Class))))
+		line(fmt.Sprintf("  %-7s HP %3d/%3d", nameOf(raceName, int(c.Race)), c.CurrentHP, c.MaxHP))
+		line(fmt.Sprintf("  SP %3d/%3d  free %d", c.CurrentSP, c.MaxSP, pts))
+	}
+	line("")
+	line("P: back")
 }
 
 func (a *app) Layout(int, int) (int, int) {
@@ -276,6 +331,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入事件表：%v", err)
 	}
+	save, err := scenario.LoadSaveGame(filepath.Join(*dataDir, "PARTY.DAT"))
+	if err != nil {
+		log.Fatalf("載入隊伍存檔：%v", err)
+	}
+	members := make([]game.Character, 0, len(save.Characters))
+	for _, sc := range save.Characters {
+		members = append(members, game.FromSave(sc))
+	}
 
 	loadSet := func(s gfx.TerrainSet) *ui.Tileset {
 		ts, err := gfx.LoadTileset(filepath.Join(*dataDir, string(s)), s)
@@ -292,15 +355,17 @@ func main() {
 	}
 
 	a := &app{
-		world:  game.NewWorld(m, tables),
-		party:  game.NewParty(*startX, *startY, game.South, 0),
-		clock:  game.NewClock(),
-		tiles:  m,
-		exits:  exits,
-		events: events,
-		normal: loadSet(gfx.NormalTiles),
-		winter: loadSet(gfx.WinterTiles),
-		font:   font,
+		world:   game.NewWorld(m, tables),
+		party:   game.NewParty(*startX, *startY, game.South, 0),
+		clock:   game.NewClock(),
+		tiles:   m,
+		exits:   exits,
+		events:  events,
+		tables:  tables,
+		members: members,
+		normal:  loadSet(gfx.NormalTiles),
+		winter:  loadSet(gfx.WinterTiles),
+		font:    font,
 	}
 
 	lw, lh := logicalSize()
