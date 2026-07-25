@@ -148,16 +148,23 @@ func (a *app) castSelected(u *game.Unit) {
 		a.logf("%s 的法力不足以施放%s（需要 %d 點）", u.Name, e.name, e.spell.M)
 		return
 	}
+	// 原版會問「How many S.P.」讓玩家決定投入多少 —— 投得多效果強，
+	// 但法力用完就沒了。先問，行動點等確認後才扣：在輸入框按 Esc 反悔
+	// 不該算掉一次行動。
+	a.spInput = &spPrompt{
+		caster: u, entry: e,
+		input: game.NewSPInput(e.spell.M, u.CurrentSP),
+	}
+}
+
+// castWithSP 是玩家在輸入框確認投入點數之後真正施法。
+func (a *app) castWithSP(u *game.Unit, e spellEntry, sp int) {
 	if _, ok := a.battle.Spend(game.ActionCast); !ok {
 		a.logf("%s 行動點不足", u.Name)
 		return
 	}
 	a.spells = nil
-
-	// 全部投入目前法力。原版讓玩家指定投入多少（「How many S.P.」），
-	// 那個輸入框還沒做 —— 先全投，並在畫面上寫明。
-	sp := u.CurrentSP
-	u.CurrentSP = 0
+	u.CurrentSP -= sp
 
 	// 範圍法術要先選中心點。原版也是先跳游標（FUN_138d_3fc9）再套效果。
 	if e.spell.Effect == game.EffectAOE {
@@ -168,6 +175,75 @@ func (a *app) castSelected(u *game.Unit) {
 
 	target := a.battle.TargetInFront(u)
 	a.applySpell(u, target, e, sp)
+}
+
+// spPrompt 是「投入多少法力」的輸入框畫面。
+//
+// 數字本身的規則在 game.SPInput（純邏輯、測得到），這裡只負責接按鍵與畫。
+type spPrompt struct {
+	caster *game.Unit
+	entry  spellEntry
+	input  *game.SPInput
+}
+
+func (a *app) updateSPPrompt() error {
+	p := a.spInput
+
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
+		// 退回施法選單，行動點還沒扣，什麼都沒發生。
+		a.spInput = nil
+		return nil
+
+	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
+		caster, entry, amount := p.caster, p.entry, p.input.Amount()
+		a.spInput = nil
+		a.castWithSP(caster, entry, amount)
+		return nil
+
+	case inpututil.IsKeyJustPressed(ebiten.KeyBackspace):
+		p.input.Backspace()
+		return nil
+
+	case inpututil.IsKeyJustPressed(ebiten.KeyUp), inpututil.IsKeyJustPressed(ebiten.KeyRight):
+		p.input.Adjust(1)
+		return nil
+
+	case inpututil.IsKeyJustPressed(ebiten.KeyDown), inpututil.IsKeyJustPressed(ebiten.KeyLeft):
+		p.input.Adjust(-1)
+		return nil
+	}
+
+	if d := pressedDigit(); d >= 0 {
+		// pressedDigit 回傳 0–8 對應鍵盤 1–9、9 對應 0。
+		digit := d + 1
+		if digit == 10 {
+			digit = 0
+		}
+		p.input.AppendDigit(digit)
+	}
+	return nil
+}
+
+func (a *app) drawSPPrompt(dst *ebiten.Image) {
+	p := a.spInput
+	y := layout.StatusY
+	line := func(s string) {
+		a.font.Draw(dst, s, layout.BoxPadX, y)
+		y += ui.LineHeight
+	}
+
+	line(fmt.Sprintf("%s 施放%s", p.caster.Name, p.entry.name))
+	line("")
+	line(fmt.Sprintf("投入多少法力？　%d", p.input.Amount()))
+	line("")
+	line(fmt.Sprintf("可投入 %d–%d（目前法力 %d）",
+		p.input.Min(), p.input.Max(), p.caster.CurrentSP))
+	line("")
+	line("數字鍵：輸入　↑↓：加減　Backspace：退格")
+	line("Enter：施放　Esc：取消")
+	line("")
+	line("※ 投入越多效果越強，法力用完就沒了")
 }
 
 // applySpell 套用一個法術的效果。
@@ -320,7 +396,7 @@ func (a *app) drawSpellMenu(dst *ebiten.Image) {
 	}
 	line("")
 	line("↑↓：選擇　Enter：施放　Esc：取消")
-	line("※ 目前一律投入全部法力（原版可指定點數，輸入框未做）")
+	line("※ 選好按 Enter 再決定投入多少法力")
 }
 
 // aoeCursor 是範圍法術的選點狀態。
@@ -448,6 +524,10 @@ func (a *app) drawItemMenu(dst *ebiten.Image) {
 func (a *app) updatePlayerTurn(u *game.Unit) error {
 	if a.useMenu != nil {
 		return a.updateItemMenu(u)
+	}
+	// 投入點數的輸入框疊在施法選單上面，要先處理。
+	if a.spInput != nil {
+		return a.updateSPPrompt()
 	}
 	if a.spells != nil {
 		return a.updateSpellMenu(u)

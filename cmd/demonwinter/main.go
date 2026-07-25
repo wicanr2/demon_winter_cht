@@ -20,7 +20,7 @@
 //   - **版面不是原版版面**。這裡是自訂的 640×400（中文需要 16×16 點陣才可讀），
 //     不是原版 320×200 的復刻。
 //   - 怪物 AI 是自己寫的簡易版，原版的還沒反組譯。
-//   - 施法時無法指定投入多少法力（一律全投），單體法術也還不能用游標選目標。
+//   - 單體法術還不能用游標選目標（傷害對正前方、治療對自己）。
 //
 // 完整的未解清單見 CONTEXT.md 與各 docs/spec 檔案末尾。
 package main
@@ -105,6 +105,8 @@ type app struct {
 	create *createScreen
 	// spells 非 nil 時戰鬥中的施法選單開著。
 	spells *spellMenu
+	// spInput 非 nil 時「投入多少法力」的輸入框開著，疊在施法選單上。
+	spInput *spPrompt
 	// useMenu 非 nil 時戰鬥中的使用道具選單開著。
 	useMenu *itemMenu
 	// aoe 非 nil 時正在選範圍法術的中心點，aoeX/aoeY 是游標位置。
@@ -286,6 +288,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawWorld(a.canvas)
 	}
 	switch {
+	case a.battle != nil && a.spInput != nil:
+		a.drawSPPrompt(a.canvas)
 	case a.battle != nil && a.spells != nil:
 		a.drawSpellMenu(a.canvas)
 	case a.battle != nil && a.useMenu != nil:
@@ -298,7 +302,7 @@ func (a *app) Draw(screen *ebiten.Image) {
 	default:
 		a.drawStatus(a.canvas)
 	}
-	if a.battle != nil && a.spells == nil && a.useMenu == nil && !a.box.Active() {
+	if a.battle != nil && a.spells == nil && a.spInput == nil && a.useMenu == nil && !a.box.Active() {
 		a.drawBattleCommands(a.canvas)
 	}
 	ui.DrawMixedTextBox(a.canvas, a.box, a.font, 0, layout.TextBoxTop, markerColor)
