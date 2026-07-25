@@ -38,6 +38,14 @@ var facilityKeys = []ebiten.Key{
 }
 
 // openTownPicker 打開城鎮選單（偵錯用的直接入口，見 townScreen.picking）。
+// townSourceFile 是城鎮名稱翻譯目錄的 key，與 dwstrings 產生時一致。
+const townSourceFile = "TOWN.TXT"
+
+// townName 回傳城鎮的顯示名稱（已翻譯）。索引是城鎮編號減 1。
+func (a *app) townName(t gamedata.Town) string {
+	return a.tr.Event(townSourceFile, t.Number-1, t.Name)
+}
+
 func (a *app) openTownPicker() {
 	a.town = &townScreen{picking: true}
 }
@@ -54,7 +62,7 @@ func (a *app) enterTownAt(x, y int) {
 		return
 	}
 	a.town = &townScreen{visit: game.EnterTown(town, a.members)}
-	a.message = fmt.Sprintf("進入%s", town.Name)
+	a.message = fmt.Sprintf("進入%s", a.townName(town))
 }
 
 func (a *app) updateTown() error {
@@ -69,7 +77,7 @@ func (a *app) updateTown() error {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		a.town = nil
-		a.message = fmt.Sprintf("離開%s", t.visit.Town.Name)
+		a.message = fmt.Sprintf("離開%s", a.townName(t.visit.Town))
 		return nil
 	}
 	for i, key := range facilityKeys {
@@ -178,7 +186,7 @@ func (a *app) drawTown(dst *ebiten.Image) {
 func (a *app) drawTownPicker(dst *ebiten.Image, line func(string)) {
 	t := a.town
 	line("進入哪座城鎮？")
-	line("（原版是走到城鎮格進城，座標對照尚未解出）")
+	line("（偵錯用。正常玩法是走到城鎮格自動進城）")
 	line("")
 
 	// 一次只列游標附近幾座，畫布放不下 25 座。
@@ -204,7 +212,7 @@ func (a *app) drawTownPicker(dst *ebiten.Image, line func(string)) {
 			docks = "　碼頭"
 		}
 		line(fmt.Sprintf("%s%s 物價 %2d%s", mark,
-			textlayout.PadCells(town.Name, 16), town.Economy, docks))
+			textlayout.PadCells(a.townName(town), 16), town.Economy, docks))
 	}
 	line("")
 	line("↑↓：選擇　Enter：進城　Esc：取消")
@@ -212,7 +220,7 @@ func (a *app) drawTownPicker(dst *ebiten.Image, line func(string)) {
 
 func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 	v := a.town.visit
-	line(fmt.Sprintf("%s　物價指數 %d", v.Town.Name, v.Economy.E))
+	line(fmt.Sprintf("%s　物價指數 %d", a.townName(v.Town), v.Economy.E))
 	line("")
 
 	labels := []string{"M 市集", "H 治療所", "I 旅店", "G 城鎮公會",
@@ -236,7 +244,7 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 	v := t.visit
 	e := v.Economy
 
-	line(fmt.Sprintf("%s — %s", v.Town.Name, game.FacilityName(*t.facility)))
+	line(fmt.Sprintf("%s — %s", a.townName(v.Town), game.FacilityName(*t.facility)))
 	line("")
 
 	switch *t.facility {

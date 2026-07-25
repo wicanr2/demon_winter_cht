@@ -47,6 +47,8 @@ func main() {
 		dumpItems(os.Args[2:])
 	case "monsters":
 		dumpMonsters(os.Args[2:])
+	case "towns":
+		dumpTowns(os.Args[2:])
 	case "check":
 		check(os.Args[2:])
 	default:
@@ -55,7 +57,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|monsters|ui|check [選項]")
+	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|monsters|towns|ui|check [選項]")
 	os.Exit(2)
 }
 
@@ -231,6 +233,43 @@ func dumpMonsters(args []string) {
 	}
 	fmt.Printf("%-11s %3d 個怪物名（新增 %d、原文變動 %d）→ %s\n",
 		monsterSource, len(merged.Entries), added, drifted, out)
+}
+
+// townSource 是城鎮名稱的來源檔，同時也是翻譯目錄的 key。
+const townSource = "TOWN.TXT"
+
+// dumpTowns 把 25 個城鎮名稱抽成翻譯目錄。
+//
+// 索引是**城鎮編號減 1**（`TOWN.TXT` 的第 n 個字串對應 `TOWN{n}.DAT`）。
+func dumpTowns(args []string) {
+	fs := flag.NewFlagSet("towns", flag.ExitOnError)
+	dataDir := fs.String("data", "workplace/orig/demwin/DEM_DATA", "原版資料目錄")
+	outDir := fs.String("out", "assets/lang/zh-Hant", "翻譯目錄輸出位置")
+	_ = fs.Parse(args)
+
+	tbl, err := gamedata.LoadTownTable(*dataDir)
+	if err != nil {
+		fatal(err)
+	}
+	cat := &i18n.Catalog{Source: townSource}
+	for i := 1; i <= gamedata.NumTowns; i++ {
+		town, err := tbl.ByNumber(i)
+		if err != nil {
+			fatal(err)
+		}
+		cat.Entries = append(cat.Entries, i18n.Entry{Index: i - 1, Source: town.Name})
+	}
+
+	if err := os.MkdirAll(*outDir, 0o755); err != nil {
+		fatal(err)
+	}
+	out := filepath.Join(*outDir, i18n.CatalogFileName(townSource))
+	merged, added, drifted := mergeInto(out, cat)
+	if err := i18n.WriteCatalog(out, merged); err != nil {
+		fatal(err)
+	}
+	fmt.Printf("%-10s %3d 個城鎮名（新增 %d、原文變動 %d）→ %s\n",
+		townSource, len(merged.Entries), added, drifted, out)
 }
 
 // spellNames 讀出 43 個法術的英文名稱。

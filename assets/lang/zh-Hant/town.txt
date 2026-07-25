@@ -1,0 +1,153 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ TOWN.TXT
+
+## 0
+:: en
+Seaside
+:: zh
+海濱鎮
+
+## 1
+:: en
+Elbarat
+:: zh
+艾巴拉特
+
+## 2
+:: en
+Akistu
+:: zh
+阿奇斯圖
+
+## 3
+:: en
+Alynhawk
+:: zh
+艾林霍克
+
+## 4
+:: en
+Paladine
+:: zh
+帕拉丁
+
+## 5
+:: en
+Erguard
+:: zh
+厄加德
+
+## 6
+:: en
+Janthrin
+:: zh
+詹斯林
+
+## 7
+:: en
+New Gleon
+:: zh
+新格里昂
+
+## 8
+:: en
+Myrquacid
+:: zh
+米爾夸西德
+
+## 9
+:: en
+Urlock
+:: zh
+烏洛克
+
+## 10
+:: en
+Dragontooth
+:: zh
+龍牙鎮
+
+## 11
+:: en
+Chandris
+:: zh
+錢德里斯
+
+## 12
+:: en
+Iris
+:: zh
+艾瑞絲
+
+## 13
+:: en
+Asaht
+:: zh
+阿薩特
+
+## 14
+:: en
+Irondome
+:: zh
+鐵穹鎮
+
+## 15
+:: en
+Ynoth
+:: zh
+伊諾斯
+
+## 16
+:: en
+Aurora
+:: zh
+奧羅拉
+
+## 17
+:: en
+Woodhaven
+:: zh
+林蔭港
+
+## 18
+:: en
+Idlewood
+:: zh
+閒林鎮
+
+## 19
+:: en
+Terlabba
+:: zh
+特拉巴
+
+## 20
+:: en
+Loven
+:: zh
+洛文
+
+## 21
+:: en
+Mojured
+:: zh
+莫朱瑞德
+
+## 22
+:: en
+Lumisle Island
+:: zh
+盧米索島
+
+## 23
+:: en
+Land's Edge
+:: zh
+地角鎮
+
+## 24
+:: en
+Pirate's Cove
+:: zh
+海盜灣

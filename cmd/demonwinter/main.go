@@ -48,6 +48,7 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
+	"github.com/wicanr2/demon_winter_cht/internal/ui/textlayout"
 )
 
 // scale 是視窗相對於邏輯畫布的整數倍率。版面本身在 internal/ui/layout。
@@ -691,10 +692,15 @@ func (a *app) drawRoster(dst *ebiten.Image) {
 		if err != nil {
 			pts = -1
 		}
-		line(fmt.Sprintf("%-8s %d級 %s", c.Name, c.Level, nameOf(className, int(c.Class))))
-		line(fmt.Sprintf(" %s 生命 %3d/%3d", nameOf(raceName, int(c.Race)), c.CurrentHP, c.MaxHP))
+		// 種族名 2–4 格（人類／黑暗精靈）、武器名 2–3 格 —— 不補到固定寬度，
+		// 後面的「生命」「護甲」欄會跟著左右跳。
+		line(fmt.Sprintf("%s %d級 %s",
+			textlayout.PadCells(c.Name, 8), c.Level, nameOf(className, int(c.Class))))
+		line(fmt.Sprintf(" %s 生命 %3d/%3d",
+			textlayout.PadCells(nameOf(raceName, int(c.Race)), 4), c.CurrentHP, c.MaxHP))
 		line(fmt.Sprintf(" 法力 %3d/%3d 未用點數 %d", c.CurrentSP, c.MaxSP, pts))
-		line(fmt.Sprintf(" %s 護甲 %d", a.weaponLabel(c), c.ArmorRating()))
+		line(fmt.Sprintf(" %s 護甲 %d",
+			textlayout.PadCells(a.weaponLabel(c), 6), c.ArmorRating()))
 	}
 	line("")
 	line("P：返回")
