@@ -121,8 +121,13 @@ type Unit struct {
 	// MaxSP／CurrentSP 是法力。幻化出來的生物法力被歸零，因此不能施法。
 	MaxSP, CurrentSP int
 
-	// IsPlayer 對應原版的陣營值 2／11。
+	// IsPlayer 代表這個單位有沒有玩家角色記錄（＝在不在槽位 7–14）。
+	// **魅惑不會改變它** —— 會變的是 Side。
 	IsPlayer bool
+
+	// Side 是原版單位記錄的 `+0x20`（陣營），值域與語意見 side.go。
+	// 零值交給 NewBattle 依 IsPlayer 補成 SidePlayer／SideMonster。
+	Side int
 
 	// AITargetSlot 是怪物記住的攻擊目標槽位，對應原版戰鬥單位記錄的
 	// `unit+0x1e`（見 ai.go）。零值 0 是合法槽位，所以新單位要由建立端

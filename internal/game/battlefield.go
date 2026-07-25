@@ -47,7 +47,7 @@ func FrontOf(u *Unit) (x, y int) {
 func (b *Battle) TargetInFront(u *Unit) *Unit {
 	x, y := FrontOf(u)
 	other := b.UnitAt(x, y)
-	if other == nil || other.IsPlayer == u.IsPlayer {
+	if other == nil || other.OnPlayerSide() == u.OnPlayerSide() {
 		return nil
 	}
 	return other

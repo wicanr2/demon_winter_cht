@@ -529,11 +529,20 @@ func (a *app) startBattle(ids []int) {
 
 // logf 把一行訊息推進戰鬥紀錄，只留最後幾行。
 func (a *app) logf(format string, args ...any) {
-	a.log = append(a.log, fmt.Sprintf(format, args...))
+	line := fmt.Sprintf(format, args...)
+	a.log = append(a.log, line)
 	if len(a.log) > battleLogLines {
 		a.log = a.log[len(a.log)-battleLogLines:]
 	}
+	// 畫面上的戰鬥紀錄只留 8 行，而且截圖只看得到最後一瞬間。
+	// DW_LOG=1 時同步吐到 stderr，驗收才能看完整條時間軸。
+	if logToStderr {
+		log.Print(line)
+	}
 }
+
+// logToStderr 由環境變數 DW_LOG 開啟，只影響輸出、不影響任何規則。
+var logToStderr = os.Getenv("DW_LOG") != ""
 
 const battleLogLines = 8
 
@@ -636,6 +645,9 @@ func main() {
 		"翻譯目錄。指向不存在的路徑即為原文模式")
 	startX := flag.Int("x", 32, "起始 X")
 	startY := flag.Int("y", 32, "起始 Y")
+	// B 鍵那條偵錯路徑在 headless 截圖底下不好按（xdotool 送的鍵不一定
+	// 進得了 ebiten 的輸入佇列）。開一個旗標走同一條路，讓截圖驗收可重跑。
+	startBattle := flag.Bool("battle", false, "啟動後直接開一場測試戰鬥（偵錯）")
 	flag.Parse()
 
 	if _, err := os.Stat(*dataDir); err != nil {
@@ -760,6 +772,10 @@ func main() {
 	}
 
 	a.canvas = ebiten.NewImage(layout.CanvasWidth, layout.CanvasHeight)
+
+	if *startBattle {
+		a.startBattle(debugBattleMonsters)
+	}
 
 	ebiten.SetWindowSize(layout.CanvasWidth*scale, layout.CanvasHeight*scale)
 	ebiten.SetWindowTitle("冬之魔 Demon's Winter")

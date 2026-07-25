@@ -36,6 +36,7 @@ docker run --rm \
     -e GOCACHE=/gocache \
     -e GOMODCACHE=/gomod \
     -e LIBGL_ALWAYS_SOFTWARE=1 \
+    -e "DW_LOG=${DW_LOG:-}" \
     -w /src \
     "$IMAGE" bash -c "
 set -e

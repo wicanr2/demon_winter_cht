@@ -227,6 +227,19 @@ func TestBattle_IllusionZeroesSP(t *testing.T) {
 	if illusion.MaxSP != 0 || illusion.CurrentSP != 0 {
 		t.Errorf("幻術版法力應歸零，得到 %d/%d", illusion.CurrentSP, illusion.MaxSP)
 	}
+
+	// 陣營值必須在這裡就填好。PlaceSummon 是戰鬥中途放進場的，
+	// 不會經過 NewBattle 的預設補值 —— 漏填會讓召喚物變成怪物側，
+	// 而且畫面上看不出來（它還是站在原位、還是能行動）。
+	if summoned.Side != SideSummon {
+		t.Errorf("召喚生物陣營值 %d，預期 %d", summoned.Side, SideSummon)
+	}
+	if illusion.Side != SideIllusion {
+		t.Errorf("幻化生物陣營值 %d，預期 %d", illusion.Side, SideIllusion)
+	}
+	if !summoned.OnPlayerSide() || !illusion.OnPlayerSide() {
+		t.Error("召喚／幻化生物應算玩家陣營")
+	}
 }
 
 // 召喚成本 = 附魔基數 ×4、幻術 ×2。

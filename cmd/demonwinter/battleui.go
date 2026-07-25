@@ -306,6 +306,17 @@ func (a *app) applySpell(caster, target *game.Unit, e spellEntry, sp int) {
 			a.logf("%s 的%s沒有奏效", caster.Name, e.name)
 		}
 
+	case game.EffectPossession:
+		if target == nil {
+			a.logf("%s 正前方沒有目標", caster.Name)
+			return
+		}
+		if game.Possess(a.rng, target, sp) {
+			a.logf("%s 的%s奪走了 %s 的心智", caster.Name, e.name, target.Name)
+		} else {
+			a.logf("%s 抵抗了%s", target.Name, e.name)
+		}
+
 	case game.EffectAOE:
 		// 走到這裡代表游標已經選好中心點（見 aoeCursor）。
 		hits := game.CastAOE(a.rng, a.battle, e.spell, sp, a.aoeX, a.aoeY)
@@ -752,8 +763,11 @@ func (a *app) monsterTurn(u *game.Unit) {
 // 原版（0x799a–0x7978）：法力 > 0 且 rnd(10) > 4 才進 AI 選法術。
 // 選法本身照 game.AISpellChoice（兩層擲點 + 區間表）。
 //
-// 技能檢查傳 nil：原版只在 `unit+0x20 == 2` 那一支查符文系技能，
-// 而那個欄位語意未定案（見 game/ai.go），怪物又沒有技能旗標可查。
+// 技能檢查傳 nil：原版只在 `unit+0x20 == 2`（＝被魅惑的玩家角色）那一支
+// 查符文系技能旗標，一般怪物不查（見 game/side.go）。這裡的施法者都是
+// 一般怪物，所以不檢查是對的。
+//
+// 目標由效果類型與 K 的正負決定，見 game.AISpellTargetsOwnSide。
 func (a *app) monsterCast(u *game.Unit) bool {
 	if u.CurrentSP <= 0 || a.rng.Roll(10) <= 4 {
 		return false
@@ -766,7 +780,10 @@ func (a *app) monsterCast(u *game.Unit) bool {
 	if err != nil {
 		return false
 	}
-	target := a.battle.AITarget(u)
+	if !game.AIEffectHandled(sp.Effect) {
+		return false // 跳表的 default：這個效果 AI 不會用
+	}
+	target := a.monsterCastTarget(u, sp)
 	if target == nil {
 		return false
 	}
@@ -785,6 +802,31 @@ func (a *app) monsterCast(u *game.Unit) bool {
 	e := spellEntry{index: id, name: a.tr.Event(spellSourceFile, id, name), spell: sp}
 	a.applySpell(u, target, e, invested)
 	return true
+}
+
+// monsterCastTarget 依效果類型挑這次施法要打誰。
+//
+// 效果 1 是範圍：先隨機挑一個敵人當中心，數過方框裡兩邊各幾個，誤傷太多
+// 就放棄（原版 0x09ae 的 `己方×2 > 敵方`）。這裡回傳的是中心那個單位，
+// 範圍效果本身還沒接上，先以單體套用 —— 缺的是效果套用端，不是選目標端。
+func (a *app) monsterCastTarget(u *game.Unit, sp gamedata.Spell) *game.Unit {
+	if game.AIEffectIsArea(sp.Effect) {
+		center := a.battle.AIPickTarget(u, false, -1)
+		if center == nil {
+			return nil
+		}
+		if a.battle.AIAreaCountAt(u, center.X, center.Y, sp.School).Veto() {
+			return nil // 會炸到太多自己人
+		}
+		return center
+	}
+
+	ownSide := game.AISpellTargetsOwnSide(sp.Effect, sp.K)
+	maxStatus := -1
+	if ownSide {
+		maxStatus = 1 // 0x0a7c：增益不往已經倒下的自己人身上放
+	}
+	return a.battle.AIPickTarget(u, ownSide, maxStatus)
 }
 
 // stepToward 回傳朝目標靠近該面向哪一邊。差距大的那個軸優先。

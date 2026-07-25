@@ -58,6 +58,9 @@ func NewBattle(r *rng.RNG, units []*Unit) *Battle {
 		// AITargetSlot 的零值 0 是合法槽位，會讓怪物一開始就「記得」
 		// 打 0 號。統一設成「還沒有目標」，第一回合才會真的去挑。
 		u.AITargetSlot = noAITarget
+		if u.Side == 0 {
+			u.Side = defaultSide(u.IsPlayer)
+		}
 		b.units[u.Slot] = u
 	}
 	return b
@@ -154,13 +157,16 @@ func (b *Battle) Kill(u *Unit) {
 }
 
 // Enemies 回傳目標單位的敵對陣營中還活著的槽位。
+//
+// 看的是 Side 不是 IsPlayer —— 被附身的隊員站在怪物那一邊，
+// 對其餘隊員來說就是敵人（見 side.go）。
 func (b *Battle) Enemies(of *Unit) []int {
 	var out []int
 	for s, u := range b.units {
 		if u == nil || !u.Alive() {
 			continue
 		}
-		if u.IsPlayer != of.IsPlayer {
+		if u.OnPlayerSide() != of.OnPlayerSide() {
 			out = append(out, s)
 		}
 	}
@@ -226,6 +232,10 @@ func (b *Battle) PlaceSummon(slot int, e gamedata.SummonEntry, kind SummonKind, 
 		WeaponIndex:   int(e.Word(5)),
 		RaceOrElement: int(e.Word(4)),
 		IsPlayer:      true,
+		Side:          SideSummon,
+	}
+	if kind == KindIllusion {
+		u.Side = SideIllusion
 	}
 	if kind == KindIllusion {
 		u.MaxSP, u.CurrentSP = 0, 0

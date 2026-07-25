@@ -427,7 +427,7 @@ decompiler／函式邊界分析都會在殘缺 CFG 上編造出看似合理但�
 | 11（束縛施加） | `FUN_138d_0e04` | `FUN_138d_0e04` |
 | 14（枯萎） | `FUN_138d_0fa5` | `FUN_138d_0fa5` |
 | 15（召喚選單） | `FUN_138d_3161` | `FUN_138d_3161` |
-| 16（職業轉換） | `FUN_138d_0cb6` | `FUN_138d_0cb6` |
+| 16（附身：陣營對翻） | `FUN_138d_0cb6` | `FUN_138d_0cb6` |
 
 **這是很強的交叉驗證**——兩個獨立的跳表（不同的呼叫路徑、不同的參數傳遞
 方式）各自指向完全相同的一組處理函式，代表這組函式的語意判讀不是巧合，
@@ -463,7 +463,7 @@ void FUN_138d_2e63(param_1..param_7) {
       case ...: FUN_138d_0e04(param_1,param_5,param_7); break;                 // 束縛施加
       case ...: FUN_138d_0fa5(param_1,param_5,param_7); break;                 // 枯萎
       case ...: FUN_138d_3161(param_2,param_6,param_7); break;                 // 召喚選單
-      case ...: FUN_138d_0cb6(param_1,param_5,param_7); break;                 // 職業轉換
+      case ...: FUN_138d_0cb6(param_1,param_5,param_7); break;                 // 附身：陣營對翻（見 docs/re/23 §4）
       default: goto override_jmp_138d_2f76_case_0;
     }
   } else { override_jmp_138d_2f76_case_0: }
@@ -603,22 +603,25 @@ type 3/4/6 而非獨立公式，但未驗證」的懸念**——**答案是否�
 `docs/re/16` §6 提到的 `FUN_138d_2f7e`／`FUN_138d_2fa0` 之後，**更接近答案**
 的新入口點。
 
-### 8.2 職業/陣營轉換（`effect_type 16`，`FUN_138d_0cb6`）
+### 8.2 附身術（`effect_type 16`，`FUN_138d_0cb6`）—— 已解
 
 ```
-roll_threshold = FUN_3016_000a(SP_invested * 300)   // 未展開的縮放函式
+成功率 = SP_invested * 300 / (2 * 目標.HP(0x4eba) + 目標.法力(0x4ec2))
 roll = RNG(100)
-若 roll_threshold < roll: 判定失敗（local_6 = 0）
+若 roll > 成功率: 判定失敗（local_6 = 0）
 否則依目標當前 field_4ed4 值做配對轉換：
     1↔0xc, 2↔0xb, 4↔0xe（雙向映射表）
 若無法映射（值不在表內）：失敗
 成功：目標.field_4ed4 = 映射後的值
 ```
 
-`field_4ed4` 是 `docs/re/16` §1/§2 已知的「近戰武器類攻擊者旗標」欄位
-（`∈{2,0xb}` 時觸發武器附魔加成/爆擊 25% 檔）。這個效果看起來是某種
-「陣營/職業互換」（可能是變形術一類，把怪物在配對表內的兩個型態互換），
-不在任務原定四項範圍內，`[未解，未深究]`，記錄供後續。
+本輪寫下這一段時，除數還掛著「`FUN_3016_000a` 未展開的縮放函式」；
+`docs/re/23` §4 把它讀出來了 —— 那是 32-bit 除法常式，被除數 `SP × 300`，
+除數 `2×HP + 法力`。**目標愈健康、法力愈滿愈難附身。**
+
+`field_4ed4` 就是陣營欄位（`docs/re/20` §9.5 的完整值域）。這個效果是
+**附身術（POSSESSION，法術 id 26）**：把單位搶到另一邊。配對表裡沒有
+3／13（幻化生物），所以幻影不能被附身。原文標的「職業轉換」是錯的標籤。
 
 ### 8.3 二元狀態切換（`effect_type 9`，`FUN_138d_2fa0`）——與 Cast 路徑行為確認不同
 
