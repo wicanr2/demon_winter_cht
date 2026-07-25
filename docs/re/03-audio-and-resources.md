@@ -309,17 +309,40 @@ void __cdecl16far FUN_25be_17fe(int param_1)   // param_1 = 這個區塊的 byte
       count = 來源[local_4-1];      // 下一個 byte 是「重複次數」
       do {
         輸出[local_8] = bVar2 & 0x7f;   // 低 7 位是「tile 值」
-        local_8 = (local_8 + 0x40) % 0x1000;   // 每寫一格，游標 +64，滿 4096 繞回（= 64x64 網格，逐欄填）
+        local_8 += 0x40; if (local_8 >= 0x1000) local_8 -= 0x0fff;  // 見下方修正
         count--;
       } while (count != 0);
     } else {                         // 最高位=0：單一 literal
       輸出[local_8] = bVar2;
-      local_8 = (local_8 + 0x40) % 0x1000;
+      local_8 += 0x40; if (local_8 >= 0x1000) local_8 -= 0x0fff;
       local_4++;
     }
   } while (寫滿 4096 格才停 或 讀完 param_1 bytes);
 }
 ```
+
+> **⚠ 2026-07-25 修正（原虛擬碼的游標公式有誤）**
+>
+> 本節原先把輸出游標寫成 `local_8 = (local_8 + 0x40) % 0x1000`。**那個取餘是錯的** ——
+> `gcd(64, 4096) = 64`，逐字實作只會在 64 個位置上打轉，丟掉 98% 解壓出的資料。
+> 真正的指令是：
+>
+> ```asm
+> 25be:187a  ADD word ptr [BP+-0x6],0x40    ; cursor += 64
+> 25be:187e  CMP word ptr [BP+-0x6],0x1000  ; cmp cursor, 4096
+> 25be:1883  JL   0x746a                    ; 未越界就跳過進位
+> 25be:1885  ADD word ptr [BP+-0x6],0xf001  ; cursor += -4095
+> ```
+>
+> `0xf001` 當有號 16 位元是 **-4095**，即 `-4096 + 1`：游標走到欄底時回到頂端**並右移一欄**。
+> 這是標準的 **column-major**（逐欄）走訪，不是取餘。
+>
+> **這個錯誤特別陰險**：改成 row-major 循序游標一樣能填滿 4096 格、一樣通過
+> 「size 加總／值域／格數」這類測試，畫出來也還是像地圖。但 ASCII 算繪一比就看得出來 ——
+> row-major 版會出現貫穿全圖的垂直色帶（地圖裡自然的**水平** RLE 長條被鋪成**垂直**），
+> column-major 版才是連貫的房間與走廊。屬於「資料對但顯示錯」，只有肉眼比對抓得到。
+>
+> 實作見 `internal/assets/world/summap.go` 的 `decodeRLE`。
 
 **格式（已驗證）**：
 - byte 最高位 = 1：**RLE 記錄，2 bytes**——`byte & 0x7f` 是 tile 值，**下一個 byte 是重複次數**。
