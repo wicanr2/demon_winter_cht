@@ -1,0 +1,183 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ ITEMS.DAT
+
+## 0
+:: en
+dagger
+:: zh
+匕首
+
+## 1
+:: en
+small axe
+:: zh
+小斧
+
+## 2
+:: en
+short sword
+:: zh
+短劍
+
+## 3
+:: en
+mace
+:: zh
+釘頭鎚
+
+## 4
+:: en
+morning star
+:: zh
+晨星鎚
+
+## 5
+:: en
+broad sword
+:: zh
+闊劍
+
+## 6
+:: en
+battle axe
+:: zh
+戰斧
+
+## 7
+:: en
+2-hand sword
+:: zh
+雙手劍
+
+## 8
+:: en
+cloth
+:: zh
+布甲
+
+## 9
+:: en
+leather
+:: zh
+皮甲
+
+## 10
+:: en
+chain
+:: zh
+鎖子甲
+
+## 11
+:: en
+scale
+:: zh
+鱗甲
+
+## 12
+:: en
+plate
+:: zh
+板甲
+
+## 13
+:: en
+crown
+:: zh
+王冠
+
+## 14
+:: en
+vial
+:: zh
+藥瓶
+
+## 15
+:: en
+ring
+:: zh
+戒指
+
+## 16
+:: en
+wand
+:: zh
+魔杖
+
+## 17
+:: en
+staff
+:: zh
+法杖
+
+## 18
+:: en
+rod
+:: zh
+權杖
+
+## 19
+:: en
+gem
+:: zh
+寶石
+
+## 20
+:: en
+amulet
+:: zh
+護身符
+
+## 21
+:: en
+medallion
+:: zh
+徽章
+
+## 22
+:: en
+figurine
+:: zh
+塑像
+
+## 23
+:: en
+talisman
+:: zh
+護符
+
+## 24
+:: en
+salve
+:: zh
+藥膏
+
+## 25
+:: en
+vial
+:: zh
+藥瓶
+
+## 26
+:: en
+torch
+:: zh
+火把
+
+## 27
+:: en
+lantern
+:: zh
+提燈
+
+## 28
+:: en
+Demon Crystal
+:: zh
+惡魔水晶
+
+## 29
+:: en
+Orb/Evertime
+:: zh
+恆世寶珠

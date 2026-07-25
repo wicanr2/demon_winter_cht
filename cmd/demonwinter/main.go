@@ -894,18 +894,11 @@ func main() {
 	}
 }
 
-// weaponLabel 回傳角色目前武器的顯示名稱。
+// weaponLabel 回傳角色目前武器的顯示名稱（已翻譯）。
 func (a *app) weaponLabel(c game.Character) string {
 	w := c.Weapon()
 	if w.Empty() {
 		return "徒手"
 	}
-	item, err := a.items.ByIndex(int(w.Type))
-	if err != nil {
-		return fmt.Sprintf("道具 %d", w.Type)
-	}
-	if w.Enchant != 0 {
-		return fmt.Sprintf("%s%+d", item.Name, w.Enchant)
-	}
-	return item.Name
+	return a.itemLabel(w)
 }

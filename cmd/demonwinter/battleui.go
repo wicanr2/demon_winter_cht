@@ -544,16 +544,20 @@ func (a *app) useItem(u *game.Unit, e game.UsableItem) {
 	}
 }
 
-// itemLabel 回傳道具的顯示名稱。
+// itemSourceFile 是道具名稱翻譯目錄的 key，與 dwstrings 產生時一致。
+const itemSourceFile = "ITEMS.DAT"
+
+// itemLabel 回傳道具的顯示名稱（已翻譯）。
 func (a *app) itemLabel(it scenario.InventorySlot) string {
 	item, err := a.items.ByIndex(int(it.Type))
 	if err != nil {
 		return fmt.Sprintf("道具 %d", it.Type)
 	}
+	name := a.tr.Event(itemSourceFile, int(it.Type), item.Name)
 	if it.Enchant != 0 {
-		return fmt.Sprintf("%s%+d", item.Name, it.Enchant)
+		return fmt.Sprintf("%s%+d", name, it.Enchant)
 	}
-	return item.Name
+	return name
 }
 
 // drawItemMenu 畫使用道具選單。

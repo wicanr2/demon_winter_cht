@@ -323,14 +323,15 @@ func (a *app) drawMarket(t *townScreen, line func(string)) {
 		if i == t.cursor {
 			mark = " > "
 		}
+		name := a.tr.Event(itemSourceFile, i, item.Name)
 		// 被觸怒後的商品不能顯示價格。HagglePrice 對 s >= 1000 會算出
 		// 下限 2 金 —— 那個數字看起來像「跳樓大拍賣」，實際上是商人拒賣。
 		if t.visit.HaggleState(i).Refused() {
-			line(fmt.Sprintf("%s%-14s %5s  %5d", mark, item.Name, "拒賣",
+			line(fmt.Sprintf("%s%-14s %5s  %5d", mark, name, "拒賣",
 				t.visit.Economy.SellPrice(item.Price)))
 			continue
 		}
-		line(fmt.Sprintf("%s%-14s %5d  %5d", mark, item.Name,
+		line(fmt.Sprintf("%s%-14s %5d  %5d", mark, name,
 			t.visit.Price(i, item.Price), t.visit.Economy.SellPrice(item.Price)))
 	}
 	line("")

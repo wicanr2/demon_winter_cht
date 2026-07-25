@@ -43,6 +43,8 @@ func main() {
 		dumpUI(os.Args[2:])
 	case "spells":
 		dumpSpells(os.Args[2:])
+	case "items":
+		dumpItems(os.Args[2:])
 	case "check":
 		check(os.Args[2:])
 	default:
@@ -51,7 +53,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|ui|check [選項]")
+	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|ui|check [選項]")
 	os.Exit(2)
 }
 
@@ -160,6 +162,40 @@ func dumpSpells(args []string) {
 	}
 	fmt.Printf("%-10s %3d 個法術名（新增 %d、原文變動 %d）→ %s\n",
 		spellSource, len(merged.Entries), added, drifted, out)
+}
+
+// itemSource 是道具名稱的來源檔，同時也是翻譯目錄的 key。
+const itemSource = "ITEMS.DAT"
+
+// dumpItems 把 30 個道具名稱抽成翻譯目錄。
+//
+// 索引就是 ITEMS.DAT 的記錄索引，也就是道具槽 `+0x00` 存的值 ——
+// 與事件敘述、法術名稱共用同一套（來源檔, 索引）機制。
+func dumpItems(args []string) {
+	fs := flag.NewFlagSet("items", flag.ExitOnError)
+	dataDir := fs.String("data", "workplace/orig/demwin/DEM_DATA", "原版資料目錄")
+	outDir := fs.String("out", "assets/lang/zh-Hant", "翻譯目錄輸出位置")
+	_ = fs.Parse(args)
+
+	tbl, err := gamedata.LoadItemTable(filepath.Join(*dataDir, itemSource))
+	if err != nil {
+		fatal(err)
+	}
+	cat := &i18n.Catalog{Source: itemSource}
+	for i, it := range tbl.All() {
+		cat.Entries = append(cat.Entries, i18n.Entry{Index: i, Source: it.Name})
+	}
+
+	if err := os.MkdirAll(*outDir, 0o755); err != nil {
+		fatal(err)
+	}
+	out := filepath.Join(*outDir, i18n.CatalogFileName(itemSource))
+	merged, added, drifted := mergeInto(out, cat)
+	if err := i18n.WriteCatalog(out, merged); err != nil {
+		fatal(err)
+	}
+	fmt.Printf("%-10s %3d 個道具名（新增 %d、原文變動 %d）→ %s\n",
+		itemSource, len(merged.Entries), added, drifted, out)
 }
 
 // spellNames 讀出 43 個法術的英文名稱。
