@@ -124,6 +124,11 @@ type Unit struct {
 	// IsPlayer 對應原版的陣營值 2／11。
 	IsPlayer bool
 
+	// AITargetSlot 是怪物記住的攻擊目標槽位，對應原版戰鬥單位記錄的
+	// `unit+0x1e`（見 ai.go）。零值 0 是合法槽位，所以新單位要由建立端
+	// 設成 noAITarget —— NewBattle 會統一處理。
+	AITargetSlot int
+
 	// Berserking 是否已學狂暴（技能 id 6），影響爆擊門檻。
 	Berserking bool
 

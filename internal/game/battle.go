@@ -55,6 +55,9 @@ func NewBattle(r *rng.RNG, units []*Unit) *Battle {
 		if u == nil || u.Slot < 0 || u.Slot >= CombatSlots {
 			continue
 		}
+		// AITargetSlot 的零值 0 是合法槽位，會讓怪物一開始就「記得」
+		// 打 0 號。統一設成「還沒有目標」，第一回合才會真的去挑。
+		u.AITargetSlot = noAITarget
 		b.units[u.Slot] = u
 	}
 	return b

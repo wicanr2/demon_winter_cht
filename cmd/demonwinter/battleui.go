@@ -720,12 +720,13 @@ func (a *app) monsterTurn(u *game.Unit) {
 		}
 	}
 
-	enemies := a.battle.Enemies(u)
-	if len(enemies) == 0 {
+	// 咬著同一個目標打，死了才隨機換人 —— 原版就是這樣（見 game.AITarget）。
+	// 每回合都挑「第一個敵人」會讓整群怪物擠在同一個隊員身上。
+	target := a.battle.AITarget(u)
+	if target == nil {
 		a.battle.Spend(game.ActionEndTurn)
 		return
 	}
-	target := a.battle.Unit(enemies[0])
 	if want, ok := stepToward(u, target); ok && game.Facing(u.Facing) != want {
 		if a.battle.TurnTo(u, turnActionToward(game.Facing(u.Facing), want)) {
 			return
