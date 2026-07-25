@@ -84,9 +84,9 @@ func TestLoadItemTable_RealFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ByIndex(7) 失敗: %v", err)
 	}
-	if dagger.Unknown1 != twoHand.Unknown1 || dagger.Unknown2 != twoHand.Unknown2 ||
-		dagger.Unknown3 != twoHand.Unknown3 || dagger.Unknown4 != twoHand.Unknown4 {
-		t.Errorf("同為武器類的 dagger 與 2-hand sword 的 Unknown1-4 應完全相同，got %+v vs %+v", dagger, twoHand)
+	if dagger.EffectClasses != twoHand.EffectClasses {
+		t.Errorf("同為武器類的 dagger 與 2-hand sword 效果類別候選應完全相同，得到 %v vs %v",
+			dagger.EffectClasses, twoHand.EffectClasses)
 	}
 
 	// vial 出現兩次，ByName 只保證回傳其中一筆，All() 才能看到兩筆都在。

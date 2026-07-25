@@ -506,14 +506,42 @@ func (a *app) updateItemMenu(u *game.Unit) error {
 			a.logf("%s 行動點不足", u.Name)
 			return nil
 		}
-		// **道具的效果索引欄位還沒在存檔格式裡定位到。**
-		// 反組譯是 `FUN_1000_114f(item.effect_index)` 載入 5-word 效果記錄，
-		// 但那個欄位在 17 bytes 的槽裡對不到位置。照實說，不要瞎猜一個欄位
-		// 然後產生看起來合理、其實亂來的效果。
-		a.logf("%s 使用 %s —— 道具效果索引尚未定位，無效果",
-			u.Name, a.itemLabel(e.Item))
+		a.useItem(u, e)
 	}
 	return nil
+}
+
+// useItem 套用一件道具的效果。
+//
+// 道具槽 `+0x07` 是效果索引，`+0x08` 是強度，兩者一起餵進與法術**同一套**
+// 效果記錄與套用路徑（原版 `17c5:19dd`–`19f2` 呼叫的 `FUN_1000_114f`
+// 就是法術用的那個載入函式，見 scenario/inventory.go）。
+//
+// 目標暫時取正前方的敵人 —— 原版走的是與法術共用的目標挑選
+// （`FUN_138d_3fc9`，會跳游標），那一段還沒接到道具這條路上。
+func (a *app) useItem(u *game.Unit, e game.UsableItem) {
+	sp, err := a.tables.Spell(e.Item.Effect)
+	if err != nil {
+		a.logf("%s 使用 %s，但效果 %d 查不到記錄",
+			u.Name, a.itemLabel(e.Item), e.Item.Effect)
+		return
+	}
+	name, err := a.strings.SpellName(e.Item.Effect)
+	if err != nil {
+		name = fmt.Sprintf("效果 %d", e.Item.Effect)
+	}
+	entry := spellEntry{
+		index: e.Item.Effect,
+		name:  a.tr.Event(spellSourceFile, e.Item.Effect, name),
+		spell: sp,
+	}
+	a.logf("%s 使用 %s", u.Name, a.itemLabel(e.Item))
+	a.applySpell(u, a.battle.TargetInFront(u), entry, e.Item.Power)
+
+	// 用掉一次。次數用完之後這一格就不再出現在選單裡（InventorySlot.Usable）。
+	if c := u2c(a.members, u); c != nil {
+		c.Inventory[e.Slot].Used++
+	}
 }
 
 // itemLabel 回傳道具的顯示名稱。
@@ -544,7 +572,7 @@ func (a *app) drawItemMenu(dst *ebiten.Image) {
 		if i == m.cursor {
 			mark = " > "
 		}
-		state := ""
+		state := fmt.Sprintf("（剩 %d 次）", e.Item.Total-e.Item.Used)
 		if !e.Item.Identified {
 			state = "（未鑑定）"
 		}
@@ -553,9 +581,8 @@ func (a *app) drawItemMenu(dst *ebiten.Image) {
 	line("")
 	line("↑↓：選擇　Enter：使用　Esc：取消")
 	line("")
-	line("※ 只列得出已裝備的武器／護甲與消耗品 —— 原版的 Use")
-	line("　 就是拿來觸發已裝備裝備的特殊能力")
-	line("※ 道具的效果索引欄位尚未在存檔格式中定位，選了不會有效果")
+	line("※ 只列得出已裝備的武器／護甲與消耗品，而且要還有次數")
+	line("　 原版的 Use 就是拿來觸發已裝備裝備的特殊能力")
 }
 
 // updatePlayerTurn 處理玩家單位的一次按鍵。

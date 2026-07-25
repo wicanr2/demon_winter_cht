@@ -77,21 +77,19 @@ type Item struct {
 	// 已知的字串表，只能算假設。
 	CategoryIndex int
 
-	// Unknown1 是原始欄位第 4 個數字（Python 參考實作稱 f3）。語意未確認：
-	// 同一大類（8 把武器／5 件護甲）內部這個欄位數值完全相同（武器皆為 0，
-	// 護甲皆為 12），代表不是「每種武器各自不同的傷害骰/力量需求」——那些
-	// 數值查手冊是逐項不同的，跟這裡「全部武器共用同一組數字」矛盾。推測是
-	// 與武器/護甲這個大類本身綁定的共用參數（可能是圖示座標或某種判定表索引）。
-	Unknown1 int
-	// Unknown2 是原始欄位第 5 個數字（f4）。語意未確認，同大類內數值相同
-	// （武器皆為 10，護甲皆為 7）。
-	Unknown2 int
-	// Unknown3 是原始欄位第 6 個數字（f5）。語意未確認，同大類內數值相同
-	// （武器皆為 8，護甲皆為 7）。
-	Unknown3 int
-	// Unknown4 是原始欄位第 7 個數字（f6）。語意未確認，同大類內數值相同
-	// （武器皆為 9，護甲皆為 7）。
-	Unknown4 int
+	// EffectClasses 是這件道具的四個**效果類別候選**（原始欄位 f3–f6）。
+	//
+	// 掉寶生成時（`1990:13e3`）從這四個裡隨機挑一個、減 1 當列索引去查
+	// `DEMON.INT` `DS:0x1941` 的候選表，再從該列的候選裡挑一個效果索引，
+	// 寫進道具槽的 `+0x07`。詳見 `docs/re/25` §3。
+	//
+	// 這解釋了為什麼「同一大類內部數值完全相同」（武器全是 `0,10,8,9`、
+	// 護甲全是 `12,7,7,7`）—— 它綁的是大類的效果池，不是單件道具的屬性。
+	//
+	// ⚠ **本作沒有實作掉寶生成**，這四個值目前只保留不使用：第一個欄位為 0
+	// 時的分支還沒解釋清楚（挑到 0 減 1 會得到 −1，索引到表外），
+	// 沒把握的部分不寫進規則。
+	EffectClasses [4]int
 }
 
 // ItemTable 是 ITEMS.DAT 解析後的查詢介面。
@@ -151,10 +149,7 @@ func LoadItemTable(path string) (*ItemTable, error) {
 			Price:         nums[0],
 			WeaponSlot:    nums[1] != 0,
 			CategoryIndex: nums[2],
-			Unknown1:      nums[3],
-			Unknown2:      nums[4],
-			Unknown3:      nums[5],
-			Unknown4:      nums[6],
+			EffectClasses: [4]int{nums[3], nums[4], nums[5], nums[6]},
 		}
 		items = append(items, it)
 		// 名稱重複（例如 "vial" 出現兩次）時只保留第一筆的索引，

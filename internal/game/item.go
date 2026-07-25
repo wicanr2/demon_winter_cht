@@ -39,6 +39,9 @@ func (c *Character) UsableItems() []UsableItem {
 		if it.Empty() {
 			continue
 		}
+		if !it.Usable() {
+			continue // 強度 0 或次數用完（原版 17c5:1976／1981）
+		}
 		t := int(it.Type)
 		switch {
 		case t < armorFirstIndex && i != c.EquippedWeapon:

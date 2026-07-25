@@ -434,6 +434,42 @@ func (a *app) checkRandomEncounter(tile byte) {
 // （光照那條是 `< 10`）。照抄，不統一。
 const worldMapMinID = 9
 
+// debugGiveItem 把一件有效果的道具塞進第一名隊員的空格。
+//
+// 純偵錯用。原版的道具效果是掉寶時生成的（`FUN_1990_????` 依 ITEMS.DAT 的
+// 四個候選類別擲兩層骰，見 docs/re/25），那條路徑還沒實作。
+func (a *app) debugGiveItem(spec string) error {
+	f := strings.Split(spec, ",")
+	if len(f) != 4 {
+		return fmt.Errorf("要四個欄位（type,effect,power,次數），拿到 %q", spec)
+	}
+	n := make([]int, 4)
+	for i, part := range f {
+		v, err := strconv.Atoi(strings.TrimSpace(part))
+		if err != nil {
+			return fmt.Errorf("第 %d 個欄位 %q 不是數字", i+1, part)
+		}
+		n[i] = v
+	}
+	if len(a.members) == 0 {
+		return fmt.Errorf("隊伍是空的")
+	}
+	c := &a.members[0]
+	for i := range c.Inventory {
+		if !c.Inventory[i].Empty() {
+			continue
+		}
+		c.Inventory[i] = scenario.InventorySlot{
+			Type: byte(n[0]), Effect: n[1], Power: n[2],
+			Total: n[3], Identified: true,
+		}
+		log.Printf("偵錯：給 %s 第 %d 格 type=%d effect=%d power=%d ×%d",
+			c.Name, i, n[0], n[1], n[2], n[3])
+		return nil
+	}
+	return fmt.Errorf("%s 的道具欄滿了", c.Name)
+}
+
 // encounterLevel 回傳目前的遭遇難度（1–10）。
 func (a *app) encounterLevel() int {
 	level := 1
@@ -701,6 +737,10 @@ func main() {
 	startBattle := flag.Bool("battle", false, "啟動後直接開一場測試戰鬥（偵錯）")
 	battleMonsters := flag.String("battle-monsters", "",
 		"測試戰鬥要放哪幾隻怪（MONSTER.DAT 索引，逗號分隔）。留空用預設那組")
+	// 起始存檔裡每一件裝備的效果索引與強度都是 0，照原版規則在 Use 選單裡
+	// 一件都選不到 —— 沒有這個旗標就沒辦法驗「用道具真的會生效」。
+	giveItem := flag.String("give-item", "",
+		"偵錯：塞一件有效果的道具給第一名隊員，格式 `type,effect,power,次數`")
 	flag.Parse()
 
 	if _, err := os.Stat(*dataDir); err != nil {
@@ -826,6 +866,11 @@ func main() {
 
 	a.canvas = ebiten.NewImage(layout.CanvasWidth, layout.CanvasHeight)
 
+	if *giveItem != "" {
+		if err := a.debugGiveItem(*giveItem); err != nil {
+			log.Fatalf("-give-item：%v", err)
+		}
+	}
 	if *startBattle {
 		picks := debugBattleMonsters
 		if *battleMonsters != "" {
