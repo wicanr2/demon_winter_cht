@@ -140,9 +140,15 @@ func CastBindRelease(sp int, s gamedata.Spell, target *Unit) bool {
 	if target.Status < StatusBindLow {
 		return false
 	}
-	if int(target.Status) != s.School {
+	// 符文系 1 是 4 的別名，比對前先重映射。
+	school := s.School
+	if school == 1 {
+		school = 4
+	}
+	if int(target.Status) != school {
 		return false
 	}
+	// 兩層門檻：力度要夠（K×SP/M >= 殘餘回合）、系別要對。
 	if SpellRate(sp, s) < target.BindRounds {
 		return false
 	}
@@ -153,17 +159,28 @@ func CastBindRelease(sp int, s gamedata.Spell, target *Unit) bool {
 
 // CastWither 施放枯萎（effect_type 14）。
 //
-// **不是扣減**：三項屬性各自「以現值為上限重擲」。
-// 回傳三項的新值（速度、力量、技巧）。
-func CastWither(r *rng.RNG, target *Unit) (speed, strength, skill int) {
+//	若 Roll(100) > K × SP / M → 失敗
+//	否則三項各自獨立重擲：屬性 = max(3, Roll(該屬性當前值))
+//
+// **不是「扣減」而是「以現值為上限重擲」** —— 與一般屬性削弱
+// （effect_type 3/4/6）的數學行為不同，不可共用實作。
+// K/M 只決定是否觸發，不參與屬性計算。下限 3 與全系統的屬性下限一致。
+func CastWither(r *rng.RNG, sp int, s gamedata.Spell, target *Unit) bool {
+	if r.Roll(100) > SpellRate(sp, s) {
+		return false
+	}
 	reroll := func(cur int) int {
-		if cur <= 1 {
-			return cur
+		if cur < 1 {
+			cur = 1
 		}
-		return r.Roll(cur)
+		v := r.Roll(cur)
+		if v < traitEffectFloor {
+			v = traitEffectFloor
+		}
+		return v
 	}
 	target.Speed = reroll(target.Speed)
 	target.Strength = reroll(target.Strength)
 	target.Skill = reroll(target.Skill)
-	return target.Speed, target.Strength, target.Skill
+	return true
 }

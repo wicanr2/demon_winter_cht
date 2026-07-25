@@ -115,6 +115,12 @@ type Unit struct {
 	// BindRounds 是束縛剩餘回合數。解除判定要拿它與解除法術的力度比。
 	BindRounds int
 
+	// Facing 是單位面向（0–3），召喚生物進場時擲定。
+	Facing int
+
+	// MaxSP／CurrentSP 是法力。幻化出來的生物法力被歸零，因此不能施法。
+	MaxSP, CurrentSP int
+
 	// IsPlayer 對應原版的陣營值 2／11。
 	IsPlayer bool
 

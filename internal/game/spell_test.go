@@ -297,28 +297,60 @@ func TestCastBindRelease_NeedsMatchingSchool(t *testing.T) {
 }
 
 // 枯萎是「以現值為上限重擲」，不是扣減 —— 結果不會超過原值，
-// 但也可能剛好等於原值。
+// 下限鉗制在 3。
 func TestCastWither_RerollsWithinCurrent(t *testing.T) {
 	r := rng.NewWithSeed(101)
+	sure := gamedata.Spell{K: 100, M: 1} // rate 100，必定觸發
 
 	sawLower := false
 	for i := 0; i < 2000; i++ {
 		u := &Unit{Speed: 20, Strength: 18, Skill: 16}
-		sp, st, sk := CastWither(r, u)
-		if sp < 1 || sp > 20 || st < 1 || st > 18 || sk < 1 || sk > 16 {
-			t.Fatalf("重擲結果超出範圍：速度 %d 力量 %d 技巧 %d", sp, st, sk)
+		if !CastWither(r, 1, sure, u) {
+			t.Fatal("rate 100 時應必定觸發")
 		}
-		if sp < 20 || st < 18 || sk < 16 {
+		if u.Speed < traitEffectFloor || u.Speed > 20 ||
+			u.Strength < traitEffectFloor || u.Strength > 18 ||
+			u.Skill < traitEffectFloor || u.Skill > 16 {
+			t.Fatalf("重擲結果超出 [3, 原值]：速度 %d 力量 %d 技巧 %d",
+				u.Speed, u.Strength, u.Skill)
+		}
+		if u.Speed < 20 || u.Strength < 18 || u.Skill < 16 {
 			sawLower = true
 		}
 	}
 	if !sawLower {
 		t.Error("重擲應該常常低於原值")
 	}
+}
 
-	// 值為 1 時不再重擲（Roll(1) 恆為 1，但明確保護避免退化）。
-	u := &Unit{Speed: 1, Strength: 1, Skill: 1}
-	if sp, st, sk := CastWither(r, u); sp != 1 || st != 1 || sk != 1 {
-		t.Errorf("值為 1 時應維持 1，得到 %d %d %d", sp, st, sk)
+// K/M 只決定是否觸發，不參與屬性計算；失敗時屬性完全不動。
+func TestCastWither_FailureLeavesTraitsAlone(t *testing.T) {
+	r := rng.NewWithSeed(202)
+	never := gamedata.Spell{K: 0, M: 1} // rate 0
+
+	u := &Unit{Speed: 20, Strength: 18, Skill: 16}
+	if CastWither(r, 1, never, u) {
+		t.Fatal("rate 0 時應必定失敗")
+	}
+	if u.Speed != 20 || u.Strength != 18 || u.Skill != 16 {
+		t.Errorf("失敗時屬性不應改變，得到 %d %d %d", u.Speed, u.Strength, u.Skill)
+	}
+}
+
+// 解除術的符文系 1 是 4 的別名。
+func TestCastBindRelease_SchoolOneAliasesToFour(t *testing.T) {
+	s := gamedata.Spell{School: 1, K: 100, M: 1}
+
+	// 目標被系別 4 束縛，用 school 1 的解除術應該成功（別名重映射）。
+	u := &Unit{Status: UnitStatus(4), BindRounds: 3}
+	if !CastBindRelease(10, s, u) {
+		t.Error("符文系 1 應重映射為 4，對系別 4 的束縛可解")
+	}
+
+	// 目標被系別 1 束縛，用 school 1 的解除術反而不該成功
+	// （重映射之後變成 4，與狀態 1 不符）。
+	v := &Unit{Status: UnitStatus(1), BindRounds: 3}
+	if CastBindRelease(10, s, v) {
+		t.Error("重映射後系別為 4，不應解除狀態 1")
 	}
 }

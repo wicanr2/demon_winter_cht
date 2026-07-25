@@ -21,6 +21,7 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
+	"github.com/wicanr2/demon_winter_cht/internal/rng"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 )
 
@@ -29,7 +30,7 @@ import (
 const (
 	viewTilesX  = 11
 	viewTilesY  = 11
-	statusWidth = 216
+	statusWidth = 232
 	scale       = 2
 )
 
@@ -57,6 +58,14 @@ type app struct {
 	members    []game.Character
 	showRoster bool
 
+	monsters *gamedata.MonsterTable
+	rng      *rng.RNG
+
+	// battle 非 nil 時遊戲進入戰鬥模式，地圖輸入停止。
+	battle     *game.Battle
+	log        []string
+	pendingIDs []int
+
 	box *ui.TextBox
 
 	lastTile byte
@@ -82,12 +91,21 @@ var keyFacing = []struct {
 }
 
 func (a *app) Update() error {
+	if a.battle != nil {
+		return a.updateBattle()
+	}
+
 	// 文字視窗開著時吃掉所有輸入，只認翻頁鍵 —— 與原版一樣，
 	// 讀完敘述才能繼續走。
 	if a.box.Active() {
 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) ||
 			inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 			a.box.Advance()
+			// 敘述讀完才開打。
+			if !a.box.Active() && a.pendingIDs != nil {
+				a.startBattle(a.pendingIDs)
+				a.pendingIDs = nil
+			}
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 			return ebiten.Termination
@@ -134,9 +152,12 @@ func (a *app) Update() error {
 func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
 	a.drawWorld(a.canvas)
-	if a.showRoster {
+	switch {
+	case a.battle != nil:
+		a.drawBattle(a.canvas)
+	case a.showRoster:
 		a.drawRoster(a.canvas)
-	} else {
+	default:
 		a.drawStatus(a.canvas)
 	}
 	ui.DrawTextBox(a.canvas, a.box, a.font, 0, textBoxTop, markerColor)
@@ -209,9 +230,128 @@ func (a *app) checkEvent(tile byte) {
 	}
 
 	a.box = ui.NewTextBox(ev.Text)
+	// Count != 0 代表這一格帶遭遇；文字讀完才開打。
+	a.pendingIDs = nil
 	if ev.Count != 0 {
-		a.message = fmt.Sprintf("combat %d grp TODO", ev.Count)
+		a.pendingIDs = append([]int(nil), ev.MonsterIDs...)
 	}
+}
+
+// startBattle 依事件記錄的怪物清單布置戰場。
+//
+// 怪物的速度與生命在 MONSTER.DAT 的基礎值上做進場擾動。
+func (a *app) startBattle(ids []int) {
+	var units []*game.Unit
+
+	for i, id := range ids {
+		if i >= game.MonsterSlotEnd {
+			break
+		}
+		m, err := a.monsters.ByIndex(id)
+		if err != nil {
+			continue
+		}
+		speed, hp := game.RollMonsterStats(a.rng, m.Speed, m.HP)
+		units = append(units, &game.Unit{
+			Slot: i, Name: m.Name,
+			X: 2, Y: i + 1,
+			Speed: speed, Strength: m.Strength, Skill: m.Skill,
+			Level: m.Level, Intellect: m.Level,
+			HP: hp, MaxHP: hp,
+			WeaponIndex:   m.AttackType,
+			RaceOrElement: m.Special,
+			MaxSP:         m.SP, CurrentSP: m.SP,
+		})
+	}
+
+	for i, c := range a.members {
+		slot := game.PlayerSlotStart + i
+		if slot >= game.PlayerSlotEnd {
+			break
+		}
+		units = append(units, &game.Unit{
+			Slot: slot, Name: c.Name,
+			X: 8, Y: i + 1,
+			Speed:      c.Traits[gamedata.Speed],
+			Strength:   c.Traits[gamedata.Strength],
+			Skill:      c.Traits[gamedata.Skill],
+			Intellect:  c.Traits[gamedata.Intellect],
+			Level:      c.Level,
+			HP:         c.CurrentHP,
+			MaxHP:      c.MaxHP,
+			MaxSP:      c.MaxSP,
+			CurrentSP:  c.CurrentSP,
+			IsPlayer:   true,
+			Berserking: c.HasSkill(gamedata.SkillBerserking),
+		})
+	}
+
+	a.battle = game.NewBattle(a.rng, units)
+	a.battle.BeginRound()
+	a.log = []string{fmt.Sprintf("Round %d", a.battle.Round())}
+}
+
+// logf 把一行訊息推進戰鬥紀錄，只留最後幾行。
+func (a *app) logf(format string, args ...any) {
+	a.log = append(a.log, fmt.Sprintf(format, args...))
+	if len(a.log) > battleLogLines {
+		a.log = a.log[len(a.log)-battleLogLines:]
+	}
+}
+
+const battleLogLines = 8
+
+// updateBattle 推進戰鬥。目前雙方都由簡單 AI 代打，
+// 按 Space 逐步執行，方便肉眼核對每一步。
+func (a *app) updateBattle() error {
+	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		return ebiten.Termination
+	}
+	if !inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		return nil
+	}
+
+	if out := a.battle.Outcome(); out != game.Ongoing {
+		if out == game.Victory {
+			a.logf("All monsters dead")
+		} else {
+			a.logf("Party defeated")
+		}
+		a.battle = nil
+		return nil
+	}
+
+	cur := a.battle.Current()
+	if cur == nil {
+		a.battle.BeginRound()
+		a.logf("-- Round %d --", a.battle.Round())
+		return nil
+	}
+
+	enemies := a.battle.Enemies(cur)
+	if len(enemies) == 0 {
+		a.battle.EndTurn()
+		return nil
+	}
+	target := a.battle.Unit(enemies[a.rng.Roll(len(enemies))-1])
+
+	res := a.battle.ResolveAttack(cur, target, 0)
+	switch {
+	case !res.Hit:
+		a.logf("%s misses.", cur.Name)
+	case res.NoEffect:
+		a.logf("%s: no effect on %s", cur.Name, target.Name)
+	case res.Killed:
+		a.logf("%s kills %s (%d)", cur.Name, target.Name, res.Damage)
+	default:
+		verb := "hits"
+		if res.Critical {
+			verb = "CRITS"
+		}
+		a.logf("%s %s %s for %d", cur.Name, verb, target.Name, res.Damage)
+	}
+	a.battle.EndTurn()
+	return nil
 }
 
 var facingName = []string{"N", "E", "S", "W"}
@@ -254,6 +394,39 @@ func logicalSize() (int, int) {
 		h = rosterH
 	}
 	return w, h
+}
+
+// drawBattle 畫戰鬥狀態：雙方單位的 HP 與最近幾行紀錄。
+func (a *app) drawBattle(dst *ebiten.Image) {
+	x := viewTilesX*gfx.TileWidth + 8
+	y := 6
+	line := func(s string) {
+		a.font.Draw(dst, s, x, y)
+		y += a.font.Height() + 2
+	}
+
+	line(fmt.Sprintf("COMBAT  round %d", a.battle.Round()))
+	for _, u := range a.battle.Units() {
+		tag := " "
+		if u == a.battle.Current() {
+			tag = ">"
+		}
+		state := ""
+		if !u.Alive() {
+			state = " dead"
+		}
+		name := u.Name
+		if len(name) > 12 {
+			name = name[:12]
+		}
+		line(fmt.Sprintf("%s%-12s%3d/%-3d%s", tag, name, u.HP, u.MaxHP, state))
+	}
+	line("")
+	for _, s := range a.log {
+		line(s)
+	}
+	line("")
+	line("Space: step  Esc: quit")
 }
 
 var raceName = []string{"Human", "Elf", "Dwarf", "DarkElf", "Troll"}
@@ -331,6 +504,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入事件表：%v", err)
 	}
+	monsters, err := gamedata.LoadMonsterTable(filepath.Join(*dataDir, "MONSTER.DAT"))
+	if err != nil {
+		log.Fatalf("載入怪物表：%v", err)
+	}
 	save, err := scenario.LoadSaveGame(filepath.Join(*dataDir, "PARTY.DAT"))
 	if err != nil {
 		log.Fatalf("載入隊伍存檔：%v", err)
@@ -355,17 +532,19 @@ func main() {
 	}
 
 	a := &app{
-		world:   game.NewWorld(m, tables),
-		party:   game.NewParty(*startX, *startY, game.South, 0),
-		clock:   game.NewClock(),
-		tiles:   m,
-		exits:   exits,
-		events:  events,
-		tables:  tables,
-		members: members,
-		normal:  loadSet(gfx.NormalTiles),
-		winter:  loadSet(gfx.WinterTiles),
-		font:    font,
+		world:    game.NewWorld(m, tables),
+		party:    game.NewParty(*startX, *startY, game.South, 0),
+		clock:    game.NewClock(),
+		tiles:    m,
+		exits:    exits,
+		events:   events,
+		tables:   tables,
+		members:  members,
+		monsters: monsters,
+		rng:      rng.New(),
+		normal:   loadSet(gfx.NormalTiles),
+		winter:   loadSet(gfx.WinterTiles),
+		font:     font,
 	}
 
 	lw, lh := logicalSize()

@@ -22,6 +22,8 @@
 // 隨機遭遇全部依賴它。序列不一致的話，其他部分再正確也對不上原版。
 package rng
 
+import "time"
+
 const (
 	// Multiplier 是 LCG 乘數（原版 0x7D）。
 	Multiplier = 125
@@ -32,6 +34,14 @@ const (
 // RNG 是原版亂數產生器的狀態。零值不可用，請用 New 或 NewWithSeed 建立。
 type RNG struct {
 	state uint32
+}
+
+// New 以目前時間當種子建立產生器。
+//
+// 對應原版從 DOS 系統時鐘（INT 21h, AH=2Ch）取種子的行為。
+// 要做確定性對拍請改用 NewWithSeed。
+func New() *RNG {
+	return NewWithSeed(uint32(time.Now().UnixNano()))
 }
 
 // NewWithSeed 以指定種子建立產生器。
