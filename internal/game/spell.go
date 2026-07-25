@@ -264,3 +264,88 @@ func CastWither(r *rng.RNG, sp int, s gamedata.Spell, target *Unit) bool {
 	target.Skill = reroll(target.Skill)
 	return true
 }
+
+// AOERadius 是範圍法術的半徑（Chebyshev 距離）。
+//
+// **框的大小是寫死的常數，不隨法術威力或投入的法力改變** ——
+// 所有範圍法術共用同一個 5×5，威力只影響傷害量。
+const AOERadius = 2
+
+// aoeResistSchool 是「特定種族免疫」那條規則的符文系。
+//
+// 原版：`spell_school_id == 4 且 目標種族 ∈ {7,10}` → 效果歸零。
+// 這條規則在單體與 AOE 兩處各自實作了一次，兩邊都要有。
+const aoeResistSchool = 4
+
+// aoeResistRaces 是對該系免疫的目標種族。
+var aoeResistRaces = map[int]bool{7: true, 10: true}
+
+// AOEHit 是一個被範圍法術波及的單位。
+type AOEHit struct {
+	Unit *Unit
+	// Delta 是生命變化量，負數是傷害。
+	Delta int
+	// Killed 表示這一擊讓它倒下。
+	Killed bool
+	// Resisted 表示因種族免疫而完全無效。
+	Resisted bool
+}
+
+// CastAOE 以 (centerX, centerY) 為中心施放範圍法術，回傳被波及的單位。
+//
+// **不分敵我。** 原版掃描全部 15 個槽位，只要座標落在框內就套用效果，
+// 沒有排除隊友 —— 範圍法術會誤傷己方，那是原版行為不是 bug。
+//
+// 實作方式也照原版：**掃單位、判斷是否落在框內**，不是逐格掃地圖。
+// 兩者結果相同，但照著寫比較不會在「空格也算一次」這種地方分岔。
+func CastAOE(r *rng.RNG, b *Battle, s gamedata.Spell, sp, centerX, centerY int) []AOEHit {
+	var hits []AOEHit
+
+	for slot := 0; slot < CombatSlots; slot++ {
+		u := b.Unit(slot)
+		if u == nil || !u.Alive() {
+			continue
+		}
+		if abs(u.X-centerX) > AOERadius || abs(u.Y-centerY) > AOERadius {
+			continue
+		}
+
+		mag := SpellMagnitude(r, sp, s)
+		resisted := s.School == aoeResistSchool && aoeResistRaces[u.RaceOrElement]
+		if resisted {
+			mag = 0
+		}
+
+		// **AOE 恆為傷害，magnitude 一律相減。**
+		//
+		// 這裡與單體版本不同：單體走 CastMagnitudeEffect，K 的正負決定
+		// 增益或傷害；AOE 的原版程式碼是
+		//
+		//	if (hp > magnitude) { hp -= magnitude } else { dies }
+		//
+		// 不看 K 的正負。表裡三個 AOE 法術（火焰風暴 K=15、冰雹風暴 K=8、
+		// 暴風 K=7）K 全是正的，照單體那套寫會變成「範圍治療」——
+		// 實際踩過這個坑：施放火焰風暴後全隊回滿血。
+		before := u.HP
+		if u.HP > mag {
+			u.HP -= mag
+		} else {
+			u.HP = 0
+		}
+
+		hit := AOEHit{Unit: u, Delta: u.HP - before, Resisted: resisted}
+		if !u.Alive() {
+			hit.Killed = true
+			b.Kill(u)
+		}
+		hits = append(hits, hit)
+	}
+	return hits
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}

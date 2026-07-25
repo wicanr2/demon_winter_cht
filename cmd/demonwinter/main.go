@@ -76,6 +76,9 @@ type app struct {
 	create *createScreen
 	// spells 非 nil 時戰鬥中的施法選單開著。
 	spells *spellMenu
+	// aoe 非 nil 時正在選範圍法術的中心點，aoeX/aoeY 是游標位置。
+	aoe        *aoeCursor
+	aoeX, aoeY int
 	// strings 是 FILES.DTT 字串池，法術名稱從這裡來。
 	strings *gamedata.StringPool
 	rng     *rng.RNG
@@ -304,7 +307,8 @@ func (a *app) checkEvent(tile byte) {
 			return
 		}
 		if q.Category == game.CatTeleport {
-			a.message = fmt.Sprintf("傳送至 (%d,%d)（未實作）", q.TeleportX, q.TeleportY)
+			a.party.TeleportTo(int(q.TeleportX), int(q.TeleportY))
+			a.message = fmt.Sprintf("被傳送到 (%d,%d)", q.TeleportX, q.TeleportY)
 			return
 		}
 		idx = q.Index
@@ -459,6 +463,18 @@ func (a *app) Layout(int, int) (int, int) {
 	return layout.CanvasWidth * scale, layout.CanvasHeight * scale
 }
 
+// newRNG 依旗標建立亂數產生器。
+//
+// 固定種子是**驗收工具**：戰鬥的行動順序由怪物進場擲點決定，
+// 每次跑都不一樣，用時間種子的話「走五步再施法」這種截圖驗收
+// 根本重跑不出同一個畫面。
+func newRNG(seed uint) *rng.RNG {
+	if seed == 0 {
+		return rng.New()
+	}
+	return rng.NewWithSeed(uint32(seed))
+}
+
 func main() {
 	dataDir := flag.String("data", "workplace/orig/demwin/DEM_DATA",
 		"原版資料目錄（玩家自備合法副本）")
@@ -466,6 +482,8 @@ func main() {
 		"倚天中文字型目錄，需含 STDFONT.15 與 SPCFONT.15（自備）")
 	mapFile := flag.String("map", "MAP1.MAP", "要載入的地圖檔")
 	dataFile := flag.String("events", "DATA1.TXT", "要載入的事件表")
+	seed := flag.Uint("seed", 0,
+		"亂數種子。0 = 依時間。指定固定值可讓截圖驗收重跑得到同一結果")
 	volume := flag.Float64("volume", 0.25,
 		"音效音量 0–1。原版沒有音量控制（喇叭只有開關），這是體貼現代耳朵")
 	savePath := flag.String("save", "workplace/save/PARTY.DAT",
@@ -584,7 +602,7 @@ func main() {
 		towns:      towns,
 		strings:    strs,
 		items:      items,
-		rng:        rng.New(),
+		rng:        newRNG(*seed),
 		normal:     loadSet(gfx.NormalTiles),
 		winter:     loadSet(gfx.WinterTiles),
 		font:       font,

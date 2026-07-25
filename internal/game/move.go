@@ -113,6 +113,12 @@ func (p *Party) Dataset() int   { return p.dataset }
 func (p *Party) Depth() int { return len(p.stack) }
 
 // Turn 改變面向而不移動。
+// TeleportTo 把隊伍直接搬到指定座標。
+//
+// 不檢查可通行性 —— 傳送目標是資料指定的，繞過一般的移動規則
+// （原版就是直接寫座標）。也不推進時間：傳送不是走路。
+func (p *Party) TeleportTo(x, y int) { p.x, p.y = x, y }
+
 func (p *Party) Turn(f Facing) { p.facing = f }
 
 // EnterSubmap 壓入目前位置並下降一層，落點為指定座標與面向。

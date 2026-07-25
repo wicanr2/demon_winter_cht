@@ -441,3 +441,129 @@ func TestCastMagnitudeEffect_NilTarget(t *testing.T) {
 		t.Error("沒有目標時應回傳 ok=false")
 	}
 }
+
+// AOE 恆為傷害，K 為正也是扣血 —— 這是與單體版本最容易搞混的地方。
+//
+// 原版程式碼是 `if (hp > magnitude) { hp -= magnitude } else { dies }`，
+// 不看 K 的正負。表裡三個 AOE 法術 K 全是正的，
+// 照單體那套「K 正 = 增益」寫會變成範圍治療。
+func TestCastAOE_AlwaysDamages(t *testing.T) {
+	u := &Unit{Slot: 0, Name: "目標", X: 5, Y: 5, HP: 40, MaxHP: 60}
+	b := NewBattle(rng.NewWithSeed(1), []*Unit{u})
+
+	// 火焰風暴的實際參數：K = 15（正）、M = 10。
+	hits := CastAOE(rng.NewWithSeed(1), b,
+		gamedata.Spell{Effect: EffectAOE, K: 15, M: 10}, 20, 5, 5)
+
+	if len(hits) != 1 {
+		t.Fatalf("應波及 1 人，得到 %d", len(hits))
+	}
+	if hits[0].Delta >= 0 {
+		t.Errorf("K 為正的 AOE 仍是傷害，delta = %d 不該 >= 0", hits[0].Delta)
+	}
+	if u.HP >= 40 {
+		t.Errorf("生命 = %d，施放後不該持平或增加", u.HP)
+	}
+}
+
+// AOE 是以中心點 ±2 的 5×5 方框（Chebyshev 距離），框外不受影響。
+// 註：以下測試的 K 一律用正值 —— 表裡三個 AOE 法術（火焰風暴 15、
+// 冰雹風暴 8、暴風 7）K 全是正的，用負值測等於在測不存在的資料。
+func TestCastAOE_Range(t *testing.T) {
+	var units []*Unit
+	// 在 (5,5) 周圍鋪一排，距離 0..3。
+	for d := 0; d <= 3; d++ {
+		units = append(units, &Unit{
+			Slot: d, Name: "距離" + string(rune('0'+d)),
+			X: 5 + d, Y: 5, HP: 50, MaxHP: 50,
+		})
+	}
+	b := NewBattle(rng.NewWithSeed(1), units)
+
+	hits := CastAOE(rng.NewWithSeed(1), b,
+		gamedata.Spell{Effect: EffectAOE, K: 10, M: 1}, 10, 5, 5)
+
+	if len(hits) != AOERadius+1 {
+		t.Fatalf("波及 %d 個單位，預期 %d（距離 0、1、2）", len(hits), AOERadius+1)
+	}
+	if units[3].HP != 50 {
+		t.Errorf("距離 3 在框外，不該受影響（HP = %d）", units[3].HP)
+	}
+}
+
+// 斜角也算在框內 —— Chebyshev 距離不是曼哈頓距離。
+func TestCastAOE_DiagonalIsInRange(t *testing.T) {
+	corner := &Unit{Slot: 0, Name: "斜角", X: 7, Y: 7, HP: 50, MaxHP: 50}
+	b := NewBattle(rng.NewWithSeed(1), []*Unit{corner})
+
+	hits := CastAOE(rng.NewWithSeed(1), b,
+		gamedata.Spell{Effect: EffectAOE, K: 10, M: 1}, 10, 5, 5)
+	if len(hits) != 1 {
+		t.Errorf("(7,7) 距中心 (5,5) 的 Chebyshev 距離是 2，應在框內")
+	}
+}
+
+// **不分敵我。** 原版沒有排除隊友，範圍法術會誤傷己方。
+func TestCastAOE_HitsBothSides(t *testing.T) {
+	monster := &Unit{Slot: 0, Name: "怪", X: 5, Y: 5, HP: 50, MaxHP: 50}
+	ally := &Unit{Slot: PlayerSlotStart, Name: "隊友", X: 6, Y: 5,
+		HP: 50, MaxHP: 50, IsPlayer: true}
+	b := NewBattle(rng.NewWithSeed(1), []*Unit{monster, ally})
+
+	hits := CastAOE(rng.NewWithSeed(1), b,
+		gamedata.Spell{Effect: EffectAOE, K: 10, M: 1}, 10, 5, 5)
+	if len(hits) != 2 {
+		t.Fatalf("波及 %d 個單位，敵我都該算進去", len(hits))
+	}
+	if ally.HP == 50 {
+		t.Error("隊友在範圍內就該被波及 —— 原版沒有排除己方")
+	}
+}
+
+// 符文系 4 對種族 7／10 完全無效。
+func TestCastAOE_RaceResist(t *testing.T) {
+	immune := &Unit{Slot: 0, Name: "免疫", X: 5, Y: 5,
+		HP: 50, MaxHP: 50, RaceOrElement: 7}
+	normal := &Unit{Slot: 1, Name: "一般", X: 5, Y: 6,
+		HP: 50, MaxHP: 50, RaceOrElement: 3}
+	b := NewBattle(rng.NewWithSeed(1), []*Unit{immune, normal})
+
+	hits := CastAOE(rng.NewWithSeed(1), b,
+		gamedata.Spell{Effect: EffectAOE, School: aoeResistSchool, K: 20, M: 1},
+		10, 5, 5)
+
+	for _, h := range hits {
+		if h.Unit == immune {
+			if !h.Resisted || h.Delta != 0 {
+				t.Errorf("種族 7 對符文系 4 應完全免疫，delta = %d", h.Delta)
+			}
+		}
+		if h.Unit == normal && h.Delta == 0 {
+			t.Error("一般種族不該免疫")
+		}
+	}
+	if immune.HP != 50 {
+		t.Errorf("免疫單位的生命 = %d，不該變動", immune.HP)
+	}
+}
+
+// 死掉的單位要回報，而且不會被重複波及。
+func TestCastAOE_Kills(t *testing.T) {
+	weak := &Unit{Slot: 0, Name: "脆", X: 5, Y: 5, HP: 1, MaxHP: 50}
+	b := NewBattle(rng.NewWithSeed(1), []*Unit{weak})
+
+	hits := CastAOE(rng.NewWithSeed(1), b,
+		gamedata.Spell{Effect: EffectAOE, K: 30, M: 1}, 10, 5, 5)
+	if len(hits) != 1 || !hits[0].Killed {
+		t.Fatalf("應回報一次擊殺，得到 %+v", hits)
+	}
+	if weak.Alive() {
+		t.Error("生命歸零後應算陣亡")
+	}
+
+	// 再打一次不該再命中它。
+	if again := CastAOE(rng.NewWithSeed(1), b,
+		gamedata.Spell{Effect: EffectAOE, K: 30, M: 1}, 10, 5, 5); len(again) != 0 {
+		t.Errorf("已陣亡的單位不該再被波及，得到 %d 個", len(again))
+	}
+}

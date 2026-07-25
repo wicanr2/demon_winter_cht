@@ -40,6 +40,13 @@ var playerCommands = []struct {
 // 玩家單位輪到時等玩家下指令；怪物與召喚物由簡單 AI 代打，按空白鍵逐步執行，
 // 方便肉眼核對每一步。
 func (a *app) updateBattle() error {
+	// 選點要排在回合派發之前。**施法會立刻結束回合**（Spend 的 endsTurn），
+	// 所以游標打開時「目前單位」已經換成下一個了 ——
+	// 把它放進 updatePlayerTurn 裡永遠等不到按鍵。
+	if a.aoe != nil {
+		return a.updateAOECursor()
+	}
+
 	if out := a.battle.Outcome(); out != game.Ongoing {
 		if !inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 			return nil
@@ -150,6 +157,13 @@ func (a *app) castSelected(u *game.Unit) {
 	sp := u.CurrentSP
 	u.CurrentSP = 0
 
+	// 範圍法術要先選中心點。原版也是先跳游標（FUN_138d_3fc9）再套效果。
+	if e.spell.Effect == game.EffectAOE {
+		a.aoe = &aoeCursor{caster: u, entry: e, sp: sp}
+		a.aoeX, a.aoeY = u.X, u.Y
+		return
+	}
+
 	target := a.battle.TargetInFront(u)
 	a.applySpell(u, target, e, sp)
 }
@@ -211,8 +225,26 @@ func (a *app) applySpell(caster, target *game.Unit, e spellEntry, sp int) {
 		}
 
 	case game.EffectAOE:
-		// AOE 的判定另有一套（docs/re/16 的 AOE handler），還沒收攏成規格。
-		a.logf("%s 施放%s —— 範圍法術尚未實作", caster.Name, e.name)
+		// 走到這裡代表游標已經選好中心點（見 aoeCursor）。
+		hits := game.CastAOE(a.rng, a.battle, e.spell, sp, a.aoeX, a.aoeY)
+		if len(hits) == 0 {
+			a.logf("%s 的%s沒有波及任何人", caster.Name, e.name)
+			return
+		}
+		a.logf("%s 施放%s（波及 %d 人）", caster.Name, e.name, len(hits))
+		for _, h := range hits {
+			switch {
+			case h.Resisted:
+				a.logf("　%s 免疫", h.Unit.Name)
+			case h.Killed:
+				a.speaker.Play(pcspeaker.EffectDeath)
+				a.logf("　%s 倒下了", h.Unit.Name)
+			case h.Delta < 0:
+				a.logf("　%s 減少 %d", h.Unit.Name, -h.Delta)
+			case h.Delta > 0:
+				a.logf("　%s 增加 %d", h.Unit.Name, h.Delta)
+			}
+		}
 
 	default:
 		// 數值增減類走通式。走不通的 effect_type 才是真的沒實作。
@@ -287,6 +319,39 @@ func (a *app) drawSpellMenu(dst *ebiten.Image) {
 	line("")
 	line("↑↓：選擇　Enter：施放　Esc：取消")
 	line("※ 目前一律投入全部法力（原版可指定點數，輸入框未做）")
+}
+
+// aoeCursor 是範圍法術的選點狀態。
+//
+// 法力已經在開游標之前扣掉了 —— 原版也是先扣再選點，
+// 取消選點不會退還。這裡照做，並在畫面上寫明。
+type aoeCursor struct {
+	caster *game.Unit
+	entry  spellEntry
+	sp     int
+}
+
+// updateAOECursor 讓玩家用方向鍵挪動 5×5 的中心點。
+func (a *app) updateAOECursor() error {
+	for _, kf := range keyFacing {
+		if !inpututil.IsKeyJustPressed(kf.key) {
+			continue
+		}
+		dx, dy := kf.f.Delta()
+		nx, ny := a.aoeX+dx, a.aoeY+dy
+		if nx >= game.BattleGridMinX && nx < game.BattleGridWidth &&
+			ny >= 0 && ny < game.BattleGridHeight {
+			a.aoeX, a.aoeY = nx, ny
+		}
+		return nil
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) ||
+		inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		c := a.aoe
+		a.aoe = nil
+		a.applySpell(c.caster, nil, c.entry, c.sp)
+	}
+	return nil
 }
 
 // updatePlayerTurn 處理玩家單位的一次按鍵。
@@ -472,7 +537,7 @@ func stepToward(u, target *game.Unit) (game.Facing, bool) {
 	if dx == 0 && dy == 0 {
 		return 0, false
 	}
-	if abs(dx) >= abs(dy) {
+	if absInt(dx) >= absInt(dy) {
 		if dx > 0 {
 			return game.East, true
 		}
@@ -484,7 +549,7 @@ func stepToward(u, target *game.Unit) (game.Facing, bool) {
 	return game.North, true
 }
 
-func abs(n int) int {
+func absInt(n int) int {
 	if n < 0 {
 		return -n
 	}
@@ -534,6 +599,9 @@ var facingArrow = []string{"↑", "→", "↓", "←"}
 // gridColor 是戰場格線的顏色，刻意比行動游標暗。
 var gridColor = color.RGBA{0x40, 0x40, 0x40, 0xff}
 
+// aoeColor 是範圍法術的選取框顏色。
+var aoeColor = color.RGBA{0xff, 0x55, 0x55, 0xff}
+
 // drawBattlefield 畫戰鬥網格：雙方單位的位置與面向。
 //
 // **底圖是空的。** 手冊說戰場是「該區域的放大地圖」，但那張放大圖怎麼生成
@@ -547,6 +615,14 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 		for gx := game.BattleGridMinX; gx < layout.MapWidth/cell; gx++ {
 			ui.StrokeRect(dst, gx*cell, gy*cell, cell, cell, gridColor)
 		}
+	}
+
+	if a.aoe != nil {
+		// 5×5 的效果範圍畫出來，玩家才知道會掃到誰（包含自己人）。
+		r := game.AOERadius
+		ui.StrokeRect(dst, (a.aoeX-r)*cell, (a.aoeY-r)*cell,
+			(2*r+1)*cell, (2*r+1)*cell, aoeColor)
+		ui.StrokeRect(dst, a.aoeX*cell, a.aoeY*cell, cell, cell, aoeColor)
 	}
 
 	for _, u := range a.battle.Units() {
@@ -631,6 +707,14 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 
 	if a.battle.Outcome() != game.Ongoing {
 		a.font.Draw(dst, "戰鬥結束　空白鍵：繼續", layout.BoxPadX, y)
+		return
+	}
+	if a.aoe != nil {
+		a.font.Draw(dst, fmt.Sprintf(
+			"%s：選 5×5 的中心　方向鍵：移動　Enter：施放",
+			a.aoe.entry.name), layout.BoxPadX, y)
+		a.font.Draw(dst, "※ 法力已扣，範圍內敵我都會被波及",
+			layout.BoxPadX, y+ui.LineHeight)
 		return
 	}
 	if cur == nil || !cur.IsPlayer {
