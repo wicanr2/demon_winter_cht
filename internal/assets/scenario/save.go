@@ -137,6 +137,12 @@ const (
 	positionXOffset = 0xa1
 	positionYOffset = 0xa2
 
+	// mapIDOffset：**目前的子地圖編號**（已驗證，反組譯）。走到子地圖邊界時
+	// 換圖的四段程式碼（DEMON.INT 0x16fec–0x17114）都在改它：往東西 ±10、
+	// 往南北 ±1，因為編號 = 欄×10 + 列（見 world/grid.go）。
+	// 別處拿 `>= 10` 當「在戶外還是在地城」判斷 —— 編號 10 以下是地城。
+	mapIDOffset = 0xa3
+
 	// facingOffset：**待複核**，中高信心（單一角色樣本，反向確認未做）。
 	// DOSBox 動態 diff 顯示對應順時針四方位，推測 0=北 1=東 2=南 3=西。
 	facingOffset = 0xa4
