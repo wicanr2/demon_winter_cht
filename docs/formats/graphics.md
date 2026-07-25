@@ -275,21 +275,24 @@ pattern 判斷是否為 RLE）。
 
 ---
 
-## 6. 字型 `.FNT`/`.FNE`：未解
+## 6. 字型 `.FNT`/`.FNE`：**已解**（2026-07-25）
 
-`ASC.FNT`（3,073B = 1(header) + 256×12）試著用「VGA BIOS 標準 8×12
-點陣字型」格式解碼（每字元 12 bytes、MSB-first、1bpp），輸出見
-`workplace/dump/gfx/font-asc-fnt.png`——**是雜訊，不是可讀的英文字母**。用
-ASCII 0x20(space)對應的 glyph 檢查，該位置應為全 0(空白)，實際卻是密集黑白
-點陣，證明目前的「1-byte header + 256 連續 8×12 glyph」假設是錯的（可能是
-glyph 尺寸不對、bit 順序不對、或者索引不是照 ASCII 碼直接排列）。`ASC.FNE`／
-`GOT.FNE`(2,688B = 224×12，去掉 header 後剛好整除)同樣輸出雜訊。
+本節原記「未解」，並列出當時試過而失敗的佈局假設。
+**已由 `docs/re/17-font-format.md` 解出並肉眼驗證**，結論：
 
-**這部分不在本任務的核心交付範圍內(PLAN 待驗證項是 V2/V3 圖形格式，字型未列入)，
-留 TODO**，`internal/assets/gfx/font.go` 的 `DecodeMonoFont8x12` 保留給下一輪用，
-但**目前的輸出不能當作字型已解出**。
+| 項目 | CGA `.FNT` | EGA `.FNE` |
+|---|---|---|
+| 字元尺寸 | 8 × 8 | 16 × 14 |
+| 色深／佈局 | 2bpp，**同一列 2 bytes = bit0/bit1 兩個平面** | 1bpp（前景色由呼叫端指定）|
+| 每字 bytes | 16 | 28 |
+| bit 順序 | MSB-first | MSB-first |
+| 字表起點 | ASCII `0x20` | ASCII `0x20` |
+| 檔頭 | 1 byte | 無 |
 
----
+原本的猜測「1-byte header + 256×8×12 1bpp」**尺寸、色深、bit 佈局全部錯**。
+解法是先讀繪字函式的位址算式（`rulebook/62`），再拿字母形狀當 oracle 驗證
+（`rulebook/64`），而不是純試佈局 —— 字型格式沒有「frame 邊界能被檔案大小整除」
+這種錨點，純試很難收斂。
 
 ## 7. 總結表
 
@@ -302,7 +305,7 @@ glyph 尺寸不對、bit 順序不對、或者索引不是照 ASCII 碼直接排
 | EGA `.SHE` 精靈圖(5 檔) | ✅ 已驗證 | 32×28 4-plane、列內 plane 分塊;反組譯 `217b:07cf` 常數 + 肉眼比對清楚 sprite |
 | EGA `CYPHER.SHE`(224 B frame) | 🟡 假設 | 同公式外推 16×28 解得乾淨,但 `07cf` stride 寫死 448,未直接涵蓋 |
 | `OPEN.PIE` | ❌ 未解 | 不符 3.5×,6 種候選尺寸全部雜訊 |
-| `.FNT`/`.FNE` 字型 | ❌ 未解 | 空白字元位置非空白,判定佈局假設錯誤 |
+| `.FNT`/`.FNE` 字型 | ✅ **已驗證**（2026-07-25，見 `docs/re/17`）| CGA 8×8 2bpp「同列 2 byte = 兩個 bit 平面」；EGA 16×14 1bpp。先讀繪字函式的位址算式再驗證，不是猜佈局 |
 
 **3.5 倍假設的最終裁決**：作為「總位元數」的約束成立（色深 ×2 × 高度 ×1.75），
 `.PIE` 人像框與 `.SHE` 精靈圖的檔案大小都符合；`OPEN.PIE` 不符。
@@ -315,10 +318,21 @@ glyph 尺寸不對、bit 順序不對、或者索引不是照 ASCII 碼直接排
 
 ## 8. 給引擎渲染層的建議
 
-- **可以立刻用**：CGA 全部格式(全螢幕/人像框/精靈圖)、EGA 全螢幕圖(人像框)。
-  `internal/assets/gfx/` 的 `DecodeCGALinear320`／`DecodeCGASpriteSheet`／
-  `DecodeEGAPlanar`(配 `ParsePIEPalette`)可直接串進 Ebiten 渲染管線。
-- **不能用**：EGA `.SHE` 精靈圖、`OPEN.PIE`、`.FNT`/`.FNE` 字型——這三塊
-  目前解碼結果是雜訊，直接串進引擎會畫出亂碼圖，需要下一輪反組譯或壓縮格式
-  分析才能繼續。若引擎近期要跑起來，建議先用 CGA 版精靈圖(視覺效果較陽春
-  但正確)頂著，EGA 精靈圖之後補。
+> **2026-07-25 更新**：本節原本寫「EGA `.SHE`、`.FNT`/`.FNE` 解碼結果是雜訊、不能用」，
+> 那是 §4、`docs/re/17` 解開之前的狀態，**已過時**。現況如下。
+
+- **可以直接串進渲染管線**：
+  - CGA 全部格式（全螢幕 `.PIC`、人像框、精靈圖 `.SHP`）
+  - EGA 全螢幕圖／人像框 `.PIE`
+  - **EGA 精靈圖 `.SHE`**（32×28、4-plane、列內 plane 分塊，見 §4）
+  - **字型 `.FNT`／`.FNE`**（見 `docs/re/17`）
+
+  `internal/assets/gfx/` 既有的 `DecodeCGALinear320`／`DecodeCGASpriteSheet`／
+  `DecodeEGAPlanar`（配 `ParsePIEPalette`）可直接用；`.SHE` 與字型的解碼器需補上。
+
+- **仍不能用**：`OPEN.PIE`（見 §5，六種候選尺寸全是雜訊）。
+  開場畫面可先用 CGA 版 `OPEN.PIC` 頂著 —— 那個已完整驗證。
+
+- **踩雷提醒**：`.SHE` 的真實尺寸是 **32×28**，不是從 CGA 16×32 套 1.75 倍
+  推出的 16×56。兩者總像素數相同，**算術分不出來**，只能靠讀 blit 程式碼
+  或肉眼比對定案。任何「用檔案大小推佈局」的推論都要當成假設，不是結論。

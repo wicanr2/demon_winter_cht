@@ -69,8 +69,9 @@
 | [`04-movement.md`](docs/spec/04-movement.md) | **READY** — 移動與模式切換 |
 | [`05-character.md`](docs/spec/05-character.md) | **READY** — 角色建立與升級 |
 | [`06-time.md`](docs/spec/06-time.md) | **READY** — 時間系統 |
+| [`07-graphics.md`](docs/spec/07-graphics.md) | **READY** — 素材格式與渲染 |
 | [`08-town-economy.md`](docs/spec/08-town-economy.md) | **READY** — 城鎮與經濟 |
-| 07 素材渲染、09 字型 | 待寫 |
+| [`09-fonts.md`](docs/spec/09-fonts.md) | **READY** — 字型與中文化 |
 
 ### 逆向筆記 `docs/re/` — 過程與證據
 
@@ -259,13 +260,23 @@ row-major、`.SHE` 尺寸 32×28 vs 16×56。**四次裡三次的錯誤版本都
 
 ## 7. 下一步
 
-**七份規格全部 READY，引擎本體可以開工了。**
+**九份規格全部寫完、全部 READY。SDD 的規格階段到此結束，引擎本體可以開工。**
 
-`01-rng`、`02-combat`、`03-events`、`04-movement`、`05-character`、`06-time`、`08-town-economy`
-涵蓋亂數、完整戰鬥、事件觸發、移動與子地圖進出、建角升級、時間與日夜、全部城鎮設施。
-沒有任何一項還卡在未解問題上。
+| 規格 | 涵蓋 |
+|---|---|
+| `01-rng` | 亂數（含浮點等價性證明）|
+| `02-combat` | 完整戰鬥：行動順序、命中傷害、爆擊、毒、戰鬥風格、法術、召喚、怪物生成 |
+| `03-events` | 座標→事件、傳送、一次性遭遇 |
+| `04-movement` | 移動、可通行性、子地圖進出 |
+| `05-character` | 建角、種族、技能、升級 |
+| `06-time` | 時／日／月、日夜、隨機遭遇 |
+| `07-graphics` | CGA/EGA 全部素材格式 |
+| `08-town-economy` | 六大城鎮設施 |
+| `09-fonts` | 字型 + 中文化設計 |
 
-若要繼續補文件（不擋開工）：
+剩下的未解項**沒有一項擋住開工**：
 
-1. **補寫規格 07 素材渲染、09 字型**（證據等級已夠，尚未收攏）
-2. `OPEN.PIE`、資源 arena 索引 2/3/6/8/14/15、`ITEMS.DAT` 的 f1–f6
+1. `OPEN.PIE`（唯一未解的素材；開場可先用已驗證的 CGA 版頂著，
+   但依完整性原則必須補上）
+2. 資源 arena 索引 2/3/6/8/14/15 的內容、`ITEMS.DAT` 的 `f1`–`f6`
+3. 各規格文末列的小項（都標明了不擋實作）
