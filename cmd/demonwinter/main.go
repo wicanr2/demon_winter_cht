@@ -18,6 +18,7 @@ import (
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
+	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
@@ -49,6 +50,11 @@ type app struct {
 	useWinter      bool
 	font           *ui.Font
 
+	exits  *world.ExitTable
+	events *scenario.EventTable
+
+	box *ui.TextBox
+
 	lastTile byte
 	message  string
 }
@@ -72,6 +78,19 @@ var keyFacing = []struct {
 }
 
 func (a *app) Update() error {
+	// 文字視窗開著時吃掉所有輸入，只認翻頁鍵 —— 與原版一樣，
+	// 讀完敘述才能繼續走。
+	if a.box.Active() {
+		if inpututil.IsKeyJustPressed(ebiten.KeySpace) ||
+			inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
+			a.box.Advance()
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+			return ebiten.Termination
+		}
+		return nil
+	}
+
 	for _, kf := range keyFacing {
 		if !inpututil.IsKeyJustPressed(kf.key) {
 			continue
@@ -91,6 +110,9 @@ func (a *app) Update() error {
 		if advanced {
 			a.message = fmt.Sprintf("hour -> %d", a.clock.Hour())
 		}
+		if res == game.MoveOK {
+			a.checkEvent(tile)
+		}
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
@@ -106,6 +128,7 @@ func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
 	a.drawWorld(a.canvas)
 	a.drawStatus(a.canvas)
+	ui.DrawTextBox(a.canvas, a.box, a.font, 0, textBoxTop, markerColor)
 
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 	op.GeoM.Scale(scale, scale)
@@ -141,6 +164,45 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 		gfx.TileWidth, gfx.TileHeight, markerColor)
 }
 
+// checkEvent 走 docs/spec/03-events.md 的觸發鏈：
+// 落點 tile 決定要不要查表 → 查 EXITS.DAT 取事件索引 → 讀 DATA*.TXT 顯示文字。
+//
+// 戰鬥（記錄的 Count != 0）與傳送尚未實作，目前只把它們寫進狀態列。
+func (a *app) checkEvent(tile byte) {
+	idx := -1
+
+	switch game.TriggerFor(tile) {
+	case game.TriggerHardBlock, game.TriggerNone:
+		return
+
+	case game.TriggerDirectIndex:
+		// tile 值本身就是 DATA*.TXT 的記錄索引，不查 EXITS.DAT。
+		idx = int(tile)
+
+	case game.TriggerLookup:
+		q := game.LookupEvent(a.exits, byte(a.party.X()), byte(a.party.Y()), nil)
+		if !q.Found {
+			return
+		}
+		if q.Category == game.CatTeleport {
+			a.message = fmt.Sprintf("teleport (%d,%d) TODO", q.TeleportX, q.TeleportY)
+			return
+		}
+		idx = q.Index
+	}
+
+	ev, err := a.events.ByIndex(idx)
+	if err != nil {
+		a.message = fmt.Sprintf("event %d out of range", idx)
+		return
+	}
+
+	a.box = ui.NewTextBox(ev.Text)
+	if ev.Count != 0 {
+		a.message = fmt.Sprintf("combat %d grp TODO", ev.Count)
+	}
+}
+
 var facingName = []string{"N", "E", "S", "W"}
 
 func (a *app) drawStatus(dst *ebiten.Image) {
@@ -156,6 +218,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"",
 		"Arrows: move",
 		"Tab:    season",
+		"Space:  page text",
 		"Esc:    quit",
 	}
 	for i, s := range lines {
@@ -163,9 +226,18 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 	}
 }
 
+// 文字視窗放在地圖與狀態列下方，不疊在上面。
+// 高度是 (5 行 + 上下各一行邊距) × 行高。
+const textBoxTop = viewTilesY * gfx.TileHeight
+
 // logicalSize 是邏輯畫布尺寸；視窗是它的整數倍。
 func logicalSize() (int, int) {
-	return viewTilesX*gfx.TileWidth + statusWidth, viewTilesY * gfx.TileHeight
+	w := viewTilesX*gfx.TileWidth + statusWidth
+	if min := (ui.TextBoxColumns + 2) * ui.CGAGlyphWidth; w < min {
+		w = min
+	}
+	h := textBoxTop + (ui.TextBoxPageLines+2)*(ui.CGAGlyphHeight+2)
+	return w, h
 }
 
 func (a *app) Layout(int, int) (int, int) {
@@ -177,6 +249,7 @@ func main() {
 	dataDir := flag.String("data", "workplace/orig/demwin/DEM_DATA",
 		"原版資料目錄（玩家自備合法副本）")
 	mapFile := flag.String("map", "MAP1.MAP", "要載入的地圖檔")
+	dataFile := flag.String("events", "DATA1.TXT", "要載入的事件表")
 	startX := flag.Int("x", 32, "起始 X")
 	startY := flag.Int("y", 32, "起始 Y")
 	flag.Parse()
@@ -193,6 +266,15 @@ func main() {
 	m, err := world.LoadMap(filepath.Join(*dataDir, *mapFile))
 	if err != nil {
 		log.Fatalf("載入地圖：%v", err)
+	}
+
+	exits, err := world.LoadExits(filepath.Join(*dataDir, "EXITS.DAT"))
+	if err != nil {
+		log.Fatalf("載入 EXITS.DAT：%v", err)
+	}
+	events, err := scenario.LoadEventTable(filepath.Join(*dataDir, *dataFile))
+	if err != nil {
+		log.Fatalf("載入事件表：%v", err)
 	}
 
 	loadSet := func(s gfx.TerrainSet) *ui.Tileset {
@@ -214,6 +296,8 @@ func main() {
 		party:  game.NewParty(*startX, *startY, game.South, 0),
 		clock:  game.NewClock(),
 		tiles:  m,
+		exits:  exits,
+		events: events,
 		normal: loadSet(gfx.NormalTiles),
 		winter: loadSet(gfx.WinterTiles),
 		font:   font,

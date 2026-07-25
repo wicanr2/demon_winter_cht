@@ -17,7 +17,7 @@
 1. **完整性 > 投報**。不得以「成本高、效益低」為由跳過任何素材版本、任何格式。
    卡關就換方法，記錄「卡在哪、試過什麼」，不寫「暫緩／低投報」當結論。
 2. **SDD：spec 齊了才實作**。反組譯 → 收攏成規格（`docs/spec/`）→ 才動手寫程式。
-   目前**刻意還沒開始寫引擎**，先把機制全部搞清楚。
+   九份規格全部 READY 後才開工，目前引擎進度見 §2。
 
 ### 不做的事
 
@@ -47,16 +47,18 @@
 | 項目 | 狀態 |
 |---|---|
 | `OPEN.PIE` | 未解（102,160 B，不符 3.5× 規律）。新線索：EGA 素材一律「檔案存半寬」，先前湊候選尺寸時用的是顯示寬度，要照半寬重算 |
-| Go 引擎本體 | **M1 完成**（見下）。戰鬥、事件、角色、原版 UI 版面尚未實作 |
+| Go 引擎本體 | **M1／M2 完成**（見下）。戰鬥、角色、城鎮、原版 UI 版面尚未實作 |
 
 ### 引擎進度
 
 | 里程碑 | 狀態 |
 |---|---|
 | M1 可走動的世界 | ✅ 載入地圖與地形圖塊、可通行性判定、子地圖進出、三層時間與步數推進。端到端驗證：從 (34,36) 連走 11 步 → X=45、Hour 5→6、Steps=1 |
-| M2 事件與文字 | 未開始（`03-events` 已 READY）|
+| M2 事件與文字 | ✅ 觸發閘門（tile 0x11/0x53 查表、五個 tile 直接當索引、0x35 硬阻擋）、`EXITS.DAT` 掃描與事件索引累計、`DATA*.TXT` 文字顯示（40 欄逐詞斷行、每 5 行翻頁）。端到端：走進 (54,16) 跳出「The Hall of Bones…」並可翻頁。**戰鬥與傳送尚未接** |
 | M3 角色與建角 | 未開始（`05-character` READY，但三次重擲機制未定位）|
 | M4 戰鬥 | 未開始（`02-combat` 已 READY）|
+| M5 城鎮與經濟 | 未開始（`08-town-economy` 已 READY）|
+| 中文化 | 未開始。前置：16×16 CJK 點陣字型、UI 版面重排（畫布拉到 640×400）、字串抽取與翻譯表 |
 
 程式碼結構：`internal/assets`（純解碼，回傳 `image.RGBA`，不認識 Ebiten）→
 `internal/game`（規則層，不認識畫面）→ `internal/ui`（Ebiten 呈現層）→ `cmd/demonwinter`。
@@ -135,7 +137,7 @@ frame 數 COMBAT 44／CYPHER 27／DEMON 102／MONSTER 240／SHIP 32／WINTER 102
 | [`14-rng-float-equivalence.md`](docs/re/14-rng-float-equivalence.md) | RNG 浮點等價性證明 |
 | [`15-spell-constants.md`](docs/re/15-spell-constants.md) | **法術 K/M 參數表**（在 `FILES.DAT`，不在 `DEMON.INT`） |
 | [`16-combat-details.md`](docs/re/16-combat-details.md) | 命中修正、爆擊、戰敗判定、AOE |
-| [`17-font-format.md`](docs/re/17-font-format.md) | **字型格式**（CGA 8×8 bit-plane、EGA 16×14）與繪字函式鏈 |
+| [`17-font-format.md`](docs/re/17-font-format.md) | **字型格式**（CGA 8×8 packed 2bpp 兩 bank、EGA 16×14 1bpp）與繪字函式鏈 |
 | [`18-jumptable-sweep.md`](docs/re/18-jumptable-sweep.md) | 跳表全檔清掃（21 張）+ **即死／束縛／枯萎的精確判定公式** |
 | [`19-town-economy.md`](docs/re/19-town-economy.md) | **城鎮經濟六大設施全部公式**；市集議價與說服技能；角色記錄 6 個新欄位 |
 | [`20-summon-and-combat-units.md`](docs/re/20-summon-and-combat-units.md) | **召喚／幻術**、戰鬥單位 19 欄結構、怪物進場擲點、傷害與排序邊界 |
@@ -177,7 +179,8 @@ frame 數 COMBAT 44／CYPHER 27／DEMON 102／MONSTER 240／SHIP 32／WINTER 102
 | `tools/ghidra_headless.sh`、`tools/ghidra_scripts/` | Ghidra 封裝與 post-script |
 | `tools/dosbox_run.sh` | DOSBox 封裝 |
 | `tools/parse_*.py` | 各資料格式的 Python 解析器 |
-| `internal/` | Go 引擎（目前只有解碼器與 RNG） |
+| `tools/go.sh`、`tools/screenshot.sh` | docker 內編譯／測試；headless 跑起來送鍵截圖 |
+| `internal/`、`cmd/` | Go 引擎（assets 解碼、game 規則層、ui 呈現層、demonwinter 執行檔） |
 
 ---
 

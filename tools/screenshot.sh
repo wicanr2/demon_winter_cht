@@ -49,6 +49,7 @@ sleep 3
 if [ -n '$KEYS' ]; then
     WID=\$(DISPLAY=:99 xdotool search --sync --onlyvisible --name "冬之魔" | head -1)
     DISPLAY=:99 xdotool windowactivate --sync \$WID 2>/dev/null || true
+    sleep 1
     for k in \$(echo '$KEYS' | tr ',' ' '); do
         DISPLAY=:99 xdotool key --window \$WID --clearmodifiers \$k
         sleep 0.25

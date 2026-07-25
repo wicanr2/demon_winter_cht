@@ -133,6 +133,11 @@ func DrawImageAt(dst, src *ebiten.Image, x, y int) {
 	dst.DrawImage(src, op)
 }
 
+// rect 是 image.Rect 的簡寫，讓 SubImage 呼叫讀起來乾淨些。
+func rect(x, y, w, h int) image.Rectangle {
+	return image.Rect(x, y, x+w, y+h)
+}
+
 // StrokeRect 畫一個一像素寬的空心矩形。
 func StrokeRect(dst *ebiten.Image, x, y, w, h int, c color.Color) {
 	line := func(x0, y0, x1, y1 int) {
