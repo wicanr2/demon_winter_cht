@@ -164,6 +164,22 @@ type Tables struct {
 	summons     [numSummons]SummonEntry
 	spells      [numSpells]Spell
 	sight       *SightShadow
+
+	// terrainGroups／encounters 是隨機遭遇的兩張表，見 encounter.go。
+	terrainGroups []byte
+	encounters    []EncounterGroup
+}
+
+// Terrain 回傳某個 tile 屬於哪一種地形。
+//
+// **地形就是可通行性表的值** —— 原版沒有另一張地形表（見 encounter.go）。
+// 不可通行的 tile（0xfd／0xfe／0xff）沒有地形，ok 回 false。
+func (t *Tables) Terrain(tile byte) (Terrain, bool) {
+	p := t.Passability(tile)
+	if byte(p) >= NumTerrains {
+		return 0, false
+	}
+	return Terrain(p), true
 }
 
 // Sight 回傳戰場視線遮蔽表（見 sight.go）。
@@ -195,6 +211,7 @@ func ParseTables(data []byte) (*Tables, error) {
 		return nil, err
 	}
 	t.sight = sight
+	t.terrainGroups, t.encounters = parseEncounters(data)
 
 	for s := 0; s < NumSkills; s++ {
 		for c := 0; c < NumClasses; c++ {

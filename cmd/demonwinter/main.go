@@ -229,6 +229,7 @@ func (a *app) Update() error {
 		}
 		if res == game.MoveOK {
 			a.checkEvent(tile)
+			a.checkRandomEncounter(tile)
 		}
 	}
 
@@ -399,6 +400,54 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 // 落點 tile 決定要不要查表 → 查 EXITS.DAT 取事件索引 → 讀 DATA*.TXT 顯示文字。
 //
 // 戰鬥（記錄的 Count != 0）與傳送尚未實作，目前只把它們寫進狀態列。
+// checkRandomEncounter 擲野外隨機遭遇。
+//
+// 原版每走一步 1/64（`rnd_raw() & 0x3f == 0x34`），只在戶外、且不在船上時擲；
+// 遇到什麼由腳下 tile 的地形決定（見 game.RollEncounter）。
+//
+// 目前的難度取隊伍最高等級，鉗在 1–10。原版存在 `ds:0x5c60`，會隨劇情推進
+// 被加值（`222f:2b5f`），那條加值路徑的觸發條件還沒追出來，所以先用隊伍等級
+// 近似 —— 這是**本作自己的取捨**，不是原版行為。
+func (a *app) checkRandomEncounter(tile byte) {
+	if a.mapID < worldMapMinID || a.battle != nil || a.box.Active() {
+		return // 地城不擲；已經在戰鬥或讀敘述時也不擲
+	}
+	if !game.EncounterTriggered(int(a.rng.Next())) {
+		return
+	}
+	terrain, ok := a.tables.Terrain(tile)
+	if !ok {
+		return
+	}
+	mons := game.RollEncounter(a.rng, a.tables, terrain, a.encounterLevel())
+	if len(mons) == 0 {
+		return
+	}
+	a.logf("在%s遭遇了敵人", terrain.Name())
+	a.startBattle(mons)
+}
+
+// worldMapMinID 是「戶外」的下界。原版拿子地圖編號跟 9 比（222f:080c），
+// 小於 9 就是地城，不擲隨機遭遇。
+//
+// 注意這裡是 9 而不是別處用的 10 —— 原版自己在兩個地方用了不同的邊界
+// （光照那條是 `< 10`）。照抄，不統一。
+const worldMapMinID = 9
+
+// encounterLevel 回傳目前的遭遇難度（1–10）。
+func (a *app) encounterLevel() int {
+	level := 1
+	for _, c := range a.members {
+		if c.Level > level {
+			level = c.Level
+		}
+	}
+	if level > 10 {
+		level = 10
+	}
+	return level
+}
+
 func (a *app) checkEvent(tile byte) {
 	// 城鎮格優先於事件鏈。原版就是這個順序：先比對剛踩到的 tile 是不是
 	// 0x2e／0x64，是就拿座標查城鎮編號，不再往事件表走
