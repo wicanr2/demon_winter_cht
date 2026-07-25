@@ -92,10 +92,10 @@ func NewParty(x, y int, facing Facing, dataset int) *Party {
 	return &Party{x: x, y: y, facing: facing, dataset: dataset}
 }
 
-func (p *Party) X() int           { return p.x }
-func (p *Party) Y() int           { return p.y }
-func (p *Party) Facing() Facing   { return p.facing }
-func (p *Party) Dataset() int     { return p.dataset }
+func (p *Party) X() int         { return p.x }
+func (p *Party) Y() int         { return p.y }
+func (p *Party) Facing() Facing { return p.facing }
+func (p *Party) Dataset() int   { return p.dataset }
 
 // Depth 回傳目前的子地圖深度。0 代表在大地圖上。
 func (p *Party) Depth() int { return len(p.stack) }
