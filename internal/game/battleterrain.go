@@ -13,7 +13,7 @@ import (
 //
 //  1. 把 9×9 的地形緩衝區清成 0（實際清 0x80 bytes）。
 //  2. 以遭遇發生的世界座標為中心，取一個 (9−2k)×(9−2k) 的視窗，
-//     貼進網格的 (k, k)。k 是視野內縮量，見 gamedata.LightInsetAt。
+//     貼進網格的 (k, k)。k 就是光照等級，見 LightLevel。
 //  3. 每一格直接抄世界地圖的 tile：`tile = world[Y*64 + X]`（0x1737f）。
 //  4. 視窗超出世界地圖邊界（X 或 Y 不在 0–63）的格子跳過，維持 0。
 //
@@ -42,17 +42,17 @@ func (t *BattleTerrain) TileAt(x, y int) byte {
 
 // NewBattleTerrain 以世界座標 (cx, cy) 為中心，從 m 切出戰場地形。
 //
-// inset 是視野內縮量 k（0 = 整個 9×9 都看得到）。超出 0–MaxLightInset
-// 一律回傳 error，不默默夾住 —— 內縮量算錯會讓整個戰場變空白，
-// 那種畫面看起來像「地圖沒載到」，很難查。
-func NewBattleTerrain(m *world.Map, cx, cy, inset int) (*BattleTerrain, error) {
+// light 是光照等級，同時就是視野內縮量 k（0 = 整個 9×9 都看得到）。
+// 超出 0–MaxLightLevel 一律回傳 error，不默默夾住 —— 內縮量算錯會讓整個
+// 戰場變空白，那種畫面看起來像「地圖沒載到」，很難查。
+func NewBattleTerrain(m *world.Map, cx, cy int, light LightLevel) (*BattleTerrain, error) {
 	if m == nil {
 		return nil, fmt.Errorf("game: 戰場地形需要世界地圖")
 	}
-	if inset < 0 || inset > gamedata.MaxLightInset {
-		return nil, fmt.Errorf("game: 視野內縮量 %d 超出 0–%d",
-			inset, gamedata.MaxLightInset)
+	if light < 0 || light > MaxLightLevel {
+		return nil, fmt.Errorf("game: 光照等級 %d 超出 0–%d", light, MaxLightLevel)
 	}
+	inset := int(light)
 
 	var t BattleTerrain
 	half := BattleTerrainSize / 2

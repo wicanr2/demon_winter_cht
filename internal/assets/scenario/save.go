@@ -143,6 +143,12 @@ const (
 	// 別處拿 `>= 10` 當「在戶外還是在地城」判斷 —— 編號 10 以下是地城。
 	mapIDOffset = 0xa3
 
+	// lightSourceOffset：**地城的光源強度**（已驗證，反組譯）。
+	// DEMON.INT 0x161ab 在「身處地城」時把它讀進 ds:0x5c64，
+	// 戰場視野內縮量 = 4 − 它（0x161c5）。兩份原版存檔都是 1，
+	// 換算成 3×3 的視野 —— 火把照得到的範圍，數值合理。
+	lightSourceOffset = 0xa7
+
 	// facingOffset：**待複核**，中高信心（單一角色樣本，反向確認未做）。
 	// DOSBox 動態 diff 顯示對應順時針四方位，推測 0=北 1=東 2=南 3=西。
 	facingOffset = 0xa4
@@ -243,6 +249,19 @@ type SaveGame struct {
 	// 0=北 1=東 2=南 3=西，單一樣本、反向確認未做。
 	Facing byte
 
+	// MapID 是目前所在的子地圖編號（已驗證，見 mapIDOffset 註解）。
+	// 11–77 是世界地圖（編號 = 欄×10 + 列），10 以下是地城。
+	//
+	// 交叉驗證：兩份原版存檔分別是 1 與 3 —— 正好是現存三個獨立地城檔
+	// （MAP1／MAP3／MAP5.MAP）裡的兩個。
+	MapID byte
+
+	// LightSource 是地城的光源強度（見 lightSourceOffset 註解）。
+	LightSource byte
+
+	// Hour 是遊戲內時辰（已驗證，見 hourOffset 註解）。
+	Hour byte
+
 	// TimeCounter 是疑似遊戲內時間／回合計數的候選欄位。**待複核**，中信心
 	// （見 timeCounterOffset 註解）。
 	TimeCounter byte
@@ -295,6 +314,9 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	copy(save.FormationOrder[:], trailer[formationOrderOffset:formationOrderOffset+formationOrderLen])
 	save.GoldRaw3 = le3(trailer[goldOffset : goldOffset+3])
 	copy(save.LDFlags[:], trailer[ldFlagsOffset:ldFlagsOffset+ldFlagsLen])
+	save.MapID = trailer[mapIDOffset]
+	save.LightSource = trailer[lightSourceOffset]
+	save.Hour = trailer[hourOffset]
 	save.PositionX = trailer[positionXOffset]
 	save.PositionY = trailer[positionYOffset]
 	save.Facing = trailer[facingOffset]

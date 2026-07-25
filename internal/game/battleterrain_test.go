@@ -31,7 +31,7 @@ func TestBattleTerrain_MirrorsWorldWindow(t *testing.T) {
 	m := loadWorldMap(t)
 	const cx, cy = 32, 32
 
-	bt, err := NewBattleTerrain(m, cx, cy, 0)
+	bt, err := NewBattleTerrain(m, cx, cy, LightFull)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestBattleTerrain_CentreIsEncounterTile(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for inset := 0; inset <= gamedata.MaxLightInset; inset++ {
+		for inset := LightFull; inset <= MaxLightLevel; inset++ {
 			bt, err := NewBattleTerrain(m, c[0], c[1], inset)
 			if err != nil {
 				t.Fatal(err)
@@ -80,19 +80,20 @@ func TestBattleTerrain_InsetBlanksBorder(t *testing.T) {
 	m := loadWorldMap(t)
 	const cx, cy = 32, 32
 
-	full, err := NewBattleTerrain(m, cx, cy, 0)
+	full, err := NewBattleTerrain(m, cx, cy, LightFull)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for inset := 1; inset <= gamedata.MaxLightInset; inset++ {
+	for inset := LightLevel(1); inset <= MaxLightLevel; inset++ {
 		bt, err := NewBattleTerrain(m, cx, cy, inset)
 		if err != nil {
 			t.Fatal(err)
 		}
 		for y := 0; y < BattleTerrainSize; y++ {
 			for x := 0; x < BattleTerrainSize; x++ {
-				inside := x >= inset && x < BattleTerrainSize-inset &&
-					y >= inset && y < BattleTerrainSize-inset
+				k := int(inset)
+				inside := x >= k && x < BattleTerrainSize-k &&
+					y >= k && y < BattleTerrainSize-k
 				got := bt.TileAt(x, y)
 				if inside {
 					if got != full.TileAt(x, y) {
@@ -115,7 +116,7 @@ func TestBattleTerrain_InsetBlanksBorder(t *testing.T) {
 func TestBattleTerrain_ClipsAtMapEdge(t *testing.T) {
 	m := loadWorldMap(t)
 
-	bt, err := NewBattleTerrain(m, 0, 0, 0)
+	bt, err := NewBattleTerrain(m, 0, 0, LightFull)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,40 +132,58 @@ func TestBattleTerrain_ClipsAtMapEdge(t *testing.T) {
 
 func TestBattleTerrain_RejectsBadInset(t *testing.T) {
 	m := loadWorldMap(t)
-	for _, k := range []int{-1, gamedata.MaxLightInset + 1, 99} {
+	for _, k := range []LightLevel{-1, MaxLightLevel + 1, 99} {
 		if _, err := NewBattleTerrain(m, 32, 32, k); err == nil {
 			t.Errorf("內縮量 %d 應回傳錯誤", k)
 		}
 	}
 }
 
-// 日夜曲線：正午看得最遠、深夜看得最近，而且整條曲線都在合法範圍內。
-func TestLightInset_DayNightCurve(t *testing.T) {
-	noon := gamedata.LightInsetAt(10)
-	if noon != 0 {
-		t.Errorf("白天（10 時）內縮量 = %d，預期 0（整個戰場都看得到）", noon)
+// 地城的光照：k = 4 − 光源強度，沒光源時戰場只剩腳下一格。
+func TestDungeonLight(t *testing.T) {
+	for _, c := range []struct {
+		torch int
+		want  LightLevel
+	}{
+		{4, LightFull}, {3, LightDim1}, {2, LightDim2}, {1, LightDark}, {0, LightBlind},
+	} {
+		if got := DungeonLight(c.torch); got != c.want {
+			t.Errorf("光源 %d → 光照 %d，預期 %d", c.torch, got, c.want)
+		}
 	}
-	night := gamedata.LightInsetAt(22)
-	if night <= noon {
-		t.Errorf("深夜（22 時）內縮量 %d 應該大於白天的 %d", night, noon)
-	}
-	for h := 0; h < gamedata.HoursPerDay; h++ {
-		if k := gamedata.LightInsetAt(h); k < 0 || k > gamedata.MaxLightInset {
-			t.Errorf("%d 時的內縮量 %d 超出 0–%d", h, k, gamedata.MaxLightInset)
+	// 超出範圍要夾住，不能算出負的視窗寬度。
+	for _, torch := range []int{-5, -1, 5, 99} {
+		if got := DungeonLight(torch); got < LightFull || got > MaxLightLevel {
+			t.Errorf("光源 %d → 光照 %d，超出 0–%d", torch, got, MaxLightLevel)
 		}
 	}
 }
 
-// 超出範圍的時辰要取模，不能越界。
-func TestLightInset_WrapsHour(t *testing.T) {
-	for _, h := range []int{-1, gamedata.HoursPerDay, gamedata.HoursPerDay + 10, 1000} {
-		k := gamedata.LightInsetAt(h)
-		if k < 0 || k > gamedata.MaxLightInset {
-			t.Errorf("時辰 %d 得到內縮量 %d，超出合法範圍", h, k)
+// 最暗的地城光照要真的縮到只剩中央一格 —— 這是 LightLevel 值域從 3
+// 擴到 4 的唯一理由，縮錯就等於這個機制沒做。
+func TestBattleTerrain_BlindLeavesOnlyCentre(t *testing.T) {
+	m := loadWorldMap(t)
+	bt, err := NewBattleTerrain(m, 32, 32, LightBlind)
+	if err != nil {
+		t.Fatal(err)
+	}
+	half := BattleTerrainSize / 2
+	for y := 0; y < BattleTerrainSize; y++ {
+		for x := 0; x < BattleTerrainSize; x++ {
+			if x == half && y == half {
+				continue
+			}
+			if got := bt.TileAt(x, y); got != 0 {
+				t.Errorf("(%d,%d) 在最暗時應為空白，卻是 0x%02x", x, y, got)
+			}
 		}
 	}
-	if a, b := gamedata.LightInsetAt(3), gamedata.LightInsetAt(3+gamedata.HoursPerDay); a != b {
-		t.Errorf("時辰 3 與 3+%d 應該一樣，得到 %d vs %d", gamedata.HoursPerDay, a, b)
+	want, err := m.TileAt(32, 32)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := bt.TileAt(half, half); got != want {
+		t.Errorf("最暗時中央格 = 0x%02x，預期 0x%02x", got, want)
 	}
 }
 
@@ -211,7 +230,7 @@ func TestBattleTerrain_ShadowHasEffectOnRealMap(t *testing.T) {
 	m := loadWorldMap(t)
 	s := loadSightTable(t)
 
-	bt, err := NewBattleTerrain(m, 20, 20, 0)
+	bt, err := NewBattleTerrain(m, 20, 20, LightFull)
 	if err != nil {
 		t.Fatal(err)
 	}

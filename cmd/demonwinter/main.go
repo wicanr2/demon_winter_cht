@@ -129,6 +129,14 @@ type app struct {
 	// battle 非 nil 時遊戲進入戰鬥模式，地圖輸入停止。
 	battle     *game.Battle
 
+	// mapID 是目前所在的子地圖編號。11–77 是世界地圖，10 以下是地城 ——
+	// 兩者的戰場視野來源不同（時辰表 vs 光源），見 terrainForBattle。
+	mapID int
+
+	// torch 是地城的光源強度，載入存檔時從隊伍欄位 +0xa7 取得。
+	// 目前沒有點火把／照明術之類會改動它的機制，所以整場遊戲維持初值。
+	torch byte
+
 	// battleTerrain 是這場戰鬥腳下的地形，已套用視線遮蔽 ——
 	// 看不到的格子是空白的。原版的戰場就是大地圖的局部放大，
 	// 看得到多大一塊由時辰決定（見 game.NewBattleTerrain）。
@@ -320,20 +328,29 @@ func (a *app) Draw(screen *ebiten.Image) {
 //
 // 世界地圖（含 25 座城鎮裡的 24 座）全部打包在 SUM.MAP 裡，只認檔名的話
 // 玩家根本走不到大陸上，自動進城也就沒地方驗。
-func loadMapArg(dataDir, arg string) (*world.Map, error) {
+func loadMapArg(dataDir, arg string) (*world.Map, int, error) {
 	id, err := strconv.Atoi(arg)
 	if err != nil {
-		return world.LoadMap(filepath.Join(dataDir, arg))
+		// 檔名形式：MAP1.MAP → 編號 1（都是地城）。
+		m, err := world.LoadMap(filepath.Join(dataDir, arg))
+		if err != nil {
+			return nil, 0, err
+		}
+		n := 0
+		if len(arg) > 3 && arg[3] >= '0' && arg[3] <= '9' {
+			n = int(arg[3] - '0')
+		}
+		return m, n, nil
 	}
 	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	m, ok := sm.Segment(id)
 	if !ok {
-		return nil, fmt.Errorf("SUM.MAP 沒有子地圖 %d，可用的是 %v", id, sm.IDs())
+		return nil, 0, fmt.Errorf("SUM.MAP 沒有子地圖 %d，可用的是 %v", id, sm.IDs())
 	}
-	return m, nil
+	return m, id, nil
 }
 
 // ditheredTiles 產生「拿來畫」的那份 tile 陣列（見 app.drawTiles）。
@@ -436,8 +453,7 @@ var debugBattleMonsters = []int{2, 3, 4}
 // 看得到多大一塊由時辰決定：正午整個 9×9 都畫得出來，深夜只剩中央 3×3。
 // 切不出來（不該發生）就回 nil，畫面退回沒有地形的樣子，不讓戰鬥開不起來。
 func (a *app) terrainForBattle() *game.BattleTerrain {
-	t, err := game.NewBattleTerrain(a.tiles, a.party.X(), a.party.Y(),
-		gamedata.LightInsetAt(a.clock.Hour()))
+	t, err := game.NewBattleTerrain(a.tiles, a.party.X(), a.party.Y(), a.battleLight())
 	if err != nil {
 		a.message = fmt.Sprintf("戰場地形切不出來：%v", err)
 		return nil
@@ -447,6 +463,21 @@ func (a *app) terrainForBattle() *game.BattleTerrain {
 		return t
 	}
 	return vis
+}
+
+// battleLight 決定這場戰鬥看得到多大一塊戰場。
+//
+// 戶外看天色，地城看光源 —— 原版就是照子地圖編號分這兩條
+// （DEMON.INT 0x161a3 用 `>= 10` 判斷）。
+//
+// 地城的光源強度來自存檔（+0xa7，兩份原版存檔都是 1 → 3×3 的視野，
+// 火把照得到的範圍）。本專案還沒有點火把／照明術這些會改動它的機制，
+// 所以整場維持初值 —— 少的是「讓它變亮的手段」，不是這條規則本身。
+func (a *app) battleLight() game.LightLevel {
+	if world.IsWorldSubMap(a.mapID) {
+		return a.clock.Light()
+	}
+	return game.DungeonLight(int(a.torch))
 }
 
 // startBattle 依事件記錄的怪物清單布置戰場。
@@ -615,7 +646,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入 FILES.DAT：%v", err)
 	}
-	m, err := loadMapArg(*dataDir, *mapFile)
+	m, mapID, err := loadMapArg(*dataDir, *mapFile)
 	if err != nil {
 		log.Fatalf("載入地圖：%v", err)
 	}
@@ -704,6 +735,7 @@ func main() {
 		party:      game.NewParty(*startX, *startY, game.South, 0),
 		clock:      game.NewClock(),
 		tiles:      m,
+		mapID:      mapID,
 		drawTiles:  ditheredTiles(m, uint16(*seed)),
 		exits:      exits,
 		events:     events,
@@ -722,6 +754,7 @@ func main() {
 		speaker:    ui.NewSpeaker(*volume),
 		title:      loadTitle(*dataDir),
 		save:       save,
+		torch:      save.LightSource,
 		savePath:   *savePath,
 	}
 
