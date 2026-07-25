@@ -60,8 +60,23 @@ const (
 	Troll
 )
 
-// Class 職業 id，與角色記錄 +0xf6 的值相同。
+// Class 職業 id，與角色記錄 +0xf6 的值相同，也是技能學費表（0x158）的欄索引。
 type Class int
+
+const (
+	Ranger Class = iota
+	Paladin
+	Barbarian
+	Monk
+	Cleric
+	Thief
+	Wizard
+	Sorcerer
+	Visionary
+	Scholar
+)
+
+// NumClasses 已在下方以表格維度定義，這裡的常數順序必須與它一致。
 
 // SkillID 是遊戲內部的技能編號，也是角色記錄 +0xc8 起技能旗標陣列的索引。
 //

@@ -72,7 +72,9 @@ type app struct {
 
 	// town 非 nil 時遊戲在城鎮畫面，地圖與戰鬥輸入都停止。
 	town *townScreen
-	rng  *rng.RNG
+	// create 非 nil 時遊戲在建角畫面。
+	create *createScreen
+	rng    *rng.RNG
 
 	// prayChance 是祈禱的成功率，會隨每次祈禱變動，跨戰鬥保留。
 	prayChance int
@@ -116,6 +118,9 @@ var keyFacing = []struct {
 func (a *app) Update() error {
 	if handled, err := a.updateQuitDialog(); handled || err != nil {
 		return err
+	}
+	if a.create != nil {
+		return a.updateCreate()
 	}
 	if a.town != nil {
 		return a.updateTown()
@@ -179,6 +184,9 @@ func (a *app) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyT) {
 		a.openTownPicker()
 	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
+		a.openCreate()
+	}
 	// ESC 只收起名冊。離開遊戲一律走 F10（見 save.go）。
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		a.showRoster = false
@@ -191,6 +199,16 @@ func (a *app) Update() error {
 
 func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
+	if a.create != nil {
+		a.drawCreate(a.canvas)
+		if a.quitting {
+			a.drawQuitDialog(a.canvas)
+		}
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
 	if a.town != nil {
 		a.drawTown(a.canvas)
 		if a.quitting {
@@ -385,6 +403,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"Tab：切換季節",
 		"P：隊伍名冊",
 		"T：進入城鎮",
+		"C：建立角色",
 		"S：存檔",
 		"空白鍵：翻頁",
 		"F10：離開遊戲",
