@@ -3,7 +3,7 @@
 # 硬規則：本專案一律用 docker 編譯，不污染主機 Go 環境。
 # Ebiten 需要 X11 / OpenGL 的標頭檔才能編譯（即使跑 headless 測試也要，
 # 因為 cmd/demonwinter 會 import ebiten）。
-FROM golang:1.24-bookworm
+FROM golang:1.25-bookworm
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         libgl1-mesa-dev \

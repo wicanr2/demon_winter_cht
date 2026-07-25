@@ -100,6 +100,15 @@ func (f *Font) Draw(dst *ebiten.Image, s string, x, y int) {
 	}
 }
 
+// glyphFor 取一個 ASCII 字元的材質，超出字表回傳 nil。
+func (f *Font) glyphFor(ch rune) *ebiten.Image {
+	idx := int(ch) - firstGlyph
+	if idx < 0 || idx >= len(f.glyphs) {
+		return nil
+	}
+	return f.glyphs[idx]
+}
+
 // Tileset 是已上傳成 Ebiten 材質的地形圖塊集。
 type Tileset struct {
 	src   *gfx.Tileset
@@ -129,6 +138,16 @@ func (t *Tileset) Tile(v byte) *ebiten.Image {
 // DrawImageAt 在指定像素座標畫一張材質。
 func DrawImageAt(dst, src *ebiten.Image, x, y int) {
 	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(x), float64(y))
+	dst.DrawImage(src, op)
+}
+
+// DrawImageScaled 在指定像素座標畫一張放大 n 倍的材質。
+//
+// 一律用 FilterNearest：點陣素材被線性濾波就糊掉。
+func DrawImageScaled(dst, src *ebiten.Image, x, y, n int) {
+	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+	op.GeoM.Scale(float64(n), float64(n))
 	op.GeoM.Translate(float64(x), float64(y))
 	dst.DrawImage(src, op)
 }

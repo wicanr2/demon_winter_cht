@@ -16,6 +16,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
+	"github.com/wicanr2/demon_winter_cht/internal/assets/cjk"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
@@ -23,18 +24,17 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
+	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
 )
 
-// 版面。原版 CGA 是 320×200、視野在畫面左側的方框裡。
-// 這裡的尺寸是暫定值，尚未對齊原版版面。
-const (
-	viewTilesX  = 11
-	viewTilesY  = 11
-	statusWidth = 232
-	scale       = 2
-)
+// scale 是視窗相對於邏輯畫布的整數倍率。版面本身在 internal/ui/layout。
+const scale = 2
 
-var markerColor = color.RGBA{0xff, 0xff, 0x55, 0xff}
+var (
+	markerColor = color.RGBA{0xff, 0xff, 0x55, 0xff}
+	// textColor 是中文的前景色。倚天字模是 1bpp，顏色在渲染時決定。
+	textColor = color.RGBA{0xff, 0xff, 0xff, 0xff}
+)
 
 type app struct {
 	world *game.World
@@ -49,7 +49,7 @@ type app struct {
 
 	normal, winter *ui.Tileset
 	useWinter      bool
-	font           *ui.Font
+	font           *ui.MixedFont
 
 	exits  *world.ExitTable
 	events *scenario.EventTable
@@ -123,14 +123,14 @@ func (a *app) Update() error {
 
 		switch res {
 		case game.MoveBlocked:
-			a.message = "blocked"
+			a.message = "前方無法通行"
 		case game.MoveExitedSubmap:
-			a.message = "left submap"
+			a.message = "離開子地圖"
 		default:
 			a.message = ""
 		}
 		if advanced {
-			a.message = fmt.Sprintf("hour -> %d", a.clock.Hour())
+			a.message = fmt.Sprintf("時間來到 %d 時", a.clock.Hour())
 		}
 		if res == game.MoveOK {
 			a.checkEvent(tile)
@@ -160,7 +160,7 @@ func (a *app) Draw(screen *ebiten.Image) {
 	default:
 		a.drawStatus(a.canvas)
 	}
-	ui.DrawTextBox(a.canvas, a.box, a.font, 0, textBoxTop, markerColor)
+	ui.DrawMixedTextBox(a.canvas, a.box, a.font, 0, layout.TextBoxTop, markerColor)
 
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 	op.GeoM.Scale(scale, scale)
@@ -169,10 +169,10 @@ func (a *app) Draw(screen *ebiten.Image) {
 
 func (a *app) drawWorld(dst *ebiten.Image) {
 	ts := a.tileset()
-	halfX, halfY := viewTilesX/2, viewTilesY/2
+	halfX, halfY := layout.ViewTilesX/2, layout.ViewTilesY/2
 
-	for dy := 0; dy < viewTilesY; dy++ {
-		for dx := 0; dx < viewTilesX; dx++ {
+	for dy := 0; dy < layout.ViewTilesY; dy++ {
+		for dx := 0; dx < layout.ViewTilesX; dx++ {
 			mx, my := a.party.X()-halfX+dx, a.party.Y()-halfY+dy
 			if mx < 0 || mx >= game.MapWidth || my < 0 || my >= game.MapHeight {
 				continue
@@ -185,15 +185,16 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 			if img == nil {
 				continue
 			}
-			ui.DrawImageAt(dst, img, dx*gfx.TileWidth, dy*gfx.TileHeight)
+			ui.DrawImageScaled(dst, img,
+				dx*gfx.TileWidth*layout.TileScale, dy*gfx.TileHeight*layout.TileScale, layout.TileScale)
 		}
 	}
 
 	// 隊伍位置暫時用方框標示。原版的隊伍 glyph 動畫表（0x210f）尚未解讀，
 	// 見 docs/spec/04-movement.md 未解表。
 	ui.StrokeRect(dst,
-		halfX*gfx.TileWidth, halfY*gfx.TileHeight,
-		gfx.TileWidth, gfx.TileHeight, markerColor)
+		halfX*gfx.TileWidth*layout.TileScale, halfY*gfx.TileHeight*layout.TileScale,
+		gfx.TileWidth*layout.TileScale, gfx.TileHeight*layout.TileScale, markerColor)
 }
 
 // checkEvent 走 docs/spec/03-events.md 的觸發鏈：
@@ -217,7 +218,7 @@ func (a *app) checkEvent(tile byte) {
 			return
 		}
 		if q.Category == game.CatTeleport {
-			a.message = fmt.Sprintf("teleport (%d,%d) TODO", q.TeleportX, q.TeleportY)
+			a.message = fmt.Sprintf("傳送至 (%d,%d)（未實作）", q.TeleportX, q.TeleportY)
 			return
 		}
 		idx = q.Index
@@ -225,11 +226,11 @@ func (a *app) checkEvent(tile byte) {
 
 	ev, err := a.events.ByIndex(idx)
 	if err != nil {
-		a.message = fmt.Sprintf("event %d out of range", idx)
+		a.message = fmt.Sprintf("事件 %d 超出範圍", idx)
 		return
 	}
 
-	a.box = ui.NewTextBox(ev.Text)
+	a.box = ui.NewMixedTextBox(ev.Text)
 	// Count != 0 代表這一格帶遭遇；文字讀完才開打。
 	a.pendingIDs = nil
 	if ev.Count != 0 {
@@ -288,7 +289,7 @@ func (a *app) startBattle(ids []int) {
 
 	a.battle = game.NewBattle(a.rng, units)
 	a.battle.BeginRound()
-	a.log = []string{fmt.Sprintf("Round %d", a.battle.Round())}
+	a.log = []string{fmt.Sprintf("第 %d 回合", a.battle.Round())}
 }
 
 // logf 把一行訊息推進戰鬥紀錄，只留最後幾行。
@@ -313,9 +314,9 @@ func (a *app) updateBattle() error {
 
 	if out := a.battle.Outcome(); out != game.Ongoing {
 		if out == game.Victory {
-			a.logf("All monsters dead")
+			a.logf("怪物全滅")
 		} else {
-			a.logf("Party defeated")
+			a.logf("隊伍全滅")
 		}
 		a.battle = nil
 		return nil
@@ -324,7 +325,7 @@ func (a *app) updateBattle() error {
 	cur := a.battle.Current()
 	if cur == nil {
 		a.battle.BeginRound()
-		a.logf("-- Round %d --", a.battle.Round())
+		a.logf("── 第 %d 回合 ──", a.battle.Round())
 		return nil
 	}
 
@@ -338,74 +339,52 @@ func (a *app) updateBattle() error {
 	res := a.battle.ResolveAttack(cur, target, 0)
 	switch {
 	case !res.Hit:
-		a.logf("%s misses.", cur.Name)
+		a.logf("%s 落空", cur.Name)
 	case res.NoEffect:
-		a.logf("%s: no effect on %s", cur.Name, target.Name)
+		a.logf("%s 對 %s 無效", cur.Name, target.Name)
 	case res.Killed:
-		a.logf("%s kills %s (%d)", cur.Name, target.Name, res.Damage)
+		a.logf("%s 擊殺 %s（%d 點）", cur.Name, target.Name, res.Damage)
 	default:
-		verb := "hits"
+		verb := "命中"
 		if res.Critical {
-			verb = "CRITS"
+			verb = "重擊"
 		}
-		a.logf("%s %s %s for %d", cur.Name, verb, target.Name, res.Damage)
+		a.logf("%s %s %s %d 點", cur.Name, verb, target.Name, res.Damage)
 	}
 	a.battle.EndTurn()
 	return nil
 }
 
-var facingName = []string{"N", "E", "S", "W"}
+var facingName = []string{"北", "東", "南", "西"}
 
 func (a *app) drawStatus(dst *ebiten.Image) {
-	x := viewTilesX*gfx.TileWidth + 8
 	lines := []string{
-		fmt.Sprintf("Hour %2d Day %2d Mon %2d", a.clock.Hour(), a.clock.Day(), a.clock.Month()),
-		fmt.Sprintf("Steps %2d  Light %d", a.clock.Steps(), a.clock.Light()),
-		fmt.Sprintf("X %2d Y %2d Facing %s", a.party.X(), a.party.Y(), facingName[a.party.Facing()]),
-		fmt.Sprintf("Tile %3d  Depth %d", a.lastTile, a.party.Depth()),
-		fmt.Sprintf("Set %s", a.tileset().Name()),
+		fmt.Sprintf("%2d時 %2d日 %2d月", a.clock.Hour(), a.clock.Day(), a.clock.Month()),
+		fmt.Sprintf("步數 %2d  光照 %d", a.clock.Steps(), a.clock.Light()),
+		fmt.Sprintf("座標 %2d,%-2d 面向%s", a.party.X(), a.party.Y(), facingName[a.party.Facing()]),
+		fmt.Sprintf("地形 %3d  深度 %d", a.lastTile, a.party.Depth()),
+		fmt.Sprintf("圖塊 %s", a.tileset().Name()),
 		"",
 		a.message,
 		"",
-		"Arrows: move",
-		"Tab:    season",
-		"P:      party",
-		"Space:  page text",
-		"Esc:    quit",
+		"方向鍵：移動",
+		"Tab：切換季節",
+		"P：隊伍名冊",
+		"空白鍵：翻頁",
+		"Esc：離開",
 	}
-	for i, s := range lines {
-		a.font.Draw(dst, s, x, 6+i*(a.font.Height()+2))
-	}
-}
-
-// 文字視窗放在地圖與狀態列下方，不疊在上面。
-// 高度是 (5 行 + 上下各一行邊距) × 行高。
-const textBoxTop = viewTilesY * gfx.TileHeight
-
-// logicalSize 是邏輯畫布尺寸；視窗是它的整數倍。
-func logicalSize() (int, int) {
-	w := viewTilesX*gfx.TileWidth + statusWidth
-	if min := (ui.TextBoxColumns + 2) * ui.CGAGlyphWidth; w < min {
-		w = min
-	}
-	h := textBoxTop + (ui.TextBoxPageLines+2)*(ui.CGAGlyphHeight+2)
-	// 名冊一次列五個人、每人三行，比地圖高，畫布要容得下。
-	if rosterH := (3*5 + 4) * (ui.CGAGlyphHeight + 2); h < rosterH {
-		h = rosterH
-	}
-	return w, h
+	a.font.DrawLines(dst, lines, layout.StatusX, layout.StatusY)
 }
 
 // drawBattle 畫戰鬥狀態：雙方單位的 HP 與最近幾行紀錄。
 func (a *app) drawBattle(dst *ebiten.Image) {
-	x := viewTilesX*gfx.TileWidth + 8
-	y := 6
+	y := layout.StatusY
 	line := func(s string) {
-		a.font.Draw(dst, s, x, y)
-		y += a.font.Height() + 2
+		a.font.Draw(dst, s, layout.StatusX, y)
+		y += ui.LineHeight
 	}
 
-	line(fmt.Sprintf("COMBAT  round %d", a.battle.Round()))
+	line(fmt.Sprintf("戰鬥　第 %d 回合", a.battle.Round()))
 	for _, u := range a.battle.Units() {
 		tag := " "
 		if u == a.battle.Current() {
@@ -413,27 +392,27 @@ func (a *app) drawBattle(dst *ebiten.Image) {
 		}
 		state := ""
 		if !u.Alive() {
-			state = " dead"
+			state = " 陣亡"
 		}
 		name := u.Name
-		if len(name) > 12 {
-			name = name[:12]
+		if len(name) > 8 {
+			name = name[:8]
 		}
-		line(fmt.Sprintf("%s%-12s%3d/%-3d%s", tag, name, u.HP, u.MaxHP, state))
+		line(fmt.Sprintf("%s%-8s%3d/%-3d%s", tag, name, u.HP, u.MaxHP, state))
 	}
 	line("")
 	for _, s := range a.log {
 		line(s)
 	}
 	line("")
-	line("Space: step  Esc: quit")
+	line("空白鍵：下一步　Esc：離開")
 }
 
-var raceName = []string{"Human", "Elf", "Dwarf", "DarkElf", "Troll"}
+var raceName = []string{"人類", "精靈", "矮人", "黑暗精靈", "巨魔"}
 
 var className = []string{
-	"Ranger", "Paladin", "Barbarian", "Monk", "Cleric",
-	"Thief", "Wizard", "Sorcerer", "Visionary", "Scholar",
+	"遊俠", "聖騎士", "蠻族", "武僧", "牧師",
+	"盜賊", "巫師", "術士", "靈視者", "學者",
 }
 
 func nameOf(list []string, i int) string {
@@ -447,35 +426,35 @@ func nameOf(list []string, i int) string {
 //
 // 屬性顯示的是天生值（不含裝備加成），與存檔欄位一致。
 func (a *app) drawRoster(dst *ebiten.Image) {
-	x := viewTilesX*gfx.TileWidth + 8
-	y := 6
+	y := layout.StatusY
 	line := func(s string) {
-		a.font.Draw(dst, s, x, y)
-		y += a.font.Height() + 2
+		a.font.Draw(dst, s, layout.StatusX, y)
+		y += ui.LineHeight
 	}
 
-	line("PARTY")
+	line("隊伍名冊")
 	for _, c := range a.members {
 		pts, err := c.RemainingSkillPoints(a.tables)
 		if err != nil {
 			pts = -1
 		}
-		line(fmt.Sprintf("%-7s L%-2d %-8s", c.Name, c.Level, nameOf(className, int(c.Class))))
-		line(fmt.Sprintf("  %-7s HP %3d/%3d", nameOf(raceName, int(c.Race)), c.CurrentHP, c.MaxHP))
-		line(fmt.Sprintf("  SP %3d/%3d  free %d", c.CurrentSP, c.MaxSP, pts))
+		line(fmt.Sprintf("%-8s %d級 %s", c.Name, c.Level, nameOf(className, int(c.Class))))
+		line(fmt.Sprintf(" %s 生命 %3d/%3d", nameOf(raceName, int(c.Race)), c.CurrentHP, c.MaxHP))
+		line(fmt.Sprintf(" 法力 %3d/%3d 未用點數 %d", c.CurrentSP, c.MaxSP, pts))
 	}
 	line("")
-	line("P: back")
+	line("P：返回")
 }
 
 func (a *app) Layout(int, int) (int, int) {
-	w, h := logicalSize()
-	return w * scale, h * scale
+	return layout.CanvasWidth * scale, layout.CanvasHeight * scale
 }
 
 func main() {
 	dataDir := flag.String("data", "workplace/orig/demwin/DEM_DATA",
 		"原版資料目錄（玩家自備合法副本）")
+	etenDir := flag.String("eten", "workplace/eten",
+		"倚天中文字型目錄，需含 STDFONT.15 與 SPCFONT.15（自備）")
 	mapFile := flag.String("map", "MAP1.MAP", "要載入的地圖檔")
 	dataFile := flag.String("events", "DATA1.TXT", "要載入的事件表")
 	startX := flag.Int("x", 32, "起始 X")
@@ -524,11 +503,22 @@ func main() {
 		}
 		return ui.NewTileset(ts)
 	}
-	// 目前整個 viewer 走 CGA 素材，字型也用 CGA 版保持一致。
-	// EGA 兩套素材都已可解碼，之後要做成可切換。
-	font, err := ui.LoadCGAFont(filepath.Join(*dataDir, "ASC.FNT"))
+	// ASCII 走原版 CGA 字型（8×8），中文走倚天點陣（16×15）。
+	// 兩者放進同一套排版格後同高，可以混排。
+	ascii, err := ui.LoadCGAFont(filepath.Join(*dataDir, "ASC.FNT"))
 	if err != nil {
-		log.Fatalf("載入字型：%v", err)
+		log.Fatalf("載入原版字型：%v", err)
+	}
+	cjkFont, err := cjk.Load(
+		filepath.Join(*etenDir, "STDFONT.15"),
+		filepath.Join(*etenDir, "SPCFONT.15"))
+	if err != nil {
+		log.Fatalf("載入倚天中文字型：%v\n"+
+			"本專案不散布倚天字型，請用 -eten 指向含 STDFONT.15／SPCFONT.15 的目錄。", err)
+	}
+	font, err := ui.NewMixedFont(cjkFont, ascii, textColor)
+	if err != nil {
+		log.Fatalf("建立混排字型：%v", err)
 	}
 
 	a := &app{
@@ -547,10 +537,9 @@ func main() {
 		font:     font,
 	}
 
-	lw, lh := logicalSize()
-	a.canvas = ebiten.NewImage(lw, lh)
+	a.canvas = ebiten.NewImage(layout.CanvasWidth, layout.CanvasHeight)
 
-	ebiten.SetWindowSize(lw*scale, lh*scale)
+	ebiten.SetWindowSize(layout.CanvasWidth*scale, layout.CanvasHeight*scale)
 	ebiten.SetWindowTitle("冬之魔 Demon's Winter")
 
 	if err := ebiten.RunGame(a); err != nil && err != ebiten.Termination {
