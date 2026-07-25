@@ -4,7 +4,7 @@
 > 不是還原原版，另立標記）
 > 證據來源：`docs/re/17-font-format.md`（繪字函式 + 肉眼驗證）、
 > `docs/formats/graphics.md` §6
-> 最後複核：2026-07-25
+> 最後複核：2026-07-25（CGA 段落當日二次修正，見下方「已作廢的斷言」）
 
 ---
 
@@ -28,20 +28,44 @@
 | 項目 | CGA `.FNT` | EGA `.FNE` |
 |---|---|---|
 | 字元尺寸 | **8 × 8** | **16 × 14** |
-| 色深／佈局 | 2bpp，**同一列 2 bytes = bit0/bit1 兩個平面** | 1bpp（前景色由呼叫端指定）|
+| 色深／佈局 | **packed 2bpp**（每 byte 4 個像素；byte0＝左 4px、byte1＝右 4px）| 1bpp（前景色由呼叫端指定）|
 | 每字 bytes | 16（8 列 × 2）| 28（14 列 × 2）|
-| bit 順序 | MSB-first | MSB-first |
+| bit 順序 | MSB-first（每 byte 最左像素在 bit7–6）| MSB-first |
 | 字表起點 | ASCII `0x20`（空白）| ASCII `0x20` |
-| 檔頭 | 1 byte（觀察值 `0x00`，用途未查）| 無 |
-| 涵蓋字元 | 192 筆（`(3073−1)/16`）| 96 筆（`2688/28`，恰為 `0x20`–`0x7F`）|
+| 檔頭 | **無**（3073 = 3072 資料 + 結尾 `0x1A` DOS EOF）| 無 |
+| 涵蓋字元 | 96 字（`0x20`–`0x7F`）× **2 個 bank** = 192 glyph（`3072/16`）| 96 筆（`2688/28`，恰為 `0x20`–`0x7F`）|
 
 硬體常數交叉驗證（`FUN_1d9f_0008`）：
 CGA `寬 8, 高 8, 總長 0xc00(3072)`；EGA `寬 0x10(16), 高 0xe(14), 總長 0xa80(2688)`。
 
-> **CGA 只有 `0x20`–`0x7F`（96 字）經可讀文字驗證。**
-> `0x80`–`0xDF` 解碼出規律圖案但未經畫面驗證 —— 那段**不要當成已驗證的字形**。
-> 曾因為看 atlas 裡那段的雜訊而差點誤判整個解碼器是錯的；
-> 實際文字渲染（`DEMON'S WINTER`、`Alternate Character Set`）完全乾淨。
+### CGA 的兩個 bank
+
+`.FNT` 的 3072 bytes 是**同一批 96 字的兩個版本**，各 1536 bytes：
+
+| bank | 位移 | 內容 | 用色 |
+|---|---|---|---|
+| 0 | `0x000` | 一般：白字黑底 | 色號 0、3 |
+| 1 | `0x600` | 反白：黑字亮洋紅底 | 色號 0、2 |
+
+選哪個 bank 由全域反白旗標 `DAT_31f0_1ff0`（0/1）決定，
+來源位移 = `1536 × flag + (ch − 0x20) × 16`。
+EGA 不需要第二個 bank——它用 Write Mode 2 在繪製當下換前景/背景色。
+
+> **名詞區分**：bank1 是**反白**，跟遊戲選單的 `Alternate Character Set`
+> （`ASC` ↔ `GOT` 花體切換）無關。
+
+### 已作廢的斷言（不要再套用）
+
+以下三條曾被標為「已驗證」，**都是錯的**：
+
+| 作廢斷言 | 正確內容 |
+|---|---|
+| CGA 是「同列 2 byte ＝ bit0/bit1 兩個平面」（planar）| packed 2bpp，每 byte 4 個像素 |
+| 檔案開頭有 1 byte header | 沒有 header；多出來的 1 byte 在**結尾**，是 `0x1A` DOS EOF |
+| `0x80`–`0xDF` 是未驗證的延伸圖形字元 | 那是反白 bank，已驗證 |
+
+依 planar 假設寫的解碼器輸出整張是雜訊。失誤成因見
+`docs/re/17-font-format.md` §2.3。
 
 ---
 
@@ -50,16 +74,19 @@ CGA `寬 8, 高 8, 總長 0xc00(3072)`；EGA `寬 0x10(16), 高 0xe(14), 總長 
 ### CGA 字型解碼
 
 ```
-glyph_offset = 1 + (ch − 0x20) × 16          ← 檔頭 1 byte
+glyph_offset = 1536 × highlight_flag + (ch − 0x20) × 16   ← 無檔頭
 for row in 0..7:
-    b0 = data[glyph_offset + row*2]          ← bit 平面 0
-    b1 = data[glyph_offset + row*2 + 1]      ← bit 平面 1
     for col in 0..7:
-        pixel = (bit(b1, 7-col) << 1) | bit(b0, 7-col)     ← 2bpp 色號
+        b     = data[glyph_offset + row*2 + col/4]
+        pixel = (b >> (6 - 2*(col%4))) & 3                 ← 2bpp 色號，MSB-first
 ```
 
-**不是 chunky（每 byte 4 個 2bpp 像素），也不是逐 plane 整塊。**
-是「同一列的兩個 byte 各提供一個 bit 平面」。
+就是 CGA mode 4 framebuffer 的原生格式（每 byte 4 個像素）——因為繪字常式
+`FUN_217b_025a` 是把字型 bytes 用 `MOVSW` **原封**搬進 `0xB800`，像素語意
+由硬體規格決定，不是檔案自訂的。
+
+檔案裡的資料是**線性**的（第 r 列在位移 `2r`）；CGA 偶/奇掃描線交錯只發生在
+目的地位址，由 blit 常式產生，與 `.PIC` 全螢幕圖同一個結論。
 
 ### EGA 字型解碼
 
@@ -94,7 +121,9 @@ for row in 0..13:
 
 - 花體（`GOT.FNE`）的中文對應：中文沒有 blackletter 概念，
   UI 標題要用別的方式做視覺區隔（字重？外框？）——未定案
-- 原版 CGA 的 `0x80`–`0xDF` 那段若確認是圖形字元，中文版要不要保留 —— 未定案
+- 中文的反白顯示怎麼做：原版 CGA 靠第二個 bank、EGA 靠換前景/背景色。
+  中文字型不會預先烘一份反白版，實作上直接換色即可 —— 需要在渲染層決定
+  是否保留原版的亮洋紅/亮青配色
 
 ---
 
@@ -110,12 +139,17 @@ for row in 0..13:
 
 ## 驗收
 
-1. **字形肉眼比對**：把 `ASC.FNT`／`ASC.FNE`／`GOT.FNE` 全部 dump 成 atlas PNG，
-   與 DOSBox 原版截圖的實際文字比對。
-   **只比對 `0x20`–`0x7F` 這 96 字**，其餘範圍未驗證。
-2. **已知字串重現**：渲染 `DEMON'S WINTER`、`Alternate Character Set`
+1. **字形肉眼比對**：把 `ASC.FNT`／`ASC.FNE`／`GOT.FNE` 全部 dump 成 atlas PNG
+   **並實際看過**。判準是 ASCII 0x20 起依序出現
+   `space ! " # $ % & ' ( ) * + , - . /` → `0`–`9` → `A`–`Z` → `a`–`z`。
+   CGA 的 atlas 應該是 12 列：前 6 列一般、後 6 列反白。
+2. **結構斷言**（`assertCGAFontLayout`）：`A` 的 8×8 圖樣、空白字元全空、
+   兩個 bank 的用色與互補關係都寫成測試，佈局判錯時測試會紅。
+3. **已知字串重現**：渲染 `DEMON'S WINTER`、`Alternate Character Set`
    兩個已知字串，必須與 `workplace/dosbox/shots/` 的截圖吻合。
-3. **花體確認**：`GOT.FNE` 解出來必須是 blackletter 風格，
+   **這條只能驗 EGA**——`shots/` 裡唯一的 CGA 截圖 `05-cga-hang-open-pic.png`
+   是開場卡住的畫面，上面沒有文字，CGA 沒有可比的原版畫面。
+4. **花體確認**：`GOT.FNE` 解出來必須是 blackletter 風格，
    與 `smoke-01.png`／`03-ega-ingame.png` 的 UI 文字一致。
 
 ---
@@ -124,7 +158,7 @@ for row in 0..13:
 
 | 項目 | 影響 |
 |---|---|
-| CGA `.FNT` 檔頭那 1 byte 的用途 | 觀察值 `0x00`，未查出。不擋解碼（跳過即可）|
-| CGA `0x80`–`0xDF`（96 字）| 解碼出規律圖案但未經畫面驗證。**不要當成已驗證** |
+| CGA 字形沒有原版畫面可對 | 只驗到「atlas 逐字可讀、順序正確、與 EGA 版字形對得上」。原版 CGA 執行會卡住（`GOT.FNT` 缺檔），拿不到有文字的截圖 |
+| `0x3000:016a`（32-bit 除法 helper）本體 | 落在 Ghidra 未分析間隙。回傳值 1536 已被算術與檔案佈局雙向夾死，不影響結論 |
 | `ASC` ↔ `GOT` 的切換串接 | 資源表已找到（`31f0:19fd` 起 5 筆遠指標的檔名表），但「Alternate Character Set」選單怎麼串到這張表未追完 |
 | 中文花體的替代方案 | 設計問題，非逆向問題。未定案 |

@@ -28,8 +28,8 @@ import (
 const (
 	viewTilesX  = 11
 	viewTilesY  = 11
-	statusWidth = 400
-	scale       = 2
+	statusWidth = 216
+	scale       = 3
 )
 
 var markerColor = color.RGBA{0xff, 0xff, 0x55, 0xff}
@@ -159,7 +159,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"Esc:    quit",
 	}
 	for i, s := range lines {
-		a.font.Draw(dst, s, x, 6+i*(ui.GlyphHeight+1))
+		a.font.Draw(dst, s, x, 6+i*(a.font.Height()+2))
 	}
 }
 
@@ -202,8 +202,9 @@ func main() {
 		}
 		return ui.NewTileset(ts)
 	}
-	font, err := ui.LoadEGAFont(filepath.Join(*dataDir, "ASC.FNE"),
-		color.RGBA{0xff, 0xff, 0xff, 0xff}, color.RGBA{0x00, 0x00, 0x00, 0xff})
+	// 目前整個 viewer 走 CGA 素材，字型也用 CGA 版保持一致。
+	// EGA 兩套素材都已可解碼，之後要做成可切換。
+	font, err := ui.LoadCGAFont(filepath.Join(*dataDir, "ASC.FNT"))
 	if err != nil {
 		log.Fatalf("載入字型：%v", err)
 	}

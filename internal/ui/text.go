@@ -16,20 +16,56 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
 )
 
-// EGA 字型（ASC.FNE）的字元尺寸與字表起點。見 docs/spec/09-fonts.md。
-//
-// 這裡用 EGA 版而不是 CGA 版，是因為**CGA 的 ASC.FNT 目前解不出可讀字形**
-// （現行解碼器輸出是雜訊，見 workplace/dump/gfx/font-asc-fnt-atlas-zoom4x.png）。
-// CGA 字型解開後這裡要補上，兩套都是要保存的數位文物。
+// 字表起點。CGA 與 EGA 兩套字型都從 ASCII 0x20 起算。見 docs/spec/09-fonts.md。
+const firstGlyph = 0x20
+
+// 兩套字型的字元尺寸。原版依顯示卡自動擇一，兩套都要支援。
 const (
-	GlyphWidth  = 16
-	GlyphHeight = 14
-	firstGlyph  = 0x20
+	CGAGlyphWidth  = 8
+	CGAGlyphHeight = 8
+	EGAGlyphWidth  = 16
+	EGAGlyphHeight = 14
 )
 
-// Font 是已上傳成 Ebiten 材質的點陣字型。
+// Font 是已上傳成 Ebiten 材質的點陣字型。字元尺寸隨來源而異，
+// 由 Width()/Height() 取得，呼叫端不要自己假設。
 type Font struct {
-	glyphs []*ebiten.Image
+	glyphs        []*ebiten.Image
+	width, height int
+}
+
+// Width 回傳單一字元的像素寬。
+func (f *Font) Width() int { return f.width }
+
+// Height 回傳單一字元的像素高。
+func (f *Font) Height() int { return f.height }
+
+// LoadCGAFont 讀取 ASC.FNT 並轉成可繪製的字型。
+//
+// CGA 字型自帶顏色（packed 2bpp），前景色不可指定。
+// 檔案含兩個 bank：bank0 是一般白字黑底，bank1 是反白版（黑字亮洋紅底）。
+// 這裡只取 bank0；反白版由原版用來畫置中標題。
+func LoadCGAFont(path string) (*Font, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("ui: 讀取字型 %s 失敗: %w", path, err)
+	}
+	imgs, err := gfx.DecodeCGAFont(data)
+	if err != nil {
+		return nil, fmt.Errorf("ui: 解碼字型 %s 失敗: %w", path, err)
+	}
+	if len(imgs) > gfx.CGAFontBankGlyphs {
+		imgs = imgs[:gfx.CGAFontBankGlyphs]
+	}
+	return newFont(imgs, CGAGlyphWidth, CGAGlyphHeight), nil
+}
+
+func newFont(imgs []*image.RGBA, w, h int) *Font {
+	f := &Font{glyphs: make([]*ebiten.Image, len(imgs)), width: w, height: h}
+	for i, g := range imgs {
+		f.glyphs[i] = ebiten.NewImageFromImage(g)
+	}
+	return f
 }
 
 // LoadEGAFont 讀取 ASC.FNE／GOT.FNE 並轉成可繪製的字型。
@@ -44,11 +80,7 @@ func LoadEGAFont(path string, fg, bg color.RGBA) (*Font, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ui: 解碼字型 %s 失敗: %w", path, err)
 	}
-	f := &Font{glyphs: make([]*ebiten.Image, len(imgs))}
-	for i, g := range imgs {
-		f.glyphs[i] = ebiten.NewImageFromImage(g)
-	}
-	return f, nil
+	return newFont(imgs, EGAGlyphWidth, EGAGlyphHeight), nil
 }
 
 // Draw 在 (x, y) 畫一行 ASCII 文字。
@@ -63,7 +95,7 @@ func (f *Font) Draw(dst *ebiten.Image, s string, x, y int) {
 			continue
 		}
 		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(x+i*GlyphWidth), float64(y))
+		op.GeoM.Translate(float64(x+i*f.width), float64(y))
 		dst.DrawImage(f.glyphs[idx], op)
 	}
 }

@@ -51,7 +51,7 @@ if [ -n '$KEYS' ]; then
     DISPLAY=:99 xdotool windowactivate --sync \$WID 2>/dev/null || true
     for k in \$(echo '$KEYS' | tr ',' ' '); do
         DISPLAY=:99 xdotool key --window \$WID --clearmodifiers \$k
-        sleep 0.12
+        sleep 0.25
     done
     sleep 0.6
 fi

@@ -1,6 +1,7 @@
 package gfx
 
 import (
+	"image"
 	"image/color"
 	"os"
 	"path/filepath"
@@ -124,22 +125,27 @@ func TestDecodeEGAPortraits(t *testing.T) {
 }
 
 // --- CGA 精靈圖 sprite sheet ---
-// 已驗證(肉眼看 MONSTER.SHP frame0 是清楚的人形武士剪影，見
-// docs/formats/graphics.md):frame 是「窄高」16x32(不是原先猜的 32x16 —
-// 寬高猜反了，byte 數量剛好一樣所以除法對得上但畫面全花，肉眼比對才抓到)，
-// CYPHER.SHP 更窄是 8x32。
+// 已驗證：frame 一律 16x16、64 bytes，**含 CYPHER.SHP**。
+//
+// 這不是靠位元組數推的 —— 遊戲自己在視訊模式初始化時宣告了 frame 大小：
+// CGA 分支 `1d9f:018d MOV word ptr [0x5226],0x40`（64 bytes/frame，
+// 2bpp 下即 16x16），並直接用它乘出各素材檔大小
+// （`x0x66` = 64*102 = 6528 = DEMON.SHP、`x0x1b` = 64*27 = 1728 = CYPHER.SHP）。
+//
+// 先前記載的 16x32 / CYPHER 8x32 是錯的：位元組數在兩種讀法下都整除，
+// 算術分不出來，而 16x32 解出來的每個 frame 其實是「兩個完整圖形上下疊著」。
 func TestDecodeCGASprites(t *testing.T) {
 	dir := origDataDir(t)
 	cases := []struct {
 		name           string
 		frameW, frameH int
 	}{
-		{"COMBAT.SHP", 16, 32},
-		{"SHIP.SHP", 16, 32},
-		{"DEMON.SHP", 16, 32},
-		{"WINTER.SHP", 16, 32},
-		{"MONSTER.SHP", 16, 32},
-		{"CYPHER.SHP", 8, 32},
+		{"COMBAT.SHP", 16, 16},
+		{"SHIP.SHP", 16, 16},
+		{"DEMON.SHP", 16, 16},
+		{"WINTER.SHP", 16, 16},
+		{"MONSTER.SHP", 16, 16},
+		{"CYPHER.SHP", 16, 16},
 	}
 	for _, c := range cases {
 		data := readAsset(t, dir, c.name)
@@ -158,25 +164,34 @@ func TestDecodeCGASprites(t *testing.T) {
 }
 
 // --- EGA 精靈圖 sprite sheet ---
-// 已驗證（2026-07-25，見 docs/re/07-sprite-blit.md）：直接反組譯
-// FUN_217b_07cf（217b 段 EGA 單一 sprite blit 常式）讀出真實佈局是
-// 32x28、EGAPlanesRowBlocks（frame 內逐列排列、每列 4 個 plane 各自連續
-// 一塊 rowBytes)，不是先前用位元組數整除猜測的 16x56 或整檔四平面分塊。
-// COMBAT/SHIP/DEMON/WINTER/MONSTER 都是 448 bytes/frame，跟 07cf/06f9
-// 硬編碼的 frame stride 0x1c0=448 完全對上。CYPHER.SHE 是 224 bytes/frame
-// （非 448），不受 07cf 直接驗證，用同一種佈局公式外推 16x28（見下方
-// TestDecodeEGASpriteCypher 與 docs/re/07-sprite-blit.md 的「假設」標記）。
+// 已驗證：**檔案內** frame 是 16x28、224 bytes，全部六個 .SHE 都一樣
+// （CYPHER 不是特例）。plane 佈局 EGAPlanesRowBlocks 維持不變。
+//
+// FUN_217b_07cf 硬編碼的 frame stride 0x1c0=448 沒有錯，但它描述的是
+// **載入時做過水平 pixel doubling 之後、記憶體緩衝區裡**的 frame，
+// 不是磁碟格式：
+//
+//	1d9f:00bf  MOV word ptr [0x5226],0xe0   ; 224 = 檔案內 frame 大小
+//	1d9f:0101  SHL AX,0x1
+//	1d9f:0109  MOV [0x521a],AX              ; 448 = 記憶體內 frame 大小
+//
+// 載入器 FUN_1d9f_0a8b 只對副檔名 "shE"/"SHE" 呼叫 FUN_217b_0adf 就地加倍，
+// 每 byte 逐 bit 複製兩次。加倍後結構同構（每列 4 個 plane 各 2->4 bytes），
+// 所以「檔案當 16x28 解」與「記憶體當 32x28 解」是同一張圖。
+//
+// 用 32x28 解檔案會看到「一格裡 2x2 四個小圖」—— 那是兩個 frame 左右各半
+// 錯位疊起來的假象，不是美術打包。
 func TestDecodeEGASprites(t *testing.T) {
 	dir := origDataDir(t)
 	cases := []struct {
 		name           string
 		frameW, frameH int
 	}{
-		{"COMBAT.SHE", 32, 28},
-		{"SHIP.SHE", 32, 28},
-		{"DEMON.SHE", 32, 28},
-		{"WINTER.SHE", 32, 28},
-		{"MONSTER.SHE", 32, 28},
+		{"COMBAT.SHE", 16, 28},
+		{"SHIP.SHE", 16, 28},
+		{"DEMON.SHE", 16, 28},
+		{"WINTER.SHE", 16, 28},
+		{"MONSTER.SHE", 16, 28},
 	}
 	for _, c := range cases {
 		data := readAsset(t, dir, c.name)
@@ -202,10 +217,10 @@ func TestDecodeEGASprites(t *testing.T) {
 	}
 }
 
-// CYPHER.SHE frame 是 224 bytes(不是 448)，FUN_217b_07cf 的硬編碼 stride
-// 0x1c0=448 不適用，這裡只是用同一個 EGAPlanesRowBlocks 公式外推
-// 16x28(16/8=2 bytes/row * 28 rows * 4 planes = 224)，**假設**，未經
-// 反組譯直接證實，見 docs/re/07-sprite-blit.md。
+// CYPHER.SHE 與其他五個 .SHE 完全同規則：16x28、224 bytes/frame、27 個 frame。
+// 它曾被當成「唯一 224 bytes 的特例」，其實反了 —— 224 才是常態，
+// 它只是因為 frame 數 27 是奇數，才是唯一無法被（記憶體側的）448 整除的檔。
+// 這支測試的參數一直都是對的，是六個檔裡唯一沒解錯的。
 func TestDecodeEGASpriteCypher(t *testing.T) {
 	dir := origDataDir(t)
 	data := readAsset(t, dir, "CYPHER.SHE")
@@ -217,15 +232,15 @@ func TestDecodeEGASpriteCypher(t *testing.T) {
 	if err := SavePNG(out, TileSpriteSheet(frames, 10)); err != nil {
 		t.Fatalf("存 PNG 失敗: %v", err)
 	}
-	t.Logf("CYPHER.SHE(假設 16x28): %d frames -> %s", len(frames), out)
+	t.Logf("CYPHER.SHE(16x28): %d frames -> %s", len(frames), out)
 }
 
-// 交叉比對用：CGA MONSTER.SHP frame0(已驗證正確的 16x32)放大 8 倍，
-// 拿來跟 EGA MONSTER.SHE frame0(32x28)並排肉眼核對是不是同一隻怪物。
+// 交叉比對用：CGA MONSTER.SHP frame0(16x16)放大 8 倍，
+// 拿來跟 EGA MONSTER.SHE frame0(16x28)並排肉眼核對是不是同一隻怪物。
 func TestDecodeCGAMonsterFrame0Zoom(t *testing.T) {
 	dir := origDataDir(t)
 	data := readAsset(t, dir, "MONSTER.SHP")
-	frames, err := DecodeCGASpriteSheet(data, 16, 32)
+	frames, err := DecodeCGASpriteSheet(data, 16, 16)
 	if err != nil {
 		t.Fatalf("解碼失敗: %v", err)
 	}
@@ -234,15 +249,15 @@ func TestDecodeCGAMonsterFrame0Zoom(t *testing.T) {
 	if err := SavePNG(out, zoomed); err != nil {
 		t.Fatalf("存 PNG 失敗: %v", err)
 	}
-	t.Logf("CGA frame0(16x32,已驗證) -> %s", out)
+	t.Logf("CGA frame0(16x16,已驗證) -> %s", out)
 }
 
-// 對照組：先前試過的「逐-frame 四平面各自整塊 sequential」在 32x28 尺寸下
-// 一樣是雜訊(已排除的假設，尺寸猜對佈局仍猜錯的案例，留著讓人對比)。
+// 對照組：「逐-frame 四平面各自整塊 sequential」佈局在正確的 16x28 尺寸下
+// 依然是雜訊 —— 留著證明 EGAPlanesRowBlocks 不是碰巧猜中的。
 func TestDecodeEGASpritesPerFrameControl(t *testing.T) {
 	dir := origDataDir(t)
 	data := readAsset(t, dir, "MONSTER.SHE")
-	frames, err := DecodeEGASpriteSheet(data, 32, 28, EGAPlanesSequential)
+	frames, err := DecodeEGASpriteSheet(data, 16, 28, EGAPlanesSequential)
 	if err != nil {
 		t.Fatalf("解碼失敗: %v", err)
 	}
@@ -319,26 +334,102 @@ func itoa(n int) string {
 	return string(buf[i:])
 }
 
+// assertCGAFontLayout 用「字形本身」而不是「解碼器沒報錯」來驗 CGA 佈局。
+//
+// 三條互相獨立的斷言：
+//  1. `A`(0x41) 的 8x8 圖樣要真的長得像 A（原始 16 bytes:
+//     03c0 0ff0 3c3c 3c3c 3ffc 3c3c 3c3c 0000）。
+//     這條同時卡死「每字 16 bytes」「每列 2 bytes」「packed 2bpp、
+//     byte0=左 4px / byte1=右 4px、MSB-first」「字表起於 0x20」四件事——
+//     只要其中一項判錯，圖樣就對不上。
+//  2. 空白(0x20)整格是背景。
+//  3. bank0 只用色號 0/3（白字黑底）、bank1 只用色號 0/2（黑字亮洋紅底），
+//     且兩者形狀互補——對應 1d9f:12ce 用 0xAA（四個像素全是色號 2）
+//     填反白底色。
+func assertCGAFontLayout(t *testing.T, glyphs []*image.RGBA) {
+	t.Helper()
+	// '#' = 前景（bank0 的色號 3），'.' = 背景（色號 0）
+	wantA := []string{
+		"...##...",
+		"..####..",
+		".##..##.",
+		".##..##.",
+		".######.",
+		".##..##.",
+		".##..##.",
+		"........",
+	}
+	gA, ok := GlyphForChar(glyphs, 'A')
+	if !ok {
+		t.Fatalf("CGA 字型取不到 'A'")
+	}
+	for y, row := range wantA {
+		for x := 0; x < cgaGlyphWidth; x++ {
+			fg := gA.RGBAAt(x, y) == CGAPalette1High[3]
+			if fg != (row[x] == '#') {
+				t.Fatalf("CGA 'A' 圖樣不符（第 %d 列第 %d 欄）：解出來的字形不是 A，佈局判錯了", y, x)
+			}
+		}
+	}
+	gSpace, ok := GlyphForChar(glyphs, ' ')
+	if !ok {
+		t.Fatalf("CGA 字型取不到空白")
+	}
+	for y := 0; y < cgaGlyphHeight; y++ {
+		for x := 0; x < cgaGlyphWidth; x++ {
+			if gSpace.RGBAAt(x, y) != CGAPalette1High[0] {
+				t.Fatalf("CGA 空白字元(0x20)在 (%d,%d) 不是背景色", x, y)
+			}
+		}
+	}
+	for i := 0; i < CGAFontBankGlyphs; i++ {
+		norm, inv := glyphs[i], glyphs[CGAFontBankGlyphs+i]
+		for y := 0; y < cgaGlyphHeight; y++ {
+			for x := 0; x < cgaGlyphWidth; x++ {
+				n, v := norm.RGBAAt(x, y), inv.RGBAAt(x, y)
+				if n != CGAPalette1High[0] && n != CGAPalette1High[3] {
+					t.Fatalf("bank0 glyph %d 在 (%d,%d) 用到色號 0/3 以外的顏色", i, x, y)
+				}
+				if v != CGAPalette1High[0] && v != CGAPalette1High[2] {
+					t.Fatalf("bank1 glyph %d 在 (%d,%d) 用到色號 0/2 以外的顏色", i, x, y)
+				}
+				// 形狀互補：bank0 的前景(3) 對應 bank1 的前景(0)。
+				if (n == CGAPalette1High[3]) != (v == CGAPalette1High[0]) {
+					t.Fatalf("bank1 glyph %d 在 (%d,%d) 不是 bank0 的反白版", i, x, y)
+				}
+			}
+		}
+	}
+}
+
 // --- 字型 ---
-// 已驗證（2026-07-25，見 docs/re/17-font-format.md）：反組譯 FUN_217b_025a
-// （CGA 路徑）與 FUN_217b_097c（EGA 路徑）逐指令核對出真實佈局——
-// CGA 8x8 2bpp「同列 2 個 byte 是 bit0/bit1 兩個平面」（不是先前假設的
-// 8x12 1bpp VGA BIOS 格式）、EGA 16x14 1bpp。肉眼比對：整個 ASCII
+// 已驗證（見 docs/re/17-font-format.md）：反組譯 FUN_217b_025a（CGA 路徑）
+// 與 FUN_217b_097c（EGA 路徑）逐指令核對出真實佈局——
+// CGA 8x8 packed 2bpp（每 byte 4 個像素、每列 2 bytes、來源線性、無 header、
+// 兩個 96 字 bank：一般 + 反白）、EGA 16x14 1bpp。肉眼比對：整個 ASCII
 // 字母表清楚可讀，GOT.FNE 呈現花體(blackletter)風格，跟
 // workplace/dosbox/shots/smoke-01.png 主選單、03-ega-ingame.png
 // 遊戲內選單的花體字一致。
+//
+// 2026-07-25 修正：CGA 一度被判成「1-byte header + 同列 2 byte 是 bit0/bit1
+// 雙平面」，輸出是雜訊；重讀 217b:025a 與 1d9f:0f1e 的原始指令後改為上述
+// packed 2bpp 才解出可讀字形（舊斷言已作廢，不要再套用）。
 func TestDecodeFonts(t *testing.T) {
 	dir := origDataDir(t)
 	white := color.RGBA{0xff, 0xff, 0xff, 0xff}
 	black := color.RGBA{0x00, 0x00, 0x00, 0xff}
 
-	// --- CGA ASC.FNT：8x8、2bpp 逐列雙平面 ---
+	// --- CGA ASC.FNT：8x8、packed 2bpp、兩個 bank ---
 	ascFnt := readAsset(t, dir, "ASC.FNT")
 	cgaGlyphs, err := DecodeCGAFont(ascFnt)
 	if err != nil {
 		t.Fatalf("ASC.FNT 解碼失敗: %v", err)
 	}
-	t.Logf("ASC.FNT: %d 個字元(從 0x20 起)", len(cgaGlyphs))
+	t.Logf("ASC.FNT: %d 個 glyph（2 個 bank × %d 字，從 0x20 起）", len(cgaGlyphs), CGAFontBankGlyphs)
+	if want := 2 * CGAFontBankGlyphs; len(cgaGlyphs) != want {
+		t.Fatalf("ASC.FNT glyph 數 = %d，預期 %d（3072 bytes / 16 = 192，尾端 0x1A 是 DOS EOF 不算資料）", len(cgaGlyphs), want)
+	}
+	assertCGAFontLayout(t, cgaGlyphs)
 	atlasCGA := TileSpriteSheet(cgaGlyphs, 16)
 	outAtlas := filepath.Join(dumpDir(t), "font-asc-fnt-atlas.png")
 	if err := SavePNG(outAtlas, atlasCGA); err != nil {
@@ -417,52 +508,14 @@ func TestDecodeFonts(t *testing.T) {
 	}
 }
 
-// 探索性:MONSTER.SHE 用不同佈局假設(row-interleaved planes、寬高对調)
-// 快速掃描,找哪個(如果有)才是清楚的怪物剪影。
-func TestDecodeEGASpritesLayoutSweep(t *testing.T) {
-	dir := origDataDir(t)
-	data := readAsset(t, dir, "MONSTER.SHE")
-
-	// 1) 逐-frame row-interleaved planes, 32x28
-	if frames, err := DecodeEGASpriteSheet(data, 32, 28, EGAPlanesRowInterleaved); err == nil {
-		out := filepath.Join(dumpDir(t), "sweep-monster-rowinterleaved-32x28.png")
-		_ = SavePNG(out, TileSpriteSheet(frames, 10))
-		t.Logf("sweep 1 -> %s", out)
-	} else {
-		t.Logf("sweep 1 失敗: %v", err)
-	}
-
-	// 2) 寬高對調:56x16 (寬度套 1.75x, 高度維持 CGA 的 16)
-	if frames, err := DecodeEGASpriteSheetGlobalPlanes(data, 56, 16); err == nil {
-		out := filepath.Join(dumpDir(t), "sweep-monster-global-56x16.png")
-		_ = SavePNG(out, TileSpriteSheet(frames, 10))
-		t.Logf("sweep 2 -> %s", out)
-	} else {
-		t.Logf("sweep 2 失敗: %v", err)
-	}
-
-	// 3) 高度不變:32x16(2bpp->4bpp僅色深加倍,不做 1.75x 縮放),全域四平面
-	if frames, err := DecodeEGASpriteSheetGlobalPlanes(data, 32, 16); err == nil {
-		out := filepath.Join(dumpDir(t), "sweep-monster-global-32x16.png")
-		_ = SavePNG(out, TileSpriteSheet(frames, 10))
-		t.Logf("sweep 3 -> %s", out)
-	} else {
-		t.Logf("sweep 3 失敗: %v", err)
-	}
-}
-
 // 放大單一 frame 方便肉眼細看(縮圖版排列在一起容易誤判成「像形狀」，
 // 這支測試把 COMBAT.SHP/MONSTER.SHP 各挑幾個 frame 放大 8 倍單獨輸出，
 // 誠實檢查到底是不是真的雜訊)。
 func TestDecodeCGASpritesZoom(t *testing.T) {
 	dir := origDataDir(t)
 	for _, name := range []string{"COMBAT.SHP", "MONSTER.SHP", "CYPHER.SHP"} {
-		w, h := 32, 16
-		if name == "CYPHER.SHP" {
-			w = 16
-		}
 		data := readAsset(t, dir, name)
-		frames, err := DecodeCGASpriteSheet(data, w, h)
+		frames, err := DecodeCGASpriteSheet(data, 16, 16)
 		if err != nil {
 			t.Fatalf("%s: %v", name, err)
 		}
@@ -475,56 +528,5 @@ func TestDecodeCGASpritesZoom(t *testing.T) {
 			_ = SavePNG(out, zoomed)
 			t.Logf("%s frame %d -> %s", name, idx, out)
 		}
-	}
-}
-
-// 探索性:CGA sprite frame 尺寸猜測掃描(byte 數固定 128,寬高比未定)。
-func TestDecodeCGASpritesDimensionSweep(t *testing.T) {
-	dir := origDataDir(t)
-	data := readAsset(t, dir, "MONSTER.SHP")
-	for _, d := range []struct{ w, h int }{{32, 16}, {16, 32}, {8, 64}, {64, 8}} {
-		frames, err := DecodeCGASpriteSheet(data, d.w, d.h)
-		if err != nil {
-			t.Logf("%dx%d 失敗: %v", d.w, d.h, err)
-			continue
-		}
-		z := zoomImage(frames[0], 8)
-		out := filepath.Join(dumpDir(t), "sweep-cga-monster-"+itoa(d.w)+"x"+itoa(d.h)+"-frame0.png")
-		_ = SavePNG(out, z)
-		t.Logf("%dx%d frame0 -> %s", d.w, d.h, out)
-	}
-}
-
-// 探索性:MONSTER.SHE 用「已驗證的正確方向」16x56,搭配不同 plane 佈局假設。
-func TestDecodeEGASpritesLayoutSweep2(t *testing.T) {
-	dir := origDataDir(t)
-	data := readAsset(t, dir, "MONSTER.SHE")
-
-	if frames, err := DecodeEGASpriteSheet(data, 16, 56, EGAPlanesSequential); err == nil {
-		out := filepath.Join(dumpDir(t), "sweep2-monster-perframe-seq-16x56.png")
-		_ = SavePNG(out, TileSpriteSheet(frames, 10))
-		t.Logf("perframe-seq -> %s", out)
-	} else {
-		t.Logf("perframe-seq 失敗: %v", err)
-	}
-
-	if frames, err := DecodeEGASpriteSheet(data, 16, 56, EGAPlanesRowInterleaved); err == nil {
-		out := filepath.Join(dumpDir(t), "sweep2-monster-perframe-rowint-16x56.png")
-		_ = SavePNG(out, TileSpriteSheet(frames, 10))
-		t.Logf("perframe-rowint -> %s", out)
-	} else {
-		t.Logf("perframe-rowint 失敗: %v", err)
-	}
-
-	// global sequential 已經在 TestDecodeEGASprites 跑過(16x56),這裡補
-	// global row-interleaved 對照:整檔視為一張大圖,但每列 4 個 plane byte 相鄰。
-	rowBytes := 16 / 8
-	totalHeight := len(data) / 4 / rowBytes
-	if img, err := DecodeEGAPlanar(data, 16, totalHeight, EGAPlanesRowInterleaved, nil); err == nil {
-		out := filepath.Join(dumpDir(t), "sweep2-monster-global-rowint-16xtall.png")
-		_ = SavePNG(out, img)
-		t.Logf("global-rowint -> %s (%dx%d)", out, 16, totalHeight)
-	} else {
-		t.Logf("global-rowint 失敗: %v", err)
 	}
 }

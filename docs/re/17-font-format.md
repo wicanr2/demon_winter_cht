@@ -1,13 +1,13 @@
 # 字型格式 `.FNT`/`.FNE`（DEMON.INT 反組譯，2026-07-25）
 
-> **結論先講：兩種字型都已解出並肉眼驗證。** `ASC.FNT`（CGA）是 8×8、2bpp、
-> 「同一列 2 個 byte 是 bit0/bit1 兩個平面」；`ASC.FNE`/`GOT.FNE`（EGA）是
-> 16×14、1bpp。這推翻了 `docs/formats/graphics.md` §6 原本「1-byte header +
-> 256×8×12 1bpp」的猜測——**尺寸、色深、bit 佈局全部猜錯**，正確答案是靠
-> `rulebook/62`（讀繪字程式碼，不猜佈局）配合 `rulebook/64`（拿字母形狀當
-> oracle 逐一測試假設）解出來的。GOT.FNE 解出來是花體(blackletter)風格，
-> 與 `workplace/dosbox/shots/smoke-01.png`、`03-ega-ingame.png` 的花體 UI
-> 文字一致。
+> **結論先講：兩種字型都已解出並肉眼驗證。** `ASC.FNT`（CGA）是 8×8、
+> **packed 2bpp**（每 byte 4 個像素、每列 2 bytes、來源線性、**無 header**），
+> 檔案含**兩個 96 字 bank**：bank0 一般（白字黑底）、bank1 反白（黑字亮洋紅底）；
+> `ASC.FNE`/`GOT.FNE`（EGA）是 16×14、1bpp。這推翻了 `docs/formats/graphics.md`
+> §6 原本「1-byte header + 256×8×12 1bpp」的猜測，**也推翻了本文件 2026-07-25
+> 第一版對 CGA 的判讀**（見 §2.3「已作廢的斷言」）。GOT.FNE 解出來是
+> 花體(blackletter)風格，與 `workplace/dosbox/shots/smoke-01.png`、
+> `03-ega-ingame.png` 的花體 UI 文字一致。
 
 驗證方法與本專案既有格式解密（`.PIC`/`.PIE`/`.SHP`/`.SHE`，見
 `docs/formats/graphics.md`、`docs/re/07-sprite-blit.md`）同一套：依假設寫
@@ -22,12 +22,12 @@ sprite 更高（沒有「frame 邊界」這種可以先用檔案大小整除卡�
 | 項目 | CGA(`.FNT`) | EGA(`.FNE`) |
 |---|---|---|
 | 字元尺寸 | **8 寬 × 8 高** | **16 寬 × 14 高** |
-| 色深/佈局 | 2bpp，**同列 2 byte = bit0/bit1 兩個平面**（非 chunky、非逐 plane 整塊） | 1bpp（前景/背景色由呼叫端指定，字型檔本身無顏色） |
+| 色深/佈局 | **packed 2bpp**（每 byte 4 個像素、byte0=左 4px、byte1=右 4px，就是 CGA mode 4 framebuffer 的原生格式） | 1bpp（前景/背景色由呼叫端指定，字型檔本身無顏色） |
 | 每字 bytes | 16（8 rows × 2 bytes/row） | 28（14 rows × 2 bytes/row） |
-| bit 順序 | MSB-first | MSB-first |
+| bit 順序 | MSB-first（每 byte 最左像素在 bit7–6） | MSB-first |
 | 字表起點 | ASCII `0x20`（空白） | ASCII `0x20`（空白） |
-| 檔頭 | 1 byte（觀察值 `0x00`，用途未查出） | 無 |
-| 涵蓋字元數 | 192（`(3073-1)/16`），但**只有 0x20–0x7F(96個)已用可讀文字驗證**，`0x80–0xDF` 解碼出規律但未經畫面驗證的圖案（見 §4） | 96（`2688/28`，恰為 `0x20`–`0x7F` 全部可印 ASCII，無餘數） |
+| 檔頭 | **無**。3073 = 3072 資料 + 1 個結尾 `0x1A`（DOS EOF 標記） | 無 |
+| 涵蓋字元數 | 96（`0x20`–`0x7F`）× **2 個 bank**＝192 個 glyph（`3072/16`）。bank0＝一般、bank1＝反白（見 §4） | 96（`2688/28`，恰為 `0x20`–`0x7F` 全部可印 ASCII，無餘數） |
 | 硬體常數交叉驗證 | `FUN_1d9f_0008`：`DAT_53ae=8, DAT_53b0=8, DAT_53b2=0xc00(3072)` | `FUN_1d9f_0008`：`DAT_53ae=0x10(16), DAT_53b0=0xe(14), DAT_53b2=0xa80(2688)` |
 
 CGA/EGA 的判別旗標是全域變數 **`DAT_31f0_19fb`**：`0`＝CGA、非 0＝EGA/圖形卡，
@@ -56,14 +56,34 @@ CGA/EGA 的判別旗標是全域變數 **`DAT_31f0_19fb`**：`0`＝CGA、非 0�
 （用 objdump 對原始位元組重新反組譯過，排除 Ghidra 對近跳轉顯示位址的
 已知混淆，見 `docs/re/00-ghidra-setup.md` 第 6 條踩雷。）
 
-- **CGA 路徑**（`0x19fb==0`）：
-  ```c
-  uVar4 = param_3 * 0x10 - 0x200;              // (char_code - 0x20) * 16
-  FUN_217b_025a(param_1*0x140 + param_2*2,      // 目標 CGA 位移
-                uVar3 + uVar4, ...);            // 來源字型緩衝區位移
+- **CGA 路徑**（`0x19fb==0`，`1d9f:0f1e` 起）`[已驗證，逐指令核對 disassembly.asm]`：
+
+  ```asm
+  1d9f:0f1e  MOV AX,[0x53b2]          ; 3072（開機常數＝字型資料長度）
+  1d9f:0f21  MOV DX,[0x53b4]          ; 0（高位字）
+  1d9f:0f25  MOV CX,0x2
+  1d9f:0f28  MOV BX,0x0
+  1d9f:0f2b  CALLF 0x3000:016a        ; 32-bit 除法 helper → 3072/2 = 1536
+  1d9f:0f32  MOV AX,[0x1ff0]          ; 反白旗標（0 或 1）
+  …          (32×32 乘法展開)          ; 1536 * flag  → bank 起始位移
+  1d9f:0f4e  MOV AX,[BP+0xa]          ; 字元碼
+  1d9f:0f51  MOV CX,0x4 / SHL AX,CL   ; char * 16       → 每字 16 bytes
+  1d9f:0f56  ADD AX,0xfe00            ; -0x200 = -(0x20*16) → 字表起於 0x20
+  1d9f:0f60  ADD AX,CX / ADC DX,BX    ; 合成來源位移
+  1d9f:0f66  MOV AX,0x140 / IMUL [BP+6]   ; 字元列 × 320 bytes
+  1d9f:0f6c  MOV CX,[BP+8] / SHL CX,1     ; 字元欄 × 2 bytes
+  1d9f:0f74  CALLF 0x2000:1a0a        ; = 217b:025a（0x21a0a）
   ```
-  `uVar4 = char*16-0x200` 已用 objdump 逐指令核對（`add $0xfe00,%ax` = `+(-0x200)`），
-  **16 bytes/字**、字表從 `0x20` 開始，兩者都已驗證。
+
+  三件事一次卡死：**每字 16 bytes**、**字表從 `0x20` 開始**、
+  **檔案有兩個 1536-byte bank，由 `[0x1ff0]` 選**（§4）。
+  目標位址算式 `列*0x140 + 欄*2` 也順帶證實字元格是 **8 px 寬**
+  （2 bytes × 4 px/byte）、**8 條掃描線高**（320 bytes ÷ 80 bytes/field row
+  = 4 個 field row = 8 條實際掃描線）。
+
+  > `0x3000:016a` 這支 helper 的本體落在 Ghidra 未分析的間隙（見 §7），
+  > 但回傳值被兩邊夾死：算術上 `3072/2 = 1536`，而檔案實際 dump 出來就是
+  > 「兩組各 96 字、間距 1536 bytes」的排列（§6），互相印證。
 - **EGA 路徑**（`0x19fb!=0`）：
   ```c
   FUN_1d9f_0eb1(param_1 * DAT_53b0, param_2 * DAT_53ae, param_3 - 0x20);
@@ -75,60 +95,79 @@ CGA/EGA 的判別旗標是全域變數 **`DAT_31f0_19fb`**：`0`＝CGA、非 0�
 
 ## 2. CGA 字型繪製：`FUN_217b_025a`（`217b:025a`，93 bytes）
 
-完整 objdump（見 §附錄）：把 CGA graphics framebuffer 段（`ES=0xB800`）
-用 **8 行、每行一個 `MOVSW`（2 bytes）** 的方式直接搬字型資料進畫面，
-搬運分兩組各 4 次迭代，利用 CGA 硬體「偶數掃描線存前半 8000B、奇數掃描線
-存後半」的位址規律（`+0x50` 一次跳 2 條實際掃描線，`+0x2000`/`-0x2000`
-在偶/奇兩個 bank 間切換）——**這一段本身是本專案已知的 CGA 硬體定址模式**
-（`docs/formats/graphics.md` §2.1 的 `.PIC` 全螢幕圖已驗證過同一套邏輯，
-但那邊是**磁碟檔案不交錯、載入時才交錯**；這裡是**函式執行期間直接對
-硬體 framebuffer 做交錯寫入**，兩者不衝突，是同一套 CGA 硬體知識的
-兩種應用場景）。
+完整原始指令（`disassembly.asm` 24941–24985 行）：
 
-### 2.1 來源位移 → 視覺列的對應 `[已驗證，逐指令核對 objdump]`
-
-第一組迭代（`SI` 起點不偏移）依序讀來源 offset `0,4,8,12`，寫到目的地
-`DI,DI+0x50,DI+0xA0,DI+0xF0`；第二組（`SI` 起點 `+2`）依序讀 `2,6,10,14`，
-寫到與第一組交錯的位置。兩組合起來，**視覺列 row 對應來源 offset
-`row*2`**（row0←offset0、row1←offset2、…、row7←offset14）——也就是
-「16 bytes 依序排列成 8 列、每列 2 bytes」，這點跟直覺一致，**真正反直覺
-的地方在下一節（bit 佈局）**。
-
-### 2.2 每列 2 bytes 的 bit 佈局 `[已驗證，PNG 逐字母肉眼核對]`
-
-**這是本文件唯一需要靠「肉眼比對排除假設」而非純讀指令解出的部分**——
-`MOVSW` 只告訴我們「兩個 byte 一起被搬到相鄰的目的地位置」，沒有告訴我們
-這兩個 byte 在**色彩語意**上是什麼關係。試過的假設：
-
-| 假設 | 說明 | 結果 |
-|---|---|---|
-| chunky 2bpp（byte0=左4px、byte1=右4px，比照 `.PIC` 全螢幕圖的慣例） | 每 byte 4 個像素、MSB-first，兩個 byte 左右接續成 8px 一列 | **雜訊**：字母出現「十字部件在兩列間漏出/重複」的撕裂感，且最後一列固定出現一個跟字母無關的殘影 |
-| **同列雙平面（byte0=bit0 平面、byte1=bit1 平面，MSB-first，逐 bit 組成 2bpp 色碼）** | `color = bit(byte0,n) \| (bit(byte1,n)<<1)`，n=0..7(MSB-first) | **✅ 清楚**：`H`/`E`/`L`/`O`/`A`–`Z`/`0`–`9`/`!` 全部渲染成正確、無雜訊的字母形狀 |
-| 1bpp、16 px 寬(兩 byte 併成一個 16-bit 遮罩) | 比照 EGA 的 1bpp 解法 | **雜訊**：字母的「莖」與「底」出現在不同水平位置，明顯對不齊 |
-| 僅用 byte0（byte1 視為未用/metadata） | 猜測 byte1 是保留欄位 | **部分正確但不完整**：多數字母清楚，但如 `L` 這種筆畫集中在 byte1 位元的字母會缺筆畫（`L` 只剩底部橫筆，直筆消失） |
-
-**已驗證的公式**：
-
-```
-frame_offset(row) = row * 2            // row ∈ [0,8)，byte0=偏移+0、byte1=偏移+1
-color_index(col)  = bit(byte0, 7-col) | (bit(byte1, 7-col) << 1)   // col ∈ [0,8)，MSB-first
+```asm
+217b:025a  PUSH BP / MOV BP,SP / PUSH AX,SI,DI,ES,DS
+217b:0262  MOV AX,0xb800 / MOV ES,AX     ; 目標 = CGA framebuffer
+217b:0267  MOV DI,[BP+0x6]               ; arg1 = framebuffer 位移
+217b:026a  MOV AX,0x31f0 / MOV DS,AX
+217b:026f  MOV SI,[0x5488]               ; 字型緩衝區 far pointer（offset）
+217b:0273  MOV BX,0x5488 / MOV AX,[BX+2] / MOV DS,AX   ; （segment）
+217b:027b  ADD SI,[BP+0x8]               ; arg2 = glyph 位移
+217b:027e  MOV CX,0x4
+217b:0281  PUSH DI / PUSH SI
+217b:0283  MOVSW                          ; ← 每次只搬 2 bytes
+217b:0284  ADD DI,0x4e                    ;   DI 淨進 0x50 = 80 bytes（一條掃描線）
+217b:0287  ADD SI,0x2                     ;   SI 淨進 4 bytes
+217b:028a  LOOP 217b:0283
+217b:028c  MOV CX,0x4
+217b:028f  POP SI / POP DI
+217b:0291  ADD SI,0x2                     ; 來源回到起點 +2
+217b:0294  CMP DI,0x1fff / JG 217b:02a0
+217b:029a  ADD DI,0x2000                  ; 切到奇數掃描線 bank
+217b:029e  JMP 217b:02a7
+217b:02a0  ADD DI,0x50 / SUB DI,0x2000    ; （DI 已在奇 bank 時的等價換算）
+217b:02a7  MOVSW / ADD DI,0x4e / ADD SI,0x2 / LOOP 217b:02a7
+217b:02b0  POP DS,ES,DI,SI,AX,BP / RETF
 ```
 
-`color_index` 對應調色盤 `CGAPalette1High`（黑／亮青／亮洋紅／白，與
-`docs/formats/graphics.md` 其他 CGA 素材共用同一份調色盤——這是 CGA 硬體
-只有兩組固定四色盤可選，不是本專案臆測）。
+### 2.1 來源位移 → 視覺列的對應 `[已驗證，逐指令核對]`
 
-**為什麼是「同列雙平面」而不是 chunky？** 這跟 EGA 的 Write Mode 2（見
-§3）是同一個設計哲學的簡化版：EGA 用硬體暫存器讓「一個 bit 位置同時決定
-4 個 plane 的顏色」，CGA 沒有那組硬體，退而求其次在**資料本身**先做好
-「同一像素的兩個色彩位元分開存但位置對齊」，搬運時兩個 plane 各自
-`MOVSW` 到 CGA 記憶體裡的正確 bit 位置（`.PIC`/`.SHP` 用的 chunky 佈局，
-是「一個 byte 內塞滿好幾個完整像素」；字型的雙平面佈局，是「一個 byte
-內塞滿好幾個像素的『半顆』」，兩者是 CGA 2bpp 資料常見的兩種互斥慣例，
-本專案在 `.PIC`/`.SHP` 用前者、字型用後者——**同一硬體格式在不同素材類型
-上可以有不同的位元組織慣例，不能互相套用**，這點呼應
-`docs/formats/graphics.md` 已記錄的「算術對不代表方向對」教訓，這次是
-「同色深不代表同位元組織」的新變體）。
+第一組迭代（`SI` 不偏移）讀來源位移 `0,4,8,12`，寫到 `DI, DI+0x50, DI+0xA0,
+DI+0xF0`（＝偶數 bank 的連續四行 ＝ 螢幕列 0,2,4,6）；第二組（`SI` 起點 `+2`）
+讀 `2,6,10,14`，寫到 `DI+0x2000` 起的同樣四行（＝螢幕列 1,3,5,7）。
+
+兩組合起來：
+
+```
+螢幕列 r ← 來源位移 2r        r ∈ [0,8)
+```
+
+也就是**來源資料是線性的**——「先偶後奇」的交錯只發生在**目的地位址**上，
+是這支函式為了配合 CGA 硬體 framebuffer 而做的，**字型檔本身沒有交錯**。
+這跟 `docs/formats/graphics.md` 記載的「`.PIC` 全螢幕圖也是線性、載入時才
+交錯」是同一個結論，不是相反。
+
+### 2.2 每列 2 bytes 的 bit 佈局：packed 2bpp `[已驗證，PNG 逐字母肉眼核對]`
+
+`MOVSW` 把來源那 2 個 byte **原封不動**寫進 `0xB800` 相鄰的兩個 byte。
+而 CGA mode 4（320×200、4 色）framebuffer 的定義就是「每 byte 4 個像素、
+2 bits/像素、最左像素在 bit7–6」。因此字型檔那 2 個 byte 的語意由硬體直接
+決定，沒有詮釋空間：
+
+```
+frame_offset(row) = row * 2
+color_index(col)  = (byte[row*2 + col/4] >> (6 - 2*(col%4))) & 3     // col ∈ [0,8)
+```
+
+byte0 = 該列**左邊 4 個像素**，byte1 = **右邊 4 個像素**。
+
+寬高的獨立佐證在呼叫端（§1）：`欄 × 2 bytes` → 8 px 寬；
+`列 × 0x140(320) bytes` ÷ 80 bytes/field row = 4 個 field row = 8 條掃描線 → 8 px 高。
+
+### 2.3 已作廢的斷言（2026-07-25 第一版）`[已推翻，不要再套用]`
+
+本文件第一版寫「同列 2 byte 是 bit0/bit1 兩個平面（planar）」並標為已驗證，
+**那是錯的**——依該假設寫的解碼器輸出整張都是雜訊，沒有任何可辨識字母。
+同時作廢的還有「檔案開頭 1 byte 是 header」（實際是**結尾**的 `0x1A`
+DOS EOF）以及「`0x80`–`0xDF` 是未知圖形字元」（實際是反白 bank，見 §4）。
+
+失誤原因值得記著：`MOVSW` 這條指令**不需要**知道 byte 的色彩語意就能寫出
+正確的搬運迴圈，所以「讀懂 blit 迴圈」並不等於「讀懂像素格式」——像素格式
+是由**目的地（CGA 硬體 framebuffer 規格）**決定的，當時卻繞過硬體規格去
+猜資料佈局，還把「猜對了嗎」的判斷交給沒有真正肉眼複核的 atlas。
+對應紀律：`rulebook/65`（驗收要對 reference 實測，不能拿內部訊號當通過）。
 
 ---
 
@@ -145,9 +184,11 @@ void FUN_1d9f_0eb1(x, y, char_minus_0x20) {
 }
 ```
 
-`*(int*)0x1ff0` 是另一個開關（**用途待查**，推測是「反白/選取狀態」，
-因為兩組色碼恰好是「白底黑字」與「反過來的青底黑字」，符合選單被選取項目
-反白顯示的常見做法，但本次沒有逐一追出所有寫入點，標記為 [推測]）。
+`*(int*)0x1ff0` 是**反白（highlight）旗標**，已驗證：`1d9f:12ea` 設 1、
+`1d9f:1357` 設 0，中間夾的正是「填底色 → 畫置中文字」這段（`1d9f:12c7`
+填 EGA 亮青 `0xb`／`1d9f:12ce` 填 CGA `0xaa`＝全部色號 2 亮洋紅）。
+CGA 路徑不是換色而是換 bank（§4），兩條路徑用同一個旗標達成同一個
+視覺效果。
 **重要**：這證明**顏色不是字型檔案本身的資料**，是呼叫端在繪製當下決定
 的——`.FNE` 檔案內容只是純粹的 1bpp 前景遮罩。
 
@@ -174,10 +215,16 @@ pixel(row, x) = bit((row 的 2-byte 合併成 16-bit MSB-first), 15-x)   // x �
 ```
 
 **14 列、16 寬、1bpp、28 bytes/字**，`14/8=1.75`、`16/8=2`——寬度剛好是
-CGA 版的 2 倍、高度是 1.75 倍，跟 `.SHE` 精靈圖（`docs/re/07` §3.1：
-CGA 16×32 → EGA 32×28，寬×2、高×0.875）**不是同一個縮放比**，
-再次印證「不同素材類型的 CGA→EGA 縮放規則不能互套」這條 `docs/formats/
-graphics.md` 已有的教訓在字型上又成立一次。
+CGA 版的 2 倍、高度是 1.75 倍。
+
+> **`.FNE` 不受 `.SHE` 的「載入時水平加倍」影響**（2026-07-25 複核）：
+> 素材載入器 `FUN_1d9f_0a8b` 雖然也會把 `.FNT` 的副檔名改成 `.FNE`，
+> 但加倍那一步只在副檔名比對到 `shE`/`SHE` 時才觸發（見 `docs/re/07` §2.6）。
+> 所以 `.FNE` 檔案裡的 16×14 就是記憶體裡的 16×14，本節結論不變。
+>
+> 附帶一提，字型的 CGA→EGA 縮放（寬 ×2、高 ×1.75）跟 sprite
+> （CGA 16×16 → EGA 16×28，檔案層寬度不變、高度 ×1.75）在**檔案層**確實不同；
+> 但把 sprite 的顯示層加倍算進去之後，兩者的「顯示寬 ×2、高 ×1.75」是一致的。
 
 ### 3.3 硬體常數交叉驗證 `[已驗證，獨立於繪字函式的第二條證據鏈]`
 
@@ -195,7 +242,7 @@ CGA 分支則是：
 ```c
 DAT_53ae = 8;
 DAT_53b0 = 8;
-DAT_53b2 = 0xc00;  // 3072 ← 與 ASC.FNT 扣掉 1-byte header 後的大小完全相等
+DAT_53b2 = 0xc00;  // 3072 ← ASC.FNT 的資料長度（檔案 3073，扣掉結尾的 0x1A DOS EOF）
 ```
 
 **這是一條完全獨立於繪字函式本身的證據鏈**——不是靠「讀 blit 迴圈次數」
@@ -205,21 +252,37 @@ DAT_53b2 = 0xc00;  // 3072 ← 與 ASC.FNT 扣掉 1-byte header 後的大小完�
 
 ---
 
-## 4. 已驗證 vs 未驗證的字元範圍
+## 4. `.FNT` 的兩個 bank：一般 / 反白 `[已驗證]`
 
-- **`0x20`–`0x7F`(96 個，含空白到 `~`)：已驗證**。CGA、EGA 兩版都用完整
-  A–Z/a–z/0–9/常見標點渲染過，PNG 逐字清楚可讀，見 §6。
-- **CGA `0x80`–`0xDF`（額外 96 個，佔滿 `ASC.FNT` 扣 header 後 3072 bytes
-  的後半）：解碼結果有規律結構（重複的棋盤位元圖樣、看起來像陰影/框線
-  字元），但目前找不到任何遊戲字串使用這個範圍（`strings.csv` 714 條
-  字串全部是純 7-bit ASCII），也沒有對應畫面可以肉眼核對，**誠實標記
-  為未驗證**——不是雜訊（有結構），但也不是「已驗證正確」，可能是
-  CGA 版額外附帶的框線/陰影圖形字元（1980 年代常見做法），也可能是檔案
-  裡緊接在字型表後面的下一個資源（本次沒有排查 `ASC.FNT` 除字型外
-  是否還有其他附加資料）。
-- **EGA 版沒有這個問題**：`ASC.FNE`/`GOT.FNE` 都是 2688 bytes，
-  `2688/28=96` 整除無餘數，檔案大小本身就界定了字元範圍恰好是
-  `0x20`–`0x7F`，沒有多餘資料。
+`ASC.FNT` 的 3072 bytes 不是「192 個不同的字」，而是**同一批 96 字
+（`0x20`–`0x7F`）的兩個版本**，各 1536 bytes：
+
+| bank | 檔案位移 | 內容 | 用到的色號 |
+|---|---|---|---|
+| 0 | `0x000`–`0x5FF` | 一般：白字黑底 | 0（黑）、3（白）|
+| 1 | `0x600`–`0xBFF` | 反白：黑字亮洋紅底 | 0（黑）、2（亮洋紅）|
+
+三條互相獨立的證據：
+
+1. **選擇算式**（§1）：來源位移 = `1536 * [0x1ff0] + (char-0x20)*16`。
+   `1536` 是 `[0x53b2]`(3072) 除以 2，`[0x1ff0]` 只取 0/1。
+2. **`[0x1ff0]` 是反白旗標**：`1d9f:12ea MOV word ptr [0x1ff0],0x1` →
+   畫一段置中文字 → `1d9f:1357 MOV word ptr [0x1ff0],0x0`。同一支函式在
+   `1d9f:12c7`/`12ce` 依 CGA/EGA 先填底色：EGA 用 `0xb`（亮青），
+   CGA 用 `0xaa`——`0xAA` 在 2bpp packed 下正是「四個像素全為色號 2
+   （亮洋紅）」。EGA 側對照組更直接：`FUN_1d9f_0eb1` 用同一個 `[0x1ff0]`
+   在 `0xff00`（白底黑字）與 `0xb`（青底黑字）之間切換（§3.1）。
+3. **檔案內容**：實際 dump 出來，bank1 每個 byte 都等於
+   `(~bank0_byte) & 0xAA`——例如 `A` 的第一列 bank0 `03 c0` ↔ bank1
+   `a8 2a`。像素上就是「色號 3 換成 0、色號 0 換成 2」，底色恰好對上
+   `0xAA` 填色。
+
+所以 CGA 版**沒有**「未驗證的 `0x80`–`0xDF` 圖形字元」——那個說法是把
+反白 bank 誤讀成延伸字元集，已作廢。EGA 版不需要第二個 bank，因為
+Write Mode 2 是在繪製當下指定前景/背景色（§3.1）。
+
+> 注意名詞：這裡的 bank1 是**反白（highlight）**，跟遊戲選單裡的
+> `Alternate Character Set`（§5，`ASC` ↔ `GOT` 花體切換）是兩回事。
 
 ---
 
@@ -320,7 +383,7 @@ resource blob 切成字型、道具範本等一串子區塊指標，篇幅所限
 
 | 輸出 | 內容 | 比對結果 |
 |---|---|---|
-| `font-asc-fnt-atlas.png`（+`-zoom4x`） | CGA `ASC.FNT` 全部 192 個 glyph 排版 | `0x20`–`0x7F` 清楚可讀英文字母/數字/標點；`0x80`+ 有規律但未驗證（見 §4） |
+| `font-asc-fnt-atlas.png`（+`-zoom4x`） | CGA `ASC.FNT` 全部 192 個 glyph（16 欄 × 12 列）| **前 6 列＝bank0**：`space ! " # $ % & ' ( ) * + , - . /` → `0`–`9` → `A`–`Z` → `a`–`z`，白字黑底，逐字清楚可讀；**後 6 列＝bank1**：同一批字的黑字亮洋紅底反白版 |
 | `font-ASC.FNE-atlas.png`（+`-zoom3x`） | EGA `ASC.FNE` 全部 96 個 glyph | 清楚、平頭無襯線字母，字形工整 |
 | `font-GOT.FNE-atlas.png`（+`-zoom3x`） | EGA `GOT.FNE` 全部 96 個 glyph | **清楚的花體(blackletter)字母**——每個字母都有哥德式的裝飾筆畫（如 `A` 的頂端分岔、`D` 的弧形襯線） |
 | `font-render-got-0.png`~`7.png` | 用 `GOT.FNE` 直接渲染 `"DEMON'S WINTER"`、`"Go adventuring"`、`"Character Utilities"`、`"Alternate Character Set"`、`"Walk"`、`"Party info"`、`"Save Game"`、`"Camp"` | **與 `workplace/dosbox/shots/smoke-01.png`（主選單）、`03-ega-ingame.png`（遊戲內選單）肉眼比對，字形風格一致**——兩張截圖裡的標題與選單文字全部是同一種花體，本文渲染出的同一批字串筆畫特徵（如 `D`、`C`、`S`、`W` 的裝飾轉折）吻合 |
@@ -329,6 +392,13 @@ resource blob 切成字型、道具範本等一串子區塊指標，篇幅所限
 **判別依據回應驗收標準**：
 - ASCII `0x20`（空白）：兩種字型解碼結果都是全空，已驗證。
 - `A`–`Z`、`0`–`9`：CGA 與 EGA 兩版都清楚可辨，已驗證。
+- **CGA 的驗證只到「atlas 逐字可讀且順序正確」這一層**：`workplace/dosbox/
+  shots/` 裡唯一的 CGA 截圖是 `05-cga-hang-open-pic.png`（開場就卡住，
+  畫面上沒有文字），所以 CGA 字形沒有原版畫面可比。下面「與 DOSBox 截圖
+  比對」那幾條**全部是 EGA（`GOT.FNE`）的結果**，不要當成 CGA 的證據。
+- `TestDecodeFonts` 另外用 `assertCGAFontLayout` 把 `A` 的 8×8 圖樣、
+  空白字元全空、兩個 bank 的用色與互補關係寫成斷言，讓佈局判錯時測試會紅，
+  不必每次都靠人看圖。
 - 與 DOSBox 截圖比對：`smoke-01.png` 的 `"Go adventuring"`／
   `"Character Utilities"`／`"Alternate Character Set"`／花體標題
   `"DEMON'S WINTER"`，以及 `03-ega-ingame.png` 的選單文字（`"Walk"`／
@@ -339,7 +409,9 @@ resource blob 切成字型、道具範本等一串子區塊指標，篇幅所限
 
 ## 7. 未解部分（誠實列出）
 
-1. **CGA 字型 `0x80`–`0xDF` 範圍**的真實用途未驗證（見 §4）。
+1. `0x3000:016a`（32-bit 除法 helper）與實際磁碟 I/O 函式本體落在 Ghidra
+   未分析的位址間隙（見 `docs/re/00-ghidra-setup.md` §5），沒有逐指令反組譯。
+   除法的回傳值 1536 已被算術與檔案實際佈局雙向夾死（§1、§4），不影響結論。
 2. **`Alternate Character Set` 選單項目→實際呼叫鏈的最後一段未追完**
    （§5.2）：找到了資源表與泛用載入器，但選單本身怎麼觸發、傳哪個
    index，因為卡在 Ghidra 分析間隙（`CALLF` 目標落在未分析區）而沒有
@@ -353,14 +425,15 @@ resource blob 切成字型、道具範本等一串子區塊指標，篇幅所限
    而失敗／卡死**——這與 `CONTEXT.md` 記載的「CGA 模式因此會卡死」
    吻合，等於是本文件提供了那個已知現象的可能成因（未經 DOSBox 實測，
    標記為推論）。
-5. `DAT_31f0_1ff0`（EGA 路徑的「反白/選取」旗標，§3.1）的完整寫入點
-   未逐一追出，只確認它切換兩組固定的前景/背景色。
+5. `DAT_31f0_1ff0`（反白旗標）已確認語意與 `1d9f:12ea`/`1d9f:1357`
+   這組寫入點，但沒有窮舉其他寫入點，不排除還有別處會設它。
 
 ---
 
 ## 8. 給引擎渲染層的建議
 
-- `internal/assets/gfx/font.go` 的 `DecodeCGAFont`（8×8、2bpp 雙平面）與
+- `internal/assets/gfx/font.go` 的 `DecodeCGAFont`（8×8、packed 2bpp，回傳
+  192 個 glyph：`[0,96)` 一般、`[96,192)` 反白）與
   `DecodeEGAFont`（16×14、1bpp，fg/bg 由呼叫端指定）可直接使用。
   `RenderText` 提供最簡單的字串→影像組字，`GlyphForChar` 處理
   ASCII→glyph 索引（`FontFirstChar=0x20`）。
@@ -382,7 +455,7 @@ resource blob 切成字型、道具範本等一串子區塊指標，篇幅所限
 |---|---|---|
 | `FUN_1d9f_1361` | `1d9f:1361` | 字串印出（逐字元呼叫 `FUN_1d9f_0eeb`） |
 | `FUN_1d9f_0eeb` | `1d9f:0eeb` | 單一字元繪製分派（CGA/EGA） |
-| `FUN_217b_025a` | `217b:025a` | CGA 字元 blit（8×8、2bpp 雙平面） |
+| `FUN_217b_025a` | `217b:025a` | CGA 字元 blit（8×8、packed 2bpp，直接 MOVSW 進 0xB800） |
 | `FUN_1d9f_0eb1` | `1d9f:0eb1` | EGA 字元繪製前處理（座標縮放、選色） |
 | `FUN_217b_097c` | `217b:097c` | EGA 字元 blit（16×14、1bpp、Write Mode 2） |
 | `FUN_1d9f_0008` | `1d9f:0008` | 開機初始化（`INT 10h` 偵測、寫入 `DAT_53ae/53b0/53b2` 等模式常數） |
