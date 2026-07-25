@@ -175,7 +175,13 @@ func TestGlyph_NonBig5FallsBack(t *testing.T) {
 
 	// Big5 收錄的範圍比直覺廣 —— 日文假名（あ）與希臘字母（Ω）都在裡面，
 	// 拿它們當「非 Big5」的例子會誤判。真正不在的是簡體字與非 BMP 字。
-	for _, ch := range []rune{'马', '仅', '试'} {
+	//
+	// 這批簡體字有一半會被 Go 的 Big5 編碼器映進造字區（`马`→`89C6`、
+	// `着`→`FED3`），編碼「成功」但字型不涵蓋。列進來釘住那個破口。
+	for _, ch := range []rune{'马', '仅', '试', '头', '顶', '着', '门', '东', '车', '国', '长', '买'} {
+		if ch == '只' || ch == '儿' {
+			continue
+		}
 		if _, ok := f.Glyph(ch); ok {
 			t.Errorf("%q 是簡體字、不在 Big5 裡，應回報 fallback", ch)
 		}
@@ -220,5 +226,25 @@ func TestLoad_RejectsMalformedFile(t *testing.T) {
 	}
 	if _, err := Load(bad, bad); err == nil {
 		t.Error("長度不是 30 的整數倍時應回傳錯誤")
+	}
+}
+
+// Go 的 Big5 編碼器會把一批簡體字映進造字區，編碼成功但沒有字模。
+//
+// Big() 必須驗碼位落在標準 Big5 區間（首 A1–F9、次 40–7E／A1–FE），
+// 否則檢查工具會放行簡體字，畫面上才發現是一片空白。
+func TestBig5_RejectsUserDefinedArea(t *testing.T) {
+	// 注意：`只`（A575）與`儿`（A449）看起來像簡體，其實是標準 Big5 收錄的字，
+	// 不能列進來 —— 「簡體字一定不在 Big5」這個直覺是錯的。
+	for _, ch := range []rune{'头', '着', '门', '东', '车', '马', '国', '长'} {
+		if _, _, ok := Big5(ch); ok {
+			t.Errorf("%q 落在造字區，應判定為非 Big5", ch)
+		}
+	}
+	// 反向確認沒有誤殺：標準區的字仍要通得過。
+	for _, ch := range []rune{'冬', '魔', '一', '，', '「', 'あ', 'Ω'} {
+		if _, _, ok := Big5(ch); !ok {
+			t.Errorf("%q 在標準 Big5 裡，不該被擋掉", ch)
+		}
 	}
 }

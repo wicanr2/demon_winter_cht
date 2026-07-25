@@ -197,3 +197,67 @@ func TestMixedColumns_FitsThirtyEightCJK(t *testing.T) {
 		t.Errorf("MixedColumns + 左右邊界 = %d，預期畫布寬 640", MixedColumns+2*16)
 	}
 }
+
+// 標點禁則：句號、逗號、收尾引號不可落在行首。
+//
+// 這是中文排版的基本要求，機器排版最容易露餡的地方。
+func TestWrapMixed_NoClosingPunctuationAtLineStart(t *testing.T) {
+	inputs := []string{
+		"你走進一頂住著四隻狗頭人的帳篷。狗頭人一頂帳篷住四隻。",
+		"他正對另一隻狗頭人說：「主人澤瑞斯沒下令，我們就不再進攻！」兩名獸人衛兵咆哮。",
+		"這裡是狗頭人營地的糧食倉庫，大多是空木箱和蒼蠅，還有一些腐爛的穀物袋。",
+	}
+	// 逐一嘗試各種行寬，逼出所有可能的斷點。
+	for _, in := range inputs {
+		for cells := 4; cells <= 20; cells++ {
+			lines := WrapMixed(in, cells*CellWidthCJK)
+			for i, ln := range lines {
+				r := []rune(ln)
+				if len(r) == 0 {
+					continue
+				}
+				if noLineStart[r[0]] {
+					t.Errorf("寬 %d 格、第 %d 行以禁則標點 %q 開頭：%q",
+						cells, i, string(r[0]), ln)
+				}
+				if noLineEnd[r[len(r)-1]] && i < len(lines)-1 {
+					t.Errorf("寬 %d 格、第 %d 行以禁則標點 %q 結尾：%q",
+						cells, i, string(r[len(r)-1]), ln)
+				}
+			}
+		}
+	}
+}
+
+// 套了禁則之後，「沒有一行超過框寬」這條保證仍然成立。
+//
+// 往回退會把字帶到下一行，退過頭就會撐破框 —— 這是實作禁則最容易引入的 bug。
+func TestWrapMixed_KerningNeverOverflows(t *testing.T) {
+	inputs := []string{
+		"他說：「好。」，，，。。。」」」結束",
+		"（（（測試）））。。。",
+		"一二三四五六七八九十。",
+	}
+	for _, in := range inputs {
+		for cells := 2; cells <= 12; cells++ {
+			width := cells * CellWidthCJK
+			for i, ln := range WrapMixed(in, width) {
+				if w := TextWidth(ln); w > width {
+					t.Errorf("輸入 %q 寬 %d：第 %d 行寬 %d 超過框：%q",
+						in, width, i, w, ln)
+				}
+			}
+		}
+	}
+}
+
+// 禁則處理不能吃字。
+func TestWrapMixed_KerningPreservesText(t *testing.T) {
+	const in = "他正對另一隻狗頭人說：「主人澤瑞斯沒下令，我們就不再進攻！」兩名獸人衛兵咆哮。"
+	for cells := 3; cells <= 20; cells++ {
+		got := strings.Join(WrapMixed(in, cells*CellWidthCJK), "")
+		if got != in {
+			t.Errorf("寬 %d 格時內容改變：\n得到 %q\n預期 %q", cells, got, in)
+		}
+	}
+}

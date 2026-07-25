@@ -1,0 +1,213 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ DATA1.TXT
+
+## 0
+:: en
+Throughout the length of the hallway you see skeletons entombed in the rock of the walls. At one point the words "Gloriosus victime" have been chiseled into the wall.
+:: zh
+走廊沿途的石壁裡嵌著一具具骷髏。牆上某處鑿著「Gloriosus victime」幾個字。
+
+## 1
+:: en
+Throughout the length of the hallway you see skeletons entombed in the rock of the walls. The smell of death is everywhere
+:: zh
+走廊沿途的石壁裡嵌著一具具骷髏。死亡的氣味瀰漫各處。
+
+## 2
+:: en
+A painting on the north wall depicts a hideous four-horned feathered beast and is labeled 'Gamur'.
+:: zh
+北牆上有一幅畫，畫著一頭醜惡的四角羽獸，下方標著「加穆爾」。
+
+## 3
+:: en
+A group of followers yell 'Glory to Xeres' and attack.
+:: zh
+一群信徒高喊「澤瑞斯萬歲」，向你們撲來。
+
+## 4
+:: en
+Two guards are in the room
+:: zh
+房裡有兩名衛兵。
+
+## 5
+:: en
+You are in the plush private library of Remondadin. A bookcase adorns the far wall.
+:: zh
+你身在雷蒙達丁華美的私人藏書室。遠處的牆邊立著一座書櫃。
+
+## 6
+:: en
+This is some kind of chemical laboratory. The room smells of plantlife and poisons. A few bottles of liquid lie around the tables and a rat is running about in a case.
+:: zh
+這裡像是某種化學實驗室，房裡有草木和毒藥的氣味。桌邊擺著幾瓶液體，一隻老鼠在籠子裡四處亂竄。
+
+## 7
+:: en
+You are in a food storage area in a hidden section of the catacombs. Many bags of grain lie rotting in the corner and a starving rat eyes you intently.
+:: zh
+你身在墓穴隱蔽處的糧食儲藏區。角落堆著許多正在腐爛的穀袋，一隻餓壞的老鼠緊盯著你。
+
+## 8
+:: en
+This is a workshop that is used to make weapons and armor judging from the scraps of iron on the floor. The room is unoccupied.
+:: zh
+從地上的鐵屑判斷，這裡是打造武器和護甲的工坊。房內沒有人。
+
+## 9
+:: en
+You have entered a temple that reeks of evil and bloody sacrifice. As you entered 4 wizards were being led in prayer by a fighter. Much to your surprise they do not pray to Gamur but to something named Xeres.
+:: zh
+你走進一座散發著邪惡與血祭腥味的神殿。你進來時，四名巫師正由一名戰士帶領祈禱。令你意外的是，他們祈禱的對象不是加穆爾，而是一個名叫澤瑞斯的存在。
+
+## 10
+:: en
+A large black door at the end of the hallway is guarded by a fierce looking hobgoblin. The door is carved with gold runes in a language you do not understand and from beyond comes a sinister chanting.
+:: zh
+走廊盡頭有一扇巨大的黑門，由一隻凶惡的大鬼哥布林看守。門上刻著金色符文，那種文字你看不懂，門後傳來陰森的吟誦聲。
+
+## 11
+:: en
+Before you is a totally black room occupied by a ghostly white figure with violet eyes beneath a tattered red cloak. The room is adorned with various symbols and its occupant seems to resent your intrusion.
+:: zh
+你面前是一間全黑的房間，裡頭有個慘白如鬼的身影，紫色的眼睛藏在破爛的紅斗篷下。房裡飾著各式符號，這名住客顯然不滿你的闖入。
+
+## 12
+:: en
+You have enetered a mysterious morgue. A glass case lie on a granite table before you. Inside the case can be seen a man perfectly intact but in some short of suspended animation. His eyes remain open and stare hauntingly outward
+:: zh
+你走進一間詭異的停屍間。面前的花崗岩台上放著一具玻璃棺，棺裡是一名完好無缺的男子，像是處在某種假死狀態。他雙眼睜著，向外投來令人不安的凝視。
+
+## 13
+:: en
+Before you is a large cavern and the sound of rushing water. A message carved in large ornate letters on the cave floor reads 'WELCOME TO PIRATE'S COVE. ENTER AT YOUR OWN RISK!'
+:: zh
+你面前是一個大洞窟，水聲奔騰。洞窟地面用華麗的大字刻著：「歡迎來到海盜灣。入內風險自負！」
+
+## 14
+:: en
+Three thieves have been waiting in the passageway here. As you approach they draw their weapons and the leader speaks- 'Only those who are worthy can pass beyond. Flee if you know you are weak'
+:: zh
+三名盜賊守在這條通道上。你靠近時他們拔出武器，為首的開口：「只有夠格的人才能過去。自知軟弱就快逃。」
+
+## 15
+:: en
+The Hall of Bones. The floor of his room is littered with hundreds of skulls and bones. The walls are painted in black and red with horrid images in which Death is the main motif. Snakes weave in and out of the skulls.
+:: zh
+骸骨廳。地上散落著數百具頭骨與骸骨。牆面用黑紅兩色畫滿恐怖的圖像，主題全是死亡。蛇群在頭骨間鑽進鑽出。
+
+## 16
+:: en
+A message has been painted in blood here- 'Beyond this point lies the Temple of the Death God - not a place for those who cherish their life...'
+:: zh
+這裡用血寫著一段話：「此處之後是死神神殿，珍惜性命的人別進去……」
+
+## 17
+:: en
+The Mist Room. An old man seated before a flickering black and violet fire speaks- 'You are fools! The one you seek is but a puppet. Abandon hope now for the puppeteer is eternal and his talons far reaching...'
+:: zh
+迷霧室。一名老者坐在忽明忽暗的黑紫色火焰前開口：「你們是傻子！你們要找的不過是個傀儡。趁早死心吧，操線的人永生不死，爪牙也伸得極遠……」
+
+## 18
+:: en
+The Skull Room. Hundreds of skulls (Human and otherwise) form the walls of this icy room. Through holes in the wall of a skulls you see other rooms filled with weapons and armor. Two huge skulls serve as thrones for two Skeleton Magi
+:: zh
+骷髏室。這個冰冷房間的牆由數百具頭骨堆成，有人類的，也有其他種族的。透過頭骨牆上的孔洞，你看見別的房間裡堆滿武器和護甲。兩具巨大的頭骨充當兩名骷髏法師的王座。
+
+## 19
+:: en
+Words carved into the floor read 'Forward 3 and right 1 will get you out of a crush...'
+:: zh
+地上刻著一行字：「前進三格、向右一格，就能逃出擠壓陷阱……」
+
+## 20
+:: en
+A bit fat hill giant guards this room. Bones litter the floor along with myriads of footprints
+:: zh
+一隻有點胖的丘陵巨人看守著這個房間。地上散落著骨頭和無數腳印。
+
+## 21
+:: en
+You are in a small bay. A beautiful sailing ship is docked on the northern part of the bay with a few giants left to guard it. The leader of them is exceedingly large and wields a huge shining sword
+:: zh
+你身在一座小海灣。海灣北側停著一艘漂亮的帆船，留了幾名巨人看守。為首的那名格外巨大，握著一把閃亮的巨劍。
+
+## 22
+:: en
+This is a simple brick room in a rounded tower. A vicious black dog lives here and appears to be somebody's pet
+:: zh
+這是圓塔裡一間簡陋的磚房。一隻凶狠的黑狗住在這裡，看來是某人養的寵物。
+
+## 23
+:: en
+The Bellkeeper's Room. The Bellkeeper was once a powerful assassin who was hired to watch over this bell tower by Eregore the High Priest. When he spots you he screams out in anger 'No one may enter this tower. Prepare to die!'
+:: zh
+守鐘人室。守鐘人曾是一名厲害的刺客，受大祭司艾瑞戈爾僱用看守這座鐘樓。他一發現你，就憤怒地大吼：「誰都不准進這座塔。準備受死！」
+
+## 24
+:: en
+The Bell Room. A large bronze bell has been set up in the center of this room. The bell has ancient runes carved around its base
+:: zh
+鐘室。房間中央架著一口巨大的銅鐘，鐘座四周刻著古老的符文。
+
+## 25
+:: en
+To the north of you is a purple haze which you cannot pass through despite your best efforts. On the side wall is a crystal eye with carving above it- 'Ony High Priests allowed past this point. Show identification'
+:: zh
+你北邊是一團紫色霧氣，你怎麼試都穿不過去。側牆上有一隻水晶眼，上方刻著：「此處之後僅限大祭司通行。出示身分證明。」
+
+## 26
+:: en
+The Dream Room. This room is filled with a constantly swirling hot mist that immediately causes you to feel drowsy and daydream. Your dreams concern a great battle in which good defeats evil
+:: zh
+夢境室。房裡充滿不斷翻騰的熱霧，你立刻感到昏沉，開始做起白日夢。夢裡是一場大戰，善戰勝了惡。
+
+## 27
+:: en
+Cathedral. The cathedral is very large and beautiful beyond belief. It is currently occupied by its guardians- three orange snakes who move hypnotically before you
+:: zh
+大教堂。這座教堂極為宏大，美得難以置信。此刻佔據這裡的是它的守衛：三條橘色的蛇，在你面前催眠般地扭動。
+
+## 28
+:: en
+This octogonal room has a beautiful crystal floor intricately carved with geometric designs. In the center is written 'Only the right path will bring reward'
+:: zh
+這間八角形房間鋪著漂亮的水晶地板，上面精細地刻著幾何圖案。正中央寫著：「只有走對路才有回報。」
+
+## 29
+:: en
+You have entered the main portion of the High Temple. Its hallways are very wide and the engraved ceiling towers above you.The size and grandeur of the passage makes you feel small and insignificant - weak and helpless
+:: zh
+你走進了大神殿的主體。走廊非常寬闊，雕飾的天花板高聳在你頭上。這條通道的規模與壯麗讓你覺得自己渺小而微不足道，軟弱又無助。
+
+## 30
+:: en
+This room is blazing with fire and heat sears your face. Malifon has selected a Demon Lord to watch over Eregore and make sure he does his job and this is where it resides
+:: zh
+這個房間烈火熊熊，熱氣灼著你的臉。馬利馮指派了一名惡魔領主監視艾瑞戈爾，確保他把事情辦好，這裡就是牠的住處。
+
+## 31
+:: en
+The Crystal Room. From a large crystal ball in the center of this room comes the voice of the Ancient One- 'You are doing well. You must continue for Malifon has gained control of the Shard of Spring and plans to destroy it'
+:: zh
+水晶室。房間中央的大水晶球傳來遠古者的聲音：「你們做得很好。務必繼續下去，馬利馮已經奪得春之石，打算把它毀掉。」
+
+## 32
+:: en
+'Ha! You have found me!' yells Eregore from the northern edge of the room. A bunch of his followers watch you with evil eyes. 'This is the infidel we have heard of- destroy him!'
+:: zh
+「哈！你們找到我了！」艾瑞戈爾在房間北端大喊。一群信徒用邪惡的眼神盯著你。「這就是我們聽說的那個異教徒，殺了他！」
+
+## 33
+:: en
+The walls of this room are fully covered by a complex spell and have been cracked by incredible power. It appears to be the God Rune for breaking a binding. Spots on the floor indicate where apprentices should stand
+:: zh
+這個房間的牆面寫滿一道複雜的法術，並被某種驚人的力量震裂。看來是用來破除束縛的神明符文。地上的幾個記號標出學徒該站的位置。
+
+## 34
+:: en
+This room is full of maps. One shows a volcano south of this island and the Dark Chapel on an island south of that
+:: zh
+這個房間堆滿地圖。其中一張畫著本島南方的一座火山，以及再往南一座島上的黑暗禮拜堂。

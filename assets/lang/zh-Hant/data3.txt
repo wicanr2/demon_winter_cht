@@ -1,0 +1,159 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ DATA3.TXT
+
+## 0
+:: en
+You have entered a stately mansion. Three doors lead out of the main hall
+:: zh
+你走進一座氣派的宅邸。主廳有三扇門通往外面。
+
+## 1
+:: en
+This is the bedroom of the mansion. It looks like it hasn't been slept in for a while
+:: zh
+這是宅邸的臥房。看起來已經有一陣子沒人睡過了。
+
+## 2
+:: en
+Three Slaver demons with nasty looking morningstars seem to be guarding something of value in this room
+:: zh
+三隻奴役惡魔手持外型猙獰的晨星鎚，似乎在守著這房間裡某樣值錢的東西。
+
+## 3
+:: en
+You stand beneath a grand archway. The archway is black and carved with runes
+:: zh
+你站在一座巨大的拱門下。拱門是黑色的，上面刻著符文。
+
+## 4
+:: en
+A dark temple of red stone stands before you. A sense of evil permeates from it and an unseen force pushes you back
+:: zh
+一座紅石砌成的黑暗神殿矗立在你面前。一股邪惡的氣息從中滲出，一道看不見的力量把你推了回去。
+
+## 5
+:: en
+This is the entrance of the Demon's temple. Two of Xeres' worhippers and a frightening black spirit confront you
+:: zh
+這裡是惡魔神殿的入口。兩名澤瑞斯的信徒和一個駭人的黑色靈體擋在你面前。
+
+## 6
+:: en
+A fire burns in the center of this square room. Two gargoyles were dancing around the fire when you entered
+:: zh
+這間方形房間的中央燃著一堆火。你進來時，兩隻石像鬼正繞著火堆跳舞。
+
+## 7
+:: en
+The Library. Most of this elegant library has long since been taken. Only a few remnants lie scattered on the floor
+:: zh
+圖書室。這間雅致的圖書室裡的藏書，大多早已被人取走，地上只散落著少許殘篇。
+
+## 8
+:: en
+On the wall of this room you can see mystic runes carved in black. A skeleton sits at a desk. Its arm still holds a quill pen but his skull has been shattered. On a piece of parchment are his last words- 'Ymros is mine'
+:: zh
+這房間的牆上刻著黑色的神祕符文。一具骷髏坐在書桌前，手裡還握著羽毛筆，頭骨卻已碎裂。一張羊皮紙上寫著他最後的話：「依姆羅斯是我的」。
+
+## 9
+:: en
+The Apprentice's Room. A room reserved for use by the apprentice priest of Xeres
+:: zh
+學徒房。這間房保留給澤瑞斯的學徒祭司使用。
+
+## 10
+:: en
+An elegant room despite the dismal architecture of the temple. It is occupied by the priest of Xeres who looks suprisingly human. Two imps act as servants
+:: zh
+儘管神殿的建築陰沉，這個房間卻很雅致。住在這裡的是澤瑞斯的祭司，長得出乎意料地像人類。兩隻小惡魔在此充當僕役。
+
+## 11
+:: en
+The Altar Room. A dark wooden altar is the most cheerful thing in this evil looking room. Drawings of demons and skulls adorn the walls spattered with blood
+:: zh
+祭壇室。一座深色木製祭壇是這間邪惡房間裡最令人愉快的東西了。濺滿血跡的牆上畫著惡魔與骷髏頭。
+
+## 12
+:: en
+The Gypsy Room. You have stumbled upon the lair of the Gypsy. The room smells of pungent spices and is littered with small trinkets and scraps of paper
+:: zh
+吉普賽人的房間。你誤闖了吉普賽人的巢穴。房裡是刺鼻的香料味，散落著小飾品和紙屑。
+
+## 13
+:: en
+This is a small graveyard. To the west you see a large tomb with a magical looking stone door
+:: zh
+這是一座小墓園。西邊有一座大墓，石造的墓門看起來帶有魔力。
+
+## 14
+:: en
+The Study. The study of the Silver Palace is small but lit by an unseen source
+:: zh
+書房。銀色宮殿的書房不大，卻被一道看不見的光源照亮。
+
+## 15
+:: en
+The Silver Palace. You stand in the garden of the Silver Palace. The Palace is made of silver colored bricks and looms before you reaching all the way up to the cave ceiling
+:: zh
+銀色宮殿。你站在銀色宮殿的花園裡。宮殿以銀色磚砌成，高聳在你面前，一路頂到洞窟的頂端。
+
+## 16
+:: en
+The Entranceway. The fabulous hallway is guarded by a silver snake with gleaming fangs and a body covered with silver armored scales
+:: zh
+入口通道。這條華麗的走廊由一條銀蛇看守，牠獠牙閃亮，全身覆著銀色的鱗甲。
+
+## 17
+:: en
+Two Slavers are beating up a Human in this alley. As they see you approach they drop what they're doing and turn towards you
+:: zh
+兩隻奴役惡魔正在這條巷子裡毆打一名人類。牠們看見你走近，便停下手邊的事，轉身面向你。
+
+## 18
+:: en
+Inserting the Skeleton Key makes the tomb door disappear to be replaced by a shimmering blue wall of light. Walking through the gate instantly teleports you to the middle of a huge misty graveyard with tombstones everywhere.
+:: zh
+你插入骷髏鑰匙，墓門隨即消失，取而代之的是一道閃著微光的藍色光牆。穿過這道門，你立刻被傳送到一座巨大墓園的中央，四周霧氣瀰漫，到處都是墓碑。
+
+## 19
+:: en
+You have exited the tombstone maze. Before you lies a great expanse of moist earth and tombstones. Figures twist in and out of the shadows and you can barely make out a large mound in the distance to the north
+:: zh
+你走出了墓碑迷宮。眼前是一大片潮濕的泥土與墓碑。有身影在陰影中扭動進出，你勉強看得出北方遠處有一座巨大的土丘。
+
+## 20
+:: en
+The Grave Keeper. A large burial mound looms before you in the mist surrounded by a wall of tombstones and fire. Out of the mist comes a huge skeletal figure surrounded by a glowing blue haze. Ghostly figures guard him
+:: zh
+墓地看守者。霧中一座巨大的墳丘聳立在你面前，四周圍著一圈墓碑與火焰。一個巨大的骷髏身影從霧裡走出來，身邊繞著發亮的藍色霧氣。幾個幽靈般的身影守在他身旁。
+
+## 21
+:: en
+The Ferryman. At this point there is a cloaked skeletal figure guiding a raft towards you from the other side of the river Styx. When he reaches you he holds out his skeletal hand as if waiting for something
+:: zh
+擺渡人。一個披著斗篷的骷髏身影，正從冥河對岸撐著木筏朝你過來。他靠岸後伸出骨手，像是在等著什麼。
+
+## 22
+:: en
+A cold breeze and the stench of death flow out from the tunnel keeping you back
+:: zh
+一股冷風和死亡的惡臭從隧道裡湧出來，把你擋在外面。
+
+## 23
+:: en
+You are in a long straight tunnel sloping sharply upwards
+:: zh
+你身處一條筆直的長隧道，地勢陡峭向上。
+
+## 24
+:: en
+The wall to your left is made of silver bricks and beyond it you see a fabulous silver palace
+:: zh
+你左邊的牆是銀磚砌成的，牆的另一頭是一座華麗的銀色宮殿。
+
+## 25
+:: en
+Exit this way
+:: zh
+出口在這邊。

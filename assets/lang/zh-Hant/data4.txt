@@ -1,0 +1,129 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ DATA4.TXT
+
+## 0
+:: en
+The Amber Vault. On the floor before you is an array of flaming runes. The skeletons of demons are fastened to the wall. Flame lines the edges of the room and heat sears your face
+:: zh
+琥珀地窖。你面前的地板上排著一組燃焰符文。惡魔的骸骨被釘在牆上。火焰沿著房間邊緣燃燒，熱氣灼著你的臉。
+
+## 1
+:: en
+A large statue of a fire demon stands here. He holds a large scimitar in his hand and his eyes seem to follow you
+:: zh
+這裡立著一尊火焰惡魔的大型雕像。牠手裡握著一把大彎刀，那雙眼睛似乎一直跟著你。
+
+## 2
+:: en
+A huge fire blazes in front of you and in the middle can be seen a large stone archway and the form of a huge fire demon. A single passageway leads into the fire and a fiery snake with ruby eyes guards it
+:: zh
+你面前燃著一大片火，火中可以看見一座巨大的石拱門，還有一頭巨大火焰惡魔的身影。有一條通道通向火裡，由一條長著紅寶石眼睛的火蛇看守。
+
+## 3
+:: en
+Xeres looks down on you and speaks- 'So you have found me. Killing me will not end the destruction. There is something bigger here your mortal minds cannot understand. If you kill me all of Ymros will eventually go down with me'
+:: zh
+澤瑞斯低頭看著你，開口說：「原來你們找到我了。殺了我，毀滅不會就此結束。這裡有更大的東西，你們凡人的心智無法理解。殺了我，整個依姆羅斯遲早也會跟著我一起完蛋。」
+
+## 4
+:: en
+This is the entranceway to a beautiful cathedral with a high vaulted ceiling carved entirely out of glistening ice. Unfortunately a portion of the entrance caved in many centuries ago blocking the passage
+:: zh
+這是一座美麗大教堂的入口，高聳的拱頂完全用晶亮的冰雕成。可惜入口有一段在幾百年前塌了下來，把通道堵住。
+
+## 5
+:: en
+The voices of ghosts a thousand years old speak from a haunted grave- 'You are a fool! Your god is dying and still you pray' 'He still is strong. Find me a god who can break these walls and I shall worship him instead'
+:: zh
+千年幽魂的聲音從一座鬧鬼的墳墓裡傳出來：「你是個蠢貨！你的神都快死了，你還在祈禱。」「他還很強大。找一個能打破這幾道牆的神來，我就改拜他。」
+
+## 6
+:: en
+'Long have I quested and at a volcano a spirit conquered my mind. It is a spirit as old as time. It once was strong but defeated and rests now regaining power. Behold its power'. Images of fire and pain engulf the senses
+:: zh
+「我探尋了很久，在一座火山那裡，有個靈體征服了我的心智。那是個和時間一樣古老的靈體。牠曾經強大，後來被擊敗，如今正在休養、重聚力量。看看牠的力量吧。」火與痛苦的影像淹沒了你的感官。
+
+## 7
+:: en
+Fast heartbeats echo in your mind. The ghost speaks 'O Dark One whose power is so great- I cannot worship thee. Instead I offer to you as sacrifice an old fool who cannot see a candle in shadows.' A blade. Pain. The heartbeats stop
+:: zh
+急促的心跳聲在你腦中迴盪。幽魂開口說：「力量如此偉大的黑暗者啊，我無法敬拜您。我改以一個連暗處燭火都看不見的老蠢貨，獻祭給您。」一把刀刃。痛楚。心跳停了。
+
+## 8
+:: en
+You are in the library of the temple. A few scrolls still lie around
+:: zh
+你身在神殿的圖書室。地上還散落著幾卷卷軸。
+
+## 9
+:: en
+The Altar Room. A large altar made of glowing blue ice is against the southern wall. The ice of the other walls is carved with drawings of the creation of the universe and the passage of time
+:: zh
+祭壇室。南牆邊立著一座大祭壇，由發著藍光的冰造成。其他幾面牆的冰上刻著圖畫，描繪宇宙的誕生與時間的流逝。
+
+## 10
+:: en
+To the south is a door carved of ice. It is very cold but seems impervious to fire. Beyond the door can be seen a large room
+:: zh
+南邊有一扇用冰雕成的門。門非常冷，卻似乎不怕火。門後可以看見一個大房間。
+
+## 11
+:: en
+The Lair of the Ice Dragon. A large dragon with icy blue scales glares at you with anger. Even his eyes seem to eminate a biting chill
+:: zh
+冰龍巢穴。一頭覆著冰藍鱗片的巨龍憤怒地瞪著你。連牠的眼睛都像在散發刺骨的寒意。
+
+## 12
+:: en
+This small room of the Ice Cave is occupied by a Yeti- a large biped with thick white fur and red eyes. Something seems to glisten in the corner
+:: zh
+寒冰洞窟的這個小房間裡住著一隻雪怪，那是一種身形高大的雙足生物，長著厚厚的白毛和紅眼睛。角落裡似乎有東西在發亮。
+
+## 13
+:: en
+This room is filled with sand and its walls are painted to depict a desert landscape. Two huge fiery snake-like creatures jump out of the sand
+:: zh
+這個房間鋪滿了沙，牆上畫著沙漠景色。兩隻巨大的火焰蛇形生物從沙裡竄了出來。
+
+## 14
+:: en
+A feeling of dark power eminates from the room. Runes carved by lightning or fire cover the walls
+:: zh
+房間裡散發出一股黑暗力量的氣息。牆上滿是以閃電或火焰刻出的符文。
+
+## 15
+:: en
+On either side of you are twenty foot high walls of fire. A Fire Elemental guards the room
+:: zh
+你的兩側是二十英尺高的火牆。一頭火元素守著這個房間。
+
+## 16
+:: en
+Magical snow falls all around the party and you are chilled by a biting cold. An ice demon with dull blue eyes moves forward to attack
+:: zh
+魔法的雪在隊伍四周落下，刺骨的寒意讓你發冷。一頭眼睛暗藍的寒冰惡魔上前攻擊。
+
+## 17
+:: en
+'Welcome fools! I am Jesric of the High Temple of Malifon and until I find the Demon Crystal I claim these ancient ruins to be mine'
+:: zh
+「歡迎啊，蠢貨們！我是馬利馮大神殿的傑斯瑞克。在我找到惡魔水晶之前，這片古代廢墟歸我所有。」
+
+## 18
+:: en
+You have entered a ruined temple. The temple was made entirely out of blocks of translucent ice and was once very beautiful but huge chunks of ice now lie cracked and scattered about.
+:: zh
+你走進一座毀壞的神殿。神殿整座是用半透明的冰塊砌成的，曾經非常美麗，如今大塊的冰碎裂散落一地。
+
+## 19
+:: en
+The Crystal Cave. This is a cave carved out of a large glacier at the base of the mountain. Icicles hang from the ceiling and the walls glisten with reflected light
+:: zh
+水晶洞窟。這是在山腳一大片冰河裡鑿出來的洞窟。冰柱從頂上垂下，牆面反射著光，閃閃發亮。
+
+## 20
+:: en
+Before you can be seen two ghosts speaking to each other. One appears to be a kind-looking priest while the other is a large evil looking man. They appear to have been arguing when you entered
+:: zh
+你面前有兩個幽魂正在交談。一個看起來像是面容和善的祭司，另一個是身材高大、面相凶惡的男人。你進來時，他們似乎正在爭吵。

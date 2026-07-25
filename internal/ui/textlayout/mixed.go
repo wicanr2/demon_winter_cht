@@ -32,6 +32,15 @@ func CellWidth(ch rune) int {
 	return CellWidthCJK
 }
 
+// runeWidth 回傳一段字元排出來的像素寬。
+func runeWidth(rs []rune) int {
+	w := 0
+	for _, r := range rs {
+		w += CellWidth(r)
+	}
+	return w
+}
+
 // TextWidth 回傳一段字串排出來的像素寬。
 func TextWidth(s string) int {
 	w := 0
@@ -39,6 +48,46 @@ func TextWidth(s string) int {
 		w += CellWidth(ch)
 	}
 	return w
+}
+
+// 標點禁則。中文排版不允許某些標點落在行首或行尾 ——
+// 句號跑到下一行開頭、開引號孤零零留在行尾，一眼就看得出是機器排的。
+//
+// 處理方式是**往回退**：把前一行結尾的字一起帶到下一行，
+// 而不是讓標點懸在行寬外（懸掛標點會讓「沒有一行超過框寬」這條保證破功）。
+var (
+	// noLineStart 不可出現在行首：收尾用的標點。
+	noLineStart = runeSet("。，、；：？！）」』》〉】〕｝%,.;:?!)]}" + "”’")
+	// noLineEnd 不可出現在行尾：起頭用的標點。
+	noLineEnd = runeSet("（「『《〈【〔｛([{" + "“‘")
+)
+
+func runeSet(s string) map[rune]bool {
+	m := make(map[rune]bool, len(s))
+	for _, r := range s {
+		m[r] = true
+	}
+	return m
+}
+
+// breakBack 回傳「為了讓斷點合法，要把目前這行結尾的幾個字帶到下一行」。
+//
+// next 是原本要開始新一行的字。回傳 0 代表原本的斷點就合法。
+// 最多退到只剩一個字 —— 再退下去這一行就空了，那比標點落在行首更難看。
+func breakBack(cur []rune, next rune) int {
+	back := 0
+	for len(cur)-back > 1 {
+		start := next
+		if back > 0 {
+			start = cur[len(cur)-back]
+		}
+		end := cur[len(cur)-back-1]
+		if !noLineStart[start] && !noLineEnd[end] {
+			break
+		}
+		back++
+	}
+	return back
 }
 
 // WrapMixed 依像素寬度斷行，中英混排通用。
@@ -86,8 +135,21 @@ func WrapMixed(s string, pixelWidth int) []string {
 		}
 
 		w := CellWidth(ch)
-		if curW+w > pixelWidth {
+		if curW+w > pixelWidth && len(cur) > 0 {
+			// 斷點違反標點禁則時往回退，把結尾幾個字一起帶到下一行。
+			// 退太多會讓下一行一開始就塞不下 —— 那時放棄禁則，
+			// 標點落在行首只是難看，撐破框寬是壞掉。
+			back := breakBack(cur, ch)
+			for back > 0 && runeWidth(cur[len(cur)-back:])+w > pixelWidth {
+				back--
+			}
+			carry := append([]rune(nil), cur[len(cur)-back:]...)
+			cur = cur[:len(cur)-len(carry)]
 			flush()
+			cur = carry
+			for _, r := range carry {
+				curW += CellWidth(r)
+			}
 			// 行首不留空白。
 			if ch == ' ' {
 				continue

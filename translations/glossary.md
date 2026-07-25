@@ -365,6 +365,24 @@
 | Hall of Illusion | 幻術廳 | 沿用既有「Illusion＝幻術」組成地名 |
 | river Styx | 冥河 | 西方神話冥界之河，通用譯名，遊戲敘事中提及 |
 
+### 房間名（`DATA1.TXT` 事件敘述新增）
+
+> 冬之魔的事件敘述常以「The XXX Room.」開頭當房間標題。統一以「〈特徵〉室」收尾，
+> 與既有的「Fire Chamber 火焰石室」「Painting Room 畫室」（`DATA2.TXT`）同一命名家族。
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Temple of the Death God | 死神神殿 | 骸骨廳血字警告所指的地方，沿用「Temple of Gamur 加穆爾神殿」的構詞 |
+| The Mist Room | 迷霧室 | |
+| The Skull Room | 骷髏室 | |
+| The Bellkeeper's Room | 守鐘人室 | |
+| The Bell Room | 鐘室 | |
+| The Dream Room | 夢境室 | |
+| The Crystal Room | 水晶室 | |
+| Cathedral（單獨出現） | 大教堂 | `DATA1.TXT` #27 只寫 `Cathedral`，即上表「The Ice Cathedral 寒冰大教堂」的主堂，無「寒冰」前綴時譯「大教堂」 |
+| private library | 私人藏書室 | **與上表「Study＝書房」是不同房間，刻意譯不同字以區分**；雷蒙達丁的藏書室（`DATA1.TXT` #5）|
+| bell tower | 鐘樓 | 守鐘人看守的塔，馬利馮大神殿區 |
+
 ## 12. 介面指令（`DEMON.INT` 字串）
 
 ### 主畫面
@@ -564,16 +582,33 @@
 | Gravekeeper | 墓地看守者 | |
 | Kobold（單獨作種族名詞） | 狗頭人 | 第 11 節已有複合詞「Kobold Camp 狗頭人營地」，此為正式收錄單詞 |
 | Goblin | 哥布林 | 第 1 節 Xeres 備註曾提及「哥布林/狗頭人」，此為正式收錄單詞 |
+| Orc | 獸人 | `MONSTER.DAT` 收錄的怪物名 |
+| orcan（形容詞）| 獸人 | `DATA2.TXT` 出現 `Two orcan guards`。原版自造的形容詞形，中文不另立詞，仍譯「獸人衛兵」|
+| Skeleton Magi | 骷髏法師 | `DATA1.TXT` #18 骷髏室的兩名王座主人。`Magi` 是 magus 的複數；與職業「Wizard 巫師」「Sorcerer 術士」（見第 4 節）刻意譯不同字以區分 |
 
 ### NPC
 
 | 原文 | 繁中 | 備註 |
 |---|---|---|
 | Remondadin | 雷蒙達丁 | 加穆爾神殿地下墓穴頭目 |
+| Uffuspgot | 烏夫斯普戈 | 狗頭人隊長，`DATA2.TXT` 狗頭人營地 |
+| Kalek-Zin | 卡雷克．辛 | 白騎士團中最偉大的一位，`DATA2.TXT` 火焰石室即其墓室 |
 | Jesric | 傑斯瑞克 | 馬利馮的僕從，同時是進入馬利馮大神殿的通關密語 |
 | Eregore | 艾瑞戈爾 | 馬利馮大神殿內的頭目 |
 | Brolor | 布洛勒 | 傳說中矮人鍛造工坊（見第 11 節 Dwarven Workshop）的地名／人名，**待確認**兩者何者為正確指涉 |
+| Bellkeeper | 守鐘人 | `DATA1.TXT` #23 守鐘人室的看守者，原為刺客，受艾瑞戈爾僱用 |
 | Andrew Schultz | Andrew Schultz | 真實人名，保留原文不譯 |
+
+### 人物稱謂／泛稱（`DATA1.TXT` 事件敘述新增）
+
+> 不是專有名詞，但同一批事件敘述反覆出現，先固定譯字避免各自發揮。
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| High Priest | 大祭司 | `DATA1.TXT` 稱艾瑞戈爾為 `Eregore the High Priest`（#23），#25 的水晶眼銘文亦限「High Priests」通行。與第 5 節技能「Priesthood 司祭」不同語境，勿混用 |
+| fighter | 戰士 | 敘述中的泛稱職業，非第 4 節可選職業清單中的詞 |
+| assassin | 刺客 | |
+| apprentice | 學徒 | 與第 12 節「College 學院」的 master 大師相對 |
 
 ## 18. 魔法道具類別與附魔機制（手冊、攻略新增）
 
@@ -663,3 +698,61 @@
 | How Encounters Are Chosen | 遭遇的產生方式 | 手冊章節標題 |
 | The Battlefield | 戰場 | 手冊章節標題 |
 | Monster List | 怪物列表 | 手冊章節標題 |
+
+---
+
+## 22. 事件敘述新增（`DATA2`–`DATA5.TXT` 中文化）
+
+> 2026-07-25 翻 `assets/lang/zh-Hant/data{2,3,4,5}.txt` 時 glossary 查不到的詞，
+> 譯完併入。`DATA1.TXT` 的新增詞併在第 11／17 節原地。
+
+### 地點與房間名（專有名詞）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| The Library | 圖書室 | 庫瑞克（`DATA3` #7）。與第 11 節「Study 書房」區隔 |
+| The Apprentice's Room | 學徒房 | `DATA3` #9 |
+| The Altar Room | 祭壇室 | `DATA3` #11、`DATA4` #9。兩座不同神殿的同名房間，刻意用同字 |
+| The Gypsy Room | 吉普賽人的房間 | `DATA3` #12 |
+| The Entranceway | 入口通道 | `DATA3` #16，銀色宮殿入口的走廊。原文特指一條 hallway，不譯「入口」|
+| The Amber Vault | 琥珀地窖 | `DATA4` #0。第 11 節已收複數形「Amber Vaults」，同一處，沿用 |
+| The Ice Cave | 寒冰洞窟 | `DATA4` #12。與「The Ice Cathedral 寒冰大教堂」同詞根 |
+| The Crystal Cave | 水晶洞窟 | `DATA4` #19 |
+| The Lair of the Ice Dragon | 冰龍巢穴 | `DATA4` #11。`Lair` 取「巢穴」，同 `DATA2` #8「洞穴熊的巢穴」|
+| tomb door | 墓門 | `DATA3` #13／#18 |
+| tombstone maze | 墓碑迷宮 | `DATA3` #19 |
+| burial mound | 墳丘 | `DATA3` #20。與 #19 的 `mound`（土丘，遠望尚未確認是墳）刻意分開 |
+| mansion | 宅邸 | `DATA3` #0／#1。不用「豪宅」（現代感過重）|
+| chapel（單獨出現）| 禮拜堂 | `DATA5` #1／#7。第 11 節已有「dark chapel 黑暗禮拜堂」，同一座建築 |
+| lake of fire | 火湖 | `DATA5` #10 |
+| golden bridge | 金橋 | `DATA5` #10 |
+
+### 人物與生物（NPC）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Ferryman | 擺渡人 | `DATA3` #21。沿用 `docs/walkthrough/part-4.md` §3.3 |
+| Gypsy | 吉普賽人 | `DATA3` #12。原文未指性別，不譯「吉普賽女郎」|
+| imp | 小惡魔 | `DATA3` #10。惡魔階層中的最低階雜役 |
+| apprentice priest | 學徒祭司 | `DATA3` #9 |
+| black spirit | 黑色靈體 | `DATA3` #5。與下方 `ghostly figures` 須可區分 |
+| ghostly figures | 幽靈般的身影 | `DATA3` #20。原文是形容詞，非具名怪物 |
+| silver snake | 銀蛇 | `DATA3` #16 |
+| ice demon | 寒冰惡魔 | `DATA4` #16。對齊第 7 節「Fire Demon 火焰惡魔」與第 5 節「Ice Runes 寒冰符文」|
+| ghost | 幽魂 | `DATA4` #5／#7／#20。指會說話的個體亡魂，與「幽靈般的身影」區分 |
+| priest（敘述用泛稱）| 祭司 | 與第 4 節「Cleric 牧師」、第 5 節「Priesthood 司祭」是不同層次，勿互換 |
+| O Dark One | 黑暗者 | `DATA4` #7。原文未點名（很可能是馬利馮，文本未言明），故不指名。同構於第 1 節「The Ancient One 遠古者」|
+
+### 道具與雜項
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Skeleton Key | 骷髏鑰匙 | `DATA3` #18。**遊戲內實體道具名**，不是「萬能鑰匙」|
+| quill pen | 羽毛筆 | `DATA3` #8 |
+| parchment | 羊皮紙 | `DATA3` #8 |
+| scimitar | 彎刀 | `DATA4` #1。敘述用詞，非玩家可裝備武器 |
+| flaming runes | 燃焰符文 | `DATA4` #0。第 8 節「Flaming 燃焰」＋第 6 節「rune 符文」組合 |
+| forcefield | 力場 | `DATA5` #2 |
+| time frame | 時代 | `DATA5` #1／#2。專指隊伍所處的時間點，相對於一萬年前 |
+| the dawn of Man | 人類初生年代 | `DATA5` #7。刻意避開「遠古」，免與第 1 節「遠古種族／遠古者」混淆 |
+| 'Ymros is mine' | 「依姆羅斯是我的」 | `DATA3` #8 臨終字句，同攻略對符文密語 `YMROS IS MINE` 的譯法 |

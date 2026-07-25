@@ -125,18 +125,61 @@ func bitsSet(w uint16) int {
 	return n
 }
 
-var big5Encoder = traditionalchinese.Big5.NewEncoder()
+// standardBig5 是「Unicode → 標準 Big5 碼位」的對照表，由解碼方向反建。
+//
+// **不能只用 Go 的 Big5 編碼器。** 它對一批字會挑到標準區以外的碼位：
+// 簡體字被映進造字區（`头`→`8960`），而 `撐` 這種標準繁體字會被編成
+// 倚天延伸區的 `FCB9`，儘管它在標準區 `BCB9` 就有字模。
+// 兩種情況的結果一樣 —— 字型查不到，畫面上一片空白。
+//
+// 反建對照表能一次解決整類問題：把標準區每一個碼位解碼成 Unicode，
+// 反過來當成查表的唯一依據。碼位由小到大掃，重複的字取較小的碼位
+// （Big5 有少數字重複收錄，較小的那個才是常用碼位）。
+var standardBig5 = buildStandardBig5()
 
-// Big5 把一個字元編成 Big5 雙位元組。回傳 ok=false 表示這個字不在 Big5 裡。
+func buildStandardBig5() map[rune][2]byte {
+	dec := traditionalchinese.Big5.NewDecoder()
+	m := make(map[rune][2]byte, 14000)
+
+	for hi := 0xA1; hi <= 0xF9; hi++ {
+		for lo := 0x40; lo <= 0xFE; lo++ {
+			if lo > 0x7E && lo < 0xA1 {
+				continue
+			}
+			out, err := dec.Bytes([]byte{byte(hi), byte(lo)})
+			if err != nil {
+				continue
+			}
+			rs := []rune(string(out))
+			// 未定義的碼位會解成替換字元，不是真的有字。
+			if len(rs) != 1 || rs[0] == '�' {
+				continue
+			}
+			if _, dup := m[rs[0]]; dup {
+				continue
+			}
+			m[rs[0]] = [2]byte{byte(hi), byte(lo)}
+		}
+	}
+	return m
+}
+
+// Big5 把一個字元編成標準 Big5 雙位元組。
+// 回傳 ok=false 表示這個字不在標準 Big5 裡，沒有對應字模。
+//
+// **一定要驗編出來的碼落在標準區間。** Go 的 Big5 編碼器會把一批簡體字
+// 映進造字區（`头`→`8960`、`马`→`89C6`、`着`→`FED3`），編碼「成功」
+// 但倚天字型完全不涵蓋那些碼位 —— 只看 err 會讓簡體字一路過關，
+// 到畫面上才發現是一片空白。
 func Big5(ch rune) (hi, lo byte, ok bool) {
 	if b, hit := manualBig5[ch]; hit {
 		return b[0], b[1], true
 	}
-	out, err := big5Encoder.Bytes([]byte(string(ch)))
-	if err != nil || len(out) != 2 {
+	b, hit := standardBig5[ch]
+	if !hit {
 		return 0, 0, false
 	}
-	return out[0], out[1], true
+	return b[0], b[1], true
 }
 
 // Glyph 取出一個字的點陣。回傳 ok=false 表示這個字不在 Big5 或字型範圍內，

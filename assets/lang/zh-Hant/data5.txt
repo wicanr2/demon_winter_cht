@@ -1,0 +1,69 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ DATA5.TXT
+
+## 0
+:: en
+Implanted in the floor here is a large round circle of glass from which pours out a never ending stream of blinding yellow light
+:: zh
+這裡的地板嵌著一大圈圓形玻璃，永不止息地湧出刺眼的黃色光芒。
+
+## 1
+:: en
+You have entered a huge chapel nestled in the hills. Its walls are mysteriously translucent and fade in and out as if the entire structure is struggling to exist in your time frame. The air is thick as if crowded with spirits.
+:: zh
+你走進一座坐落在丘陵間的巨大禮拜堂。牆壁詭異地半透明，忽隱忽現，彷彿整棟建築正勉強維持在你所在的時代。空氣濃濁，像是擠滿了幽靈。
+
+## 2
+:: en
+A shimmering purple forcefield stretches from the top to the bottom of the archway through which can be seen familiar hills. It is not apparent whether these hills are in your normal time frame or ten thousand years in the past
+:: zh
+一道閃著微光的紫色力場從拱門頂端延伸到底部，穿過力場可以看見熟悉的丘陵。看不出這些丘陵是在你原本的時代，還是一萬年前的過去。
+
+## 3
+:: en
+The floor is carved with an intricate circular drawing of wind being sucked up into blackness. Runes are carved around the circle
+:: zh
+地板上刻著一幅精細的圓形圖畫，畫的是被吸進黑暗中的風。圓的四周刻著符文。
+
+## 4
+:: en
+The floor is carved with an intricate circular drawing of a lightning bolt splitting a mountain in half. Runes are carved around the circle
+:: zh
+地板上刻著一幅精細的圓形圖畫，畫的是一道閃電將山劈成兩半。圓的四周刻著符文。
+
+## 5
+:: en
+The floor is carved with an intricate circular drawing of some kind of ghostly apparition. Runes are carved around the circle
+:: zh
+地板上刻著一幅精細的圓形圖畫，畫的是某種鬼魅般的身影。圓的四周刻著符文。
+
+## 6
+:: en
+The floor is carved with an intricate circular drawing of the creation of the universe. Runes are carved around the circle
+:: zh
+地板上刻著一幅精細的圓形圖畫，畫的是宇宙的創生。圓的四周刻著符文。
+
+## 7
+:: en
+The shifting walls have solidified into white stone and the Chapel is suddenly filled by the spectral forms of grossly disfigured men- haunting images from the dawn of Man- with heads bent in prayer
+:: zh
+晃動不定的牆壁凝固成白色石牆，禮拜堂裡突然滿是形貌嚴重扭曲的人形幽影——來自人類初生年代的鬼魅影像——一個個低頭祈禱。
+
+## 8
+:: en
+This room is occupied by an ancient stone staircase cracked with time and covered by vines. A huge stone statue dominates the room. When you enter the statue slowly comes to life and attacks
+:: zh
+房裡有一道古老的石階，年久龜裂，爬滿藤蔓。一尊巨大的石像佔據了整個房間。你一走進去，石像就緩緩活了過來，向你攻擊。
+
+## 9
+:: en
+The Hall of Illusion. Purple mist sways back and forth as if alive. As you peer into the mist you can see faces of people you have known and places you have seen. The illusions beckon you inward
+:: zh
+幻術廳。紫色的霧氣來回擺盪，彷彿有生命。你凝視霧中，看見你認識的人的臉孔，以及你去過的地方。幻象招手要你往裡走。
+
+## 10
+:: en
+A golden bridge spans the lake of fire before you. Two great dragons guard the bridge and a huge demon commands them
+:: zh
+一座金橋橫跨你面前的火湖。兩條巨龍守著這座橋，一隻巨大的惡魔指揮牠們。

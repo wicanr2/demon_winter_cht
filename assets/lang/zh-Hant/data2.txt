@@ -1,0 +1,75 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ DATA2.TXT
+
+## 0
+:: en
+You have entered the tent of four kobolds. Kobolds are placed 4 to a tent
+:: zh
+你走進一頂住著四隻狗頭人的帳篷。狗頭人一頂帳篷住四隻。
+
+## 1
+:: en
+This is where the food for the kobold camp is stored. Mostly empty crates and flies
+:: zh
+這裡是狗頭人營地的糧食倉庫。大多是空木箱和蒼蠅。
+
+## 2
+:: en
+This tent is abandoned. In the center of the tent are the remains of a fire. In the ashes you see a half burnt scroll. On it you can make out the words 'cult ... worships Xeres ... catacombs under temple of Gamur ... codeword -X-'
+:: zh
+這頂帳篷已經廢棄。帳篷中央有一堆燒過的餘燼，灰裡有一卷燒了一半的卷軸。你勉強辨認出上面的字：「教團……信奉澤瑞斯……加穆爾神殿地下的墓穴……通關密語 -X-」
+
+## 3
+:: en
+This is the tent of Uffuspgot the kobold Captain. As you enter you overhear him talking to another kobold- 'We do not attack again until my master Xeres commands it!'. Two orcan guards snarl at you for intruding
+:: zh
+這是狗頭人隊長烏夫斯普戈的帳篷。你進去時聽見他正對另一隻狗頭人說：「主人澤瑞斯沒下令，我們就不再進攻！」兩名獸人衛兵對你的闖入齜牙咆哮。
+
+## 4
+:: en
+A tent housing four Kobolds. The Kobolds are placed four to a tent and these Kobolds are unusually sloppy- the tent is a mess
+:: zh
+一頂住著四隻狗頭人的帳篷。狗頭人一頂帳篷住四隻，而這幾隻特別邋遢，帳篷裡一團亂。
+
+## 5
+:: en
+This tent has a woman held captive. One of the Kobolds was harassing her when you entered.
+:: zh
+這頂帳篷裡關著一名女子。你進去時，其中一隻狗頭人正在騷擾她。
+
+## 6
+:: en
+Living quarters for four Kobolds under the command of Uffuspgot
+:: zh
+烏夫斯普戈麾下四隻狗頭人的住處。
+
+## 7
+:: en
+This tent has a wooden table in it and a few torn maps spread out on it. The maps show to your surprise that towns other than Ildyrn have been attacked. Perhaps the threat you are facing is bigger than you first imagined...
+:: zh
+帳篷裡有一張木桌，上面攤著幾張破損的地圖。地圖顯示遭到攻擊的不只伊爾德林一座城鎮，這讓你頗感意外。你面對的威脅，也許比原先想像的還大……
+
+## 8
+:: en
+You have stumbled across the den of a cave bear. The bear was happily taking a cool drink when you entered and seems angered by your presence
+:: zh
+你誤闖了一頭洞穴熊的巢穴。你進來時牠正愜意地喝著水，被打擾後顯得十分惱怒。
+
+## 9
+:: en
+The Vault of the White Knights. The walls of this room have been painted white and engraved with the names of the Knights. In the center of the room is a sparkling octogonal pool. The Vault is a memorial to those warriors of old
+:: zh
+白騎士地窖。這個房間的牆漆成白色，刻滿了騎士們的名字。房間中央有一座閃著微光的八角水池。地窖是為紀念那些昔日的戰士而建。
+
+## 10
+:: en
+The Fire Chamber of Kalek-Zin. A wall of fire illuminates this room but gives off no heat. This is the burial place of Kalek-Zin- the greatest of the White Knights. In the flames you see a glowing orb. You sense immense power here
+:: zh
+卡雷克．辛的火焰石室。一道火牆照亮房間，卻不散發熱氣。這裡是白騎士團中最偉大的卡雷克．辛的墓室。火焰中有一顆發光的寶珠。你感覺到此處蘊藏著龐大的力量。
+
+## 11
+:: en
+The Painting Room. Paintings of the ancient warriors adorn the walls. They all appear strong and noble
+:: zh
+畫室。牆上掛滿古代戰士的畫像，個個看來強壯而高貴。

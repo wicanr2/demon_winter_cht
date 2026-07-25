@@ -22,6 +22,7 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
+	"github.com/wicanr2/demon_winter_cht/internal/i18n"
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
@@ -54,6 +55,10 @@ type app struct {
 	exits  *world.ExitTable
 	events *scenario.EventTable
 	tables *gamedata.Tables
+
+	// tr 把事件敘述換成中文。查不到就回原文 —— 缺譯在畫面上是英文，看得見。
+	tr         *i18n.Translator
+	eventsFile string
 
 	members    []game.Character
 	showRoster bool
@@ -230,7 +235,7 @@ func (a *app) checkEvent(tile byte) {
 		return
 	}
 
-	a.box = ui.NewMixedTextBox(ev.Text)
+	a.box = ui.NewMixedTextBox(a.tr.Event(a.eventsFile, idx, ev.Text))
 	// Count != 0 代表這一格帶遭遇；文字讀完才開打。
 	a.pendingIDs = nil
 	if ev.Count != 0 {
@@ -457,6 +462,8 @@ func main() {
 		"倚天中文字型目錄，需含 STDFONT.15 與 SPCFONT.15（自備）")
 	mapFile := flag.String("map", "MAP1.MAP", "要載入的地圖檔")
 	dataFile := flag.String("events", "DATA1.TXT", "要載入的事件表")
+	langDir := flag.String("lang", "assets/lang/zh-Hant",
+		"翻譯目錄。指向不存在的路徑即為原文模式")
 	startX := flag.Int("x", 32, "起始 X")
 	startY := flag.Int("y", 32, "起始 Y")
 	flag.Parse()
@@ -496,6 +503,24 @@ func main() {
 		members = append(members, game.FromSave(sc))
 	}
 
+	tr, err := i18n.Load(*langDir)
+	if err != nil {
+		log.Fatalf("載入翻譯：%v", err)
+	}
+	// 逐條比對譯文的原文與現在的資料。索引錯位的譯文每一句都通順、
+	// 每一句都接錯地方，不自動比對根本看不出來。
+	texts := make([]string, 0, events.Len())
+	for _, ev := range events.All() {
+		texts = append(texts, ev.Text)
+	}
+	if err := tr.Verify(*langDir, *dataFile, texts); err != nil {
+		log.Fatalf("核對翻譯：%v", err)
+	}
+	if bad := tr.Mismatched(); len(bad) > 0 {
+		log.Printf("警告：%d 條譯文的原文與 %s 對不上，那幾條退回英文。"+
+			"重跑 `dwstrings events` 更新翻譯檔。", len(bad), *dataFile)
+	}
+
 	loadSet := func(s gfx.TerrainSet) *ui.Tileset {
 		ts, err := gfx.LoadTileset(filepath.Join(*dataDir, string(s)), s)
 		if err != nil {
@@ -522,19 +547,21 @@ func main() {
 	}
 
 	a := &app{
-		world:    game.NewWorld(m, tables),
-		party:    game.NewParty(*startX, *startY, game.South, 0),
-		clock:    game.NewClock(),
-		tiles:    m,
-		exits:    exits,
-		events:   events,
-		tables:   tables,
-		members:  members,
-		monsters: monsters,
-		rng:      rng.New(),
-		normal:   loadSet(gfx.NormalTiles),
-		winter:   loadSet(gfx.WinterTiles),
-		font:     font,
+		world:      game.NewWorld(m, tables),
+		party:      game.NewParty(*startX, *startY, game.South, 0),
+		clock:      game.NewClock(),
+		tiles:      m,
+		exits:      exits,
+		events:     events,
+		tr:         tr,
+		eventsFile: *dataFile,
+		tables:     tables,
+		members:    members,
+		monsters:   monsters,
+		rng:        rng.New(),
+		normal:     loadSet(gfx.NormalTiles),
+		winter:     loadSet(gfx.WinterTiles),
+		font:       font,
 	}
 
 	a.canvas = ebiten.NewImage(layout.CanvasWidth, layout.CanvasHeight)
