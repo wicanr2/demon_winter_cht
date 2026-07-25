@@ -142,6 +142,7 @@ type Tables struct {
 	raceMax     [NumRaces][NumTraits]int
 	raceBonus   [NumRaces]SkillID
 	summons     [numSummons]SummonEntry
+	spells      [numSpells]Spell
 }
 
 // LoadTables 從 FILES.DAT 解出全部四張表。
@@ -184,6 +185,14 @@ func ParseTables(data []byte) (*Tables, error) {
 		for w := 0; w < summonWords; w++ {
 			t.summons[i].words[w] = binary.LittleEndian.Uint16(data[base+w*2:])
 		}
+	}
+
+	for i := 0; i < numSpells; i++ {
+		base := offSpells + i*10
+		w := func(k int) int {
+			return int(int16(binary.LittleEndian.Uint16(data[base+k*2:])))
+		}
+		t.spells[i] = Spell{School: w(0), Effect: w(1), K: w(2), M: w(3), W4: w(4)}
 	}
 
 	return t, nil
@@ -253,3 +262,42 @@ func (t *Tables) Summon(i int) (SummonEntry, error) {
 
 // NumSummons 回傳召喚表的筆數。
 func (t *Tables) NumSummons() int { return numSummons }
+
+// 法術參數表：FILES.DAT offset 0x45e–0x60c，43 筆 × 10 bytes。
+//
+// **不在 DEMON.INT 裡** —— 這是先前一直找不到的原因。
+// 索引 0..42 與 FILES.DTT 的「名稱 + 訊息」字串順序 1:1。
+const (
+	offSpells = 0x45e
+	numSpells = 43
+)
+
+// Spell 是法術參數表的一筆記錄。五個 signed 16-bit word。
+type Spell struct {
+	// School 是所屬符文系 id。束縛狀態欄存的就是這個值，
+	// 解除判定要靠它比對系別。
+	School int
+	// Effect 決定效果類型（套用到哪個屬性欄位，或走哪條特殊判定）。
+	Effect int
+	// K 是效果強度係數，**正負決定增益或傷害方向**。
+	K int
+	// M 是最低施法 SP，也是通式裡的分母。
+	// 有程式碼直證：FUN_1000_11e5 裡 `if (SP < M) → "not enough points"`。
+	M int
+	// W4 語意未解，保留原值。
+	W4 int
+}
+
+// Empty 回報這是不是一筆空記錄（表中有幾筆全零的佔位）。
+func (s Spell) Empty() bool { return s.School == 0 && s.Effect == 0 && s.M == 0 }
+
+// Spell 取回第 i 筆法術參數。
+func (t *Tables) Spell(i int) (Spell, error) {
+	if i < 0 || i >= numSpells {
+		return Spell{}, fmt.Errorf("法術索引 %d 超出範圍 0..%d", i, numSpells-1)
+	}
+	return t.spells[i], nil
+}
+
+// NumSpells 回傳法術表的筆數。
+func (t *Tables) NumSpells() int { return numSpells }

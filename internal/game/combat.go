@@ -112,6 +112,9 @@ type Unit struct {
 	// 功夫暈眩會把它設成 −1，連續命中可以疊加。
 	StatusCount int
 
+	// BindRounds 是束縛剩餘回合數。解除判定要拿它與解除法術的力度比。
+	BindRounds int
+
 	// IsPlayer 對應原版的陣營值 2／11。
 	IsPlayer bool
 
