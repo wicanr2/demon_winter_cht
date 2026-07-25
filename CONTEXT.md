@@ -45,14 +45,14 @@
 
 | 項目 | 狀態 |
 |---|---|
-| 法術 K/M 常數表 | **調查中** — 擋住整個法術系統 |
+| 即死／束縛／枯萎法術的判定邏輯 | 未解（K/M 已有，缺豁免與狀態儲存） |
 | 召喚生物機制 | 未解（`effect_type 8/9` 在 Cast 與 Use 路徑行為不一致） |
 | 字型 `.FNT`/`.FNE` | **解碼仍是雜訊** — 這是中文化的前提 |
 | `OPEN.PIE` | 未解（102,160 B，不符 3.5× 規律） |
 | 城鎮經濟 | 程式碼落在 Ghidra 未發現區域 |
 | 一天幾小時（26 vs 38） | DOSBox 實測未完成（隊伍被困小中庭） |
 | 種族存在存檔哪裡 | 原以為是 `0x0c`，已推翻，位置未知 |
-| 第三張跳表 | `FUN_138d_3c81`（18 項）未套 override |
+| 第三張跳表 | `FUN_138d_3c81`（18 項）未套 override — 擋住 `Use` 道具效果套用 |
 | Go 引擎本體 | **尚未開始**（依 SDD，等規格齊） |
 
 ---
@@ -67,7 +67,7 @@
 |---|---|
 | [`README.md`](docs/spec/README.md) | SDD 工作方式、規格分級定義 |
 | [`01-rng.md`](docs/spec/01-rng.md) | **READY** — 亂數產生器 |
-| [`02-combat.md`](docs/spec/02-combat.md) | **DRAFT** — 戰鬥（框架與普通攻擊可用，法術缺常數表） |
+| [`02-combat.md`](docs/spec/02-combat.md) | **DRAFT** — 戰鬥（框架／普通攻擊／一般法術可用；即死・束縛・召喚三類與 `Use` 效果套用仍缺） |
 
 ### 逆向筆記 `docs/re/` — 過程與證據
 
@@ -88,9 +88,8 @@
 | [`12-ghidra-jumptable-fix.md`](docs/re/12-ghidra-jumptable-fix.md) | 跳表 override 修復 |
 | [`13-realmode-tooling-survey.md`](docs/re/13-realmode-tooling-survey.md) | real mode 工具鏈調查 |
 | [`14-rng-float-equivalence.md`](docs/re/14-rng-float-equivalence.md) | RNG 浮點等價性證明 |
+| [`15-spell-constants.md`](docs/re/15-spell-constants.md) | **法術 K/M 參數表**（在 `FILES.DAT`，不在 `DEMON.INT`） |
 | [`16-combat-details.md`](docs/re/16-combat-details.md) | 命中修正、爆擊、戰敗判定、AOE |
-
-> `15` 保留給進行中的法術常數表調查。
 
 ### 資料格式 `docs/formats/`
 
@@ -245,9 +244,9 @@ row-major、`.SHE` 尺寸 32×28 vs 16×56。**四次裡三次的錯誤版本都
 
 按目前的 SDD 進度，優先序是：
 
-1. **法術 K/M 常數表**（調查中）— 解開後戰鬥規格可從 DRAFT 推向 READY
-2. **字型 `.FNT`/`.FNE`** — 中文化的前提，目前解碼仍是雜訊
-3. **第三張跳表 override** — `FUN_138d_3c81`，可能連帶解開 Use 道具的效果套用
+1. **字型 `.FNT`/`.FNE`** — 中文化的前提，目前解碼仍是雜訊
+2. **第三張跳表 override** — `FUN_138d_3c81`，解開後 `Use` 道具效果套用就通了
+3. **即死／束縛／召喚三類法術的判定邏輯** — K/M 常數已有，缺判定
 4. **城鎮經濟** — 程式碼在 Ghidra 未發現區，跳表修復後值得重試
 5. 補齊規格：事件觸發、移動、建角升級（證據等級已夠，尚未收攏成 spec）
 
