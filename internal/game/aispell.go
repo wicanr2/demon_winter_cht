@@ -48,11 +48,32 @@ import "github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 // 這裡採取的作法是：**呼叫端給什麼技能旗標就照查**，
 // 由呼叫端決定怪物要不要受這條限制。
 //
+// # 投入多少法力
+//
+// 挑定之後，AI **不是把法力全投下去**（0x7ceb–0x7d2e）：
+//
+//	7ceb  ax = 施法者法力
+//	7cef  sub ax,[0x4e32]      ; 減掉該法術的 M → 餘裕
+//	7cf6  rnd(100)
+//	7d05  imul 餘裕
+//	7d07  cx = 250
+//	7d0d  call 2016:000a       ; 除法
+//	7d12  add ax,[0x4e32]      ; 再加回 M
+//	7d2e  sub [bx+0x4ec2],ax   ; 從法力扣掉
+//
+// 也就是 `投入 = M + rnd(100) × (法力 − M) / 250`。`rnd(100)` 是 1–100，
+// 所以最多只會投入餘裕的 40%。見 AISpellInvestment。
+//
 // # 還沒讀完
 //
-// 0x7bef 之後還有幾道以 `effect_type`（`ds:0x4e2e`）為條件的過濾
-// （例如 `== 1` 且 `ds:0x518e == 1` 時重挑、`== 0xf` 另有分支）。
-// 那些狀態旗標的語意未解，這裡不實作，只在挑不到時回 ok=false。
+// 0x7bef 之後有幾道以 `effect_type`（`ds:0x4e2e`）為條件的分支。已讀出來的：
+// `== 0xf` 是召喚／幻術那一支（0x7c07 依法術 id 24／25 把 effect_type
+// 改寫成 4／2，對上「召喚成本 = PowerBase×4、幻術 = ×2」的既有結論）。
+// 其餘（`== 1` 且 `ds:0x518e == 1` 時重挑）的狀態旗標語意未解。
+//
+// 效果分派在 0x7d35 的 `jmp 8157`，還沒往下讀 —— **AI 挑到增益法術時
+// 要打誰**應該在那裡決定。目前實測會看到怪物法師對玩家施放增益，
+// 就是缺這一段。
 
 // AISpellSchools 是 AI 會抽到的符文系數量。
 const AISpellSchools = 5
@@ -104,6 +125,21 @@ func AISpellChoice(r RollSource, tb *gamedata.Tables, currentSP int,
 		return id, true
 	}
 	return 0, false
+}
+
+// AISpellInvestment 回傳 AI 這次要投入多少法力。
+//
+// 公式照原版（0x7ceb–0x7d16）：`M + rnd(100) × (法力 − M) / 250`。
+// `rnd(100)` 回 1–100，所以投入量落在 `M` 到 `M + 餘裕×0.4` 之間 ——
+// **AI 不會把法力一次燒光**，這與玩家「預設全投」的介面不同。
+//
+// 法力不足 M 時回 currentSP（呼叫端本來就該先擋掉這種情況）。
+func AISpellInvestment(r RollSource, currentSP, m int) int {
+	if currentSP <= m {
+		return currentSP
+	}
+	spare := currentSP - m
+	return m + r.Roll(100)*spare/250
 }
 
 // RollSource 是 AISpellChoice 需要的擲點介面。

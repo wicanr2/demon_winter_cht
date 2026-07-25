@@ -146,3 +146,46 @@ func TestAISpellChoice_NilArgs(t *testing.T) {
 		t.Error("沒有法術表卻挑得到")
 	}
 }
+
+// 投入量：至少是 M，最多是 M + 餘裕的 40%，而且不會超過現有法力。
+//
+// 這條擋的是「AI 把法力一次燒光」—— 我原本就是那樣接的，
+// 結果怪物法師開場放一次大的就再也不施法了，與原版的節奏差很多。
+func TestAISpellInvestment_Bounds(t *testing.T) {
+	r := rng.NewWithSeed(4)
+	for _, c := range []struct{ sp, m int }{
+		{20, 3}, {50, 10}, {5, 5}, {5, 9}, {100, 1},
+	} {
+		for i := 0; i < 200; i++ {
+			got := AISpellInvestment(r, c.sp, c.m)
+			if got > c.sp {
+				t.Fatalf("法力 %d、M %d：投入 %d 超過現有法力", c.sp, c.m, got)
+			}
+			if c.sp <= c.m {
+				if got != c.sp {
+					t.Fatalf("法力 %d <= M %d 時應全投，卻投 %d", c.sp, c.m, got)
+				}
+				continue
+			}
+			if got < c.m {
+				t.Fatalf("法力 %d、M %d：投入 %d 低於最低需求", c.sp, c.m, got)
+			}
+			// rnd(100) 最大 100 → 餘裕 × 100/250 = 40%
+			if max := c.m + (c.sp-c.m)*100/250; got > max {
+				t.Fatalf("法力 %d、M %d：投入 %d 超過上限 %d", c.sp, c.m, got, max)
+			}
+		}
+	}
+}
+
+// 公式要逐項對上原版：M + rnd(100) × 餘裕 / 250（整數除法）。
+func TestAISpellInvestment_MatchesFormula(t *testing.T) {
+	for _, roll := range []int{1, 37, 100} {
+		r := &fixedRolls{vals: []int{roll}}
+		const sp, m = 60, 10
+		want := m + roll*(sp-m)/250
+		if got := AISpellInvestment(r, sp, m); got != want {
+			t.Errorf("rnd=%d：投入 %d，預期 %d", roll, got, want)
+		}
+	}
+}

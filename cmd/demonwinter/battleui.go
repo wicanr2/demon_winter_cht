@@ -774,9 +774,9 @@ func (a *app) monsterCast(u *game.Unit) bool {
 		return false
 	}
 
-	// 原版讓施法者投入手上的法力；怪物沒有「投入多少」的介面，全投。
-	invested := u.CurrentSP
-	u.CurrentSP = 0
+	// AI 不會把法力一次燒光 —— 投入量照原版的公式算（見 AISpellInvestment）。
+	invested := game.AISpellInvestment(a.rng, u.CurrentSP, sp.M)
+	u.CurrentSP -= invested
 
 	name, err := a.strings.SpellName(id)
 	if err != nil {
