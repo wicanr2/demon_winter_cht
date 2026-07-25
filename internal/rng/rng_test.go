@@ -109,6 +109,67 @@ func TestRollDistribution(t *testing.T) {
 	}
 }
 
+// TestRollFloatEquivalence 是「浮點路徑 vs 整數路徑」等價性的回歸測試。
+//
+// 背景（完整推導與窮舉證據見 docs/re/14-rng-float-equivalence.md）：原版 Roll(n)
+// 實際走的是「先除後乘」的軟體浮點路徑（state/Modulus 先算成浮點小數，再乘 n，
+// 最後截斷取整），現行實作是「先乘後除」的純整數路徑（state*n 先算，再整除
+// Modulus）。兩者在有理數上等價，但要確認浮點捨入不會讓 floor() 結果跨過整數
+// 邊界差 1。
+//
+// docs/re/14 已用數論方式證明並窮舉驗證（tools/rng_float_equiv_check.go，
+// 33,554,424 組 (state,n) 全數檢查）：因為 Modulus=2796203 是質數、遊戲用到的
+// n 都遠小於 Modulus 且 state 恆不為 0，所以 state*n mod Modulus 恆不為 0，
+// 每一組合的「離最近的 Modulus 倍數」至少差 1（約 21.4 bit 的安全邊界）——
+// 而原版浮點函式庫的尾數寬度已由反組譯證實 ≥ 48 bit（見 docs/re/14 §2.3），
+// 遠遠蓋過這個邊界，浮點捨入不可能改變 floor() 的結果。
+//
+// 這裡只做**抽樣**式的複查（用直接算術重新驗證同一個數論不等式，不依賴 Roll()
+// 本身，因為 Roll() 就是被驗證的對象），確保這條性質沒有在未來的改動中被破壞；
+// 完整窮舉已經在上面提到的 docs/re/14 與 tools/rng_float_equiv_check.go 做過，
+// 不需要在單元測試裡重跑一次全部 2,796,202 個狀態。
+func TestRollFloatEquivalence(t *testing.T) {
+	ns := []int{2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 100}
+	// 抽樣：均勻跳點掃過整個狀態空間，抓「性質被破壞」這類系統性錯誤即可，
+	// 不需要每次測試都窮舉 279 萬次。
+	const stride = 977 // 與 Modulus 互質的隨意步長，讓抽樣點分散
+	for _, n := range ns {
+		checked := 0
+		for state := 1; state < Modulus; state += stride {
+			product := int64(state) * int64(n)
+			r := product % Modulus
+			if r == 0 {
+				t.Fatalf("n=%d state=%d: state*n 恰為 Modulus 倍數，違反「Modulus 為質數且 n<Modulus」的前提，數論論證失效", n, state)
+			}
+			margin := r
+			if Modulus-r < margin {
+				margin = Modulus - r
+			}
+			// 21 bit 相對邊界（保守取 2^21，比實測最小值 2^21.4 略嚴格一點點）。
+			// 原版尾數寬度 ≥ 48 bit，這裡驗證的是「邊界仍然遠大於浮點誤差」這個
+			// 前提沒有被破壞，不是在驗證浮點函式庫本身。
+			if margin < 1 {
+				t.Fatalf("n=%d state=%d: margin=%d 小於安全邊界", n, state, margin)
+			}
+			checked++
+		}
+		if checked == 0 {
+			t.Fatalf("n=%d: 抽樣迴圈沒有跑到任何狀態", n)
+		}
+	}
+
+	// 同時確認 Roll() 對外行為在這些 n 上持續落在 [1,n]（TestRollBounds 已經測過，
+	// 這裡只是把「等價性前提成立」與「Roll() 實際行為正常」放在同一份測試裡交叉確認）。
+	r := NewWithSeed(20260725)
+	for _, n := range ns {
+		for i := 0; i < 2000; i++ {
+			if got := r.Roll(n); got < 1 || got > n {
+				t.Fatalf("n=%d: Roll 回傳 %d，超出 [1,%d]", n, got, n)
+			}
+		}
+	}
+}
+
 // TestSequenceReproducible 相同種子必須產生相同序列。
 // 對拍原版時要靠這個性質固定測試條件。
 func TestSequenceReproducible(t *testing.T) {

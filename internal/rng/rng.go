@@ -68,10 +68,16 @@ func (r *RNG) SetState(s uint32) { r.state = s }
 //	負數取絕對值；n 為 0 或 1 時直接回傳 1（不消耗亂數）；
 //	否則 floor(uniform × n) + 1。
 //
-// 原版把狀態轉成浮點數再乘 n，用的是自製的軟體浮點函式庫（段 310e，
-// 模擬 80 位元擴充精度），不是硬體 x87。這裡用整數運算取代：
-// 對 n 遠小於 Modulus 的情況（遊戲中最大是 RNG(100)）兩者結果一致，
-// 且避免了浮點捨入帶來的平台差異。
+// 原版走的是自製軟體浮點函式庫（段 310e）：LCG 狀態推進函式（30c2:0006）
+// 結尾就先把新狀態除以 2796203.0（IEEE double），Roll(n) 再把這個小數乘上 n、
+// 截斷取整。這裡用整數運算取代（先乘後除，而非原版的先除後乘），兩者在有理數
+// 上等價；經 docs/re/14-rng-float-equivalence.md 用數論證明並窮舉驗證
+// （33,554,424 組 (state,n) 組合），兩條路徑的 floor() 結果保證逐一相同——
+// 因為 Modulus 是質數、state 恆不為 0、且遊戲用到的 n 都遠小於 Modulus，
+// 精確有理數 state*n/Modulus 的小數部分恆與整數邊界至少相差 1/Modulus
+// （約 21.4 bit 安全邊界），而原版浮點精度下界是 IEEE double 的 53 bit，
+// 捨入誤差不可能大到讓 floor() 跨過邊界。回歸測試見 rng_test.go 的
+// TestRollFloatEquivalence。
 func (r *RNG) Roll(n int) int {
 	if n < 0 {
 		n = -n
