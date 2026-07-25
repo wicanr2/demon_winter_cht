@@ -12,6 +12,18 @@ const (
 	West
 )
 
+// Delta 回傳這個面向的座標位移，戰鬥網格也用同一組。
+func (f Facing) Delta() (dx, dy int) { return f.delta() }
+
+// CW 回傳順時針轉一格後的面向。
+func (f Facing) CW() Facing { return (f + 1) % 4 }
+
+// CCW 回傳逆時針轉一格後的面向。
+func (f Facing) CCW() Facing { return (f + 3) % 4 }
+
+// Reverse 回傳迴轉後的面向。
+func (f Facing) Reverse() Facing { return (f + 2) % 4 }
+
 // delta 回傳這個面向的座標位移。
 // 對應原版 0x15da（ΔX）與 0x15d2（ΔY）兩張表。
 func (f Facing) delta() (dx, dy int) {

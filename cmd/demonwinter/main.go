@@ -66,6 +66,9 @@ type app struct {
 	monsters *gamedata.MonsterTable
 	rng      *rng.RNG
 
+	// prayChance 是祈禱的成功率，會隨每次祈禱變動，跨戰鬥保留。
+	prayChance int
+
 	// battle 非 nil 時遊戲進入戰鬥模式，地圖輸入停止。
 	battle     *game.Battle
 	log        []string
@@ -156,14 +159,22 @@ func (a *app) Update() error {
 
 func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
-	a.drawWorld(a.canvas)
+	// 戰鬥有自己的戰場，不畫世界地圖 —— 把大地圖留在底下會讓
+	// 「單位站在哪一格」完全看不出來。
+	if a.battle == nil {
+		a.drawWorld(a.canvas)
+	}
 	switch {
 	case a.battle != nil:
+		a.drawBattlefield(a.canvas)
 		a.drawBattle(a.canvas)
 	case a.showRoster:
 		a.drawRoster(a.canvas)
 	default:
 		a.drawStatus(a.canvas)
+	}
+	if a.battle != nil && !a.box.Active() {
+		a.drawBattleCommands(a.canvas)
 	}
 	ui.DrawMixedTextBox(a.canvas, a.box, a.font, 0, layout.TextBoxTop, markerColor)
 
@@ -260,7 +271,7 @@ func (a *app) startBattle(ids []int) {
 		speed, hp := game.RollMonsterStats(a.rng, m.Speed, m.HP)
 		units = append(units, &game.Unit{
 			Slot: i, Name: m.Name,
-			X: 2, Y: i + 1,
+			X: 2, Y: i + 1, Facing: int(game.East),
 			Speed: speed, Strength: m.Strength, Skill: m.Skill,
 			Level: m.Level, Intellect: m.Level,
 			HP: hp, MaxHP: hp,
@@ -277,7 +288,7 @@ func (a *app) startBattle(ids []int) {
 		}
 		units = append(units, &game.Unit{
 			Slot: slot, Name: c.Name,
-			X: 8, Y: i + 1,
+			X: 8, Y: i + 1, Facing: int(game.West),
 			Speed:      c.Traits[gamedata.Speed],
 			Strength:   c.Traits[gamedata.Strength],
 			Skill:      c.Traits[gamedata.Skill],
@@ -294,6 +305,11 @@ func (a *app) startBattle(ids []int) {
 
 	a.battle = game.NewBattle(a.rng, units)
 	a.battle.BeginRound()
+	// 祈禱成功率跨戰鬥保留、每次祈禱永久遞減；初值 20% 來自手冊
+	// （反組譯只確認了遞減量 −5，初始化位置未逐指令追出）。
+	if a.prayChance == 0 {
+		a.prayChance = game.PrayInitialChance
+	}
 	a.log = []string{fmt.Sprintf("第 %d 回合", a.battle.Round())}
 }
 
@@ -306,59 +322,6 @@ func (a *app) logf(format string, args ...any) {
 }
 
 const battleLogLines = 8
-
-// updateBattle 推進戰鬥。目前雙方都由簡單 AI 代打，
-// 按 Space 逐步執行，方便肉眼核對每一步。
-func (a *app) updateBattle() error {
-	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		return ebiten.Termination
-	}
-	if !inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		return nil
-	}
-
-	if out := a.battle.Outcome(); out != game.Ongoing {
-		if out == game.Victory {
-			a.logf("怪物全滅")
-		} else {
-			a.logf("隊伍全滅")
-		}
-		a.battle = nil
-		return nil
-	}
-
-	cur := a.battle.Current()
-	if cur == nil {
-		a.battle.BeginRound()
-		a.logf("── 第 %d 回合 ──", a.battle.Round())
-		return nil
-	}
-
-	enemies := a.battle.Enemies(cur)
-	if len(enemies) == 0 {
-		a.battle.EndTurn()
-		return nil
-	}
-	target := a.battle.Unit(enemies[a.rng.Roll(len(enemies))-1])
-
-	res := a.battle.ResolveAttack(cur, target, 0)
-	switch {
-	case !res.Hit:
-		a.logf("%s 落空", cur.Name)
-	case res.NoEffect:
-		a.logf("%s 對 %s 無效", cur.Name, target.Name)
-	case res.Killed:
-		a.logf("%s 擊殺 %s（%d 點）", cur.Name, target.Name, res.Damage)
-	default:
-		verb := "命中"
-		if res.Critical {
-			verb = "重擊"
-		}
-		a.logf("%s %s %s %d 點", cur.Name, verb, target.Name, res.Damage)
-	}
-	a.battle.EndTurn()
-	return nil
-}
 
 var facingName = []string{"北", "東", "南", "西"}
 
@@ -379,38 +342,6 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"Esc：離開",
 	}
 	a.font.DrawLines(dst, lines, layout.StatusX, layout.StatusY)
-}
-
-// drawBattle 畫戰鬥狀態：雙方單位的 HP 與最近幾行紀錄。
-func (a *app) drawBattle(dst *ebiten.Image) {
-	y := layout.StatusY
-	line := func(s string) {
-		a.font.Draw(dst, s, layout.StatusX, y)
-		y += ui.LineHeight
-	}
-
-	line(fmt.Sprintf("戰鬥　第 %d 回合", a.battle.Round()))
-	for _, u := range a.battle.Units() {
-		tag := " "
-		if u == a.battle.Current() {
-			tag = ">"
-		}
-		state := ""
-		if !u.Alive() {
-			state = " 陣亡"
-		}
-		name := u.Name
-		if len(name) > 8 {
-			name = name[:8]
-		}
-		line(fmt.Sprintf("%s%-8s%3d/%-3d%s", tag, name, u.HP, u.MaxHP, state))
-	}
-	line("")
-	for _, s := range a.log {
-		line(s)
-	}
-	line("")
-	line("空白鍵：下一步　Esc：離開")
 }
 
 var raceName = []string{"人類", "精靈", "矮人", "黑暗精靈", "巨魔"}

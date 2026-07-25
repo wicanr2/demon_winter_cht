@@ -41,6 +41,11 @@ type Battle struct {
 	order []int
 	// cursor 指向 order 裡下一個要行動的單位。
 	cursor int
+
+	// points 是目前行動單位的剩餘行動點數，pointsFor 記住那是誰的。
+	// 見 action.go。
+	points    int
+	pointsFor *Unit
 }
 
 // NewBattle 建立一場戰鬥。units 依槽位放入，空槽傳 nil。
@@ -91,6 +96,7 @@ func (b *Battle) Current() *Unit {
 		// 排序後才死掉的單位跳過 —— 順序是回合開始時算好的，
 		// 中途死亡不會重排，但已死的不該再行動。
 		if u != nil && u.Alive() {
+			b.beginTurn(u)
 			return u
 		}
 		b.cursor++

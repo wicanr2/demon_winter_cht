@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
+	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/textlayout"
 )
 
@@ -44,5 +45,19 @@ func TestLayout_TileScaleMatchesTextGrid(t *testing.T) {
 	if gfx.TileWidth*TileScale != 2*textlayout.CellHeight {
 		t.Errorf("圖塊放大後 %d 像素，預期是行高 %d 的兩倍",
 			gfx.TileWidth*TileScale, textlayout.CellHeight)
+	}
+}
+
+// 戰場的規則邊界必須與畫得出來的格數一致。
+//
+// 規則允許走到視野外的話，單位會憑空消失 —— 而且從規格看不出哪裡錯，
+// 因為兩個常數各自都「合理」。
+func TestBattleGrid_MatchesViewport(t *testing.T) {
+	cell := gfx.TileWidth * TileScale
+	if cols := MapWidth / cell; cols != game.BattleGridWidth {
+		t.Errorf("視野畫得出 %d 欄，戰場規則允許 %d 欄", cols, game.BattleGridWidth)
+	}
+	if rows := MapHeight / cell; rows != game.BattleGridHeight {
+		t.Errorf("視野畫得出 %d 列，戰場規則允許 %d 列", rows, game.BattleGridHeight)
 	}
 }
