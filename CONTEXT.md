@@ -45,9 +45,7 @@
 
 | 項目 | 狀態 |
 |---|---|
-| 可通行性對照表 `[0x5500]` | **擋住移動實作** — 機制已驗證，表的來源檔未追出、內容未 dump |
-| 事件類別 0 的下游消費者 | `EXITS.DAT` 裡佔 94/110。索引**有**被算出（`docs/re/05` 舊述不準），但這條路徑上沒被消費，真正的消費者未定位 |
-| 一天幾小時（26 vs 38）| DOSBox 實測未完成（隊伍被困小中庭）|
+| 一天幾小時（26 vs 38）| DOSBox 實測未完成（隊伍被困小中庭）。擋住時間系統規格（06）|
 | `OPEN.PIE` | 未解（102,160 B，不符 3.5× 規律）|
 | Go 引擎本體 | **尚未開始**（依 SDD，多數規格已 READY，可以開工了）|
 
@@ -68,8 +66,8 @@
 | [`README.md`](docs/spec/README.md) | SDD 工作方式、規格分級定義 |
 | [`01-rng.md`](docs/spec/01-rng.md) | **READY** — 亂數產生器 |
 | [`02-combat.md`](docs/spec/02-combat.md) | **READY** — 戰鬥系統（全部子系統）|
-| [`03-events.md`](docs/spec/03-events.md) | **DRAFT** — 事件觸發（類別 0 的下游消費者未定位）|
-| [`04-movement.md`](docs/spec/04-movement.md) | **READY** — 移動與模式切換（可通行性表待 dump）|
+| [`03-events.md`](docs/spec/03-events.md) | **READY** — 事件觸發 |
+| [`04-movement.md`](docs/spec/04-movement.md) | **READY** — 移動與模式切換 |
 | [`05-character.md`](docs/spec/05-character.md) | **READY** — 角色建立與升級 |
 | [`08-town-economy.md`](docs/spec/08-town-economy.md) | **READY** — 城鎮與經濟 |
 | 06 時間、07 素材渲染、09 字型 | 待寫 |
@@ -100,6 +98,7 @@
 | [`19-town-economy.md`](docs/re/19-town-economy.md) | **城鎮經濟六大設施全部公式**；市集議價與說服技能；角色記錄 6 個新欄位 |
 | [`20-summon-and-combat-units.md`](docs/re/20-summon-and-combat-units.md) | **召喚／幻術**、戰鬥單位 19 欄結構、怪物進場擲點、傷害與排序邊界 |
 | [`21-skills-races-and-files-dat.md`](docs/re/21-skills-races-and-files-dat.md) | **遊戲內部技能 id 表**、種族系統與修正公式、`FILES.DAT` 完整布局 |
+| [`22-resource-arena-and-passability.md`](docs/re/22-resource-arena-and-passability.md) | **18 段資源記憶體區**、**可通行性表**、子地圖退出、**事件消費者** |
 
 ### 資料格式 `docs/formats/`
 
@@ -260,18 +259,14 @@ row-major、`.SHE` 尺寸 32×28 vs 16×56。**四次裡三次的錯誤版本都
 
 ## 7. 下一步
 
-規格層已大致齊備（6 份裡 5 份 READY），**引擎本體可以開工了**。
-若要先把剩下的缺口補完，優先序是：
+**六份規格全部 READY，引擎本體可以開工了。**
 
-1. **dump 可通行性對照表 `[0x5500]`** —— 唯一擋住移動實作的東西。
-   機制已驗證，缺的是表的來源檔與內容
-2. **事件類別 0 的下游消費者** —— 唯一擋住事件規格升 READY 的東西。
-   已知索引有被算出，缺的是誰消費它。建議 DOSBox 走進純文字房間單步觀察 `0x52f4`
-3. **一天幾小時（26 vs 38）** —— 擋住時間系統規格（06）
-4. **補寫規格 06 時間、07 素材渲染、09 字型**（證據等級已夠，尚未收攏）
-5. `OPEN.PIE`、`FILES.DAT` 三段未解區、`ITEMS.DAT` 的 f1–f6
+`01-rng`、`02-combat`、`03-events`、`04-movement`、`05-character`、`08-town-economy`
+涵蓋亂數、完整戰鬥、事件觸發、移動與子地圖進出、建角升級、全部城鎮設施。
+沒有任何一項還卡在未解問題上。
 
-### 可以直接開工的部分
+若要繼續補文件（不擋開工）：
 
-`01-rng`、`02-combat`、`05-character`、`08-town-economy` 四份 READY，
-涵蓋亂數、完整戰鬥、建角升級、全部城鎮設施。這些不依賴上面任何一項缺口。
+1. **一天幾小時（26 vs 38）** — 擋住時間系統規格（06）。需 DOSBox 實測
+2. **補寫規格 06 時間、07 素材渲染、09 字型**（證據等級已夠，尚未收攏）
+3. `OPEN.PIE`、資源 arena 索引 2/3/6/8/14/15、`ITEMS.DAT` 的 f1–f6
