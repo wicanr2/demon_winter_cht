@@ -163,7 +163,7 @@ func RollTraits(r *rng.RNG, t *gamedata.Tables, race gamedata.Race) ([gamedata.N
 		if err != nil {
 			return out, err
 		}
-		v := r.Roll(baseTraitDie) + mod
+		v := r.Roll(traitDie) + r.Roll(traitDie) + traitRollBonus + mod
 		if v < traitFloor {
 			v = traitFloor
 		}
@@ -175,8 +175,28 @@ func RollTraits(r *rng.RNG, t *gamedata.Tables, race gamedata.Race) ([gamedata.N
 	return out, nil
 }
 
-// baseTraitDie 是建角基礎骰的面數。**假設值**，見 RollTraits 說明。
-const baseTraitDie = 15
+// 建角擲點的骰子。**已從原版反組譯確認**（DEMON.INT 0x13bba–0x13c0d）：
+//
+//	13bba  mov ax,6 / call rnd     ; 第一顆 d6
+//	13bc5  mov ax,6 / call rnd     ; 第二顆 d6
+//	13bd2  add ax,cx               ; 兩顆相加
+//	13bdb  call 106a:026c          ; 取種族修正
+//	13be6  add ax,cx               ; + 種族修正
+//	13be8  inc ax                  ; **+1**
+//	13bec  cmp ax,3 / jge          ; 下限 3
+//	13c02  cmp es:[bx+si+0xf5],0   ; 種族 == 人類？
+//	13c0a  inc / inc               ; 人類 +2
+//
+// 所以公式是 `max(3, 2d6 + 種族修正 + 1)`，人類再 +2。
+//
+// **這裡原本寫的是 `Roll(15)`，標著「假設值」——期望值剛好也是 8，
+// 所以「該種族平均」那一欄一直是對的，錯的是分布**：均勻 1–15 會擲出
+// 原版不可能出現的 1、2、14、15，而且沒有 2d6 往中間集中的特性。
+// 平均值對不代表分布對，這種錯在畫面上完全看不出來。
+const (
+	traitDie       = 6
+	traitRollBonus = 1
+)
 
 // LevelUpResult 記錄一次升級的成長量，方便呼叫端顯示與測試。
 type LevelUpResult struct {

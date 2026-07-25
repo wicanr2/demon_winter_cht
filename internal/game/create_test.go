@@ -220,3 +220,66 @@ func TestCreation_ResultSurvivesSaveRoundTrip(t *testing.T) {
 		t.Errorf("屬性走樣：%v vs %v", back.Traits, ch.Traits)
 	}
 }
+
+// 擲點分布要與原版一致：2d6 + 1 + 種族修正，下限 3。
+//
+// 這條擋的是「期望值對、分布錯」—— 這個 bug 真的發生過：實作原本是
+// Roll(15)（均勻 1–15），期望值剛好也是 8，所以畫面上的「該種族平均」
+// 一直是對的，沒人看得出來。分布錯的後果是玩家會擲出原版不可能出現的
+// 極端值，而且少了 2d6 往中間集中的手感。
+func TestRollTraits_MatchesOriginalDistribution(t *testing.T) {
+	tb := loadTables(t)
+	r := rng.NewWithSeed(20260726)
+
+	// 用種族修正為 0 的那些項來看純粹的骰子範圍。
+	const rolls = 20000
+	seen := map[int]int{}
+	for i := 0; i < rolls; i++ {
+		traits, err := RollTraits(r, tb, gamedata.Elf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for j := 0; j < gamedata.NumTraits; j++ {
+			mod, err := tb.RaceModifier(gamedata.Elf, gamedata.Trait(j))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if mod != 0 {
+				continue
+			}
+			seen[traits[j]]++
+		}
+	}
+	if len(seen) == 0 {
+		t.Fatal("精靈沒有任何修正為 0 的屬性，測試前提不成立")
+	}
+
+	// 2d6 + 1 → 3..13。原本的 Roll(15) 會擲出 1、2、14、15。
+	const lo, hi = 2*1 + traitRollBonus, 2*traitDie + traitRollBonus
+	for v, n := range seen {
+		if v < lo || v > hi {
+			t.Errorf("擲出 %d（%d 次），超出 2d6+%d 的範圍 %d–%d",
+				v, n, traitRollBonus, lo, hi)
+		}
+	}
+
+	// 中間值要比極端值常見很多 —— 均勻分布不會有這個性質。
+	mid, edge := seen[8], seen[lo]+seen[hi]
+	if mid <= edge {
+		t.Errorf("中央值 8 出現 %d 次，兩端合計 %d 次 —— 看起來不像 2d6 的三角分布",
+			mid, edge)
+	}
+}
+
+// 三次機會 = 初次擲點 + 兩次重擲，與原版的迴圈次數一致。
+//
+// 原版把計數器設 0，每輪玩家選完後 +1、`cmp 3` 沒到就再擲一輪
+// （0x13b9d／0x13d60–0x13d69）；而且起手先把五項旗標全設成 1，
+// 所以第一輪就是「全部擲一次」。三輪 = 初擲 + 兩次重擲。
+func TestCreation_RerollBudgetMatchesOriginalLoop(t *testing.T) {
+	const originalRollRounds = 3
+	if MaxRerolls != originalRollRounds-1 {
+		t.Errorf("MaxRerolls = %d，原版總共擲 %d 輪（含初擲），所以應該是 %d",
+			MaxRerolls, originalRollRounds, originalRollRounds-1)
+	}
+}

@@ -144,11 +144,15 @@ func TestRollTraits_BaseDieRange(t *testing.T) {
 		}
 	}
 
-	if hi != baseTraitDie {
-		t.Errorf("修正為 0 的屬性最大值 = %d，預期 %d（Roll(15) 的上界）", hi, baseTraitDie)
+	// 2d6 + 1 的上界。**原本這裡寫的是 Roll(15) 的上界 15** ——
+	// 擲點公式改成與原版一致的 2d6 之後，上界是 13。
+	if want := 2*traitDie + traitRollBonus; hi != want {
+		t.Errorf("修正為 0 的屬性最大值 = %d，預期 %d（2d6+%d 的上界）",
+			hi, want, traitRollBonus)
 	}
-	if lo != traitFloor {
-		t.Errorf("修正為 0 的屬性最小值 = %d，預期 %d（下限鉗制）", lo, traitFloor)
+	// 下界：2d6+1 最小是 3，剛好等於下限鉗制值，兩者在這裡分不開。
+	if want := 2*1 + traitRollBonus; lo != want || lo != traitFloor {
+		t.Errorf("修正為 0 的屬性最小值 = %d，預期 %d", lo, want)
 	}
 }
 
