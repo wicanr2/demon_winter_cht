@@ -310,6 +310,14 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 //
 // 戰鬥（記錄的 Count != 0）與傳送尚未實作，目前只把它們寫進狀態列。
 func (a *app) checkEvent(tile byte) {
+	// 城鎮格優先於事件鏈。原版就是這個順序：先比對剛踩到的 tile 是不是
+	// 0x2e／0x64，是就拿座標查城鎮編號，不再往事件表走
+	// （DEMON.INT 0x19192 的分支，見 gamedata.townSites 說明）。
+	if gamedata.IsTownTile(tile) {
+		a.enterTownAt(a.party.X(), a.party.Y())
+		return
+	}
+
 	idx := -1
 
 	switch game.TriggerFor(tile) {

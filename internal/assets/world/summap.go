@@ -69,8 +69,9 @@ func (s *SumMap) Segment(id int) (*Map, bool) {
 // 23 個變長區塊，逐一 RLE 解壓成 64×64 子地圖。
 //
 // 解析失敗（檔案讀不到、檔案大小與 23 筆 size 加總不符）一律回傳 error，
-// 不 panic。單一區塊解壓後格數不足 4096（RLE 資料提前讀完，見
-// decodeRLE 說明）不視為錯誤，只會反映在該 Map 的 FilledCount()。
+// 不 panic。單一區塊解壓後格數不足 4096 不視為錯誤，只會反映在該 Map 的
+// FilledCount()——不過實測 23/23 個區塊都精確填滿，出現缺格就代表
+// decodeRLE 又走鐘了，TestLoadSumMap_AllSegmentsFill 會擋下來。
 func LoadSumMap(path string) (*SumMap, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -105,16 +106,14 @@ func LoadSumMap(path string) (*SumMap, error) {
 }
 
 // decodeRLE 解壓一個 SUM.MAP 子地圖區塊，寫入 out（固定 64×64=4096 格，
-// 呼叫端負責預先歸零；未被以下演算法覆寫的格子維持零值）。回傳實際被
-// 寫入的格數（可能小於 4096，見下方「格式與已知限制」）。
+// 呼叫端負責預先歸零）。回傳實際被寫入的格數；用真實 SUM.MAP 實測
+// 23/23 個區塊都精確等於 4096。
 //
-// 演算法反組譯自 FUN_25be_17fe（25be:17fe，見
-// docs/re/03-audio-and-resources.md §3.3）：
+// 演算法反組譯自 FUN_25be_17fe（Ghidra 位址 25be:17fe = DEMON.INT 檔位移
+// 0x1afde，見 docs/re/03-audio-and-resources.md §3.3）：
 //
 //	逐 byte 掃描來源資料，直到讀完 param_1-1 個 byte 為止（原函式的
-//	迴圈判斷式是「param_1 - 1 <= 讀取游標」就結束，因此每個區塊最後
-//	一個 byte 永遠不會被當成記錄開頭讀取——已用真實資料核對，21/23
-//	個區塊的「已消耗位元組數」都精確等於 size-1）：
+//	迴圈判斷式在 0x1b0b6：「param_1 - 1 <= 讀取游標」就結束）：
 //	  - byte 最高位 = 1：RLE 記錄，2 bytes。byte&0x7f 是 tile 值，
 //	    下一個 byte 是重複次數，寫入該值 count 次。
 //	  - byte 最高位 = 0：literal 記錄，1 byte。這個 byte 本身就是
@@ -122,16 +121,46 @@ func LoadSumMap(path string) (*SumMap, error) {
 //
 // 格式與已知限制（誠實記錄，未強行湊測試）：
 //
-//  1. 「填滿 4096 格才停」與「讀完來源 bytes 就停」兩個結束條件都存在，
-//     用真實 SUM.MAP 資料實測（23 個區塊全數）發現只有 4/23 個區塊
-//     （ID=2、4、35、43）在寫滿 4096 格前把來源資料耗盡；其餘 19 個
-//     區塊都是「來源 bytes 先耗盡」提前停止，實際寫入格數介於
-//     769～3841，明顯小於 4096。這與 docs/re/03-audio-and-resources.md
-//     §3.3 的原話「不一定填滿全部 4096 格」一致，因此本函式**不**
-//     假設每個區塊都能填滿整個網格；FilledCount() 如實回報實際格數，
-//     缺口維持零值（呼應 MAP1.MAP 已驗證「0 = 未映射區域/邊界外」）。
+//  1. **重複次數 0 代表 256，不是 0。** 原函式的重複迴圈是 do-while，
+//     不是 while——先寫一格，再 `dec` 次數，最後才比對是否為 0：
 //
-//  2. **寫入游標是 column-major（逐欄填），不是循序**。
+//     1b01b  loop: inc  word [bp-0x4]      ; 已寫格數++
+//     1b048        cmp  word [bp-0x4],0x1000
+//     1b04d        jne  1b057              ; 寫滿 4096 就收工
+//     1b057        dec  byte [bp-0x7]      ; 次數--
+//     1b05a        add  word [bp-0x6],0x40 ; 游標推進
+//     1b06a        cmp  byte [bp-0x7],0x0
+//     1b06e        jne  loop
+//
+//     次數 byte = 0 時，`dec` 後變 0xff，要繞完整整 256 圈才回到 0。
+//     這是 8 位元計數器唯一能表達「256 連」的方式，也是 RLE 常見手法。
+//     照字面當成 0 圈解，每碰到一次就少寫 256 格——症狀是後續 tile 全部
+//     往前位移 256 格（欄優先游標下 = 往左 4 欄），而且解出來還是「像
+//     地圖」，肉眼與格數檢查都抓不到。抓到它的是城鎮座標表交叉比對
+//     （見 §3）。
+//
+//  2. **每個區塊的第一個 byte 不是 RLE 資料，要跳過。**
+//     原程式讀檔時把區塊寫進 `[ds:0x4c90]+1`（0x188b5 的 `add ax,0x1`），
+//     解壓時從 `[ds:0x4c94]` 起讀。實測上這一個 byte 一定得跳過：跳過後
+//     23/23 個區塊都精確填滿 4096 格，不跳過則全部卡在 4097-256k 格。
+//     這個 byte 的語意未解，值域 0x01–0x09（區段 2 與 4 例外，都是 0xa3），
+//     與獨立 .MAP 檔開頭那 1 byte header（MAP1=0x00、MAP3=0x97、MAP5=0x09）
+//     疑似同一種東西。
+//
+//  3. 上面兩點的**驗收依據不是「解得出東西」，是城鎮座標表**：
+//     DEMON.INT 的 25 筆城鎮 (X,Y) 表（DS:0x2f86，見 gamedata 的 townSites）
+//     是從機器碼獨立讀出來的，與 SUM.MAP 無關。修正前 25 個座標上一個
+//     城鎮 tile（0x2e／0x64）都沒有；兩點都修好之後，24 個座標精確命中
+//     SUM.MAP 的城鎮 tile，第 25 個（海盜灣）命中 MAP1.MAP——25/25 全中。
+//     兩份互相獨立的資料能對到這種程度，不會是湊出來的。
+//
+//  4. **尚未實作：tile 0x14 的條件替換。** 原函式在寫入前會檢查
+//     `tile == 0x14`，成立就呼叫 15be:179f，回傳 1 時改寫成 0x62
+//     （0x1b01e／0x1b075 兩個分支都有）。那個判斷式是什麼還沒追，
+//     推測與雪地版地形（WINTER.SHP）有關。本函式先照實寫入 0x14，
+//     不猜條件——真要還原季節變化時要回頭補這一段。
+//
+//  5. **寫入游標是 column-major（逐欄填），不是循序**。
 //     docs/re/03 §3.3 把游標描述成「每寫一格 +64，對 4096 取餘」，
 //     那個公式漏了進位：gcd(64,4096)=64，逐字實作只會在 64 個位置上
 //     打轉，丟掉 98% 的資料。真正的邏輯在原始指令裡（25be:187a 起）：
@@ -156,7 +185,8 @@ func decodeRLE(src []byte, out *[mapTileCount]byte) int {
 
 	cursor := 0
 	filled := 0
-	i := 0
+	// 跳過區塊的第一個 byte（見說明 §2）。
+	i := 1
 	n := len(src)
 
 	// 原函式每寫一格就推進游標一次，所以計數用 filled 而非 cursor。
@@ -174,7 +204,11 @@ func decodeRLE(src []byte, out *[mapTileCount]byte) int {
 		if b&0x80 != 0 {
 			// RLE 記錄：高位元=1，低 7 位是 tile 值，下一 byte 是重複次數。
 			val := b & 0x7f
+			// 次數 0 代表 256：原函式是 do-while，dec 後才判斷（見說明 §1）。
 			count := int(src[i+1])
+			if count == 0 {
+				count = 256
+			}
 			i += 2
 			for c := 0; c < count && filled < mapTileCount; c++ {
 				write(val)

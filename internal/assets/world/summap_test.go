@@ -63,30 +63,28 @@ func TestLoadSumMap_RealFile(t *testing.T) {
 	}
 }
 
-// TestLoadSumMap_FilledCounts 誠實記錄每個 sub-map 實際解壓出的格數，
-// 不強行斷言全部等於 4096——依 decodeRLE 的文件說明，19/23 個區塊會
-// 因來源位元組提前耗盡而少於 4096。這裡把實際數字印出來供人工核對，
-// 並只對「不可能超過 4096、不可能是負數」這種結構性條件斷言。
-func TestLoadSumMap_FilledCounts(t *testing.T) {
+// 23 個子地圖每一個都要精確填滿 4096 格。
+//
+// 這條原本寫成「誠實記錄格數、不斷言等於 4096」，理由是當時實測只有
+// 4/23 填滿，就照著寫進文件說「來源資料會提前耗盡」。那不是格式特性，
+// 是 decodeRLE 的兩個 bug（次數 0 沒當 256、沒跳過區塊首 byte）；把
+// 觀察到的錯誤結果寫成規格，等於用測試把 bug 釘死。
+//
+// 缺格數一定是 256 的倍數（少解一個 256 連），所以這條抓得很準。
+func TestLoadSumMap_AllSegmentsFill(t *testing.T) {
 	dir := origDataDir(t)
 	sm, err := LoadSumMap(filepath.Join(dir, "SUM.MAP"))
 	if err != nil {
 		t.Fatalf("LoadSumMap 失敗: %v", err)
 	}
 
-	fullCount := 0
 	for _, id := range sm.IDs() {
 		m, _ := sm.Segment(id)
-		filled := m.FilledCount()
-		t.Logf("id=%-3d filled=%d/%d", id, filled, mapTileCount)
-		if filled < 0 || filled > mapTileCount {
-			t.Errorf("id=%d FilledCount()=%d 超出合理範圍 [0,%d]", id, filled, mapTileCount)
-		}
-		if filled == mapTileCount {
-			fullCount++
+		if filled := m.FilledCount(); filled != mapTileCount {
+			t.Errorf("子地圖 %d 只填了 %d/%d 格，缺 %d 格",
+				id, filled, mapTileCount, mapTileCount-filled)
 		}
 	}
-	t.Logf("23 個子地圖中，恰好填滿 4096 格的有 %d 個（其餘因來源資料提前耗盡而未填滿，見 decodeRLE 文件說明）", fullCount)
 }
 
 func TestLoadSumMap_WrongSize(t *testing.T) {

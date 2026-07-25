@@ -21,9 +21,8 @@ type townScreen struct {
 
 	// picking 為真代表正在選要進哪座城鎮。
 	//
-	// **這是暫時的入口。** 原版靠「走到世界地圖的城鎮格」進城，
-	// 但「座標 → 城鎮編號」的對照還沒解出來（見 docs/spec/08-town-economy.md
-	// 未解表）。在那之前用選單讓玩家進得去，功能才驗得到。
+	// 正規入口已經是「走到世界地圖的城鎮格自動進城」（見 app.enterTownAt）。
+	// 這個選單留著當偵錯用：T 鍵可以直接跳進任何一座城鎮，不用先走到那格。
 	picking bool
 	cursor  int
 
@@ -37,9 +36,24 @@ var facilityKeys = []ebiten.Key{
 	ebiten.KeyG, ebiten.KeyC, ebiten.KeyD, ebiten.KeyB,
 }
 
-// openTownPicker 打開城鎮選單。
+// openTownPicker 打開城鎮選單（偵錯用的直接入口，見 townScreen.picking）。
 func (a *app) openTownPicker() {
 	a.town = &townScreen{picking: true}
+}
+
+// enterTownAt 以世界座標進城，對應原版「踩到城鎮格」的正規入口。
+//
+// 原版的查表迴圈沒有上界，座標不在表上就會一路讀過頭；這裡只留一行訊息。
+// 會走到這條的情況是已知的：子地圖 54 有兩格城鎮 tile 不在 25 筆座標表裡
+// （見 world 套件的 TestTownTiles_MostlyAccountedFor），語意還沒解。
+func (a *app) enterTownAt(x, y int) {
+	town, ok := a.towns.TownAt(x, y)
+	if !ok {
+		a.message = fmt.Sprintf("(%d,%d) 是城鎮格，但不在 25 筆城鎮座標表裡", x, y)
+		return
+	}
+	a.town = &townScreen{visit: game.EnterTown(town, a.members)}
+	a.message = fmt.Sprintf("進入%s", town.Name)
 }
 
 func (a *app) updateTown() error {

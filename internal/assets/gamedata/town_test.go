@@ -103,3 +103,67 @@ func TestTownTable_ByNumberBounds(t *testing.T) {
 		}
 	}
 }
+
+// 25 組座標必須兩兩相異。
+//
+// 原版的查表只比對 (X, Y)、不看在哪張子地圖上，所以座標一旦撞號，兩座城鎮
+// 就會有一座永遠進不去 —— 而且是編號大的那座默默消失，不會有任何錯誤訊息。
+func TestTownSites_AllDistinct(t *testing.T) {
+	seen := map[[2]int]int{}
+	for i, s := range townSites {
+		if prev, dup := seen[s]; dup {
+			t.Errorf("城鎮 %d 與城鎮 %d 都在 (%d,%d)", i+1, prev, s[0], s[1])
+		}
+		seen[s] = i + 1
+	}
+}
+
+// 座標要落在 64×64 的子地圖範圍內。表抄錯一個 byte 多半會撞破這條。
+func TestTownSites_InRange(t *testing.T) {
+	for i, s := range townSites {
+		if s[0] < 0 || s[0] > 63 || s[1] < 0 || s[1] > 63 {
+			t.Errorf("城鎮 %d 座標 (%d,%d) 超出 0–63", i+1, s[0], s[1])
+		}
+	}
+}
+
+// TownAt 要對得回城鎮，且不在表上的座標要老實回 false。
+func TestTownAt(t *testing.T) {
+	tt := loadTowns(t)
+
+	// 抽兩座有外部佐證的：新格里昂是攻略指名的買船處，海盜灣是唯一
+	// 落在 MAP1.MAP（而非 SUM.MAP 子地圖）上的城鎮。
+	for _, c := range []struct {
+		x, y int
+		want string
+	}{
+		{34, 11, "New Gleon"},
+		{1, 3, "Pirate's Cove"},
+	} {
+		got, ok := tt.TownAt(c.x, c.y)
+		if !ok {
+			t.Errorf("(%d,%d) 查不到城鎮，預期 %s", c.x, c.y, c.want)
+			continue
+		}
+		if got.Name != c.want {
+			t.Errorf("(%d,%d) 查到 %s，預期 %s", c.x, c.y, got.Name, c.want)
+		}
+	}
+
+	if _, ok := tt.TownAt(0, 0); ok {
+		t.Error("(0,0) 不是城鎮，卻查得到")
+	}
+}
+
+// 每座城鎮的 X/Y 要與 townSites 一致 —— LoadTownTable 少填一個欄位的話，
+// 全部城鎮會擠在 (0,0)，而 TownAt 只會回傳第一座。
+func TestLoadTownTable_FillsSites(t *testing.T) {
+	tt := loadTowns(t)
+	for _, town := range tt.All() {
+		want := townSites[town.Number-1]
+		if town.X != want[0] || town.Y != want[1] {
+			t.Errorf("城鎮 %d %s 座標 (%d,%d)，預期 (%d,%d)",
+				town.Number, town.Name, town.X, town.Y, want[0], want[1])
+		}
+	}
+}
