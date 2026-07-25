@@ -97,24 +97,31 @@ func DecodeEGAPlanar(data []byte, width, height int, layout EGAPlaneLayout, pale
 // 檔案長度整除 (frameW/8*frameH*4) 即為 frame 數，除不盡就回傳 error
 // （代表尺寸假設錯誤）。
 //
-// **已驗證**（2026-07-25，見 docs/re/07-sprite-blit.md）：直接反組譯
-// `FUN_217b_07cf`（217b 段 EGA 單一 sprite blit 常式）讀出真實佈局是
-// **frameW=32、frameH=28、layout=EGAPlanesRowBlocks**——frame 內部逐列排列、
-// 每列 4 個 plane 各自連續一塊（不是逐 frame 四平面各自整塊，也不是整檔
-// 四平面分塊）。呼叫方式：
-// `DecodeEGASpriteSheet(data, 32, 28, EGAPlanesRowBlocks)`。
+// **已驗證**：檔案內的 frame 是 **16x28、224 bytes**，佈局
+// `EGAPlanesRowBlocks`（frame 內逐列排列、每列 4 個 plane 各自連續一塊）。
+// 呼叫方式：`DecodeEGASpriteSheet(data, 16, 28, EGAPlanesRowBlocks)`。
+// 六個 .SHE 都適用，CYPHER.SHE 不是特例。
 //
-// **踩過的雷**：早期（2026-07-25 上午）在沒有讀 217b 段反組譯前，靠「檔案
-// 大小整除、跟 CGA frame 數對上」試過 8 種佈局假設（frame 內自帶四平面
-// sequential／整檔四平面 sequential／逐列交錯 1-byte 粒度／16x56 高度
-// 縮放／32x16 不縮放…），全部輸出雜訊，細節見 docs/formats/graphics.md
-// §4.2。真正的答案要讀 `217b:07cf` 的原始指令（不是 decompile，decompile
-// 對 word/byte 指標單位有歧義）才對得出來：來源指標在 28-row 內層迴圈裡
-// 每列只讀 4 bytes 卻步進 16 bytes，28 列跑完淨移動 -444(0x1bc)+448(0x1c0)
-// = +4 bytes 才切到下一個 plane——這代表「同一列的 4 個 plane 緊接著存」，
-// 且 sprite 尺寸是 32×28（不是先前用位元組數整除猜的 16×56），兩者總像素數
-// 剛好都是 896，這正是「除法對得上、佈局/尺寸猜錯」的第三個案例（CGA
-// 全螢幕圖偶奇交錯、CGA sprite 寬高對調之後的第三次教訓）。
+// 各檔 frame 數與 CGA 對應檔完全相同：COMBAT 44、CYPHER 27、DEMON 102、
+// MONSTER 240、SHIP 32、WINTER 102。
+//
+// **frame stride 0x1c0=448 是記憶體側的值，不是檔案格式。**
+// `FUN_217b_07cf` 硬編碼的 448 沒有錯，但它描述的是載入時做過
+// 水平 pixel doubling 之後、緩衝區裡的 frame：
+//
+//	1d9f:00bf  MOV word ptr [0x5226],0xe0   ; 224 = 檔案內 frame 大小
+//	1d9f:0101  SHL AX,0x1
+//	1d9f:0109  MOV [0x521a],AX              ; 448 = 記憶體內 frame 大小
+//
+// 載入器 `FUN_1d9f_0a8b` 只在副檔名為 "shE"/"SHE" 時呼叫 `FUN_217b_0adf`
+// 就地加倍（每 byte 逐 bit 複製兩次）。加倍後結構同構——每列仍是 4 個 plane，
+// 只是各自從 2 bytes 變 4 bytes——所以「檔案當 16x28 解」與「記憶體當
+// 32x28 解」是同一張圖。
+//
+// **踩過的雷**：用 32x28 解檔案會看到「一格裡 2x2 四個小圖」，那是兩個 frame
+// 左右各半錯位疊起來的假象。位元組數在 16x28 與 32x28 兩種讀法下都整除，
+// 3.5x 規律也都成立，**算術完全分不出來**——這是本專案在 sprite 尺寸上
+// 踩的第四個坑。定案靠的是遊戲自己宣告的 `[0x5226]` 常數加上肉眼比對。
 func DecodeEGASpriteSheet(data []byte, frameW, frameH int, layout EGAPlaneLayout) ([]*image.RGBA, error) {
 	if frameW%8 != 0 {
 		return nil, fmt.Errorf("gfx: EGA frame width 必須是 8 的倍數，得到 %d", frameW)
@@ -145,7 +152,7 @@ func DecodeEGASpriteSheet(data []byte, frameW, frameH int, layout EGAPlaneLayout
 // MONSTER.SHE/COMBAT.SHE 解出清楚剪影」，但實際上這個假設（連同這裡的
 // EGAPlanesSequential 佈局）跟其餘 7 種試過的假設一樣，輸出的都是雜訊，
 // 見 docs/formats/graphics.md §4.2「整檔 4-plane sequential(global)」列。
-// 真正解出來的佈局是 DecodeEGASpriteSheet(data, 32, 28, EGAPlanesRowBlocks)
+// 真正解出來的佈局是 DecodeEGASpriteSheet(data, 16, 28, EGAPlanesRowBlocks)
 // ——4 個 plane 的分塊粒度是「每一列」，不是「整個檔案」。保留這個函式僅供
 // 對照／回歸測試用，**不要在新程式碼裡使用**。
 func DecodeEGASpriteSheetGlobalPlanes(data []byte, frameW, frameH int) ([]*image.RGBA, error) {
