@@ -9,6 +9,7 @@ import (
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
+	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
@@ -27,6 +28,7 @@ var playerCommands = []struct {
 }{
 	{ebiten.KeyA, "A 攻擊", game.ActionAttack},
 	{ebiten.KeyC, "C 施法", game.ActionCast},
+	{ebiten.KeyU, "U 使用道具", game.ActionUseItem},
 	{ebiten.KeyT, "T 驅散不死", game.ActionTurnUndead},
 	{ebiten.KeyP, "P 祈禱", game.ActionPray},
 	{ebiten.KeyL, "L 汲取法力", game.ActionLeech},
@@ -354,8 +356,99 @@ func (a *app) updateAOECursor() error {
 	return nil
 }
 
+// itemMenu 是使用道具選單的狀態。
+type itemMenu struct {
+	caster  *game.Unit
+	entries []game.UsableItem
+	cursor  int
+}
+
+// u2c 找出戰鬥單位對應的隊伍成員。
+//
+// 用姓名對 —— 戰鬥單位是從角色複製出來的，兩者之間沒有指標關聯。
+func u2c(members []game.Character, u *game.Unit) *game.Character {
+	for i := range members {
+		if members[i].Name == u.Name {
+			return &members[i]
+		}
+	}
+	return &game.Character{}
+}
+
+// updateItemMenu 處理使用道具選單的按鍵。
+func (a *app) updateItemMenu(u *game.Unit) error {
+	m := a.useMenu
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
+		a.useMenu = nil
+	case inpututil.IsKeyJustPressed(ebiten.KeyDown):
+		m.cursor = (m.cursor + 1) % len(m.entries)
+	case inpututil.IsKeyJustPressed(ebiten.KeyUp):
+		m.cursor = (m.cursor - 1 + len(m.entries)) % len(m.entries)
+	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
+		e := m.entries[m.cursor]
+		a.useMenu = nil
+		if _, ok := a.battle.Spend(game.ActionUseItem); !ok {
+			a.logf("%s 行動點不足", u.Name)
+			return nil
+		}
+		// **道具的效果索引欄位還沒在存檔格式裡定位到。**
+		// 反組譯是 `FUN_1000_114f(item.effect_index)` 載入 5-word 效果記錄，
+		// 但那個欄位在 17 bytes 的槽裡對不到位置。照實說，不要瞎猜一個欄位
+		// 然後產生看起來合理、其實亂來的效果。
+		a.logf("%s 使用 %s —— 道具效果索引尚未定位，無效果",
+			u.Name, a.itemLabel(e.Item))
+	}
+	return nil
+}
+
+// itemLabel 回傳道具的顯示名稱。
+func (a *app) itemLabel(it scenario.InventorySlot) string {
+	item, err := a.items.ByIndex(int(it.Type))
+	if err != nil {
+		return fmt.Sprintf("道具 %d", it.Type)
+	}
+	if it.Enchant != 0 {
+		return fmt.Sprintf("%s%+d", item.Name, it.Enchant)
+	}
+	return item.Name
+}
+
+// drawItemMenu 畫使用道具選單。
+func (a *app) drawItemMenu(dst *ebiten.Image) {
+	m := a.useMenu
+	y := layout.StatusY
+	line := func(s string) {
+		a.font.Draw(dst, s, layout.BoxPadX, y)
+		y += ui.LineHeight
+	}
+
+	line(fmt.Sprintf("%s 使用道具", m.caster.Name))
+	line("")
+	for i, e := range m.entries {
+		mark := "   "
+		if i == m.cursor {
+			mark = " > "
+		}
+		state := ""
+		if !e.Item.Identified {
+			state = "（未鑑定）"
+		}
+		line(fmt.Sprintf("%s%-14s%s", mark, a.itemLabel(e.Item), state))
+	}
+	line("")
+	line("↑↓：選擇　Enter：使用　Esc：取消")
+	line("")
+	line("※ 只列得出已裝備的武器／護甲與消耗品 —— 原版的 Use")
+	line("　 就是拿來觸發已裝備裝備的特殊能力")
+	line("※ 道具的效果索引欄位尚未在存檔格式中定位，選了不會有效果")
+}
+
 // updatePlayerTurn 處理玩家單位的一次按鍵。
 func (a *app) updatePlayerTurn(u *game.Unit) error {
+	if a.useMenu != nil {
+		return a.updateItemMenu(u)
+	}
 	if a.spells != nil {
 		return a.updateSpellMenu(u)
 	}
@@ -422,6 +515,14 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 			return
 		}
 		a.openSpellMenu(u)
+
+	case game.ActionUseItem:
+		items := u2c(a.members, u).UsableItems()
+		if len(items) == 0 {
+			a.logf("%s 沒有可用的道具", u.Name)
+			return
+		}
+		a.useMenu = &itemMenu{caster: u, entries: items}
 
 	case game.ActionAttack:
 		target := a.battle.TargetInFront(u)

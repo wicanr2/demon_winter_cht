@@ -162,6 +162,10 @@ type Character struct {
 	// （0 劍擊 … 30 硬化皮膚，見 docs/re/21）。值為 1 表示已學。
 	SkillFlags [skillFlagsLen]byte
 
+	// Inventory 是 10 個裝備／道具欄的已解欄位。未解的部分仍在
+	// InventorySlotsRaw 裡，兩者指向同一份資料。
+	Inventory [inventorySlotCount]InventorySlot
+
 	// InventorySlotsRaw 是 10 個裝備／道具欄位，每個 17 bytes，語意未解
 	// （只驗證了 slot 邊界與數量），保留原始 bytes。
 	InventorySlotsRaw [inventorySlotCount][]byte
@@ -319,6 +323,7 @@ func parseCharacter(rec []byte) (Character, error) {
 		ClassByte:         rec[classOffset],
 		SkillFlags:        skills,
 		InventorySlotsRaw: slots,
+		Inventory:         parseInventory(slots),
 		Experience:        le4(rec[expOffset : expOffset+expLen]),
 		StrengthNatural:   attr(attrStrengthNaturalOffset),
 		SkillNatural:      attr(attrSkillNaturalOffset),
@@ -350,4 +355,13 @@ func le3(b []byte) int {
 // le4 把 4 bytes 讀成 little-endian 無號整數（角色經驗值欄位）。
 func le4(b []byte) int {
 	return int(b[0]) | int(b[1])<<8 | int(b[2])<<16 | int(b[3])<<24
+}
+
+// parseInventory 解出 10 格道具的已知欄位。
+func parseInventory(slots [inventorySlotCount][]byte) [inventorySlotCount]InventorySlot {
+	var out [inventorySlotCount]InventorySlot
+	for i, raw := range slots {
+		out[i] = parseInventorySlot(raw)
+	}
+	return out
 }

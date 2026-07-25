@@ -32,11 +32,16 @@ func TestLayout_StatusPanelFitsLabels(t *testing.T) {
 	}
 }
 
-// 名冊一次列五個人、每人三行，加上標題與提示共 18 行，要塞得進地圖高度。
-func TestLayout_RosterFitsAboveTextBox(t *testing.T) {
-	const rosterLines = 1 + 5*3 + 2
-	if h := rosterLines * textlayout.CellHeight; h > MapHeight {
-		t.Errorf("名冊需要 %d 像素，超過文字視窗上方可用的 %d", h, MapHeight)
+// 名冊一次列五個人、每人四行（含裝備），加上標題與提示共 23 行。
+//
+// **名冊佔整張畫布，不是只有地圖那一塊。** 開名冊時文字視窗不會同時出現，
+// 所以下半部可以借來用。這條原本釘的是「每人三行、要塞進地圖高度」，
+// 加了裝備那一行之後就不成立 —— 行數寫死在測試裡的話，版面改了也不會紅，
+// 所以改成引用 layout 的常數。
+func TestLayout_RosterFitsCanvas(t *testing.T) {
+	const rosterLines = 1 + 5*RosterLinesPerMember + 2
+	if h := rosterLines * textlayout.CellHeight; h > CanvasHeight {
+		t.Errorf("名冊需要 %d 像素，超過畫布高度 %d", h, CanvasHeight)
 	}
 }
 

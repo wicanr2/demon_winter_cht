@@ -266,3 +266,83 @@ func TestLoadSaveGame_ClassWithinRange(t *testing.T) {
 		}
 	}
 }
+
+// 真實存檔的裝備欄要解得出合理的內容。
+//
+// 五名起始角色都有裝備（攻略記載開局就配好），
+// 解出來全空就代表相位或欄位位移錯了。
+func TestInventory_RealSaveHasEquipment(t *testing.T) {
+	save, err := LoadSaveGame(filepath.Join(dataDir, "PARTY.DAT"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	occupied := 0
+	for i := range save.Characters {
+		c := save.Characters[i]
+		for _, slot := range c.Inventory {
+			if !slot.Empty() {
+				occupied++
+			}
+		}
+	}
+	if occupied == 0 {
+		t.Fatal("五名角色的道具欄全空，欄位位移大概錯了")
+	}
+
+	// 起始裝備都沒附魔，附魔欄的儲存值是 10（＝加成 0）。
+	for i := range save.Characters {
+		for j, slot := range save.Characters[i].Inventory {
+			if slot.Empty() {
+				continue
+			}
+			if slot.Enchant != 0 {
+				t.Errorf("角色 %d 第 %d 格的附魔 = %d，起始裝備應為 0",
+					i+1, j, slot.Enchant)
+			}
+			if int(slot.Type) > 30 {
+				t.Errorf("角色 %d 第 %d 格的型別 %d 超出 ITEMS.DAT 的 30 件商品",
+					i+1, j, slot.Type)
+			}
+		}
+	}
+}
+
+// 空槽的其餘欄位沒有意義，不能解讀成「附魔 −10」。
+func TestInventory_EmptySlotHasNoEnchant(t *testing.T) {
+	raw := make([]byte, inventorySlotLen)
+	for i := range raw {
+		raw[i] = 0
+	}
+	raw[slotType] = slotEmpty
+
+	got := parseInventorySlot(raw)
+	if !got.Empty() {
+		t.Fatal("型別 0xFF 應判定為空槽")
+	}
+	if got.Enchant != 0 {
+		t.Errorf("空槽的附魔 = %d，不該把 0 解讀成 −10", got.Enchant)
+	}
+}
+
+// 兩組特效各有一個條件旗標，都啟用時相加。
+func TestInventory_WeaponEffectConditions(t *testing.T) {
+	mk := func(condA, effA, condB, effB byte) InventorySlot {
+		raw := make([]byte, inventorySlotLen)
+		raw[slotType] = 5
+		raw[slotEnchant] = storedOffset
+		raw[slotCondA], raw[slotEffectA] = condA, effA
+		raw[slotCondB], raw[slotEffectB] = condB, effB
+		return parseInventorySlot(raw)
+	}
+
+	if got := mk(0, 13, 0, 14).WeaponEffect; got != 0 {
+		t.Errorf("條件旗標都沒啟用時特效應為 0，得到 %d", got)
+	}
+	if got := mk(effectCondEnabled, 13, 0, 14).WeaponEffect; got != 3 {
+		t.Errorf("只啟用 A 組時特效 = %d，預期 13−10 = 3", got)
+	}
+	if got := mk(effectCondEnabled, 13, effectCondEnabled, 14).WeaponEffect; got != 7 {
+		t.Errorf("兩組都啟用時特效 = %d，預期 3+4 = 7", got)
+	}
+}

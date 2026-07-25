@@ -350,3 +350,88 @@ func TestCharacter_ApplyToLeavesUnknownFields(t *testing.T) {
 		t.Error("含加成欄位被改寫了")
 	}
 }
+
+// 裝備要真的換算成戰鬥數值。
+//
+// 少帶裝備的話角色會空手、零護甲上場，戰鬥數字全部偏掉，
+// 但畫面上看不出哪裡不對 —— 這是最容易被漏掉的一類缺陷。
+func TestCharacter_EquipmentToCombatUnit(t *testing.T) {
+	var c Character
+	c.Name = "Kern"
+	c.Level = 3
+	c.CurrentHP, c.MaxHP = 20, 30
+	c.Traits[gamedata.Speed] = 11
+	c.Traits[gamedata.Strength] = 9
+
+	// 第 0 格闊劍（ITEMS.DAT 索引 5），附魔 +2、特效 +3。
+	c.Inventory[0] = scenario.InventorySlot{Type: 5, Enchant: 2, WeaponEffect: 3}
+	// 第 1 格鎖子甲（索引 10 → 防護 3）。
+	c.Inventory[1] = scenario.InventorySlot{Type: 10}
+	c.EquippedWeapon = 0
+	c.EquippedArmor = 1
+
+	u := c.CombatUnit(PlayerSlotStart, 8, 1, West)
+
+	if u.WeaponIndex != 6 {
+		t.Errorf("武器骰索引 = %d，預期 ITEMS.DAT 索引 5 + 1 = 6", u.WeaponIndex)
+	}
+	if u.Armor != 3 {
+		t.Errorf("護甲 = %d，預期鎖子甲的 3", u.Armor)
+	}
+	if u.EnchantBonus != 2 || u.WeaponEffect != 3 {
+		t.Errorf("附魔／特效 = %d／%d，預期 2／3", u.EnchantBonus, u.WeaponEffect)
+	}
+	if !u.IsPlayer || u.Speed != 11 || u.HP != 20 || u.MaxHP != 30 {
+		t.Errorf("基本欄位沒帶過來：%+v", u)
+	}
+}
+
+// 沒裝備就是徒手、零護甲 —— 徒手在骰表的索引是 0，那一格是刻意留的。
+func TestCharacter_UnarmedDefaults(t *testing.T) {
+	var c Character
+	for i := range c.Inventory {
+		c.Inventory[i] = scenario.InventorySlot{Type: 0xff}
+	}
+	c.EquippedWeapon, c.EquippedArmor = 0, 1
+
+	if got := c.WeaponDieIndex(); got != 0 {
+		t.Errorf("空手的骰表索引 = %d，預期 0", got)
+	}
+	if got := c.ArmorRating(); got != 0 {
+		t.Errorf("沒穿護甲的防護 = %d，預期 0", got)
+	}
+	if got := WeaponDamageDie(0); got != 2 {
+		t.Errorf("徒手骰面 = %d，預期 2", got)
+	}
+}
+
+// 五件護甲的防護值 1–5，對應 ITEMS.DAT 索引 8–12。
+func TestCharacter_ArmorRatingRange(t *testing.T) {
+	for typ := armorFirstIndex; typ <= armorLastIndex; typ++ {
+		var c Character
+		c.Inventory[0] = scenario.InventorySlot{Type: byte(typ)}
+		c.EquippedArmor = 0
+		want := typ - armorRatingBase
+		if got := c.ArmorRating(); got != want {
+			t.Errorf("索引 %d 的護甲防護 = %d，預期 %d", typ, got, want)
+		}
+	}
+	// 武器不該被當成護甲。
+	var c Character
+	c.Inventory[0] = scenario.InventorySlot{Type: 5}
+	c.EquippedArmor = 0
+	if got := c.ArmorRating(); got != 0 {
+		t.Errorf("把武器當護甲時防護 = %d，預期 0", got)
+	}
+}
+
+// 裝備欄索引超出範圍不能 panic。
+func TestCharacter_BadEquipIndex(t *testing.T) {
+	var c Character
+	for _, i := range []int{-1, InventorySlots, 999} {
+		c.EquippedWeapon, c.EquippedArmor = i, i
+		if !c.Weapon().Empty() || !c.Armor().Empty() {
+			t.Errorf("索引 %d 應視為空槽", i)
+		}
+	}
+}

@@ -46,6 +46,35 @@ type Character struct {
 
 	// Skills 是已學技能，索引即遊戲內部技能 id。
 	Skills [gamedata.NumSkills]bool
+
+	// Inventory 是 10 格裝備／道具。
+	Inventory [InventorySlots]scenario.InventorySlot
+	// EquippedWeapon／EquippedArmor 是目前裝備的那一格的索引。
+	//
+	// **待複核**：兩個欄位是反組譯推得（存檔 +0x100／+0x101），
+	// 尚未做 DOSBox 動態複核。
+	EquippedWeapon int
+	EquippedArmor  int
+}
+
+// InventorySlots 是每個角色的道具欄格數。
+const InventorySlots = 10
+
+// Weapon 回傳目前裝備的武器那一格。沒裝備時回傳空槽。
+func (c *Character) Weapon() scenario.InventorySlot {
+	return c.slot(c.EquippedWeapon)
+}
+
+// Armor 回傳目前裝備的護甲那一格。
+func (c *Character) Armor() scenario.InventorySlot {
+	return c.slot(c.EquippedArmor)
+}
+
+func (c *Character) slot(i int) scenario.InventorySlot {
+	if i < 0 || i >= InventorySlots {
+		return scenario.InventorySlot{Type: 0xff}
+	}
+	return c.Inventory[i]
 }
 
 // FromSave 把存檔解出來的角色轉成規則層的表示。
@@ -61,6 +90,10 @@ func FromSave(c scenario.Character) Character {
 		MaxSP:      int(c.MaxSPBonus),
 		CurrentSP:  int(c.CurrentSP),
 	}
+	out.EquippedWeapon = int(c.WeaponSlotIndex)
+	out.EquippedArmor = int(c.ArmorSlotIndex)
+	out.Inventory = c.Inventory
+
 	out.Traits[gamedata.Speed] = int(c.SpeedNatural)
 	out.Traits[gamedata.Strength] = int(c.StrengthNatural)
 	out.Traits[gamedata.Intellect] = int(c.Intellect)
@@ -269,5 +302,71 @@ func (c Character) ApplyTo(rec *scenario.Character) {
 		} else {
 			rec.SkillFlags[i] = 0
 		}
+	}
+}
+
+// 裝備換算成戰鬥數值。
+//
+// 兩張表都不在 `ITEMS.DAT` 裡：
+//   - 武器骰表內嵌在 `DEMON.INT`（`31f0:1785`），索引是 `ITEMS.DAT 索引 + 1`
+//     （戰鬥碼直接這樣用，見 docs/formats/game-data-tables.md §1.3）
+//   - 護甲防護值是手冊記載的 1–5，對應 `ITEMS.DAT` 索引 8–12 的五件護甲
+//     （布甲 1 … 板甲 5），所以防護值 = 索引 − 7
+const (
+	// armorFirstIndex／armorLastIndex 是五件護甲在 ITEMS.DAT 的索引範圍。
+	armorFirstIndex = 8
+	armorLastIndex  = 12
+	// armorRatingBase 讓「索引 − base」等於防護值。
+	armorRatingBase = armorFirstIndex - 1
+)
+
+// WeaponDieIndex 回傳角色目前武器在傷害骰表裡的索引。
+//
+// 沒裝備武器時回 0（徒手），骰面 2 —— 這是表裡刻意留的那一格，
+// 不是 padding。
+func (c *Character) WeaponDieIndex() int {
+	w := c.Weapon()
+	if w.Empty() || int(w.Type) >= armorFirstIndex {
+		return 0
+	}
+	return int(w.Type) + 1
+}
+
+// ArmorRating 回傳角色目前的護甲防護值。沒穿護甲回 0。
+func (c *Character) ArmorRating() int {
+	a := c.Armor()
+	if a.Empty() || int(a.Type) < armorFirstIndex || int(a.Type) > armorLastIndex {
+		return 0
+	}
+	return int(a.Type) - armorRatingBase
+}
+
+// CombatUnit 依角色目前的狀態與裝備建一個戰鬥單位。
+//
+// **裝備一定要帶進來。** 少帶的話角色會空手、零護甲上場 ——
+// 戰鬥數字全部偏掉，但畫面上看不出哪裡不對。
+func (c *Character) CombatUnit(slot, x, y int, facing Facing) *Unit {
+	w := c.Weapon()
+	return &Unit{
+		Slot: slot, Name: c.Name,
+		X: x, Y: y, Facing: int(facing),
+		Speed:        c.Traits[gamedata.Speed],
+		Strength:     c.Traits[gamedata.Strength],
+		Skill:        c.Traits[gamedata.Skill],
+		Intellect:    c.Traits[gamedata.Intellect],
+		Level:        c.Level,
+		HP:           c.CurrentHP,
+		MaxHP:        c.MaxHP,
+		MaxSP:        c.MaxSP,
+		CurrentSP:    c.CurrentSP,
+		Armor:        c.ArmorRating(),
+		WeaponIndex:  c.WeaponDieIndex(),
+		WeaponEffect: w.WeaponEffect,
+		EnchantBonus: w.Enchant,
+		IsPlayer:     true,
+		Berserking:   c.HasSkill(gamedata.SkillBerserking),
+		Style: StyleFor(c.WeaponDieIndex(), func(s gamedata.SkillID) bool {
+			return c.HasSkill(s)
+		}),
 	}
 }

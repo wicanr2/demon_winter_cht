@@ -76,6 +76,8 @@ type app struct {
 	create *createScreen
 	// spells 非 nil 時戰鬥中的施法選單開著。
 	spells *spellMenu
+	// useMenu 非 nil 時戰鬥中的使用道具選單開著。
+	useMenu *itemMenu
 	// aoe 非 nil 時正在選範圍法術的中心點，aoeX/aoeY 是游標位置。
 	aoe        *aoeCursor
 	aoeX, aoeY int
@@ -234,6 +236,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 	switch {
 	case a.battle != nil && a.spells != nil:
 		a.drawSpellMenu(a.canvas)
+	case a.battle != nil && a.useMenu != nil:
+		a.drawItemMenu(a.canvas)
 	case a.battle != nil:
 		a.drawBattlefield(a.canvas)
 		a.drawBattle(a.canvas)
@@ -242,7 +246,7 @@ func (a *app) Draw(screen *ebiten.Image) {
 	default:
 		a.drawStatus(a.canvas)
 	}
-	if a.battle != nil && a.spells == nil && !a.box.Active() {
+	if a.battle != nil && a.spells == nil && a.useMenu == nil && !a.box.Active() {
 		a.drawBattleCommands(a.canvas)
 	}
 	ui.DrawMixedTextBox(a.canvas, a.box, a.font, 0, layout.TextBoxTop, markerColor)
@@ -360,21 +364,7 @@ func (a *app) startBattle(ids []int) {
 		if slot >= game.PlayerSlotEnd {
 			break
 		}
-		units = append(units, &game.Unit{
-			Slot: slot, Name: c.Name,
-			X: 8, Y: i + 1, Facing: int(game.West),
-			Speed:      c.Traits[gamedata.Speed],
-			Strength:   c.Traits[gamedata.Strength],
-			Skill:      c.Traits[gamedata.Skill],
-			Intellect:  c.Traits[gamedata.Intellect],
-			Level:      c.Level,
-			HP:         c.CurrentHP,
-			MaxHP:      c.MaxHP,
-			MaxSP:      c.MaxSP,
-			CurrentSP:  c.CurrentSP,
-			IsPlayer:   true,
-			Berserking: c.HasSkill(gamedata.SkillBerserking),
-		})
+		units = append(units, c.CombatUnit(slot, 8, i+1, game.West))
 	}
 
 	a.battle = game.NewBattle(a.rng, units)
@@ -454,6 +444,7 @@ func (a *app) drawRoster(dst *ebiten.Image) {
 		line(fmt.Sprintf("%-8s %d級 %s", c.Name, c.Level, nameOf(className, int(c.Class))))
 		line(fmt.Sprintf(" %s 生命 %3d/%3d", nameOf(raceName, int(c.Race)), c.CurrentHP, c.MaxHP))
 		line(fmt.Sprintf(" 法力 %3d/%3d 未用點數 %d", c.CurrentSP, c.MaxSP, pts))
+		line(fmt.Sprintf(" %s 護甲 %d", a.weaponLabel(c), c.ArmorRating()))
 	}
 	line("")
 	line("P：返回")
@@ -619,4 +610,20 @@ func main() {
 	if err := ebiten.RunGame(a); err != nil && err != ebiten.Termination {
 		log.Fatal(err)
 	}
+}
+
+// weaponLabel 回傳角色目前武器的顯示名稱。
+func (a *app) weaponLabel(c game.Character) string {
+	w := c.Weapon()
+	if w.Empty() {
+		return "徒手"
+	}
+	item, err := a.items.ByIndex(int(w.Type))
+	if err != nil {
+		return fmt.Sprintf("道具 %d", w.Type)
+	}
+	if w.Enchant != 0 {
+		return fmt.Sprintf("%s%+d", item.Name, w.Enchant)
+	}
+	return item.Name
 }

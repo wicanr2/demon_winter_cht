@@ -49,3 +49,9 @@ const (
 // TextBoxTop 是文字視窗頂端。它與畫布下緣切齊 ——
 // 版面靠這條等式閉合，改任一個常數都會被 layout 的測試擋下來。
 const TextBoxTop = CanvasHeight - BoxHeight
+
+// RosterLinesPerMember 是隊伍名冊每個成員佔幾行。
+//
+// 姓名／等級／職業、種族／生命、法力／未用點數、武器／護甲 —— 共四行。
+// 名冊開著時文字視窗不會同時出現，所以它可以用滿整張畫布的高度。
+const RosterLinesPerMember = 4
