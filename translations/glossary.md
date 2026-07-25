@@ -29,7 +29,7 @@
 | the Ancients | 遠古種族 | **複數**，指遠古種族整體，非單一個體；`TOWN.TXT` 城鎮描述文字出現 "With the Ancients gone and Malifon imprisoned…"、"the Ancients became angry at Malifon"，確認為複數集合用法，與「The Ancient One 遠古者」（單數）需區分譯詞（2026-07 彙整裁決） |
 | White Knights | 白騎士團 | |
 | Orb of Evertime | 恆世寶珠 | `T2C.TXT` 劇情物品 |
-| Shard of Spring | 春之碎片 | SSI 前作，手冊有提及 |
+| Shard of Spring | 春之石 | SSI 前作，手冊有提及。**採軟體世界 1990 年官方中文標題**（2026-07-25 裁決）——作品標題取通行譯名，不取字面直譯，同「冬之魔」|
 
 ### 劇情道具（攻略新增）
 
