@@ -303,7 +303,7 @@ flowchart TD
 222f:0df6   JMP 0x171e4（本文位址，= 跳表本體 222f:12f4）
 ...
 222f:12f4   CMP AX,0x13        ; AX >= 19 → 走 default
-222f:12f7   JAE default(222f:11a8)
+222f:12f7   JAE default(222f:12c8)   ; 訂正:原寫 11a8,見下方位址訂正說明
 222f:12f9   XCHG AX,BX
 222f:12fa   SHL BX,1
 222f:12fc   JMP CS:[BX+0x12ce] ; 跳表本體，19 個 word entries
@@ -315,9 +315,21 @@ flowchart TD
 | 4 | `222f:0dff` | 跳過設 facing，沿用目前 facing，走移動處理（§6） |
 | 5 | `222f:1274` | 設 `0x5c66=0x80`，回傳 `0xfffe`（PartyInfo，推測顯示疊圖） |
 | 6 | `222f:1282` | 檢查 `0x4e2e`；呼叫 `FUN_222f_0a90()`；>0 直接回傳（見 §5.3 限制） |
-| 7–17（11 個值） | `222f:12b8` | `MOV AX,[BP-4]; RETURN AX`（即回傳 `switch值-1`，交給外層 dispatcher） |
-| 18 | `222f:1298` | Quit：`CALLF 1d9f:19d3`(確認對話框，帶參數3) → 若確認(AX==1) `CALLF 1d9f:2962`(真正離開) → 重繪 → 回 exit trampoline |
-| ≥19（含 -1 取消） | `222f:11a8`（同 7–17 的 shared handler） | default：等同 case 7–17 |
+| 7–17（11 個值） | `222f:12c8` | `MOV AX,[BP-4]; RETURN AX`（即回傳 `switch值-1`，交給外層 dispatcher） |
+| 18 | `222f:12a8` | Quit：`CALLF 1d9f:19d3`(確認對話框，帶參數3) → 若確認(AX==1) `CALLF 1d9f:2962`(真正離開) → 重繪 → 回 exit trampoline |
+| ≥19（含 -1 取消） | `222f:12c8`（與 7–17 同一位址） | default：等同 case 7–17 |
+
+> **⚠ 2026-07-25 位址訂正**：上表原本把 case 7–17 寫成 `222f:12b8`、case 18 寫成 `222f:1298`、
+> default 寫成 `222f:11a8`，三者都是**手工換算時的 `0x10` 疏失**（前兩者少了 0x10，
+> default 更是誤植成另一個位址）。
+>
+> 協調者已從 binary 直接解出跳表 19 項核對，正確值為：
+> cases 0–3 → `0df9`、case 4 → `0dff`、case 5 → `1274`、case 6 → `1282`、
+> **cases 7–17 → `12c8`**、**case 18 → `12a8`**。
+> default 與 cases 7–17 **共用同一個位址** `12c8`，不是另一個 handler。
+>
+> **只是位址標籤錯，行為理解沒錯** —— 本表描述的各 case 行為與 Ghidra 修好跳表後的
+> 反編譯輸出逐一比對一致（見 `docs/re/12`）。
 
 （位址均為「本文自訂的 222f 內顯示位址」，換算自 objdump 讀出的 file_offset，公式見 §1；
 與 Ghidra 顯示的 `disassembly.asm` 位址系統一致，可用 `tools/re_fun_222f_0b0e_cfg.py`
