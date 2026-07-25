@@ -57,8 +57,10 @@ if [ -n '$KEYS' ]; then
     sleep 0.6
 fi
 DISPLAY=:99 import -window root /out/$(basename "$OUT_ABS")
-kill \$APP_PID \$XVFB_PID 2>/dev/null || true
-wait 2>/dev/null || true
+# 一律 KILL：TERM 有機會被卡在裝置 I/O 的執行緒忽略，
+# 那時 wait 會永遠等下去，整個截圖流程掛住。
+kill -9 \$APP_PID \$XVFB_PID 2>/dev/null || true
+wait \$APP_PID 2>/dev/null || true
 echo '--- app log ---'; cat /tmp/app.log || true
 "
 echo "截圖 -> $OUT_ABS"

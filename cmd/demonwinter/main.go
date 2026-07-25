@@ -48,6 +48,9 @@ type app struct {
 	// 一旦被線性濾波就糊掉，這是唯一能保住像素邊緣的做法。
 	canvas *ebiten.Image
 
+	// speaker 播原版的 PC speaker 音效。原版沒有配樂，只有這幾段短音效。
+	speaker *ui.Speaker
+
 	normal, winter *ui.Tileset
 	useWinter      bool
 	font           *ui.MixedFont
@@ -438,6 +441,8 @@ func main() {
 		"倚天中文字型目錄，需含 STDFONT.15 與 SPCFONT.15（自備）")
 	mapFile := flag.String("map", "MAP1.MAP", "要載入的地圖檔")
 	dataFile := flag.String("events", "DATA1.TXT", "要載入的事件表")
+	volume := flag.Float64("volume", 0.25,
+		"音效音量 0–1。原版沒有音量控制（喇叭只有開關），這是體貼現代耳朵")
 	savePath := flag.String("save", "workplace/save/PARTY.DAT",
 		"進度存檔路徑。刻意不預設在原版資料目錄，免得蓋掉玩家的原版存檔")
 	langDir := flag.String("lang", "assets/lang/zh-Hant",
@@ -553,6 +558,7 @@ func main() {
 		normal:     loadSet(gfx.NormalTiles),
 		winter:     loadSet(gfx.WinterTiles),
 		font:       font,
+		speaker:    ui.NewSpeaker(*volume),
 		save:       save,
 		savePath:   *savePath,
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
+	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
@@ -28,6 +29,7 @@ var playerCommands = []struct {
 	{ebiten.KeyP, "P 祈禱", game.ActionPray},
 	{ebiten.KeyL, "L 汲取法力", game.ActionLeech},
 	{ebiten.KeyD, "D 閃避", game.ActionDodge},
+	{ebiten.KeyS, "S 音效開關", game.ActionSound},
 	{ebiten.KeyEscape, "Esc 結束回合", game.ActionEndTurn},
 }
 
@@ -188,6 +190,15 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 		bonus := a.battle.DoDodge()
 		a.logf("%s 進入閃避（命中率 %d）", u.Name, game.DodgeHitModifier(bonus))
 
+	case game.ActionSound:
+		// 對應原版的 Sound on／Sound off（旗標 [0x1585]）。不耗行動點。
+		a.speaker.SetEnabled(!a.speaker.Enabled())
+		if a.speaker.Enabled() {
+			a.logf("音效開啟")
+		} else {
+			a.logf("音效關閉")
+		}
+
 	case game.ActionEndTurn:
 		a.battle.Spend(act)
 		a.logf("%s 結束回合", u.Name)
@@ -260,15 +271,24 @@ func turnActionToward(cur, want game.Facing) game.Action {
 	}
 }
 
+// reportAttack 把一次攻擊的結果寫進紀錄並播對應音效。
+//
+// 音效編號照反組譯查到的呼叫端（見 docs/re/03 §1.5）：
+// 未命中依交戰距離用 1 或 4、命中依武器類型用 5 或 8、陣亡放那段旋律。
+// 這裡先用「近戰」那一支（1／5）—— 遠端攻擊的判別條件（欄位 0x4ed4）
+// 還沒接進戰鬥單位。
 func (a *app) reportAttack(attacker, target *game.Unit, res game.AttackResult) {
 	switch {
 	case !res.Hit:
+		a.speaker.Play(pcspeaker.EffectC3)
 		a.logf("%s 落空", attacker.Name)
 	case res.NoEffect:
 		a.logf("%s 對 %s 無效", attacker.Name, target.Name)
 	case res.Killed:
+		a.speaker.Play(pcspeaker.EffectDeath)
 		a.logf("%s 擊殺 %s（%d 點）", attacker.Name, target.Name, res.Damage)
 	default:
+		a.speaker.Play(pcspeaker.EffectG3)
 		verb := "命中"
 		if res.Critical {
 			verb = "重擊"
