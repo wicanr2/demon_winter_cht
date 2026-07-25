@@ -64,7 +64,12 @@ type app struct {
 	showRoster bool
 
 	monsters *gamedata.MonsterTable
-	rng      *rng.RNG
+	towns    *gamedata.TownTable
+	items    *gamedata.ItemTable
+
+	// town 非 nil 時遊戲在城鎮畫面，地圖與戰鬥輸入都停止。
+	town *townScreen
+	rng  *rng.RNG
 
 	// prayChance 是祈禱的成功率，會隨每次祈禱變動，跨戰鬥保留。
 	prayChance int
@@ -99,6 +104,9 @@ var keyFacing = []struct {
 }
 
 func (a *app) Update() error {
+	if a.town != nil {
+		return a.updateTown()
+	}
 	if a.battle != nil {
 		return a.updateBattle()
 	}
@@ -151,6 +159,9 @@ func (a *app) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
 		a.showRoster = !a.showRoster
 	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyT) {
+		a.openTownPicker()
+	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		return ebiten.Termination
 	}
@@ -159,6 +170,13 @@ func (a *app) Update() error {
 
 func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
+	if a.town != nil {
+		a.drawTown(a.canvas)
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
 	// 戰鬥有自己的戰場，不畫世界地圖 —— 把大地圖留在底下會讓
 	// 「單位站在哪一格」完全看不出來。
 	if a.battle == nil {
@@ -338,6 +356,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"方向鍵：移動",
 		"Tab：切換季節",
 		"P：隊伍名冊",
+		"T：進入城鎮",
 		"空白鍵：翻頁",
 		"Esc：離開",
 	}
@@ -425,6 +444,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入怪物表：%v", err)
 	}
+	towns, err := gamedata.LoadTownTable(*dataDir)
+	if err != nil {
+		log.Fatalf("載入城鎮表：%v", err)
+	}
+	items, err := gamedata.LoadItemTable(filepath.Join(*dataDir, "ITEMS.DAT"))
+	if err != nil {
+		log.Fatalf("載入道具表：%v", err)
+	}
 	save, err := scenario.LoadSaveGame(filepath.Join(*dataDir, "PARTY.DAT"))
 	if err != nil {
 		log.Fatalf("載入隊伍存檔：%v", err)
@@ -489,6 +516,8 @@ func main() {
 		tables:     tables,
 		members:    members,
 		monsters:   monsters,
+		towns:      towns,
+		items:      items,
 		rng:        rng.New(),
 		normal:     loadSet(gfx.NormalTiles),
 		winter:     loadSet(gfx.WinterTiles),
