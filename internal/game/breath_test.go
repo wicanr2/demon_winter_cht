@@ -69,13 +69,13 @@ func TestBreathCone_SameShapeAllDirections(t *testing.T) {
 func breathBattle(t *testing.T) *Battle {
 	t.Helper()
 	units := []*Unit{
-		{Slot: 0, Name: "龍", X: 4, Y: 6, HP: 30, MaxHP: 30, Facing: int(North), RaceOrElement: 9},
+		{Slot: 0, Name: "龍", X: BattleCentreX, Y: BattleCentreY + 2, HP: 30, MaxHP: 30, Facing: int(North), RaceOrElement: 9},
 	}
 	// 三個玩家排在龍的正前方一直線上。
 	for i := 0; i < 3; i++ {
 		units = append(units, &Unit{
 			Slot: PlayerSlotStart + i, Name: "我" + string(rune('A'+i)),
-			X: 4, Y: 5 - i, HP: 10, MaxHP: 10, IsPlayer: true,
+			X: BattleCentreX, Y: BattleCentreY + 1 - i, HP: 10, MaxHP: 10, IsPlayer: true,
 		})
 	}
 	return NewBattle(rng.NewWithSeed(1), units)
@@ -227,8 +227,8 @@ func TestBreathe_VetoLeavesEveryoneAlone(t *testing.T) {
 	b := breathBattle(t)
 	dragon := b.Unit(0)
 	// 塞兩個同伴進錐形裡：敵方 3、己方 2 → 2×2 = 4 > 3 → 否決。
-	for i, y := range []int{4, 3} {
-		b.units[1+i] = &Unit{Slot: 1 + i, Name: "同伴", X: 3 + i, Y: y,
+	for i, y := range []int{BattleCentreY, BattleCentreY - 1} {
+		b.units[1+i] = &Unit{Slot: 1 + i, Name: "同伴", X: BattleCentreX - 1 + i, Y: y,
 			HP: 10, MaxHP: 10, Side: SideMonster}
 	}
 	before := map[*Unit]int{}

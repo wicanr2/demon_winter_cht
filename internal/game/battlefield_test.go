@@ -6,8 +6,18 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 )
 
-// gridBattle 擺一個玩家與一隻怪，位置與面向可指定。
+// battleTestBase 把測試裡的小座標平移進 15×15 戰場：(5,5) 落在正中央。
+//
+// 戰場的合法座標是 6–20（`docs/re/36`），測試寫 0–8 比較好讀，
+// 所以統一在這裡加上偏移，斷言那邊也用 tx()／ty() 換算。
+const battleTestBase = BattleCentreX - 5
+
+func tx(n int) int { return n + battleTestBase }
+func ty(n int) int { return n + battleTestBase }
+
+// gridBattle 擺一個玩家與一隻怪，位置與面向可指定（座標會平移進戰場）。
 func gridBattle(px, py, pf, mx, my int) (*Battle, *Unit, *Unit) {
+	px, py, mx, my = tx(px), ty(py), tx(mx), ty(my)
 	player := &Unit{Slot: PlayerSlotStart, Name: "玩家", X: px, Y: py, Facing: pf,
 		Speed: 12, Skill: 10, HP: 30, MaxHP: 30, IsPlayer: true}
 	monster := &Unit{Slot: 0, Name: "怪物", X: mx, Y: my,
@@ -64,7 +74,7 @@ func TestUnitAt_SkipsDead(t *testing.T) {
 	b, _, monster := gridBattle(5, 5, int(North), 5, 4)
 	b.Kill(monster)
 
-	if got := b.UnitAt(5, 4); got != nil {
+	if got := b.UnitAt(tx(5), ty(4)); got != nil {
 		t.Errorf("已死單位不該再佔格子，得到 %v", got.Name)
 	}
 }
@@ -75,8 +85,8 @@ func TestStep_MovesAndSpends(t *testing.T) {
 	if !b.Step(player) {
 		t.Fatal("前方空地應該走得動")
 	}
-	if player.X != 6 || player.Y != 5 {
-		t.Errorf("走到 (%d,%d)，預期 (6,5)", player.X, player.Y)
+	if player.X != tx(6) || player.Y != ty(5) {
+		t.Errorf("走到 (%d,%d)，預期 (%d,%d)", player.X, player.Y, tx(6), ty(5))
 	}
 	if got := b.Points(); got != 10 {
 		t.Errorf("前進應花 2 點，剩 %d，預期 10", got)
@@ -90,7 +100,7 @@ func TestStep_BlockedByUnit(t *testing.T) {
 	if b.Step(player) {
 		t.Error("前方有單位不該走得動")
 	}
-	if player.X != 5 {
+	if player.X != tx(5) {
 		t.Errorf("被擋下時不該移動，位置 (%d,%d)", player.X, player.Y)
 	}
 	if got := b.Points(); got != 12 {
@@ -98,23 +108,23 @@ func TestStep_BlockedByUnit(t *testing.T) {
 	}
 }
 
-// 走出邊界要被擋下。
+// 走出可站範圍要被擋下。
 //
-// 注意西邊界是 X=1 而不是 X=0：原版把 `X == 0` 當成「空槽或已死」的哨兵，
-// 站進去的單位會從行動順序裡消失。
+// 可站範圍是 6–20（外面就是那圈牆），這裡直接用絕對座標，不走 tx()／ty()。
 func TestStep_BlockedByEdge(t *testing.T) {
 	cases := []struct {
 		x, y   int
 		facing Facing
 		where  string
 	}{
-		{BattleGridMinX, 5, West, "西（X=0 是哨兵值）"},
-		{5, 0, North, "北"},
-		{BattleGridWidth - 1, 5, East, "東"},
-		{5, BattleGridHeight - 1, South, "南"},
+		{BattleFieldMin, BattleCentreY, West, "西"},
+		{BattleCentreX, BattleFieldMin, North, "北"},
+		{BattleFieldMax, BattleCentreY, East, "東"},
+		{BattleCentreX, BattleFieldMax, South, "南"},
 	}
 	for _, c := range cases {
-		b, player, _ := gridBattle(c.x, c.y, int(c.facing), 9, 9)
+		b, player, _ := gridBattle(c.x-battleTestBase, c.y-battleTestBase,
+			int(c.facing), 0, 0)
 		if b.Step(player) {
 			t.Errorf("從 (%d,%d) 往%s走出邊界應被擋下", c.x, c.y, c.where)
 		}
@@ -152,7 +162,7 @@ func TestStep_RefusedWhenOutOfPoints(t *testing.T) {
 	if b.Step(player) {
 		t.Error("剩 1 點不該走得動（前進要 2 點）")
 	}
-	if player.X != 5 {
+	if player.X != tx(5) {
 		t.Errorf("失敗的前進不該移動，位置 (%d,%d)", player.X, player.Y)
 	}
 }

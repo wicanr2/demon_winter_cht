@@ -46,6 +46,9 @@ type Battle struct {
 	// 見 action.go。
 	points    int
 	pointsFor *Unit
+
+	// Terrain 是這場戰鬥的地形。nil 代表不做地形判定（單元測試常這樣用）。
+	Terrain *BattleTerrain
 }
 
 // NewBattle 建立一場戰鬥。units 依槽位放入，空槽傳 nil。

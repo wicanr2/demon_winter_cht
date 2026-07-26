@@ -6,11 +6,13 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 )
 
-// flatTerrain 造一塊全部同值的戰場地形。
+// flatTerrain 造一塊可站範圍全部同值的戰場地形（外圍留 0，等於不可站）。
 func flatTerrain(tile byte) *BattleTerrain {
 	var t BattleTerrain
-	for i := range t {
-		t[i] = tile
+	for y := BattleFieldMin; y <= BattleFieldMax; y++ {
+		for x := BattleFieldMin; x <= BattleFieldMax; x++ {
+			t[y*BattleTerrainSize+x] = tile
+		}
 	}
 	return &t
 }
@@ -74,7 +76,7 @@ func TestScatterMonster_StaysWithinTwoOfCentre(t *testing.T) {
 // 兩個獨立的證據：怪物不會疊在一起，也不會站到不是空地的格子上。
 func TestScatterMonster_AvoidsOccupiedAndNonGround(t *testing.T) {
 	terrain := flatTerrain(7)
-	// 把中心那一列以外全部改成牆，只留 (3,4) (4,4) (5,4)。
+	// 把中心那一列以外全部改成別的地形，只留中心那一列是空地。
 	for y := 0; y < BattleGridHeight; y++ {
 		for x := 0; x < BattleGridWidth; x++ {
 			if y != BattleCentreY {
@@ -102,18 +104,15 @@ func TestScatterMonster_AvoidsOccupiedAndNonGround(t *testing.T) {
 	}
 }
 
-func TestGroundTile_IsTheCentreCell(t *testing.T) {
+// 牆與界外都不可站。
+func TestOpenGround_RejectsOutsideTheField(t *testing.T) {
 	terrain := flatTerrain(7)
-	terrain[BattleCentreY*BattleTerrainSize+BattleCentreX] = 42
-	if got := GroundTile(terrain); got != 42 {
-		t.Errorf("空地值 %d，預期中心那一格的 42", got)
-	}
-}
-
-// X == 0 是原版「空槽或已死」的哨兵，不能拿來站人。
-func TestOpenGround_RejectsSentinelColumn(t *testing.T) {
-	terrain := flatTerrain(7)
-	if OpenGround(terrain, nil, 7, 0, 4) {
-		t.Error("第 0 欄不可站人")
+	for _, p := range [][2]int{
+		{0, 0}, {BattleWallLow, BattleCentreY}, {BattleWallHigh, BattleCentreY},
+		{BattleCentreX, BattleFieldMax + 1},
+	} {
+		if OpenGround(terrain, nil, p[0], p[1]) {
+			t.Errorf("(%d,%d) 在可站範圍外，不該放得下", p[0], p[1])
+		}
 	}
 }

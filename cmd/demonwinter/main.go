@@ -570,32 +570,20 @@ var debugBattleMonsters = []int{2, 3, 4, 1}
 // 看得到多大一塊由時辰決定：正午整個 9×9 都畫得出來，深夜只剩中央 3×3。
 // 切不出來（不該發生）就回 nil，畫面退回沒有地形的樣子，不讓戰鬥開不起來。
 func (a *app) terrainForBattle() *game.BattleTerrain {
-	t, err := game.NewBattleTerrain(a.tiles, a.party.X(), a.party.Y(), a.battleLight())
+	t, err := game.NewBattleTerrain(a.tiles, a.party.X(), a.party.Y())
 	if err != nil {
 		a.message = fmt.Sprintf("戰場地形切不出來：%v", err)
 		return nil
 	}
-	vis, err := t.Visible(a.tables.Sight())
-	if err != nil {
-		return t
-	}
-	return vis
+	return t
 }
 
-// battleLight 決定這場戰鬥看得到多大一塊戰場。
+// 這裡原本有一個 battleLight()：把光照等級當成戰場視野的內縮量。
 //
-// 戶外看天色，地城看光源 —— 原版就是照子地圖編號分這兩條
-// （DEMON.INT 0x161a3 用 `>= 10` 判斷）。
-//
-// 地城的光源強度來自存檔（+0xa7，兩份原版存檔都是 1 → 3×3 的視野，
-// 火把照得到的範圍）。本專案還沒有點火把／照明術這些會改動它的機制，
-// 所以整場維持初值 —— 少的是「讓它變亮的手段」，不是這條規則本身。
-func (a *app) battleLight() game.LightLevel {
-	if world.IsWorldSubMap(a.mapID) {
-		return a.clock.Light()
-	}
-	return game.DungeonLight(int(a.torch))
-}
+// **那條規則不屬於戰場。** 它來自 `0x172f4`，而那一段填的是另一塊 9×9 的
+// 緩衝（`[0x514e]`）；真正的戰場地形是由 3×3 個世界 tile 各放大 5×5 拼出來的，
+// 整段程式碼裡沒有任何光照內縮（`docs/re/36`）。光照要接回哪個畫面還沒查清楚，
+// 在查清楚之前寧可什麼都不做，也不要把它掛在對不上的地方。
 
 // monsterSourceFile 是怪物名稱翻譯目錄的 key，與 dwstrings 產生時一致。
 const monsterSourceFile = "MONSTER.DAT"
@@ -606,14 +594,7 @@ const monsterSourceFile = "MONSTER.DAT"
 func (a *app) startBattle(ids []int) {
 	var units []*game.Unit
 
-	// 擺位不看地形，只看有沒有人站著。
-	//
-	// 原版多一道條件：落點的地形值必須等於隊伍腳下那一格的值
-	// （`docs/re/35` §3）。本專案**沒有套** —— 我們的戰鬥根本沒有地形阻擋，
-	// `CanStep` 只查邊界與佔位，單位走得過任何一格。只在生成時擋、
-	// 移動時不擋，是自相矛盾的一半規則；等戰場地形阻擋做出來再一起上。
-	// （實測過套上去的後果：戰場地形是從大地圖切下來的，中心與鄰格的
-	// tile 幾乎都不同，怪物一隻也放不下，進戰鬥直接「怪物全滅」。）
+	// 地形要先切出來 —— 擺位與移動都要問「這一格是不是空地」。
 	terrain := a.terrainForBattle()
 	taken := map[[2]int]bool{}
 	occupied := func(x, y int) bool { return taken[[2]int{x, y}] }
@@ -628,7 +609,7 @@ func (a *app) startBattle(ids []int) {
 		if !ok {
 			// 陣型裡沒有他 —— 原版佈陣是掃九格，沒被放進去的人不會上場。
 			// 本專案不讓人憑空消失：塞進中心附近還空著的位置。
-			x, y, ok = game.ScatterMonster(a.rng, nil, occupied)
+			x, y, ok = game.ScatterMonster(a.rng, terrain, occupied)
 			if !ok {
 				continue
 			}
@@ -646,7 +627,7 @@ func (a *app) startBattle(ids []int) {
 		if err != nil {
 			continue
 		}
-		x, y, ok := game.ScatterMonster(a.rng, nil, occupied)
+		x, y, ok := game.ScatterMonster(a.rng, terrain, occupied)
 		if !ok {
 			continue // 中心附近站滿了，這一隻上不了場
 		}
@@ -665,6 +646,7 @@ func (a *app) startBattle(ids []int) {
 	}
 
 	a.battle = game.NewBattle(a.rng, units)
+	a.battle.Terrain = terrain
 	a.battle.BeginRound()
 	a.battleTerrain = terrain
 	// 祈禱成功率跨戰鬥保留、每次祈禱永久遞減；初值 20% 來自手冊

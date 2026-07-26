@@ -53,16 +53,24 @@ func TestLayout_TileScaleMatchesTextGrid(t *testing.T) {
 	}
 }
 
-// 戰場的規則邊界必須與畫得出來的格數一致。
+// 戰場（15×15）比視窗（9×9）大，所以畫面一定要會捲動。
 //
-// 規則允許走到視野外的話，單位會憑空消失 —— 而且從規格看不出哪裡錯，
-// 因為兩個常數各自都「合理」。
-func TestBattleGrid_MatchesViewport(t *testing.T) {
+// 這條測試釘的不是「相等」而是「視窗不大於戰場」+「視窗確實比戰場小」——
+// 前者防止畫出戰場外的空格，後者提醒：只要這個關係還在，捲動就不能拿掉。
+// 原版也是這樣（`FUN_222f_1404(中心−4, 中心−4)`，見 docs/re/35）。
+func TestBattleViewport_IsAScrollingWindow(t *testing.T) {
 	cell := gfx.TileWidth * TileScale
-	if cols := MapWidth / cell; cols != game.BattleGridWidth {
-		t.Errorf("視野畫得出 %d 欄，戰場規則允許 %d 欄", cols, game.BattleGridWidth)
+	cols, rows := MapWidth/cell, MapHeight/cell
+
+	if cols > game.BattleFieldSize || rows > game.BattleFieldSize {
+		t.Errorf("視窗 %d×%d 大於戰場 %d×%d",
+			cols, rows, game.BattleFieldSize, game.BattleFieldSize)
 	}
-	if rows := MapHeight / cell; rows != game.BattleGridHeight {
-		t.Errorf("視野畫得出 %d 列，戰場規則允許 %d 列", rows, game.BattleGridHeight)
+	if cols >= game.BattleFieldSize && rows >= game.BattleFieldSize {
+		t.Error("視窗與戰場一樣大，那就不需要捲動了 —— 這條測試該改")
+	}
+	if cols != ViewTilesX || rows != ViewTilesY {
+		t.Errorf("視窗 %d×%d 與 ViewTiles %d×%d 對不上",
+			cols, rows, ViewTilesX, ViewTilesY)
 	}
 }

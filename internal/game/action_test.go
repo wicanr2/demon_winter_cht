@@ -9,9 +9,9 @@ import (
 // twoUnitBattle 建一場「一個玩家、一隻怪」的戰鬥，玩家速度可指定。
 func twoUnitBattle(t *testing.T, playerSpeed int) *Battle {
 	t.Helper()
-	player := &Unit{Slot: PlayerSlotStart, Name: "玩家", X: 8, Y: 1,
+	player := &Unit{Slot: PlayerSlotStart, Name: "玩家", X: BattleFieldMax, Y: BattleCentreY,
 		Speed: playerSpeed, Skill: 10, HP: 30, MaxHP: 30, IsPlayer: true}
-	monster := &Unit{Slot: 0, Name: "怪物", X: 2, Y: 1,
+	monster := &Unit{Slot: 0, Name: "怪物", X: BattleFieldMin, Y: BattleCentreY,
 		Speed: 1, Skill: 5, HP: 20, MaxHP: 20}
 
 	b := NewBattle(rng.NewWithSeed(1), []*Unit{player, monster})
@@ -176,9 +176,9 @@ func TestSpend_FreeActions(t *testing.T) {
 
 // 換人時重新配點，換回同一個人不會重配。
 func TestPoints_ResetPerUnit(t *testing.T) {
-	fast := &Unit{Slot: PlayerSlotStart, Name: "快", X: 8, Y: 1,
+	fast := &Unit{Slot: PlayerSlotStart, Name: "快", X: BattleFieldMax, Y: BattleCentreY,
 		Speed: 9, HP: 10, MaxHP: 10, IsPlayer: true}
-	slow := &Unit{Slot: 0, Name: "慢", X: 2, Y: 1,
+	slow := &Unit{Slot: 0, Name: "慢", X: BattleFieldMin, Y: BattleCentreY,
 		Speed: 4, HP: 10, MaxHP: 10}
 
 	b := NewBattle(rng.NewWithSeed(1), []*Unit{fast, slow})

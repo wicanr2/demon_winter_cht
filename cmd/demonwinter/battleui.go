@@ -981,23 +981,58 @@ var aoeColor = color.RGBA{0xff, 0x55, 0x55, 0xff}
 // **底圖是空的。** 手冊說戰場是「該區域的放大地圖」，但那張放大圖怎麼生成
 // 還沒反組譯出來。畫格線比畫一張猜的地形圖誠實 ——
 // 玩家至少看得出誰站哪一格。
+// battleCam 回傳 9×9 視窗的左上角。
+//
+// 戰場是 15×15，視窗只有 9×9 —— 所以畫面得跟著人跑。原版也是這樣：
+// `FUN_222f_1404(中心X − 4, 中心Y − 4)`，中心每步追向行動中的單位
+// （`[0x50f0] += sign(單位X − [0x50f0])`，見 docs/re/35）。
+//
+// 這裡直接對準行動單位，不做逐格追趕 —— 追趕的動畫感在無頭截圖裡看不出來，
+// 而且會讓「現在在看誰」變得不確定。夾在牆框之內，視窗不會飄到空白區。
+func (a *app) battleCam() (x, y int) {
+	cell := gfx.TileWidth * layout.TileScale
+	cols, rows := layout.MapWidth/cell, layout.MapHeight/cell
+
+	cx, cy := game.BattleCentreX, game.BattleCentreY
+	if cur := a.battle.Current(); cur != nil && cur.Alive() {
+		cx, cy = cur.X, cur.Y
+	}
+	return clampCam(cx-cols/2, cols), clampCam(cy-rows/2, rows)
+}
+
+// clampCam 把視窗夾在牆框之內（含牆，牆是戰場的一部分）。
+func clampCam(v, span int) int {
+	lo, hi := game.BattleWallLow, game.BattleWallHigh-span+1
+	if v < lo {
+		return lo
+	}
+	if v > hi {
+		return hi
+	}
+	return v
+}
+
 func (a *app) drawBattlefield(dst *ebiten.Image) {
 	cell := gfx.TileWidth * layout.TileScale
 	cur := a.battle.Current()
+	camX, camY := a.battleCam()
 
-	// 先鋪地形，格線疊在上面。地形是大地圖的局部放大，看不到的格子是空的
-	// （夜間視野縮小、被樹石擋住），那些地方就只剩格線。
+	// 先鋪地形，格線疊在上面。地形是 3×3 個世界 tile 各放大 5×5 拼出來的
+	// （docs/re/36），外圍那圈牆也是地形的一部分。
 	ts := a.tileset()
-	for gy := 0; gy < layout.MapHeight/cell; gy++ {
-		for gx := game.BattleGridMinX; gx < layout.MapWidth/cell; gx++ {
-			if a.battleTerrain != nil {
-				if v := a.battleTerrain.TileAt(gx, gy); v != 0 {
-					if img := ts.Tile(v & 0x7f); img != nil {
-						ui.DrawImageScaled(dst, img, gx*cell, gy*cell, layout.TileScale)
-					}
+	cols, rows := layout.MapWidth/cell, layout.MapHeight/cell
+	for vy := 0; vy < rows; vy++ {
+		for vx := 0; vx < cols; vx++ {
+			// 畫不畫要看座標，**不能看地形值是不是 0** —— 0 是合法的
+			// 世界 tile，大地圖上到處都是（見 game.InArena 的說明）。
+			tx, ty := camX+vx, camY+vy
+			if a.battleTerrain != nil && game.InArena(tx, ty) {
+				v := a.battleTerrain.TileAt(tx, ty)
+				if img := ts.Tile(v & 0x7f); img != nil {
+					ui.DrawImageScaled(dst, img, vx*cell, vy*cell, layout.TileScale)
 				}
 			}
-			ui.StrokeRect(dst, gx*cell, gy*cell, cell, cell, gridColor)
+			ui.StrokeRect(dst, vx*cell, vy*cell, cell, cell, gridColor)
 		}
 	}
 
@@ -1005,17 +1040,17 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 		if a.aoe.area {
 			// 5×5 的效果範圍畫出來，玩家才知道會掃到誰（包含自己人）。
 			r := game.AOERadius
-			ui.StrokeRect(dst, (a.aoeX-r)*cell, (a.aoeY-r)*cell,
+			ui.StrokeRect(dst, (a.aoeX-r-camX)*cell, (a.aoeY-r-camY)*cell,
 				(2*r+1)*cell, (2*r+1)*cell, aoeColor)
 		}
-		ui.StrokeRect(dst, a.aoeX*cell, a.aoeY*cell, cell, cell, aoeColor)
+		ui.StrokeRect(dst, (a.aoeX-camX)*cell, (a.aoeY-camY)*cell, cell, cell, aoeColor)
 	}
 
 	for _, u := range a.battle.Units() {
 		if !u.Alive() {
 			continue
 		}
-		x, y := u.X*cell, u.Y*cell
+		x, y := (u.X-camX)*cell, (u.Y-camY)*cell
 		if x < 0 || x >= layout.MapWidth || y < 0 || y >= layout.MapHeight {
 			continue
 		}

@@ -1,35 +1,60 @@
 package game
 
 // 戰鬥網格上的定位與目標選擇。
+//
+// # 戰場的形狀（`docs/re/36`）
+//
+// 原版開戰時做的第一件事是把一塊 64×64 的緩衝清成 0，然後：
+//
+//  1. 在第 5 與第 21 列／欄畫一圈 17×17 的牆（tile 3）
+//  2. 把大地圖上隊伍周圍的 **3×3 個世界 tile**，每一個攤成 **5×5** 的
+//     戰場格，拼成 15×15 貼進 (6, 6)
+//
+// 所以**可站的範圍是 (6,6)–(20,20)，15×15，中心正是 (13,13)** ——
+// 佈陣把隊伍放在 (13,13) 的道理就在這裡（`docs/re/35`）。
+//
+// 本專案沿用原版的絕對座標，只把緩衝縮到 22×22（原版 64×64 的其餘部分
+// 是空的）。座標一致，之後任何反組譯發現都能直接對號入座。
 const (
-	// BattleGridWidth／BattleGridHeight 是本專案的戰場邊界，取 9×9。
-	//
-	// ⚠ **「9×9 是戰場邊界」這句話要打個折。** 原版的 9×9 是一個
-	// **會跟著行動單位捲動的視窗**（`FUN_222f_1404(中心X−4, 中心Y−4)`，
-	// 中心每回合追著單位跑），單位座標本身是一塊 64 stride 緩衝的索引。
-	// 戰場真正的邊界在哪還沒解 —— 見 `docs/re/35` §4。
-	//
-	// 底下那段視線遮蔽表的推導沒有問題（表確實是 9 寬），
-	// 錯的是把「9 寬」直接讀成「戰場只有 9 格寬」。
-	//
-	// 證據是 FILES.DAT 0x0a8 的視線遮蔽表（見 gamedata/sight.go）：它的
-	// 元素是網格索引、上限 81，讀取端的迴圈把游標從 10 起、每列走 7 格、
-	// 每輪跳 2、到 73 為止 —— 展開來正好是 9 寬網格的內部 7×7，而表也
-	// 剛好切出 49 組。索引展開、上限、掃描範圍三者只有在 9×9 時才自洽。
-	//
-	// 在弄清楚原版的戰場邊界之前，本專案的 9×9 同時扮演戰場與視窗：
-	// 自洽、測試釘得住，而且擺位的相對幾何與原版一致（`docs/re/35`）。
-	// 與呈現層的一致性由 internal/ui/layout 的測試釘住。
-	BattleGridWidth  = 9
-	BattleGridHeight = 9
+	// BattleGridWidth／BattleGridHeight 是緩衝尺寸，含牆。
+	BattleGridWidth  = 22
+	BattleGridHeight = 22
+
+	// BattleWallLow／BattleWallHigh 是牆框所在的列／欄。
+	BattleWallLow  = 5
+	BattleWallHigh = 21
+
+	// BattleFieldMin／BattleFieldMax 是可站範圍（含端點），
+	// BattleFieldSize 是它的邊長。
+	BattleFieldMin  = BattleWallLow + 1
+	BattleFieldMax  = BattleWallHigh - 1
+	BattleFieldSize = BattleFieldMax - BattleFieldMin + 1
+
+	// BattleCentreX／BattleCentreY 是佈陣中心，原版寫死 (13, 13)。
+	BattleCentreX = (BattleFieldMin + BattleFieldMax) / 2
+	BattleCentreY = BattleCentreX
+
+	// BattleBlockSize 是一個世界 tile 攤開成幾格。
+	BattleBlockSize = 5
+	// BattleBlocks 是一邊有幾個區塊（3×3 個世界 tile）。
+	BattleBlocks = BattleFieldSize / BattleBlockSize
+
+	// BattleWallTile 是牆框的 tile 值。
+	BattleWallTile = 3
 
 	// BattleGridMinX 是可站的最小 X。**不是 0。**
 	//
 	// 原版的行動順序把 `X == 0` 當成「空槽或已死」的哨兵值排除掉
-	// （見 TurnOrder 的三個排除條件）。所以第 0 欄不是戰場的一部分 ——
-	// 單位走進去就會從行動順序裡消失，看起來像原地蒸發。
+	// （見 TurnOrder 的三個排除條件）。可站範圍從 6 起，本來就不會撞到 0，
+	// 但這個哨兵語意仍然成立 —— 死亡結算會把 X 清成 0。
 	BattleGridMinX = 1
 )
+
+// InField 回報座標在不在可站範圍內（只看邊界，不看地形與佔位）。
+func InField(x, y int) bool {
+	return x >= BattleFieldMin && x <= BattleFieldMax &&
+		y >= BattleFieldMin && y <= BattleFieldMax
+}
 
 // UnitAt 回傳站在 (x, y) 的存活單位，沒有則回傳 nil。
 func (b *Battle) UnitAt(x, y int) *Unit {
@@ -62,9 +87,22 @@ func (b *Battle) TargetInFront(u *Unit) *Unit {
 }
 
 // CanStep 回報單位能不能往正前方走一步（只看地形與佔位，不看點數）。
+//
+// 原版的判定只有一條（`FUN_1990_07ed`）：
+//
+//	if (地圖[目標] == *(char*)0x51d8) 就走得過去
+//
+// `[0x51d8]` 是「空地值」，開戰時從隊伍腳下那一格取樣。這一條同時擋掉
+// 「地形不對」與「有人站著」—— 因為擺好的單位會把自己的圖塊蓋進地圖，
+// 那一格從此不再等於空地值。**一張地圖同時當地形與佔位表**（`docs/re/35` §3）。
+//
+// 本專案的地形緩衝是唯讀的，所以兩件事分開問：地形問 Terrain、佔位問 UnitAt。
 func (b *Battle) CanStep(u *Unit) bool {
 	x, y := FrontOf(u)
-	if x < BattleGridMinX || x >= BattleGridWidth || y < 0 || y >= BattleGridHeight {
+	if !InField(x, y) {
+		return false
+	}
+	if b.Terrain != nil && !b.Terrain.Walkable(x, y) {
 		return false
 	}
 	return b.UnitAt(x, y) == nil

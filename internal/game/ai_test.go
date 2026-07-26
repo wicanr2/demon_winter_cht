@@ -12,13 +12,13 @@ func aiBattle(t *testing.T) *Battle {
 	for i := 0; i < 3; i++ { // 怪物槽 0–2
 		units = append(units, &Unit{
 			Slot: i, Name: "怪" + string(rune('A'+i)),
-			X: 2, Y: i + 1, HP: 10, MaxHP: 10, Speed: 5,
+			X: BattleCentreX - 2, Y: BattleCentreY + i - 1, HP: 10, MaxHP: 10, Speed: 5,
 		})
 	}
 	for i := 0; i < 3; i++ { // 玩家槽 7–9
 		units = append(units, &Unit{
 			Slot: PlayerSlotStart + i, Name: "我" + string(rune('A'+i)),
-			X: 7, Y: i + 1, HP: 10, MaxHP: 10, Speed: 5, IsPlayer: true,
+			X: BattleCentreX + 2, Y: BattleCentreY + i - 1, HP: 10, MaxHP: 10, Speed: 5, IsPlayer: true,
 		})
 	}
 	return NewBattle(rng.NewWithSeed(42), units)

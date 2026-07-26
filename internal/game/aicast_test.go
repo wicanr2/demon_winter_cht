@@ -42,12 +42,12 @@ func TestAISpellTargetsOwnSide(t *testing.T) {
 // 兩隻怪物、兩個玩家，四個人擠在同一格附近。
 func areaBattle(t *testing.T) (*Battle, *Unit) {
 	t.Helper()
-	caster := &Unit{Slot: 0, Name: "法師", X: 1, Y: 1, HP: 10, MaxHP: 10}
+	caster := &Unit{Slot: 0, Name: "法師", X: BattleCentreX - 4, Y: BattleCentreY - 4, HP: 10, MaxHP: 10}
 	units := []*Unit{caster}
 	for i := 0; i < 3; i++ {
 		units = append(units, &Unit{
 			Slot: PlayerSlotStart + i, Name: "我" + string(rune('A'+i)),
-			X: 5, Y: 5 + i, HP: 10, MaxHP: 10, IsPlayer: true,
+			X: BattleCentreX, Y: BattleCentreY + i, HP: 10, MaxHP: 10, IsPlayer: true,
 		})
 	}
 	return NewBattle(rng.NewWithSeed(2), units), caster
@@ -56,18 +56,18 @@ func areaBattle(t *testing.T) (*Battle, *Unit) {
 // 方框是 5×5、中心含在內；框外的不算。
 func TestAIAreaCountAt_BoxShape(t *testing.T) {
 	b, caster := areaBattle(t)
-	// 中心放在 (5,5)：三個玩家在 (5,5)(5,6)(5,7)，都在框內。
-	c := b.AIAreaCountAt(caster, 5, 5, 0)
+	// 中心放在隊伍中心：三個玩家在中心與其正下方兩格，都在框內。
+	c := b.AIAreaCountAt(caster, BattleCentreX, BattleCentreY, 0)
 	if c.Enemy != 3 || c.Own != 0 {
-		t.Fatalf("中心 (5,5)：己方 %d 敵方 %d，預期 0／3", c.Own, c.Enemy)
+		t.Fatalf("中心：己方 %d 敵方 %d，預期 0／3", c.Own, c.Enemy)
 	}
-	// 中心移到 (5,3)：只剩 (5,5) 那一個在 |Δy| <= 2 內。
-	c = b.AIAreaCountAt(caster, 5, 3, 0)
+	// 中心往上移兩格：只剩最上面那一個在 |Δy| <= 2 內。
+	c = b.AIAreaCountAt(caster, BattleCentreX, BattleCentreY-2, 0)
 	if c.Enemy != 1 {
-		t.Errorf("中心 (5,3)：敵方 %d，預期 1", c.Enemy)
+		t.Errorf("中心往上兩格：敵方 %d，預期 1", c.Enemy)
 	}
 	// 剛好差一格：|Δ| = 3 應該落在框外。
-	c = b.AIAreaCountAt(caster, 5, 2, 0)
+	c = b.AIAreaCountAt(caster, BattleCentreX, BattleCentreY-3, 0)
 	if c.Enemy != 0 {
 		t.Errorf("中心 (5,2)：敵方 %d，預期 0（|Δy| = 3 已出框）", c.Enemy)
 	}
@@ -76,9 +76,9 @@ func TestAIAreaCountAt_BoxShape(t *testing.T) {
 // 施法者自己落在框內時要算成一個己方命中。
 func TestAIAreaCountAt_CountsCasterItself(t *testing.T) {
 	b, caster := areaBattle(t)
-	caster.X, caster.Y = 5, 5 // 自己站進去
+	caster.X, caster.Y = BattleCentreX, BattleCentreY // 自己站進去
 
-	c := b.AIAreaCountAt(caster, 5, 5, 0)
+	c := b.AIAreaCountAt(caster, BattleCentreX, BattleCentreY, 0)
 	if c.Own != 1 {
 		t.Errorf("施法者站在中心，己方命中 %d，預期 1", c.Own)
 	}
@@ -87,18 +87,18 @@ func TestAIAreaCountAt_CountsCasterItself(t *testing.T) {
 // School 為 4 時，己方裡種族／元素 4／7／10 的不算誤傷。
 func TestAIAreaCountAt_ElementImmunity(t *testing.T) {
 	b, caster := areaBattle(t)
-	friend := &Unit{Slot: 1, Name: "同伴", X: 5, Y: 5, HP: 10, MaxHP: 10,
+	friend := &Unit{Slot: 1, Name: "同伴", X: BattleCentreX, Y: BattleCentreY, HP: 10, MaxHP: 10,
 		RaceOrElement: 7, Side: SideMonster}
 	b.units[1] = friend
 
-	if c := b.AIAreaCountAt(caster, 5, 5, 0); c.Own != 1 {
+	if c := b.AIAreaCountAt(caster, BattleCentreX, BattleCentreY, 0); c.Own != 1 {
 		t.Errorf("School 0：己方命中 %d，預期 1（沒有免疫）", c.Own)
 	}
-	if c := b.AIAreaCountAt(caster, 5, 5, aiAreaElement); c.Own != 0 {
+	if c := b.AIAreaCountAt(caster, BattleCentreX, BattleCentreY, aiAreaElement); c.Own != 0 {
 		t.Errorf("School %d：己方命中 %d，預期 0（種族 7 免疫）", aiAreaElement, c.Own)
 	}
 	friend.RaceOrElement = 9
-	if c := b.AIAreaCountAt(caster, 5, 5, aiAreaElement); c.Own != 1 {
+	if c := b.AIAreaCountAt(caster, BattleCentreX, BattleCentreY, aiAreaElement); c.Own != 1 {
 		t.Errorf("種族 9 不在免疫組，卻沒算成誤傷")
 	}
 }
