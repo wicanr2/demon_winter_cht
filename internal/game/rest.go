@@ -74,8 +74,8 @@ const (
 	// restNeverRecharge 是「永不充能」的已用次數哨兵（`2aed:0466` 的 `0xff`）。
 	restNeverRecharge = 0xff
 
-	// restCampTorch 是紮營時重設的光源值（`2aed:040c`）。
-	restCampTorch = 1
+	// RestCampTorch 是紮營時重設的光源值（`2aed:040c`）。
+	RestCampTorch = 1
 )
 
 // RestKind 區分睡在哪裡。
@@ -188,4 +188,65 @@ func rechargeItems(c *Character) {
 		}
 		it.Used = 0
 	}
+}
+
+// 打獵（紮營選單的 Hunt）。
+//
+// 原版在 `1000:08af`–`0945`。手冊：「在野外或在船上，每日一次出去找尋食物，
+// 能否找到須靠運氣。」
+//
+//	1000:0894  if 狀態(char+0x102) > 1 → 印訊息，不能打獵
+//	1000:08bb  if 技能旗標(char+0xd0) == 0 → 印訊息，不會打獵
+//	1000:08e2  char+0xef = 1                 ; 標記本日已打獵
+//	1000:08e8  rnd(16)
+//	1000:08f2  收穫 = rnd(16) − 6            ; 負數鉗成 0
+//	1000:0933  糧食 += 收穫，上限 255
+//
+// `char+0xd0` 是技能旗標陣列（`+0xc8` 起）的第 8 格 —— **技能 8 就是「狩獵」**
+// （`docs/re/21`）。`char+0xef` 那個旗標由睡覺清掉（`2aed:0513`），
+// 兩邊合起來就是手冊講的「每日一次」。
+const (
+	// HuntDie 是打獵的骰面（`1000:08e8` 的 `rnd(16)`）。
+	HuntDie = 16
+	// huntPenalty 是骰完要扣的固定值（`1000:08f2` 的 `+0xfffa` ＝ −6）。
+	// 所以 16 面裡有 6 面是空手而回。
+	huntPenalty = 6
+	// SkillHunting 是狩獵技能的 id（記錄內位移 0xd0 − 0xc8）。
+	SkillHunting = 8
+	// maxRationsHeld 是糧食份數的上限（`1000:0936` 的 `0xff`）。
+	maxRationsHeld = 255
+)
+
+// HuntResult 是一次打獵的結果。
+type HuntResult struct {
+	// Gained 是拿到幾份糧食，0 代表空手而回。
+	Gained int
+	// Reason 非空代表這個人根本打不了獵。
+	Reason string
+}
+
+// Hunt 讓一名角色打獵，回傳收穫並把糧食加進 rations。
+//
+// 狀態超過中毒（束縛以上）或沒學狩獵技能的人打不了。
+func Hunt(r RollSource, c *Character, rations *int) HuntResult {
+	switch {
+	case c == nil || r == nil:
+		return HuntResult{Reason: "沒有人可以去打獵"}
+	case c.Status > scenario.StatusPoison:
+		return HuntResult{Reason: c.Name + " 的狀態沒辦法出去打獵"}
+	case !c.Skills[SkillHunting]:
+		return HuntResult{Reason: c.Name + " 不會狩獵"}
+	}
+
+	got := r.Roll(HuntDie) - huntPenalty
+	if got < 0 {
+		got = 0
+	}
+	if rations != nil {
+		*rations += got
+		if *rations > maxRationsHeld {
+			*rations = maxRationsHeld
+		}
+	}
+	return HuntResult{Gained: got}
 }

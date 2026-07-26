@@ -165,3 +165,69 @@ func TestRest_InnDoesNotRecharge(t *testing.T) {
 		t.Errorf("旅店不該充能，Used = %d", p[0].Inventory[0].Used)
 	}
 }
+
+// 打獵收穫 = max(0, rnd(16) − 6)，值域 0–10，16 面裡 6 面空手。
+func TestHunt_Yield(t *testing.T) {
+	c := &Character{Name: "獵人"}
+	c.Skills[SkillHunting] = true
+
+	for roll := 1; roll <= 16; roll++ {
+		rations := 0
+		want := roll - 6
+		if want < 0 {
+			want = 0
+		}
+		res := Hunt(&fixedRolls{vals: []int{roll}}, c, &rations)
+		if res.Gained != want || rations != want {
+			t.Errorf("擲 %d：收穫 %d、糧食 %d，預期都是 %d",
+				roll, res.Gained, rations, want)
+		}
+	}
+
+	// 分布：16 面裡剛好 6 面空手。
+	empty := 0
+	for roll := 1; roll <= 16; roll++ {
+		if Hunt(&fixedRolls{vals: []int{roll}}, c, nil).Gained == 0 {
+			empty++
+		}
+	}
+	if empty != huntPenalty {
+		t.Errorf("空手的面數 %d，預期 %d", empty, huntPenalty)
+	}
+}
+
+// 不會狩獵、或狀態超過中毒的人打不了獵。
+func TestHunt_Requirements(t *testing.T) {
+	rations := 0
+
+	noSkill := &Character{Name: "路人"}
+	if res := Hunt(&fixedRolls{vals: []int{16}}, noSkill, &rations); res.Reason == "" {
+		t.Error("不會狩獵的人不該打得了獵")
+	}
+
+	bound := &Character{Name: "獵人", Status: scenario.StatusBound1}
+	bound.Skills[SkillHunting] = true
+	if res := Hunt(&fixedRolls{vals: []int{16}}, bound, &rations); res.Reason == "" {
+		t.Error("被束縛的人不該打得了獵")
+	}
+	// 中毒還是可以（原版是 > 1 才擋）。
+	poisoned := &Character{Name: "獵人", Status: scenario.StatusPoison}
+	poisoned.Skills[SkillHunting] = true
+	if res := Hunt(&fixedRolls{vals: []int{16}}, poisoned, &rations); res.Reason != "" {
+		t.Errorf("中毒還是能打獵，卻被擋掉：%s", res.Reason)
+	}
+	if rations != 10 {
+		t.Errorf("糧食應該只被中毒那次加上 10，得到 %d", rations)
+	}
+}
+
+// 糧食鉗在 255。
+func TestHunt_CapsRations(t *testing.T) {
+	c := &Character{Name: "獵人"}
+	c.Skills[SkillHunting] = true
+	rations := 250
+	Hunt(&fixedRolls{vals: []int{16}}, c, &rations)
+	if rations != maxRationsHeld {
+		t.Errorf("糧食 %d，應鉗在 %d", rations, maxRationsHeld)
+	}
+}

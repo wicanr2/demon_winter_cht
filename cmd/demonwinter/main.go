@@ -103,6 +103,8 @@ type app struct {
 	town *townScreen
 	// title 非 nil 時停在開場標題畫面。
 	title *ebiten.Image
+	// camp 非 nil 時遊戲在紮營畫面。
+	camp *campScreen
 	// create 非 nil 時遊戲在建角畫面。
 	create *createScreen
 	// spells 非 nil 時戰鬥中的施法選單開著。
@@ -186,6 +188,9 @@ func (a *app) Update() error {
 	if a.battle != nil {
 		return a.updateBattle()
 	}
+	if a.camp != nil {
+		return a.updateCamp()
+	}
 
 	// 文字視窗開著時吃掉所有輸入，只認翻頁鍵 —— 與原版一樣，
 	// 讀完敘述才能繼續走。
@@ -251,6 +256,10 @@ func (a *app) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 		a.openCreate()
 	}
+	// R：紮營。原版用哪個鍵沒查，這是本作自己選的（見 campui.go）。
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+		a.openCamp()
+	}
 	// ESC 只收起名冊。離開遊戲一律走 F10（見 save.go）。
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		a.showRoster = false
@@ -293,9 +302,9 @@ func (a *app) Draw(screen *ebiten.Image) {
 		screen.DrawImage(a.canvas, op)
 		return
 	}
-	// 戰鬥有自己的戰場，不畫世界地圖 —— 把大地圖留在底下會讓
-	// 「單位站在哪一格」完全看不出來。
-	if a.battle == nil {
+	// 戰鬥與紮營有自己的畫面，不畫世界地圖 —— 把大地圖留在底下，
+	// 文字會疊在圖塊上完全讀不了。
+	if a.battle == nil && a.camp == nil {
 		a.drawWorld(a.canvas)
 	}
 	switch {
@@ -308,6 +317,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 	case a.battle != nil:
 		a.drawBattlefield(a.canvas)
 		a.drawBattle(a.canvas)
+	case a.camp != nil:
+		a.drawCamp(a.canvas)
 	case a.showRoster:
 		a.drawRoster(a.canvas)
 	default:
@@ -655,6 +666,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"T：進入城鎮",
 		"B：測試戰鬥（偵錯）",
 		"C：建立角色",
+		"R：紮營",
 		"S：存檔",
 		"空白鍵：翻頁",
 		"F10：離開遊戲",

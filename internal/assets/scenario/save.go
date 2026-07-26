@@ -113,6 +113,14 @@ const (
 	ldFlagsOffset = 0x0e
 	ldFlagsLen    = 7
 
+	// partySizeOffset：**隊伍人數**（已驗證）。睡覺（`2aed:048f`）與紮營清旗標
+	// 那幾段都拿它當「掃過每名隊員」的迴圈上界。
+	partySizeOffset = 0x9a
+
+	// rationsOffset：**糧食份數**（已驗證）。紮營睡覺會 −1（`2aed:057a`），
+	// 打獵成功會 += 收穫並鉗在 255（`1000:0933`–`0945`）。
+	rationsOffset = 0x9b
+
 	// hourOffset：**時辰**（已驗證，反組譯）。0x164f7 對它 `inc`，同一段
 	// 程式把 stepCounter（+0xa0）歸 1 —— 走滿一小時的步數就進位。
 	// 戰場的視野內縮量拿它當索引查 DEMON.INT 的時辰表
@@ -278,6 +286,11 @@ type SaveGame struct {
 	// LightSource 是地城的光源強度（見 lightSourceOffset 註解）。
 	LightSource byte
 
+	// PartySize 是隊伍人數（已驗證，見 partySizeOffset 註解）。
+	PartySize byte
+	// Rations 是糧食份數（已驗證，見 rationsOffset 註解）。
+	Rations byte
+
 	// Hour 是遊戲內時辰（已驗證，見 hourOffset 註解）。
 	Hour byte
 
@@ -335,6 +348,8 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	copy(save.LDFlags[:], trailer[ldFlagsOffset:ldFlagsOffset+ldFlagsLen])
 	save.MapID = trailer[mapIDOffset]
 	save.LightSource = trailer[lightSourceOffset]
+	save.PartySize = trailer[partySizeOffset]
+	save.Rations = trailer[rationsOffset]
 	save.Hour = trailer[hourOffset]
 	save.PositionX = trailer[positionXOffset]
 	save.PositionY = trailer[positionYOffset]
