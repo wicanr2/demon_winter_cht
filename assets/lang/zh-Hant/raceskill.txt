@@ -3,7 +3,7 @@
 # 的技能表裡，所以照 internal/assets/gamedata 的 raceSkillNames 手寫。
 #
 # 索引是「偽技能 id − 31」：0 再生（巨魔）、1 察覺靈光（精靈）、
-# 2 黑暗視覺（矮人）、3 竊取法力（黑暗精靈）。
+# 2 黑暗視覺（矮人）、3 汲取法力（黑暗精靈）。
 # 原版那張表的排序不同（Detect aura 在最前面），對照時要換順序。
 @@ RACESKILL
 
@@ -29,4 +29,4 @@ Dark vision
 :: en
 Power leech
 :: zh
-竊取法力
+汲取法力
