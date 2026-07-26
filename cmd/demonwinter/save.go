@@ -7,10 +7,13 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
+	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
@@ -128,3 +131,24 @@ func (a *app) drawQuitDialog(dst *ebiten.Image) {
 
 // quitDialogBG 是確認框的底色。刻意不透明 —— 蓋住底下的畫面才看得清楚在問什麼。
 var quitDialogBG = color.RGBA{0, 0, 0, 0xff}
+
+// debugGiveSkill 教第一名隊員幾個技能（`-give-skill`）。
+//
+// 起始隊伍沒有人會觀地或三種學識，那幾個紮營選項在 headless 驗收時
+// 一步都走不到。**只動記憶體，不寫存檔**，除非之後真的按了存檔。
+func (a *app) debugGiveSkill(spec string) error {
+	if len(a.members) == 0 {
+		return fmt.Errorf("隊伍是空的")
+	}
+	for _, f := range strings.Split(spec, ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(f))
+		if err != nil {
+			return fmt.Errorf("技能 id %q 不是數字：%w", f, err)
+		}
+		if n < 0 || n >= gamedata.NumSkills {
+			return fmt.Errorf("技能 id %d 超出 0–%d", n, gamedata.NumSkills-1)
+		}
+		a.members[0].Skills[n] = true
+	}
+	return nil
+}

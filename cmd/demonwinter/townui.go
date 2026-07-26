@@ -356,6 +356,8 @@ func (a *app) restAtInn() {
 		return
 	}
 	res := game.Rest(a.rng, game.RestInn, a.members, a.clock, nil)
+	// 睡一晚就清掉隊伍層級的每日旗標（與紮營同一條規則）。
+	a.save.ViewedLandToday = false
 
 	msg := fmt.Sprintf("睡了 %d 個時辰，%d 日 %d 時醒來",
 		res.Hours, a.clock.Day(), a.clock.Hour())

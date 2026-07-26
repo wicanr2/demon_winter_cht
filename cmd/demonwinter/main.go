@@ -818,6 +818,10 @@ func main() {
 	// 一件都選不到 —— 沒有這個旗標就沒辦法驗「用道具真的會生效」。
 	giveItem := flag.String("give-item", "",
 		"偵錯：塞一件有效果的道具給第一名隊員，格式 `type,effect,power,次數`")
+	// 起始隊伍沒有人會觀地、也沒有人會學識 —— 那幾個紮營選項在
+	// headless 驗收時因此一步都走不到。
+	giveSkill := flag.String("give-skill", "",
+		"偵錯：教第一名隊員幾個技能（技能 id，逗號分隔）")
 	startHourFlag := flag.Int("hour", 0,
 		"偵錯：起始時辰（1–38）。0 代表照原版的 5 時")
 	// 城鎮的貴服務（復活、修船、買船）在起始存檔的 65 金之下全都試不到。
@@ -997,6 +1001,11 @@ func main() {
 	if *giveItem != "" {
 		if err := a.debugGiveItem(*giveItem); err != nil {
 			log.Fatalf("-give-item：%v", err)
+		}
+	}
+	if *giveSkill != "" {
+		if err := a.debugGiveSkill(*giveSkill); err != nil {
+			log.Fatalf("-give-skill：%v", err)
 		}
 	}
 	if *startBattle {

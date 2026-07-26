@@ -210,6 +210,12 @@ const (
 	// boatOffset：**目前搭乘的船**（已驗證，反組譯）。存的是船隻陣列的
 	// 格號 **+1**，`0` 代表沒有搭船。走上有船的格子時 `0x16ede` 寫入
 	// `格號+1`，上岸時 `0x16dd6` 清成 0。見 `docs/re/31`。
+	// viewedLandTodayOffset 是「本日已用過觀地」的**隊伍層級**旗標
+	// （`1000:09b6` 設 1，睡覺 `2aed:03f?` 清 0）。角色層級的每日旗標
+	// 是 `+0xed`（鑑定）與 `+0xef`（打獵）—— 觀地一天只能用一次，
+	// 而且是整隊共用一次。
+	viewedLandTodayOffset = 0xac
+
 	boatOffset = 0xb0
 
 	// unknownC1Offset 是 trailer 的**最後一個 byte**。語意未解，
@@ -363,6 +369,9 @@ type SaveGame struct {
 	// Rations 是糧食份數（已驗證，見 rationsOffset 註解）。
 	Rations byte
 
+	// ViewedLandToday 是「本日已用過觀地」（trailer +0xac，整隊共用）。
+	ViewedLandToday bool
+
 	// Boat 是目前搭乘的船（船隻陣列格號 +1，0 代表沒搭船）。
 	// 見 boatOffset 註解與 ship.go。
 	Boat byte
@@ -448,6 +457,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.TimeCounter = trailer[timeCounterOffset]
 	save.Unknown9C = trailer[unknown9COffset]
 	save.Ships = parseShips(trailer)
+	save.ViewedLandToday = trailer[viewedLandTodayOffset] != 0
 	save.Boat = trailer[boatOffset]
 	save.UnknownC1 = trailer[unknownC1Offset]
 

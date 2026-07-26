@@ -36,6 +36,9 @@ type campScreen struct {
 
 	// reorder 是排陣型的進行狀態；nil 代表沒在進行（見 campreorder.go）。
 	reorder *reorderScreen
+
+	// viewLand 是觀地檢視的狀態；nil 代表沒在進行（見 campviewland.go）。
+	viewLand *viewLandScreen
 }
 
 // openCamp 進入紮營畫面。
@@ -58,6 +61,9 @@ func (a *app) updateCamp() error {
 	}
 	if c.reorder != nil {
 		return a.updateReorder()
+	}
+	if c.viewLand != nil {
+		return a.updateViewLand()
 	}
 
 	switch {
@@ -85,6 +91,8 @@ func (a *app) updateCamp() error {
 		a.openReorder()
 	case inpututil.IsKeyJustPressed(ebiten.KeyI):
 		a.openItemAction(itemActionIdentify)
+	case inpututil.IsKeyJustPressed(ebiten.KeyV):
+		a.openViewLand()
 	}
 	return nil
 }
@@ -140,6 +148,8 @@ func (a *app) campSleep() {
 
 	// 紮營會把光源重設成火把（原版 2aed:040c）。
 	a.torch = game.RestCampTorch
+	// 隊伍層級的「每日一次」旗標也由睡覺清掉（`2aed:03f1` 那一段）。
+	a.save.ViewedLandToday = false
 
 	msg := fmt.Sprintf("睡了 %d 個時辰，%d 日 %d 時醒來",
 		res.Hours, a.clock.Day(), a.clock.Hour())
@@ -190,6 +200,12 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
+	// 觀地攤開地圖時整個畫面讓給地圖 —— 紮營抬頭會壓在右欄的字上。
+	if c.viewLand != nil && c.viewLand.member < 0 {
+		a.drawViewLand(dst, line)
+		return
+	}
+
 	line(fmt.Sprintf("紮營　%s月 %d 日 %d 時　糧食 %d 份",
 		a.monthName(), a.clock.Day(), a.clock.Hour(), a.save.Rations))
 	line("")
@@ -229,6 +245,11 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		return
 	}
 
+	if c.viewLand != nil {
+		a.drawViewLand(dst, line)
+		return
+	}
+
 	if a.clock.CanSleep() {
 		line("  S 睡覺")
 	} else {
@@ -237,7 +258,7 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 	line("  H 打獵")
 	line("  E 換裝")
 	line("  D 丟棄　T 交給隊友")
-	line("  R 排列陣型　I 鑑定道具")
+	line("  R 排列陣型　I 鑑定道具　V 觀地")
 	line("")
 	line("Esc：收帳篷")
 	line("")
@@ -246,7 +267,8 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		line("")
 	}
 	line("※ 原版的紮營選單有 14 項，這裡只做了規則已解出的")
-	line("　 睡覺、打獵、換裝、丟棄、轉手、陣型、鑑定，其餘見 docs/re/33")
+	line("　 睡覺、打獵、換裝、丟棄、轉手、陣型、鑑定、觀地，")
+	line("　 其餘見 docs/re/33")
 }
 
 func (a *app) drawEquipPicker(line func(string)) {
