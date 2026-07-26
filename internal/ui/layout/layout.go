@@ -68,3 +68,9 @@ const RosterLinesPerMember = 4
 // 溢出的字會畫到畫布外被裁掉，看起來像訊息被砍一半（存檔路徑就踩過）。
 // 呼叫端用 textlayout.TruncateCells 收在這個寬度內。
 const StatusCells = (CanvasWidth - StatusX) / textlayout.CellWidthCJK
+
+// StatusPixels 是狀態欄的可用像素寬，給 textlayout.WrapMixed 用。
+//
+// 有了 StatusCells 為什麼還要這個：`WrapMixed` 是按像素算的
+//（它要處理半形與全形混排），拿格數餵它會斷在錯的地方。
+const StatusPixels = CanvasWidth - StatusX

@@ -184,6 +184,8 @@ type app struct {
 	// trace 非 nil 時把每一次狀態變化寫進軌跡檔（`-trace`）。
 	// 這是 A4 全程試玩的驗收工具，見 trace.go。
 	trace *tracer
+	// auto 非 nil 時由自動戰鬥驅動代打（`-autofight`），見 autofight.go。
+	auto *autoFighter
 
 	// winText 是 WIN.TXT 的結局文字（`docs/re/82`）；讀不到時為 nil。
 	winText *scenario.StoryText
@@ -987,7 +989,18 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		fmt.Sprintf("地形 %3d  深度 %d", a.lastTile, a.party.Depth()),
 		fmt.Sprintf("圖塊 %s", a.tileset().Name()),
 		"",
-		a.message,
+	}
+	// **訊息要斷行，不能截斷。** 其餘幾行是固定格式、寬度可控，
+	// 截斷只會掉尾巴的空白；訊息是變動長度的句子，截斷會把後半句吃掉。
+	//
+	// 這是全程試玩的截圖抓到的（`docs/playtest/01`）：走到 (23,31) 時
+	// 「（地點劇情 3 還沒接，見 docs/re/65）」被切成「…見 docs/re」——
+	// 而畫面上完全看不出那是被裁掉的，看起來就像訊息本來就那樣寫。
+	// 單點截圖驗收沒抓到，因為那些畫面的訊息都夠短。
+	if a.message != "" {
+		lines = append(lines, textlayout.WrapMixed(a.message, layout.StatusPixels)...)
+	}
+	lines = append(lines, []string{
 		"",
 		"方向鍵：移動",
 		"Tab：切換季節",
@@ -1001,9 +1014,10 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"S：存檔",
 		"空白鍵：翻頁",
 		"F10：離開遊戲",
-	}
+	}...)
 	// 溢出欄寬的字會畫到畫布外被裁掉 —— 看起來像訊息被砍一半，
 	// 而不是「這行太長」。存檔路徑就踩過這個。
+	// 訊息已經在上面斷過行，這裡的截斷只會碰到固定格式那幾行。
 	for i, s := range lines {
 		lines[i] = textlayout.TruncateCells(s, layout.StatusCells)
 	}
@@ -1152,6 +1166,10 @@ func main() {
 	// 兩道密語謎題各在一張地城深處，而且是全遊戲僅有的自由文字輸入。
 	// A4 全程試玩要能事後逐行核對「走了幾步、到了哪、觸發了什麼」。
 	// 只有截圖的話，漏掉一次按鍵在畫面上完全看不出來。
+	// 沒有這個，按鍵重播腳本永遠過不了第一場仗（`docs/playtest/01` §4）。
+	// **它不是捷徑** —— 下的是玩家下得出來的同一組指令。
+	autoFightFlag := flag.Bool("autofight", false,
+		"驗收：戰鬥由自動驅動代打（找最近的敵人、面向、攻擊）")
 	traceFlag := flag.String("trace", "",
 		"驗收：把每一次狀態變化寫進這個檔（全程試玩用，見 trace.go）")
 	riddleFlag := flag.Int("riddle", -1,
@@ -1289,6 +1307,7 @@ func main() {
 
 	a := &app{
 		trace:      newTracer(*traceFlag),
+		auto:       newAutoFighter(*autoFightFlag),
 		world:      game.NewWorld(m, tables),
 		party:      newPartyAt(px, py, save),
 		clock:      game.ClockAt(int(save.Hour), int(save.Day), int(save.Month), int(save.TimeCounter)),

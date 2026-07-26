@@ -72,7 +72,8 @@ func (a *app) updateBattle() error {
 				a.logf("隊伍全滅")
 			}
 		}
-		if !inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		// -autofight 時自動翻過結算畫面，等同玩家按著空白鍵。
+		if !inpututil.IsKeyJustPressed(ebiten.KeySpace) && !a.autoAdvance() {
 			return nil
 		}
 		a.battle = nil
@@ -88,9 +89,12 @@ func (a *app) updateBattle() error {
 	}
 
 	if cur.IsPlayer {
+		if a.updateAutoFight() {
+			return nil
+		}
 		return a.updatePlayerTurn(cur)
 	}
-	if !inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+	if !inpututil.IsKeyJustPressed(ebiten.KeySpace) && !a.autoAdvance() {
 		return nil
 	}
 	a.monsterTurn(cur)
