@@ -826,6 +826,24 @@ Use 只實作了光源那一條 —— 有效果的道具要走施法路徑，�
 
 紮營選單做完九項，還缺 Party／Worship／Xorcise／Cast。
 
+### 這一輪（2026-07-26 續八）：Party 其實是「檢視角色」（`docs/re/40`）
+
+選單上叫 `Party`，字串卻是 **`Inspect character:`** —— 這一項是攤開**一個人**的
+角色卡，不是隊伍總覽。世界地圖上那個 `P`（隊伍名冊）是本作自己加的摘要，
+原版沒有。兩者現在並存：一個看全隊、一個看單人。
+
+`sel < 0` 那條分支比較有意思：先印一行 `"Hour %d, Day %d in the Month of the %s"`，
+再印 `"%s followed in the footsteps of"`，然後把角色卡送去 `[0x514a]` 指定的地方
+（預設 2）。**看起來是「把角色卡印到印表機」**，`0xffff` 那條是全隊都印。
+**不實作** —— 就算解出來也沒有印表機可接。
+
+角色卡的卡面是本專案自己排的（原版版面在 `FUN_278d_2f61` 裡，沒讀），
+資料全部來自已解出的欄位：五項屬性、生命法力、武器護甲、經驗與門檻、
+信仰與祈禱率、束縛等級、已學技能。驗收畫面上 Menhir 是人類遊俠 3 級、
+技能「劍術／狩獵」—— 與 `docs/re/26` §4b 記的「只有遊俠 Menhir 有狩獵旗標」對得上。
+
+紮營選單做完十項，還缺 Worship／Xorcise／Cast。
+
 ## 3. 文件索引
 
 ### 規格層 `docs/spec/` — 實作的唯一依據
@@ -873,6 +891,7 @@ Use 只實作了光源那一條 —— 有效果的道具要走施法路徑，�
 | [`21-skills-races-and-files-dat.md`](docs/re/21-skills-races-and-files-dat.md) | **遊戲內部技能 id 表**、種族系統與修正公式、`FILES.DAT` 完整布局 |
 | [`22-resource-arena-and-passability.md`](docs/re/22-resource-arena-and-passability.md) | **18 段資源記憶體區**、**可通行性表**、子地圖退出、**事件消費者** |
 | [`26-camp-and-rest.md`](docs/re/26-camp-and-rest.md) | **紮營選單（13 選項）**、睡覺的時間與回復公式、過夜充能；順帶抓到道具槽兩個欄位標反 |
+| [`40-inspect-character.md`](docs/re/40-inspect-character.md) | **檢視角色**：選單叫 Party、字串是 `Inspect character:`；另一條分支看起來是印到印表機（不實作）|
 | [`39-use-item-in-camp.md`](docs/re/39-use-item-in-camp.md) | **營地用道具**：火把 26／提燈 27 點起來設光源 2／3；訂正 `item.go` 那條「兩個欄位沒定位到」的假缺口 |
 | [`38-view-land.md`](docs/re/38-view-land.md) | **觀地**：技能 26、隊伍層級的每日旗標 `+0xac`、只在大地圖上能用；與戰場攝影機共用同一支捲動視窗常式 |
 | [`37-identify.md`](docs/re/37-identify.md) | **鑑定**：成功率 = 智力 × 4.5、每天一次（失敗也算）、三種學識技能各管一段型別範圍 |

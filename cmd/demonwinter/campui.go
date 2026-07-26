@@ -39,6 +39,9 @@ type campScreen struct {
 
 	// viewLand 是觀地檢視的狀態；nil 代表沒在進行（見 campviewland.go）。
 	viewLand *viewLandScreen
+
+	// party 是角色卡的狀態；nil 代表沒在看（見 campparty.go）。
+	party *partyScreen
 }
 
 // openCamp 進入紮營畫面。
@@ -64,6 +67,9 @@ func (a *app) updateCamp() error {
 	}
 	if c.viewLand != nil {
 		return a.updateViewLand()
+	}
+	if c.party != nil {
+		return a.updatePartySheet()
 	}
 
 	switch {
@@ -95,6 +101,8 @@ func (a *app) updateCamp() error {
 		a.openViewLand()
 	case inpututil.IsKeyJustPressed(ebiten.KeyU):
 		a.openItemAction(itemActionUse)
+	case inpututil.IsKeyJustPressed(ebiten.KeyP):
+		a.openPartySheet()
 	}
 	return nil
 }
@@ -252,6 +260,11 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		return
 	}
 
+	if c.party != nil {
+		a.drawPartySheet(line)
+		return
+	}
+
 	if a.clock.CanSleep() {
 		line("  S 睡覺")
 	} else {
@@ -261,6 +274,7 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 	line("  E 換裝")
 	line("  D 丟棄　T 交給隊友")
 	line("  R 排列陣型　I 鑑定道具　V 觀地　U 使用")
+	line("  P 角色卡")
 	line("")
 	line("Esc：收帳篷")
 	line("")
@@ -269,7 +283,8 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		line("")
 	}
 	line("※ 原版的紮營選單有 14 項，這裡只做了規則已解出的")
-	line("　 睡覺、打獵、換裝、丟棄、轉手、陣型、鑑定、觀地、使用，")
+	line("　 睡覺、打獵、換裝、丟棄、轉手、陣型、鑑定、觀地、使用、")
+	line("　 角色卡，")
 	line("　 其餘見 docs/re/33")
 }
 
