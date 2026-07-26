@@ -237,3 +237,54 @@ func GenerateLoot(r *rng.RNG, t *gamedata.Tables, item gamedata.Item, itemType, 
 
 // lootRerollLimit 是「強度配不上效果」時的重擲上限。見 GenerateLoot 結尾。
 const lootRerollLimit = 64
+
+// --- 戰鬥勝利的掉落 ---
+
+// lootTypeCount 是掉落道具的型別上限：`rnd(26) − 1` → 0–25。
+//
+// **26–29（火把、提燈、惡魔水晶、恆世寶珠）永遠不會掉** ——
+// 前兩件是雜貨、後兩件是劇情物，掉出來會壞掉劇情。
+const lootTypeCount = 26
+
+// LootItemType 擲出掉落道具的型別（`1990:1128`）。
+func LootItemType(r *rng.RNG) int { return r.Roll(lootTypeCount) - 1 }
+
+// 掉落機率的兩個係數（`FUN_0990_?` 的 `0xe3be` 一帶）：
+//
+//	if rnd(100) <= 怪物等級×6 + 5 → 這一隻掉一件
+//
+// 逐隻獨立判定，所以打贏一群低等怪也可能一件都沒有。
+const (
+	dropChanceMul  = 6
+	dropChancePlus = 5
+)
+
+// BattleDropChance 回傳一隻怪物掉東西的百分比機率。
+func BattleDropChance(monsterLevel int) int {
+	return monsterLevel*dropChanceMul + dropChancePlus
+}
+
+// RollBattleDrops 依戰敗怪物的等級擲出戰利品。
+//
+// **每隻怪物各自判定**（`rnd(100) <= 等級×6 + 5`），中的那隻掉一件
+// 型別隨機（0–25）的道具，內容走 GenerateLoot。
+//
+// 掉落的道具**是未鑑定的**，而且可能被詛咒 —— 戰場上撿到的東西
+// 本來就不知道好壞，這是原版的設計，不是缺漏。
+func RollBattleDrops(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
+	monsterLevels []int) []scenario.InventorySlot {
+
+	var out []scenario.InventorySlot
+	for _, level := range monsterLevels {
+		if r.Roll(100) > BattleDropChance(level) {
+			continue
+		}
+		typ := LootItemType(r)
+		item, err := items.ByIndex(typ)
+		if err != nil {
+			continue
+		}
+		out = append(out, GenerateLoot(r, t, item, typ, level, false))
+	}
+	return out
+}

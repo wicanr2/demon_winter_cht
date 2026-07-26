@@ -131,7 +131,10 @@ type app struct {
 	quitting bool
 
 	// battle 非 nil 時遊戲進入戰鬥模式，地圖輸入停止。
-	battle     *game.Battle
+	battle *game.Battle
+	// settled 代表這場戰鬥的結算（訊息、戰利品）已經做過了。
+	// 結算要在「等玩家按空白鍵」之前完成，不然訊息只存在一幀。
+	settled bool
 
 	// mapID 是目前所在的子地圖編號。11–77 是世界地圖，10 以下是地城 ——
 	// 兩者的戰場視野來源不同（時辰表 vs 光源），見 terrainForBattle。
@@ -793,6 +796,10 @@ func main() {
 	// B 鍵那條偵錯路徑在 headless 截圖底下不好按（xdotool 送的鍵不一定
 	// 進得了 ebiten 的輸入佇列）。開一個旗標走同一條路，讓截圖驗收可重跑。
 	startBattle := flag.Bool("battle", false, "啟動後直接開一場測試戰鬥（偵錯）")
+	// 用 xdotool 打完一場戰鬥不切實際（要走位、要相鄰才打得到），
+	// 但「打贏之後會怎樣」得看得到 —— 這個旗標直接把怪物血量清零。
+	battleWin := flag.Bool("battle-win", false,
+		"偵錯：開場就把測試戰鬥的怪物全部打倒，用來驗勝利後的流程")
 	battleMonsters := flag.String("battle-monsters", "",
 		"測試戰鬥要放哪幾隻怪（MONSTER.DAT 索引，逗號分隔）。留空用預設那組")
 	// 起始存檔裡每一件裝備的效果索引與強度都是 0，照原版規則在 Use 選單裡
@@ -987,6 +994,14 @@ func main() {
 			}
 		}
 		a.startBattle(picks)
+		if *battleWin {
+			for _, u := range a.battle.Units() {
+				if u != nil && !u.IsPlayer {
+					u.HP = 0
+				}
+			}
+			log.Print("偵錯：怪物全部打倒，直接進入勝利流程")
+		}
 	}
 
 	ebiten.SetWindowSize(layout.CanvasWidth*scale, layout.CanvasHeight*scale)

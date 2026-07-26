@@ -50,15 +50,23 @@ func (a *app) updateBattle() error {
 	}
 
 	if out := a.battle.Outcome(); out != game.Ongoing {
+		// **結算要在等按鍵之前做完。** 原本擺在按下空白鍵之後，
+		// 而那一幀馬上就 `a.battle = nil` 回到世界地圖 ——
+		// 撿到什麼的那幾行只存在一幀，玩家永遠看不到。
+		if !a.settled {
+			a.settled = true
+			if out == game.Victory {
+				a.logf("怪物全滅")
+				a.awardDrops()
+			} else {
+				a.logf("隊伍全滅")
+			}
+		}
 		if !inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 			return nil
 		}
-		if out == game.Victory {
-			a.logf("怪物全滅")
-		} else {
-			a.logf("隊伍全滅")
-		}
 		a.battle = nil
+		a.settled = false
 		return nil
 	}
 
@@ -1116,4 +1124,43 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 	}
 	a.font.Draw(dst, "方向鍵：轉向／前進　Enter：前進",
 		layout.BoxPadX, y+ui.LineHeight)
+}
+
+// awardDrops 發放戰鬥勝利的戰利品。
+//
+// 每隻死掉的怪物各自擲一次（`rnd(100) <= 等級×6 + 5`，見 game.RollBattleDrops），
+// 中的那隻掉一件隨機型別的道具。**掉的東西是未鑑定的**，市集才鑑定得出來。
+//
+// 隊伍道具欄滿了就掉在地上 —— 原版印 "No more room!"，這裡照做。
+func (a *app) awardDrops() {
+	var levels []int
+	for _, u := range a.battle.Units() {
+		if u == nil || u.IsPlayer || u.Alive() {
+			continue
+		}
+		levels = append(levels, u.Level)
+	}
+	drops := game.RollBattleDrops(a.rng, a.tables, a.items, levels)
+	if len(drops) == 0 {
+		return
+	}
+	for _, slot := range drops {
+		member, idx := a.freeInventorySlot()
+		if member < 0 {
+			a.logf("撿到%s，但沒有人放得下了", a.itemLabel(slot))
+			continue
+		}
+		a.members[member].Inventory[idx] = slot
+		a.logf("%s 撿到%s", a.members[member].Name, a.itemLabel(slot))
+	}
+}
+
+// freeInventorySlot 找出全隊第一個空的道具格，找不到回 (-1, -1)。
+func (a *app) freeInventorySlot() (member, slot int) {
+	for i := range a.members {
+		if s := a.members[i].FreeSlot(); s >= 0 {
+			return i, s
+		}
+	}
+	return -1, -1
 }

@@ -237,3 +237,55 @@ func loadItems(t *testing.T) *gamedata.ItemTable {
 	}
 	return tb
 }
+
+// 掉落型別只到 25 —— 火把、提燈與兩件劇情物永遠不會掉。
+func TestLootItemType_ExcludesPlotItems(t *testing.T) {
+	r := rng.NewWithSeed(23)
+	seen := map[int]bool{}
+	for n := 0; n < 5000; n++ {
+		v := LootItemType(r)
+		if v < 0 || v > 25 {
+			t.Fatalf("掉落型別 %d 超出 0–25", v)
+		}
+		seen[v] = true
+	}
+	if len(seen) != lootTypeCount {
+		t.Errorf("只出現 %d 種型別，預期 %d 種都會出現", len(seen), lootTypeCount)
+	}
+	for _, plot := range []int{26, 27, 28, 29} {
+		if seen[plot] {
+			t.Errorf("劇情物／雜貨型別 %d 不該掉出來", plot)
+		}
+	}
+}
+
+// 掉落機率 = 怪物等級 × 6 + 5，逐隻獨立判定。
+func TestBattleDropChance(t *testing.T) {
+	for _, c := range []struct{ level, want int }{
+		{1, 11}, {5, 35}, {10, 65}, {16, 101},
+	} {
+		if got := BattleDropChance(c.level); got != c.want {
+			t.Errorf("%d 級怪的掉落機率 %d%%，預期 %d%%", c.level, got, c.want)
+		}
+	}
+}
+
+// 一群高等怪幾乎一定有掉落，一群 1 級怪大多沒有 —— 逐隻判定的直接後果。
+func TestRollBattleDrops_ScalesWithLevel(t *testing.T) {
+	tb := loadTables(t)
+	items := loadItems(t)
+	r := rng.NewWithSeed(29)
+
+	low, high := 0, 0
+	for n := 0; n < 300; n++ {
+		low += len(RollBattleDrops(r, tb, items, []int{1, 1, 1}))
+		high += len(RollBattleDrops(r, tb, items, []int{15, 15, 15}))
+	}
+	if high <= low*3 {
+		t.Errorf("1 級怪掉 %d 件、15 級怪掉 %d 件 —— 差距應該大得多", low, high)
+	}
+	// 16 級以上機率破百，一定每隻都掉。
+	if got := len(RollBattleDrops(r, tb, items, []int{20, 20})); got != 2 {
+		t.Errorf("20 級怪兩隻掉了 %d 件，機率破百應該每隻都掉", got)
+	}
+}
