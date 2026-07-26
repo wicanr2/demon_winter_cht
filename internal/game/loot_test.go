@@ -101,7 +101,7 @@ func TestLootEnchant_HalvedForNonWeapons(t *testing.T) {
 func TestLootCharges_MatchesRestExceptions(t *testing.T) {
 	r := rng.NewWithSeed(5)
 
-	total, used := LootCharges(r, ChargeUnlimitedUses, 5, 17, 10)
+	total, used := LootCharges(r, ChargeUnlimitedUses, 5, 16, 10)
 	if used != restNeverRecharge {
 		t.Errorf("種類 1 的已用次數 %d，預期 %d（過夜不充能的哨兵）",
 			used, restNeverRecharge)
@@ -111,7 +111,7 @@ func TestLootCharges_MatchesRestExceptions(t *testing.T) {
 	}
 
 	for n := 0; n < 200; n++ {
-		total, used = LootCharges(r, ChargeManyUses, 5, 20, 10)
+		total, used = LootCharges(r, ChargeManyUses, 5, 19, 10)
 		if total < restRechargeMaxTotal {
 			t.Fatalf("種類 2 的上限 %d，應該 >= %d（過夜不充能的另一個條件）",
 				total, restRechargeMaxTotal)
@@ -121,9 +121,11 @@ func TestLootCharges_MatchesRestExceptions(t *testing.T) {
 		}
 	}
 
-	// 戒指與火把固定 200。
-	if total, _ := LootCharges(r, ChargeManyUses, 5, itemTypeRing, 10); total != chargeManyFixed {
-		t.Errorf("戒指的次數 %d，預期 %d", total, chargeManyFixed)
+	// 兩種藥瓶固定 200（1-based 15／26 → 0-based 14／25，見 docs/re/48 §2）。
+	for _, typ := range []int{chargeFixedVial - 1, lootFixedTypeVial - 1} {
+		if total, _ := LootCharges(r, ChargeManyUses, 5, typ, 10); total != chargeManyFixed {
+			t.Errorf("型別 %d 的次數 %d，預期 %d", typ, total, chargeManyFixed)
+		}
 	}
 
 	// 種類 3 是個位數，而且**強度越高次數越少**。
@@ -156,7 +158,7 @@ func TestGenerateLoot_StrengthCoversEffectCost(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		slot := GenerateLoot(r, tb, it, typ, 12, false)
+		slot := GenerateDrop(r, tb, it, typ, 12)
 
 		if slot.Type != byte(typ) {
 			t.Fatalf("道具型別 %d，預期 %d", slot.Type, typ)
@@ -187,27 +189,36 @@ func TestGenerateLoot_StrengthCoversEffectCost(t *testing.T) {
 }
 
 // 被詛咒的道具：附魔為負，而且**一定沒有效果**。
+//
+// 詛咒是生成器自己擲的（`rnd(10) == 10`，只有武器與護甲會中），
+// 呼叫端沒得指定 —— 所以這裡是撈一大堆樣本再驗那條不變式。
 func TestGenerateLoot_CursedHasNoEffect(t *testing.T) {
 	tb := loadTables(t)
 	items := loadItems(t)
 	r := rng.NewWithSeed(17)
 
-	negative := 0
-	for n := 0; n < 500; n++ {
+	negative, resisted := 0, 0
+	for n := 0; n < 3000; n++ {
 		it, _ := items.ByIndex(0)
-		slot := GenerateLoot(r, tb, it, 0, 12, true)
+		slot := GenerateDrop(r, tb, it, 0, 12)
+		if slot.Enchant >= 0 {
+			continue
+		}
+		negative++
 		if slot.Power != 0 || slot.Effect != 0 {
 			t.Fatalf("被詛咒的道具長出了效果：%+v", slot)
 		}
-		if slot.Enchant < 0 {
-			negative++
-		}
-		if slot.Enchant > 0 {
-			t.Fatalf("被詛咒的附魔是正的：%d", slot.Enchant)
+		if slot.ExorciseResist != 0 {
+			resisted++
 		}
 	}
 	if negative == 0 {
-		t.Error("500 次都沒擲出負附魔，詛咒那條沒生效")
+		t.Error("3000 次都沒擲出負附魔，詛咒那條沒生效")
+	}
+	// 51 − rnd(5×等級) 有機會剛好是 0（12 級時 rnd(60) 擲到 51），
+	// 所以不能要求每一件都非零，只能要求整體上寫得出來。
+	if resisted == 0 {
+		t.Error("一件詛咒品都沒有驅邪成功率")
 	}
 }
 
@@ -218,7 +229,7 @@ func TestGenerateLoot_NotIdentified(t *testing.T) {
 	r := rng.NewWithSeed(19)
 	it, _ := items.ByIndex(5)
 	for n := 0; n < 100; n++ {
-		if GenerateLoot(r, tb, it, 5, 8, false).Identified {
+		if GenerateDrop(r, tb, it, 5, 8).Identified {
 			t.Fatal("掉落的道具不該是已鑑定的")
 		}
 	}
@@ -287,5 +298,121 @@ func TestRollBattleDrops_ScalesWithLevel(t *testing.T) {
 	// 16 級以上機率破百，一定每隻都掉。
 	if got := len(RollBattleDrops(r, tb, items, []int{20, 20})); got != 2 {
 		t.Errorf("20 級怪兩隻掉了 %d 件，機率破百應該每隻都掉", got)
+	}
+}
+
+// 材質類別：六個豁免型別永遠是 1，其餘落在 1–8。
+func TestLootMaterialClass(t *testing.T) {
+	r := rng.NewWithSeed(101)
+
+	// 1-based 的豁免清單換回 0-based：布甲、皮甲、藥瓶、寶石、藥膏、藥瓶。
+	for _, typ := range []int{8, 9, 14, 19, 24, 25} {
+		for n := 0; n < 200; n++ {
+			if c := LootMaterialClass(r, typ, 12); c != 1 {
+				t.Fatalf("型別 %d 應該永遠是類別 1，得到 %d", typ, c)
+			}
+		}
+	}
+
+	// 其餘型別：值域 1–8，而且高等級擲得出高類別。
+	seen := map[int]bool{}
+	for n := 0; n < 20000; n++ {
+		c := LootMaterialClass(r, 0, 10)
+		if c < 1 || c > MaterialClassCount-1 {
+			t.Fatalf("類別 %d 超出 1–%d", c, MaterialClassCount-1)
+		}
+		seen[c] = true
+	}
+	for c := 1; c <= 8; c++ {
+		if !seen[c] {
+			t.Errorf("10 級擲了兩萬次都沒出現類別 %d", c)
+		}
+	}
+
+	// 低等級擲不出貴材質：等級 1 時 n 最大 11，只可能是類別 1 或 2。
+	for n := 0; n < 2000; n++ {
+		if c := LootMaterialClass(r, 0, 1); c > 2 {
+			t.Fatalf("1 級擲出類別 %d，公式最多只到 2", c)
+		}
+	}
+}
+
+// 價格上限：2.6^等級 + 25×等級。低等怪掉不出貴東西。
+func TestLootPriceCap(t *testing.T) {
+	// 匕首 2、雙手劍 100、寶石 500（ITEMS.DAT 的底價）。
+	cases := []struct {
+		level, atLeast, below int
+	}{
+		{1, 2, 100},   // 1 級：買得起匕首，買不起雙手劍
+		{4, 100, 500}, // 4 級：雙手劍可以，寶石還不行
+		{7, 500, 0},   // 7 級：全部解鎖
+	}
+	for _, c := range cases {
+		got := LootPriceCap(c.level)
+		if got < c.atLeast {
+			t.Errorf("%d 級的上限 %d，應該至少蓋得住 %d", c.level, got, c.atLeast)
+		}
+		if c.below != 0 && got >= c.below {
+			t.Errorf("%d 級的上限 %d，不該蓋到 %d", c.level, got, c.below)
+		}
+	}
+}
+
+// 型別篩選：低等級只挑得出便宜貨。
+func TestLootItemTypeFor_RespectsCap(t *testing.T) {
+	items := loadItems(t)
+	r := rng.NewWithSeed(103)
+	cap1 := LootPriceCap(1)
+	for n := 0; n < 2000; n++ {
+		typ := LootItemTypeFor(r, items, 1)
+		it, err := items.ByIndex(typ)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if it.Price > cap1 {
+			t.Fatalf("1 級挑到 %s（底價 %d），上限是 %d", it.Name, it.Price, cap1)
+		}
+	}
+}
+
+// 附魔的三段式：武器全額、護甲減半、飾品以上沒有。
+func TestLootEnchant_ThreeTiers(t *testing.T) {
+	r := rng.NewWithSeed(107)
+	for n := 0; n < 3000; n++ {
+		// 王冠（13）以上完全沒有附魔。
+		for _, typ := range []int{13, 15, 19, 25} {
+			if v := LootEnchant(r, 12, typ); v != 0 {
+				t.Fatalf("型別 %d 不該有附魔，得到 +%d", typ, v)
+			}
+		}
+	}
+	// 布甲（8）屬於護甲，要減半 —— 這正是偏一格的那一格。
+	maxCloth, maxSword := 0, 0
+	for n := 0; n < 5000; n++ {
+		if v := LootEnchant(r, 12, 8); v > maxCloth {
+			maxCloth = v
+		}
+		if v := LootEnchant(r, 12, 7); v > maxSword {
+			maxSword = v
+		}
+	}
+	if maxCloth >= maxSword {
+		t.Errorf("布甲最高 +%d、雙手劍 +%d —— 布甲是護甲，應該被減半",
+			maxCloth, maxSword)
+	}
+}
+
+// 詛咒只出現在武器與護甲上。
+func TestGenerateDrop_CurseOnlyOnGear(t *testing.T) {
+	tb, items := loadTables(t), loadItems(t)
+	r := rng.NewWithSeed(109)
+	for _, typ := range []int{13, 15, 19, 22} {
+		it, _ := items.ByIndex(typ)
+		for n := 0; n < 500; n++ {
+			slot := GenerateDrop(r, tb, it, typ, 12)
+			if slot.Enchant < 0 || slot.ExorciseResist != 0 {
+				t.Fatalf("型別 %d 不該被詛咒：%+v", typ, slot)
+			}
+		}
 	}
 }

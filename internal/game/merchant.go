@@ -11,9 +11,12 @@ import (
 // 掉寶生成器有兩個呼叫端，戰鬥勝利是一個，這是另一個：
 // 路上遇到一群商人，打招呼就能看他們的貨。
 //
-// **他們的貨可能被詛咒。** 這是商隊與市集最大的差別 —— 市集賣的是
-// 沒有效果的平凡裝備（安全但無趣），商隊賣的是掉寶生成器生出來的東西
-// （可能有效果、也可能是負附魔的詛咒品），而且**未鑑定**。
+// **他們的貨是掉寶生成器生出來的**，這是商隊與市集最大的差別 ——
+// 市集賣的是沒有效果的平凡裝備（安全但無趣），商隊賣的可能帶效果。
+//
+// 商隊那條路**不會生出詛咒品**：生成器的詛咒判定只在掉落模式跑
+// （`docs/re/48` §5）。以前這裡寫「可能被詛咒」，是把商隊那個機率
+// 參數的用途讀錯了。
 
 // 商隊規模對應的形容詞索引表（`ds:0x3612`）。索引是規模、值是形容詞編號。
 //
@@ -51,19 +54,25 @@ func MerchantAdjective(size int) string {
 
 // 商隊貨物的兩個擲點（`0x1d63c`／`0x1d656`）。
 const (
-	// 詛咒機率 = rnd(120) − 80，負的鉗成 0 —— 所以**最多四成的貨是詛咒品**，
-	// 而且有一半以上的商隊完全乾淨。
-	merchantCurseDie    = 120
-	merchantCurseOffset = 80
+	// 這個機率 = rnd(120) − 80，負的鉗成 0，值域 0–40，
+	// **而且有一半以上的商隊擲到 0**。
+	//
+	// 它以前被讀成「詛咒機率」，讀錯了（`docs/re/48` §5）：生成器在商隊
+	// 模式下拿它擲中的貨**跳過第一道效果門檻**，帶效果的機率因此大增
+	// （第二道門檻還在，所以不是「一定有」）。
+	// 附魔不取負、效果不被擋、驅邪成功率也不寫 —— 一件壞事都沒發生。
+	merchantEffectDie    = 120
+	merchantEffectOffset = 80
 
 	// 貨物件數 = rnd(4) + 6 → 7–10 件。
 	merchantWaresDie  = 4
 	merchantWaresBase = 6
 )
 
-// MerchantCurseChance 擲出這一支商隊的詛咒機率（百分比，已鉗在 0 以上）。
-func MerchantCurseChance(r *rng.RNG) int {
-	c := r.Roll(merchantCurseDie) - merchantCurseOffset
+// MerchantEffectChance 擲出這一支商隊「跳過第一道效果門檻」的百分比機率
+// （已鉗在 0 以上）。
+func MerchantEffectChance(r *rng.RNG) int {
+	c := r.Roll(merchantEffectDie) - merchantEffectOffset
 	if c < 0 {
 		return 0
 	}
@@ -86,6 +95,10 @@ type MerchantWare struct {
 	PriceExact bool
 	// Sold 為 true 代表已經被買走。
 	Sold bool
+	// Guaranteed 是原版逐件記下來的那個旗標（`ds:0x4e2e`）：這一件跳過了
+	// 第一道效果門檻。**商隊後續拿它做什麼還沒讀**（`docs/re/48` §5），
+	// 所以目前只保存不使用。
+	Guaranteed bool
 }
 
 // Merchant 是一支商隊。
@@ -94,13 +107,13 @@ type Merchant struct {
 	Size int
 	// Level 是商隊等級，掉寶生成器拿它當品質基準。
 	Level int
-	// CurseChance 是每件貨被詛咒的百分比機率。
-	CurseChance int
+	// EffectChance 是每件貨「跳過第一道效果門檻」的百分比機率（見上）。
+	EffectChance int
 	// Wares 是他們帶的 7–10 件貨。
 	//
 	// **生成時未鑑定，列出來給玩家看的時候標成已鑑定**
 	// （原版 `0x1d6c8`，見 `docs/re/44` §2）—— 商人願意讓你看清楚，
-	// 但那不改變東西本身可能帶詛咒的事實。
+	// 而且看清楚的那個值也是估價的依據。
 	Wares []MerchantWare
 }
 
@@ -109,8 +122,9 @@ func (m Merchant) Adjective() string { return MerchantAdjective(m.Size) }
 
 // RollMerchant 生出一支商隊的貨，連同各自的開價。
 //
-// 每件貨各自擲一次詛咒（`rnd(100) < 詛咒機率`），中的那件附魔取負且
-// **一定沒有效果** —— 詛咒品在 GenerateLoot 裡就被擋掉效果了。
+// 每件貨各自擲一次（`rnd(100) < EffectChance`），
+// 中的那件跳過第一道效果門檻。原版把結果逐件記在自己的陣列裡
+// （`ds:0x4e2e` 進出一次），這裡收在 `MerchantWare.Guaranteed`。
 //
 // 開價的順序照原版（`0x1d6c8`–`0x1d737`）：**先標成已鑑定，再估價** ——
 // 已鑑定會讓估價多一項，所以順序不能對調。
@@ -118,19 +132,18 @@ func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 	size, level int) Merchant {
 
 	m := Merchant{
-		Size:        size,
-		Level:       level,
-		CurseChance: MerchantCurseChance(r),
+		Size:         size,
+		Level:        level,
+		EffectChance: MerchantEffectChance(r),
 	}
 	n := MerchantWareCount(r)
 	for i := 0; i < n; i++ {
-		typ := LootItemType(r)
+		typ := LootItemTypeFor(r, items, level)
 		item, err := items.ByIndex(typ)
 		if err != nil {
 			continue
 		}
-		cursed := r.Roll(100) < m.CurseChance
-		slot := GenerateLoot(r, t, item, typ, level, cursed)
+		slot, guaranteed := GenerateWare(r, t, item, typ, level, m.EffectChance)
 		slot.Identified = true
 
 		value, exact := ItemValue(item.Price, slot)
@@ -138,6 +151,7 @@ func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 			Item:       slot,
 			Price:      MerchantPrice(r, value),
 			PriceExact: exact,
+			Guaranteed: guaranteed,
 		})
 	}
 	return m

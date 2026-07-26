@@ -1115,7 +1115,7 @@ func (a *app) debugLoot(spec string) error {
 			if !c.Inventory[i].Empty() {
 				continue
 			}
-			slot := game.GenerateLoot(a.rng, a.tables, item, n[0], n[1], false)
+			slot := game.GenerateDrop(a.rng, a.tables, item, n[0], n[1])
 			c.Inventory[i] = slot
 			given++
 			// 已用次數印原始值，不印「剩幾次」—— 充能種類 1 的 255 是

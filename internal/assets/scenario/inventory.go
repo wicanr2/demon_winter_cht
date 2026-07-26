@@ -3,6 +3,10 @@ package scenario
 // 道具槽的已解欄位（17 bytes，見 docs/formats/game-data-tables.md §1.3）。
 //
 //	+0x00  道具型別 = ITEMS.DAT 索引，0xFF 空槽
+//	+0x01  附帶法術 A 的索引（最高位元 0x80 是旗標）
+//	+0x02  附帶法術 A 的強度
+//	+0x03  附帶法術 B 的索引
+//	+0x04  附帶法術 B 的強度
 //	+0x05  總次數（上限）
 //	+0x06  已用次數（與 +0x05 相等代表用完）
 //	+0x07  效果索引 —— 與法術共用同一張效果記錄表
@@ -10,9 +14,15 @@ package scenario
 //	+0x09  條件旗標 A，值 0x15 時啟用 +0x0a
 //	+0x0a  武器特效值 A（以 +10 偏移儲存）
 //	+0x0b  條件旗標 B，值 0x15 時啟用 +0x0c
-//	+0x0c  武器特效值 C（以 +10 偏移儲存）
+//	+0x0c  武器特效值 B（以 +10 偏移儲存）
+//	+0x0d  驅邪成功率（只有掉落生的詛咒品才寫）
 //	+0x0e  附魔加成（以 +10 偏移儲存，10 = 無附魔）
+//	+0x0f  材質／品質類別，決定名稱前綴與價格倍率
 //	+0x10  已鑑定旗標
+//
+// 17 個 byte 到這裡全部有名字了。`+0x01`–`+0x04` 與 `+0x09`–`+0x0c`
+// 是讀通掉寶生成器（`docs/re/48`）之後才對上的 —— 那支常式是這些欄位
+// **唯一的寫入端**，看它寫什麼進去比看讀取端猜語意可靠得多。
 //
 // `+0x05`–`+0x08` 是本輪新解的，來源是「使用道具」那一支
 // （`FUN_17c5_18ab`，Ghidra `17c5:18ab`）：
@@ -39,19 +49,24 @@ package scenario
 // 所以那些道具在原版的 Use 選單裡本來就選不到。
 const (
 	slotType = 0x00
-	// slotUnknown02／slotUnknown04 語意未解。**唯一已知的讀取端是估價常式**
-	// （`278d:1c1b`）：已鑑定的道具加價 `(這兩個相加) × 270`（`docs/re/44` §3）。
-	// 兩份原版存檔裡每一件都是 0，所以看不出它們平常代表什麼。
-	slotUnknown02 = 0x02
-	slotUnknown04 = 0x04
-	slotTotal     = 0x05
-	slotUsed      = 0x06
-	slotEffect    = 0x07
-	slotPower     = 0x08
-	slotCondA     = 0x09
-	slotEffectA   = 0x0a
-	slotCondB     = 0x0b
-	slotEffectB   = 0x0c
+	// `+0x01`–`+0x04` 是**兩組「附帶法術」**（`docs/re/48` §6）：
+	// 各一個位元組的法術索引（最高位元 0x80 是旗標）加一個位元組的強度。
+	// 掉寶生成器只給**武器**長這個，一次最多兩個。
+	//
+	// 估價把兩個強度相加乘 270 當已鑑定加價（`docs/re/44` §3）——
+	// 那個「語意未解的兩個 byte」就是這裡的強度。
+	slotSpellA      = 0x01
+	slotSpellAPower = 0x02
+	slotSpellB      = 0x03
+	slotSpellBPower = 0x04
+	slotTotal       = 0x05
+	slotUsed        = 0x06
+	slotEffect      = 0x07
+	slotPower       = 0x08
+	slotCondA       = 0x09
+	slotEffectA     = 0x0a
+	slotCondB       = 0x0b
+	slotEffectB     = 0x0c
 
 	// slotExorcise 是驅邪成功率（`1000:19c8`：`rnd(100) > 它` 就失敗）。
 	// 值越大越好驅。這個 byte 一度標在「語意未解」那一排。
@@ -110,14 +125,20 @@ type InventorySlot struct {
 	// MaterialClass 是材質／品質類別（`+0x0f`），決定名稱前綴與價格倍率。
 	MaterialClass int
 
-	// Unknown02／Unknown04 語意未解，只知道它們一起決定已鑑定道具的加價
-	// （見 slotUnknown02 的註解）。
-	Unknown02, Unknown04 int
+	// SpellA／SpellB 是兩組附帶法術的原始位元組（`+0x01`／`+0x03`），
+	// SpellAPower／SpellBPower 是各自的強度（`+0x02`／`+0x04`）。
+	// 只有武器會長這個，見 `docs/re/48` §6。
+	SpellA, SpellAPower int
+	SpellB, SpellBPower int
 
-	// EffectAByte 是 `+0x0a` 的**原始值**（沒扣掉 storedOffset，也不管
-	// `+0x09` 的條件旗標）。`WeaponEffect` 是兩組相加後的衍生值，
-	// 拆不回來 —— 估價的第四項要的是這個原始 byte（`docs/re/46` §4）。
-	EffectAByte int
+	// CondA／CondB 是兩組特效的條件旗標（`+0x09`／`+0x0b`），
+	// EffectAByte／EffectBByte 是各自的**原始值**（沒扣掉 storedOffset）。
+	//
+	// `WeaponEffect` 是「條件旗標為 0x15 時把值算進去」的衍生結果，
+	// 拆不回來；估價的第四項要的是 `EffectAByte` 這個原始 byte
+	// （`docs/re/46` §4）。四個 byte 都留原值才寫得回存檔。
+	CondA, EffectAByte int
+	CondB, EffectBByte int
 
 	// ExorciseResist 是驅邪成功率（`+0x0d`）。紮營選單的 Xorcise
 	// 擲 `rnd(100)`，大於這個值就失敗 —— **越大越好驅**，
@@ -160,9 +181,14 @@ func parseInventorySlot(raw []byte) InventorySlot {
 	out.Used = int(raw[slotUsed])
 	out.ExorciseResist = int(raw[slotExorcise])
 	out.MaterialClass = int(raw[slotMaterialClass])
-	out.Unknown02 = int(raw[slotUnknown02])
-	out.Unknown04 = int(raw[slotUnknown04])
+	out.SpellA = int(raw[slotSpellA])
+	out.SpellAPower = int(raw[slotSpellAPower])
+	out.SpellB = int(raw[slotSpellB])
+	out.SpellBPower = int(raw[slotSpellBPower])
+	out.CondA = int(raw[slotCondA])
 	out.EffectAByte = int(raw[slotEffectA])
+	out.CondB = int(raw[slotCondB])
+	out.EffectBByte = int(raw[slotEffectB])
 	out.Enchant = int(raw[slotEnchant]) - storedOffset
 	if raw[slotCondA] == effectCondEnabled {
 		out.WeaponEffect += int(raw[slotEffectA]) - storedOffset
@@ -175,12 +201,12 @@ func parseInventorySlot(raw []byte) InventorySlot {
 
 // encodeInto 把已解欄位寫回一格的原始 bytes。
 //
-// **只覆蓋 parseInventorySlot 讀得出來的那些欄位**，其餘（`+0x01`、`+0x03`、
-// `+0x09`–`+0x0c`…）留原值 —— 那些 byte 的語意還沒解，寫進去等於亂猜。
+// `+0x01`–`+0x04` 與 `+0x09`–`+0x0c` 原本標「語意未解、留原值」，
+// 掉寶生成器讀通之後（`docs/re/48`）都有了名字，改成照欄位寫回 ——
+// 讀出來是什麼就寫回什麼，逐位元組往返仍然相同。
 //
-// `WeaponEffect` 是兩組「條件旗標＋特效值」相加出來的**衍生值**，
-// 拆不回去（3 = 3+0 還是 1+2？），所以不寫；那四個 byte 一律留原樣。
-// 規則層要改武器特效時得直接動 raw，目前沒有這種需求。
+// `WeaponEffect` 仍然不寫：它是兩組「條件旗標＋特效值」算出來的**衍生值**，
+// 拆不回去（3 = 3+0 還是 1+2？）。要改武器特效請動 CondA／EffectAByte 那四個。
 //
 // 空槽只寫型別。這是照原版做的：交出道具時它也只把 `+0x00` 寫成 0xFF，
 // 剩下的 bytes 就留在那裡（兩份原版存檔都看得到這種殘值）。
@@ -198,8 +224,14 @@ func (s InventorySlot) encodeInto(raw []byte) {
 	raw[slotUsed] = byte(s.Used)
 	raw[slotExorcise] = byte(s.ExorciseResist)
 	raw[slotMaterialClass] = byte(s.MaterialClass)
-	raw[slotUnknown02] = byte(s.Unknown02)
-	raw[slotUnknown04] = byte(s.Unknown04)
+	raw[slotSpellA] = byte(s.SpellA)
+	raw[slotSpellAPower] = byte(s.SpellAPower)
+	raw[slotSpellB] = byte(s.SpellB)
+	raw[slotSpellBPower] = byte(s.SpellBPower)
+	raw[slotCondA] = byte(s.CondA)
+	raw[slotEffectA] = byte(s.EffectAByte)
+	raw[slotCondB] = byte(s.CondB)
+	raw[slotEffectB] = byte(s.EffectBByte)
 	raw[slotEnchant] = byte(s.Enchant + storedOffset)
 	if s.Identified {
 		raw[slotIdentified] = 1

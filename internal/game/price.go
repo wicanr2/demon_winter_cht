@@ -89,7 +89,7 @@ func chargeBonus(slot scenario.InventorySlot) int {
 func ItemValue(basePrice int, slot scenario.InventorySlot) (value int, exact bool) {
 	value = ItemValueBase(basePrice, slot)
 	if slot.Identified {
-		value += (slot.Unknown02 + slot.Unknown04) * identifiedBonusMul
+		value += (slot.SpellAPower + slot.SpellBPower) * identifiedBonusMul
 	}
 	if slot.Power != 0 {
 		value += chargeBonus(slot)

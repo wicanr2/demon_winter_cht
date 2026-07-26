@@ -30,18 +30,18 @@ func TestMerchantAdjective(t *testing.T) {
 	}
 }
 
-// 詛咒機率 = rnd(120) − 80，負的鉗成 0。
+// 「跳過第一道效果門檻」的機率 = rnd(120) − 80，負的鉗成 0。
 //
-// 值域 0–40 意味著**最壞的商隊也只有四成的貨是詛咒品**，
-// 而且超過一半的商隊完全乾淨（rnd 擲到 80 以下就是 0）。
-func TestMerchantCurseChance_Range(t *testing.T) {
+// 值域 0–40，而且**超過一半的商隊擲到 0**（rnd 擲到 80 以下就歸零）。
+// 這個參數以前被讀成詛咒機率，見 `docs/re/48` §5。
+func TestMerchantEffectChance_Range(t *testing.T) {
 	r := rng.NewWithSeed(31)
 	clean, max := 0, 0
 	const n = 4000
 	for i := 0; i < n; i++ {
-		c := MerchantCurseChance(r)
-		if c < 0 || c > merchantCurseDie-merchantCurseOffset {
-			t.Fatalf("詛咒機率 %d 超出 0–%d", c, merchantCurseDie-merchantCurseOffset)
+		c := MerchantEffectChance(r)
+		if c < 0 || c > merchantEffectDie-merchantEffectOffset {
+			t.Fatalf("機率 %d 超出 0–%d", c, merchantEffectDie-merchantEffectOffset)
 		}
 		if c == 0 {
 			clean++
@@ -51,10 +51,10 @@ func TestMerchantCurseChance_Range(t *testing.T) {
 		}
 	}
 	if clean*3 < n {
-		t.Errorf("完全乾淨的商隊只有 %d/%d —— 應該超過一半", clean, n)
+		t.Errorf("擲到 0 的商隊只有 %d/%d —— 應該超過一半", clean, n)
 	}
 	if max < 35 {
-		t.Errorf("最高詛咒機率只到 %d%%，應該接近 40%%", max)
+		t.Errorf("最高只到 %d%%，應該接近 40%%", max)
 	}
 }
 
@@ -80,7 +80,7 @@ func TestRollMerchant_WaresAreUnidentified(t *testing.T) {
 	items := loadItems(t)
 	r := rng.NewWithSeed(41)
 
-	cursed, withEffect := 0, 0
+	guaranteed, withEffect := 0, 0
 	for n := 0; n < 400; n++ {
 		m := RollMerchant(r, tb, items, 6, 14)
 		if len(m.Wares) < 7 || len(m.Wares) > 10 {
@@ -95,38 +95,39 @@ func TestRollMerchant_WaresAreUnidentified(t *testing.T) {
 				t.Fatalf("開價 %d 不合理：%+v", ware.Price, w)
 			}
 			if w.Enchant < 0 {
-				cursed++
-				if w.Power != 0 || w.Effect != 0 {
-					t.Fatalf("詛咒品不該有效果：%+v", w)
-				}
+				t.Fatalf("商隊的貨不該有負附魔：%+v", w)
+			}
+			if ware.Guaranteed {
+				guaranteed++
 			}
 			if w.Power != 0 {
 				withEffect++
 			}
 		}
 	}
-	if cursed == 0 {
-		t.Error("400 支商隊一件詛咒品都沒有，詛咒那條沒生效")
+	if guaranteed == 0 {
+		t.Error("400 支商隊一件「保證帶效果」都沒擲到")
 	}
 	if withEffect == 0 {
 		t.Error("400 支商隊一件有效果的都沒有，生成那條沒生效")
 	}
 }
 
-// 詛咒機率 0 的商隊一件詛咒品都不該有。
-func TestRollMerchant_CleanCaravanHasNoCurse(t *testing.T) {
+// **商隊完全不會生出詛咒品。** 生成器的詛咒判定只在掉落模式跑，
+// 商隊那條路連負附魔與驅邪成功率都不會出現（`docs/re/48` §5）。
+func TestRollMerchant_NeverCursed(t *testing.T) {
 	tb := loadTables(t)
 	items := loadItems(t)
 	r := rng.NewWithSeed(43)
 
 	for n := 0; n < 500; n++ {
 		m := RollMerchant(r, tb, items, 3, 10)
-		if m.CurseChance != 0 {
-			continue
-		}
 		for _, ware := range m.Wares {
 			if ware.Item.Enchant < 0 {
-				t.Fatalf("詛咒機率 0 的商隊卻有詛咒品：%+v", ware.Item)
+				t.Fatalf("商隊的貨出現負附魔：%+v", ware.Item)
+			}
+			if ware.Item.ExorciseResist != 0 {
+				t.Fatalf("商隊的貨被寫了驅邪成功率：%+v", ware.Item)
 			}
 		}
 	}

@@ -62,7 +62,7 @@ func TestItemValueBase_RealSaveIsAllClassOne(t *testing.T) {
 func TestItemValue_IdentifiedBonus(t *testing.T) {
 	slot := scenario.InventorySlot{
 		Type: 3, MaterialClass: 1, Identified: true,
-		Unknown02: 2, Unknown04: 3,
+		SpellAPower: 2, SpellBPower: 3,
 	}
 	got, exact := ItemValue(30, slot)
 	if !exact {
@@ -75,7 +75,7 @@ func TestItemValue_IdentifiedBonus(t *testing.T) {
 
 // 未鑑定就沒有第二項。
 func TestItemValue_UnidentifiedSkipsBonus(t *testing.T) {
-	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, Unknown02: 2, Unknown04: 3}
+	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, SpellAPower: 2, SpellBPower: 3}
 	if got, _ := ItemValue(30, slot); got != 30 {
 		t.Errorf("未鑑定的估價 %d，預期 30", got)
 	}
