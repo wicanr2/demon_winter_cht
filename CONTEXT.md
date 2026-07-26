@@ -1204,6 +1204,35 @@ M4 掛了很久的最後一項。`0x1a59` 那一行讀出來是
 要眼睛驗的是「方塊有沒有畫在對的格子上」，時間常數是另一件事，
 分開驗比想辦法卡在對的 frame 上可靠。
 
+### 這一輪（2026-07-26 續二十一）：市集與商隊是同一支常式（`docs/re/52`）
+
+`docs/re/50` 發現商隊常式開頭分岔，`mode == 0` 是別的東西 ——
+讀出來是**市集（Marketplace）**，而商隊（Merchants）是 `mode == 1`。
+兩個畫面共用一支常式、一張 14 個 case 的分派表。
+
+**商隊有七個選項，本專案只做了兩個**：
+
+	mode 0 市集  Purchase Sell Continue Back Haggle Identify 五個角色槽 Quit（12）
+	mode 1 商隊  Purchase View-mind Continue Back Haggle Inspect Quit（7）
+
+選項數有**三個獨立來源互相驗**：熱鍵字串長度（`PVCBHIQ`）、
+遠指標表長度、`[bp-0x34]` 的 `12 − 5`。任一個讀錯三者就對不起來 ——
+這種冗餘交叉驗證成本幾乎是零，比「反編譯看起來是這樣」硬得多。
+
+**Haggle 兩個模式共用同一段程式**（case 4），所以市集議價與商隊議價
+是同一條規則。三條分支解出來了：
+
+	rnd(100) < 10 × 計數器  → "You have insulted the merchant"，那件貨報廢（計數器 = 1000）
+	rnd(100) < 15 × 計數器  → "The merchant stands firm"，沒降價
+	否則                    → 計數器++，成功
+
+第一次議價一定成功（計數器 0）；成功一次之後翻臉 10%／僵持 15%，
+再一次 20%／30%，第五次之後翻臉機率就到 50%。**降價幅度還沒讀**
+（成功那條只做 `計數器++` 與重畫，價格是顯示時重算的）——
+差那一項就不實作，議價的手感全在幅度上。
+
+所以 `docs/re/47` 的「購買介面做好了」要收窄成「**能買，但少四個選項**」。
+
 ## 3. 文件索引
 
 ### 規格層 `docs/spec/` — 實作的唯一依據
@@ -1251,6 +1280,7 @@ M4 掛了很久的最後一項。`0x1a59` 那一行讀出來是
 | [`21-skills-races-and-files-dat.md`](docs/re/21-skills-races-and-files-dat.md) | **遊戲內部技能 id 表**、種族系統與修正公式、`FILES.DAT` 完整布局 |
 | [`22-resource-arena-and-passability.md`](docs/re/22-resource-arena-and-passability.md) | **18 段資源記憶體區**、**可通行性表**、子地圖退出、**事件消費者** |
 | [`26-camp-and-rest.md`](docs/re/26-camp-and-rest.md) | **紮營選單（13 選項）**、睡覺的時間與回復公式、過夜充能；順帶抓到道具槽兩個欄位標反 |
+| [`52-marketplace-and-merchants.md`](docs/re/52-marketplace-and-merchants.md) | **市集與商隊共用一支常式**；商隊有七個選項（本專案只做兩個）；議價的三條分支與「翻臉就報廢那件貨」；選項數的三重交叉驗證 |
 | [`51-encounter-dispatch-corrected.md`](docs/re/51-encounter-dispatch-corrected.md) | **那道 1/64 是商隊不是戰鬥**（訂正 `docs/re/04` §2.2 與本專案的實作）；隨機戰鬥掛在動作碼 `0x16`，由 `隊伍[+0x9c]` 倒數歸零觸發 |
 | [`50-merchant-encounter-trigger.md`](docs/re/50-merchant-encounter-trigger.md) | **商隊是事件動作不是隨機遭遇**（從函式位址回推呼叫端找到的）；規模＝等級＝`clamp(基準 + rnd(3) − 2, ≤ 9)`；等級 0 會讓原版的型別重擲轉不完 |
 | [`49-item-valuation-complete.md`](docs/re/49-item-valuation-complete.md) | **估價六項全解**：兩組特效值 `trunc(1.4×|n|×250)×sign(n)`、附魔項（武器 350／護甲 700，取絕對值不補符號）、詛咒品估價 0；「小數乘出整數」的捷徑**因乘法順序而不成立** |

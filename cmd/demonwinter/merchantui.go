@@ -12,7 +12,15 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/ui/textlayout"
 )
 
-// 商隊遭遇（規則見 `docs/re/32`／`44`／`45`／`46`）。
+// 商隊遭遇（規則見 `docs/re/32`／`44`／`45`／`46`／`49`／`50`）。
+//
+// **這個畫面是原版的子集。** 原版有七個選項
+// （Purchase / View mind / Continue / Back / Haggle / Inspect / Quit，
+// 見 `docs/re/52`），這裡只有 Purchase 與離開：
+//
+//   - Continue／Back 是貨單翻頁，640×400 一次列得完，沒有對應物
+//   - Haggle 的三條分支解了，**降價幅度沒解**，湊一個等於自己設計遊戲
+//   - Inspect／View mind 完全沒讀
 //
 // 路上遇到一群商人，打招呼就能看他們的貨。與市集最大的差別是
 // **貨是掉寶生成器生出來的** —— 可能帶效果，也可能被詛咒。
