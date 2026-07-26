@@ -69,7 +69,7 @@
 
 ## 5. 下一步
 
-- **`tools/route.py` 支援 `SUM.MAP` 段**（先做 Go 端的 dump）——
-  沒有它就沒辦法在地面上規劃任何路線。
+- ~~**`tools/route.py` 支援 `SUM.MAP` 段**~~ → **已做，做法不同**：整支搬進 Go
+  （`cmd/dwroute`），直接用引擎的載入與可通行判定，見 `docs/playtest/05`。
 - **建角開新遊戲**還沒進試玩流程。
 - `docs/re/58` §4 動作層剩下的：`Take:`、`Move:`、水池、全隊死亡。
