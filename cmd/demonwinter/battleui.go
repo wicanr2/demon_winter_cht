@@ -63,6 +63,9 @@ func (a *app) updateBattle() error {
 		// 撿到什麼的那幾行只存在一幀，玩家永遠看不到。
 		if !a.settled {
 			a.settled = true
+			// **戰鬥的持久後果要在這裡寫回隊伍。** 不寫的話打完就滿血
+			// 復活，而且「全隊死亡」永遠不成立（`campcast.WriteBackParty`）。
+			game.WriteBackParty(a.members, a.battle.Units())
 			if out == game.Victory {
 				a.logf("怪物全滅")
 				a.awardExperience()
@@ -71,6 +74,11 @@ func (a *app) updateBattle() error {
 			} else {
 				a.logf("隊伍全滅")
 			}
+		}
+		// 全滅就直接走死亡畫面，不要等玩家按鍵回世界地圖 ——
+		// 那條路會讓一支全員陣亡的隊伍繼續走路（`deathui.go`）。
+		if out == game.Defeat && a.checkPartyDeath() {
+			return nil
 		}
 		// -autofight 時自動翻過結算畫面，等同玩家按著空白鍵。
 		if !inpututil.IsKeyJustPressed(ebiten.KeySpace) && !a.autoAdvance() {

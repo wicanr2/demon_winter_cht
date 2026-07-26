@@ -92,6 +92,17 @@ func (a *app) traceState() string {
 	if a.battle != nil {
 		fmt.Fprintf(&b, "  第%d回合", a.battle.Round())
 	}
+	// **隊伍血量。** 加這一欄的理由：戰鬥的傷害一直沒寫回隊伍，
+	// 而軌跡只記位置與畫面，所以那個 bug 在四輪試玩裡完全看不見
+	// （戰鬥畫面上的血量是 `Unit` 的，是對的）。
+	// 血量進軌跡之後，「打完一場仗血沒少」一眼就看得出來。
+	b.WriteString("  血")
+	for i := range a.members {
+		if i > 0 {
+			b.WriteByte('/')
+		}
+		fmt.Fprintf(&b, "%d", a.members[i].CurrentHP)
+	}
 	return b.String()
 }
 
@@ -101,6 +112,11 @@ func (a *app) screenName() string {
 	switch {
 	case a.quitting:
 		return "離開確認"
+	// **死亡要排在最前面**，與 `Update` 的分派順序一致。
+	// 漏了它的話全隊死亡之後軌跡還寫「野外」—— 而那正是這一輪
+	// 要抓的狀態。軌跡與分派順序不一致，軌跡就在說謊。
+	case a.death != nil:
+		return "死亡"
 	case a.won:
 		return "結局"
 	case a.title != nil:

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
@@ -63,7 +62,7 @@ func (a *app) checkExit(tile byte) bool {
 // 換回來時狀態還在（原版是用 `ds:0x5c52` 那組旗標做同一件事，
 // 見 `0x191c4`：換圖前把緩衝區刷進該圖的快取）。
 func (a *app) changeMap(id, x, y int) {
-	m, err := loadMapByID(a.dataDir, id)
+	m, err := world.LoadByID(a.dataDir, id)
 	if err != nil {
 		// 換不過去就留在原地並說清楚 —— 靜默失敗會讓玩家
 		// 以為那一格本來就沒事，然後在樓梯上反覆踩。
@@ -85,29 +84,4 @@ func (a *app) changeMap(id, x, y int) {
 	a.save.MapID = byte(id)
 	a.message = fmt.Sprintf("進入地圖 %d 的 (%d,%d)", id, x, y)
 	a.trace.note("換地圖 → %d (%d,%d)", id, x, y)
-}
-
-// loadMapByID 依編號載入地圖。
-//
-// 兩個來源，跟 `-map` 旗標的規則一致（`loadMapArg`）：
-// 1／3／5 是獨立的 `MAPn.MAP`，其餘全部在 `SUM.MAP` 裡
-// （含地圖 2、4 與世界地圖各格）。
-//
-// **`EXITS.DAT` 的 13 個目的地編號全部載得到**，這是查過資料的：
-// `{1,2,3,4,5,21,22,34,35,44,51,56,64}`，其中 1／3／5 有獨立檔案，
-// 其餘 10 個都在 `SUM.MAP` 的段編號表裡。
-func loadMapByID(dataDir string, id int) (*world.Map, error) {
-	switch id {
-	case 1, 3, 5:
-		return world.LoadMap(filepath.Join(dataDir, fmt.Sprintf("MAP%d.MAP", id)))
-	}
-	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
-	if err != nil {
-		return nil, err
-	}
-	seg, ok := sm.Segment(id)
-	if !ok {
-		return nil, fmt.Errorf("SUM.MAP 裡沒有段 %d", id)
-	}
-	return seg, nil
 }

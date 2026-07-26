@@ -126,3 +126,39 @@ func CampCastCandidates(t *gamedata.Tables) []int {
 	}
 	return out
 }
+
+// WriteBackParty 把一場戰鬥結束後的持久狀態寫回隊伍。
+//
+// **在這之前，戰鬥完全沒有後果。** 引擎把角色複製成 `Unit` 上場，
+// 傷害只寫在 `Unit` 上，而沒有任何地方寫回去 —— 打完一場慘勝回到地圖，
+// 全隊照樣滿血；打輸了每個人也還是滿血，所以「全隊死亡」永遠不會成立。
+//
+// 症狀不會報錯，而且**戰鬥畫面上的血量是對的**（那是 `Unit` 的），
+// 所以單看戰鬥截圖看不出來。要看出來得在戰鬥前後各看一次隊伍名冊。
+//
+// 對應到原版：角色記錄就是戰鬥用的那份資料（`docs/re/20`），
+// 原版沒有「複製一份上場」這回事，所以它沒有這個問題也不需要這支函式 ——
+// **這是移植架構自己引入的缺口**。
+//
+// 只寫回持久欄位，理由與 `writeBackFromUnit` 相同：
+// 速度／力量／技巧／護甲在單位上是戰鬥期間的暫時值。
+//
+// 配對用**槽位**不用名字：`u2c` 那種按名字找的做法遇到同名角色會配錯，
+// 而遊戲允許同名（建角不查重複）。
+//
+// 判別式只看槽位範圍，**不看 `Side`**。三段槽位是不相交的
+//（怪物 0–6、隊伍 7–11、召喚 12–14，見 `battle.go`），所以槽位就夠了；
+// 而且被魅惑的隊員 `Side` 會變成 `SideCharmedPlayer`，
+// 用 `Side == SidePlayer` 篩會把他的傷害漏掉。
+func WriteBackParty(members []Character, units []*Unit) {
+	for _, u := range units {
+		if u == nil || u.Slot < PlayerSlotStart || u.Slot >= PlayerSlotEnd {
+			continue
+		}
+		i := u.Slot - PlayerSlotStart
+		if i < 0 || i >= len(members) {
+			continue
+		}
+		writeBackFromUnit(&members[i], u)
+	}
+}

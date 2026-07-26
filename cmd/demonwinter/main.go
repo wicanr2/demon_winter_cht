@@ -190,6 +190,9 @@ type app struct {
 	// 所以路徑不能只留在 main 的區域變數裡（見 mapchange.go）。
 	dataDir string
 
+	// death 非 nil 時螢幕上是全隊死亡畫面（`docs/re/58` 動作 `0x18`）。
+	death *deathScreen
+
 	// newGameSlots 是開新遊戲時還有幾個角色沒建（見 createui.go）。
 	// 大於 0 時世界地圖不吃輸入。
 	newGameSlots int
@@ -255,6 +258,10 @@ func (a *app) Update() error {
 func (a *app) update() error {
 	if handled, err := a.updateQuitDialog(); handled || err != nil {
 		return err
+	}
+	// 死亡與結局排在所有畫面之前 —— 兩者都是終局，不該還能回去紮營。
+	if a.death != nil {
+		return a.updateDeath()
 	}
 	// 結局要排在所有畫面之前 —— 破關之後不該還能回去紮營。
 	if a.won {
@@ -360,6 +367,11 @@ func (a *app) update() error {
 		if res == game.MoveOK {
 			a.stepBoat(tile)
 			a.stepHPTick()
+			// 走一步可能餓死／毒死（`stepHPTick`）。原版有 11 個呼叫端 ——
+			// **任何一條會扣血的路都要檢查**，不是只有戰鬥。
+			if a.checkPartyDeath() {
+				return nil
+			}
 			// 出口要排在事件之前，而且命中就收工 —— 踩到樓梯是
 			// 「離開這張圖」，原地的事件與遭遇都不該再跑
 			// （`docs/re/05` §3：出口那條路徑不經過事件表）。
@@ -418,6 +430,14 @@ func (a *app) update() error {
 
 func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
+	if a.death != nil {
+		a.canvas.Fill(color.Black)
+		a.drawDeath(a.canvas)
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
 	if a.won {
 		a.drawEnding(a.canvas)
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
@@ -553,13 +573,20 @@ func loadMapArg(dataDir, arg string) (*world.Map, int, error) {
 		}
 		return m, n, nil
 	}
-	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
+	// 數字形式**一律走 `world.LoadByID`**，它知道 1／3／5 是獨立檔案、
+	// 其餘在 `SUM.MAP` 裡。那是這條規則**唯一**的一份實作。
+	//
+	// ⚠ 這裡原本直接查 `SUM.MAP`，於是數字 `1` 會變成「`SUM.MAP` 沒有子地圖 1」。
+	// 以前沒事是因為 `-map` 的預設值是檔名 `MAP1.MAP`（走上面那條）；
+	// 我把預設改成「用存檔的 MapID」之後，出貨存檔的 `1` 就走進了這一條
+	// —— **啟動直接失敗**。而我當時只用 `-newgame`（MapID 34，`SUM.MAP` 有 34）
+	// 驗過，沒有回頭測從出貨存檔啟動的那條路。
+	//
+	// 教訓與 `dwroute` 那次同一條：**同一件事只留一份實作。**
+	// 兩份「編號 → 地圖」的邏輯放在兩個檔案裡，改了一邊就會漂。
+	m, err := world.LoadByID(dataDir, id)
 	if err != nil {
 		return nil, 0, err
-	}
-	m, ok := sm.Segment(id)
-	if !ok {
-		return nil, 0, fmt.Errorf("SUM.MAP 沒有子地圖 %d，可用的是 %v", id, sm.IDs())
 	}
 	return m, id, nil
 }

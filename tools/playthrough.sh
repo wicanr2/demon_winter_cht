@@ -47,7 +47,14 @@ mkdir -p "$OUTDIR"
 OUT_ABS="$(cd "$OUTDIR" && pwd)"
 SCRIPT_ABS="$(cd "$(dirname "$SCRIPT")" && pwd)/$(basename "$SCRIPT")"
 
-docker run --rm \
+# **具名 + trap**：外層被 timeout 砍掉時，`docker run --rm` 的容器會活下來
+# （殺的是 shell，不是容器）。踩過一次 —— 三個孤兒容器同時跑，
+# 互相搶 CPU，於是後續每一次試玩都慢到像卡住，而 log 上什麼都看不到。
+CONTAINER="dw-playthrough-$$"
+cleanup() { docker kill "$CONTAINER" >/dev/null 2>&1 || true; }
+trap cleanup EXIT INT TERM
+
+docker run --rm --name "$CONTAINER" \
     -v "$REPO_ROOT:/src" \
     -v "$OUT_ABS:/out" \
     -v "$SCRIPT_ABS:/script.txt:ro" \

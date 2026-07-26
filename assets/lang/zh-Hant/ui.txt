@@ -177,3 +177,31 @@ You are not known to this temple.
 ## riddle.cancel
 :: zh
 Esc：離開
+
+## death.line0
+:: en
+A cold breeze
+:: zh
+一陣冷風
+
+## death.line1
+:: en
+chills the air...
+:: zh
+讓空氣凝結……
+
+## death.line2
+:: en
+...all characters
+:: zh
+……全隊
+
+## death.line3
+:: en
+have died.
+:: zh
+都死了。
+
+## death.dismiss
+:: zh
+（按任意鍵離開）

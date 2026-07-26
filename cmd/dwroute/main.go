@@ -95,27 +95,16 @@ func main() {
 	}
 }
 
-// loadMap 依 -map 的形式載入：純數字是 SUM.MAP 的段，其餘當檔名。
+// loadMap 依 -map 的形式載入：純數字走 `world.LoadByID`，其餘當檔名。
 //
-// 規則與 `cmd/demonwinter` 的 `loadMapArg`／`loadMapByID` 一致。
+// **編號 → 地圖的規則只有一份**，在 `world.LoadByID` ——
+// 這支原本自己抄了一份，而重複的那份正是上一次 regression 的來源。
 func loadMap(dataDir, arg string) (*world.Map, error) {
 	id, err := strconv.Atoi(arg)
 	if err != nil {
 		return world.LoadMap(filepath.Join(dataDir, arg))
 	}
-	switch id {
-	case 1, 3, 5:
-		return world.LoadMap(filepath.Join(dataDir, fmt.Sprintf("MAP%d.MAP", id)))
-	}
-	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
-	if err != nil {
-		return nil, err
-	}
-	seg, ok := sm.Segment(id)
-	if !ok {
-		return nil, fmt.Errorf("SUM.MAP 裡沒有段 %d（有的是 %v）", id, sm.IDs())
-	}
-	return seg, nil
+	return world.LoadByID(dataDir, id)
 }
 
 type point struct{ x, y int }
