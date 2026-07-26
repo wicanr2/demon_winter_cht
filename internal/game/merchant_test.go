@@ -82,7 +82,7 @@ func TestRollMerchant_WaresAreUnidentified(t *testing.T) {
 
 	guaranteed, withEffect := 0, 0
 	for n := 0; n < 400; n++ {
-		m := RollMerchant(r, tb, items, 6, 14)
+		m := RollMerchant(r, tb, items, 9)
 		if len(m.Wares) < 7 || len(m.Wares) > 10 {
 			t.Fatalf("帶了 %d 件貨", len(m.Wares))
 		}
@@ -121,7 +121,7 @@ func TestRollMerchant_NeverCursed(t *testing.T) {
 	r := rng.NewWithSeed(43)
 
 	for n := 0; n < 500; n++ {
-		m := RollMerchant(r, tb, items, 3, 10)
+		m := RollMerchant(r, tb, items, 3)
 		for _, ware := range m.Wares {
 			if ware.Item.Enchant < 0 {
 				t.Fatalf("商隊的貨出現負附魔：%+v", ware.Item)
@@ -136,7 +136,7 @@ func TestRollMerchant_NeverCursed(t *testing.T) {
 // 買一件貨：扣錢、進包包、標成已賣。
 func TestBuyFromMerchant_Success(t *testing.T) {
 	tb, items := loadTables(t), loadItems(t)
-	m := RollMerchant(rng.NewWithSeed(11), tb, items, 5, 8)
+	m := RollMerchant(rng.NewWithSeed(11), tb, items, 5)
 
 	const i = 0
 	want := m.Wares[i].Item
@@ -192,5 +192,35 @@ func TestBuyFromMerchant_Refusals(t *testing.T) {
 	}
 	if res := BuyFromMerchant(nil, 0, nil, 100); res.OK {
 		t.Error("nil 商隊不該買得到東西")
+	}
+}
+
+// 規模 = clamp(基準 + rnd(3) − 2, ≤ 9)，而且規模就是等級。
+func TestMerchantSize(t *testing.T) {
+	r := rng.NewWithSeed(53)
+	seen := map[int]bool{}
+	for n := 0; n < 3000; n++ {
+		got := MerchantSize(r, 4)
+		if got < 3 || got > 5 {
+			t.Fatalf("基準 4 擲出 %d，應該落在 3–5", got)
+		}
+		seen[got] = true
+	}
+	if len(seen) != 3 {
+		t.Errorf("三種結果只出現 %d 種", len(seen))
+	}
+	// 上限鉗在 9，下限（本專案補的）鉗在 0。
+	for n := 0; n < 200; n++ {
+		if got := MerchantSize(r, 20); got != MerchantMaxSize {
+			t.Fatalf("基準 20 擲出 %d，應該鉗成 %d", got, MerchantMaxSize)
+		}
+		if got := MerchantSize(r, 0); got < 0 {
+			t.Fatalf("基準 0 擲出負數 %d", got)
+		}
+	}
+	// 規模就是等級。
+	m := RollMerchant(rng.NewWithSeed(59), loadTables(t), loadItems(t), 6)
+	if m.Level != m.Size {
+		t.Errorf("等級 %d != 規模 %d", m.Level, m.Size)
 	}
 }

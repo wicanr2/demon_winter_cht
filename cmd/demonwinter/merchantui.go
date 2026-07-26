@@ -17,9 +17,9 @@ import (
 // 路上遇到一群商人，打招呼就能看他們的貨。與市集最大的差別是
 // **貨是掉寶生成器生出來的** —— 可能帶效果，也可能被詛咒。
 //
-// **進入鍵 `M` 是偵錯用的**：原版什麼情況下會遇到商隊還沒解
-// （`docs/re/32` §4 的「遭遇觸發」），與 `B 測試戰鬥`、`T 進入城鎮`
-// 同一個性質 —— 沒有這個鍵就沒辦法驗這個畫面。
+// **進入鍵 `M` 是偵錯用的**：商隊是**事件動作**不是隨機遭遇
+// （`docs/re/50`），要接上事件表才會自己出現。與 `B 測試戰鬥`、
+// `T 進入城鎮` 同一個性質 —— 沒有這個鍵就沒辦法驗這個畫面。
 
 // merchantScreen 是商隊畫面的狀態。
 type merchantScreen struct {
@@ -32,17 +32,14 @@ type merchantScreen struct {
 	message string
 }
 
-// debugMerchantSize／Level 是偵錯遭遇的商隊規模與等級。
-// 原版怎麼決定這兩個值沒解（`docs/re/32` §4）。
-const (
-	debugMerchantSize  = 6
-	debugMerchantLevel = 12
-)
-
+// openMerchant 開一支商隊。
+//
+// 規模照原版擲（`docs/re/50`）：基準值來自存檔 `+0xaf`，
+// **規模同時就是商隊等級**。原版起始存檔的基準是 1 與 4，
+// 所以一開始遇到的都是小商隊 —— 那是遊戲設計，不是我們算錯。
 func (a *app) openMerchant() {
-	m := game.RollMerchant(a.rng, a.tables, a.items,
-		debugMerchantSize, debugMerchantLevel)
-	a.merchant = &merchantScreen{m: m}
+	size := game.MerchantSize(a.rng, int(a.save.MerchantBase))
+	a.merchant = &merchantScreen{m: game.RollMerchant(a.rng, a.tables, a.items, size)}
 }
 
 func (a *app) updateMerchant() error {

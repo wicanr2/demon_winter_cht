@@ -27,6 +27,35 @@ var merchantAdjectiveIndex = [MerchantMaxSize + 1]int{0, 1, 2, 2, 3, 4, 5, 5, 6,
 // MerchantMaxSize 是商隊規模的上限。原版算出來之後鉗在 9（`0x1d567`）。
 const MerchantMaxSize = 9
 
+// 規模的擲點（`0x1d555`，見 `docs/re/50`）。
+//
+//	規模 = clamp(基準 + rnd(3) − 2, ≤ 9)
+//
+// 基準來自存檔的 `+0xaf`（戶外會被地圖記錄自帶的參數覆蓋，那個來源沒解）。
+const (
+	merchantSizeDie    = 3
+	merchantSizeOffset = 2
+)
+
+// MerchantSize 依基準值擲出這一支商隊的規模。
+//
+// **規模同時就是商隊等級** —— 原版是同一個區域變數，算完規模之後直接
+// 當等級傳給掉寶生成器（`0x1d6ad`）。所以「衣衫襤褸的商隊」賣的東西
+// 一定也差，兩件事本來就是一回事。
+//
+// 原版只鉗上限；下限這裡補一個 0，免得基準值太小時算出負數去索引
+// 形容詞表（原版會讀到表前面的 bytes）。
+func MerchantSize(r *rng.RNG, base int) int {
+	size := base + r.Roll(merchantSizeDie) - merchantSizeOffset
+	if size > MerchantMaxSize {
+		return MerchantMaxSize
+	}
+	if size < 0 {
+		return 0
+	}
+	return size
+}
+
 // merchantAdjectives 是七個形容詞（`ds:0x3632` 遠指標表的前七項）。
 // 譯名走 assets/lang 的 MERCHANT 目錄。
 var merchantAdjectives = []string{
@@ -103,6 +132,7 @@ type Merchant struct {
 	// Size 是規模，決定形容詞。
 	Size int
 	// Level 是商隊等級，掉寶生成器拿它當品質基準。
+	// **與 Size 永遠相同** —— 原版是同一個變數（`docs/re/50`）。
 	Level int
 	// EffectChance 是每件貨「跳過第一道效果門檻」的百分比機率（見上）。
 	EffectChance int
@@ -126,21 +156,21 @@ func (m Merchant) Adjective() string { return MerchantAdjective(m.Size) }
 // 開價的順序照原版（`0x1d6c8`–`0x1d737`）：**先標成已鑑定，再估價** ——
 // 已鑑定會讓估價多一項，所以順序不能對調。
 func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
-	size, level int) Merchant {
+	size int) Merchant {
 
 	m := Merchant{
 		Size:         size,
-		Level:        level,
+		Level:        size,
 		EffectChance: MerchantEffectChance(r),
 	}
 	n := MerchantWareCount(r)
 	for i := 0; i < n; i++ {
-		typ := LootItemTypeFor(r, items, level)
+		typ := LootItemTypeFor(r, items, m.Level)
 		item, err := items.ByIndex(typ)
 		if err != nil {
 			continue
 		}
-		slot, guaranteed := GenerateWare(r, t, item, typ, level, m.EffectChance)
+		slot, guaranteed := GenerateWare(r, t, item, typ, m.Level, m.EffectChance)
 		slot.Identified = true
 
 		m.Wares = append(m.Wares, MerchantWare{

@@ -41,6 +41,7 @@ func (s *SaveGame) Encode() ([]byte, error) {
 	putByte(trailer[:], monthOffset, s.Month)
 	putByte(trailer[:], mapIDOffset, s.MapID)
 	putByte(trailer[:], lightSourceOffset, s.LightSource)
+	putByte(trailer[:], merchantBaseOffset, s.MerchantBase)
 	putByte(trailer[:], partySizeOffset, s.PartySize)
 	putByte(trailer[:], rationsOffset, s.Rations)
 	encodeShips(trailer[:], s.Ships)

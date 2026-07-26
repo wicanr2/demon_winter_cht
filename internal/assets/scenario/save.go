@@ -223,6 +223,13 @@ const (
 	// 而且是整隊共用一次。
 	viewedLandTodayOffset = 0xac
 
+	// merchantBaseOffset：**商隊規模的基準值**（`docs/re/50`）。
+	// 進地圖時 `0x15f5d` 把它讀進 `ds:0x5c60`；在戶外（子地圖編號 > 9）
+	// 會被地圖記錄自帶的參數覆蓋。商隊遭遇拿它算
+	// `規模 = clamp(基準 + rnd(3) − 2, ≤ 9)`，而**規模同時就是商隊等級**。
+	// 兩份原版存檔是 1 與 4 —— 所以早期遇到的都是小商隊。
+	merchantBaseOffset = 0xaf
+
 	boatOffset = 0xb0
 
 	// unknownC1Offset 是 trailer 的**最後一個 byte**。語意未解，
@@ -377,6 +384,9 @@ type SaveGame struct {
 	// LightSource 是地城的光源強度（見 lightSourceOffset 註解）。
 	LightSource byte
 
+	// MerchantBase 是商隊規模的基準值（見 merchantBaseOffset 註解）。
+	MerchantBase byte
+
 	// PartySize 是隊伍人數（已驗證，見 partySizeOffset 註解）。
 	PartySize byte
 	// Rations 是糧食份數（已驗證，見 rationsOffset 註解）。
@@ -459,6 +469,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	copy(save.LDFlags[:], trailer[ldFlagsOffset:ldFlagsOffset+ldFlagsLen])
 	save.MapID = trailer[mapIDOffset]
 	save.LightSource = trailer[lightSourceOffset]
+	save.MerchantBase = trailer[merchantBaseOffset]
 	save.PartySize = trailer[partySizeOffset]
 	save.Rations = trailer[rationsOffset]
 	save.Hour = trailer[hourOffset]

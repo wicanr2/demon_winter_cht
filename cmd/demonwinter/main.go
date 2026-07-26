@@ -838,6 +838,11 @@ func main() {
 	// 起始隊伍沒有人有信仰，敬拜那一項在 headless 驗收時走不到最後一步。
 	deityFlag := flag.Int("deity", 0,
 		"偵錯：給第一名隊員一個信仰（神祇 1–11）與 20% 祈禱成功率")
+	// 商隊規模的基準值在原版存檔裡是 1，擲出來的規模常常是 0 ——
+	// 而規模就是等級，等級 0 的價格上限只有 1，連匕首（2）都選不出來，
+	// 貨單會是清一色的匕首（見 `docs/re/50` §4）。要驗大商隊得改基準。
+	merchantBase := flag.Int("merchant-base", -1,
+		"偵錯：商隊規模的基準值。負值代表用存檔裡的 `+0xaf`")
 	startHourFlag := flag.Int("hour", 0,
 		"偵錯：起始時辰（1–38）。0 代表照原版的 5 時")
 	// 城鎮的貴服務（復活、修船、買船）在起始存檔的 65 金之下全都試不到。
@@ -995,6 +1000,9 @@ func main() {
 			a.clock.AdvanceHour()
 		}
 		log.Printf("偵錯：時辰設為 %d", a.clock.Hour())
+	}
+	if *merchantBase >= 0 {
+		a.save.MerchantBase = byte(*merchantBase)
 	}
 	if *goldFlag >= 0 {
 		a.setGold(*goldFlag)
