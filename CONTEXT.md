@@ -1488,6 +1488,7 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`35-battle-deployment.md`](docs/re/35-battle-deployment.md) | **開戰擺位**：隊伍照陣型站中央、怪物散在 ±2、地圖兼作佔位表；單位結構間距 38、玩家從槽位 7 起；9×9 是捲動視窗不是邊界 |
 | [`34-formation-grid.md`](docs/re/34-formation-grid.md) | **3×3 陣型格**（trailer `+0x00`–`+0x08`）：四個呼叫端、Reorder 是整張重填、佈陣的座標換算（讀出來但未接）|
 | [`33-camp-menu-items.md`](docs/re/33-camp-menu-items.md) | **紮營選單 14 項**的完整對照（名稱／快捷鍵／處理常式）＋ Drop 與 Trade 的規則；訂正 `docs/re/26` 的 13 項與「順序對不上」|
+| [`60-imprison-and-endgame.md`](docs/re/60-imprison-and-endgame.md) | **禁錮與終局**：UNCURSE／IMPRISON 是主線專屬選單（不在 43 筆法術表）、禁錮條件（子地圖 5 或 Y≤6，地點不對照扣 100 SP）、結局文字檔的遠指標表、**完整破關路徑**與六項保留 |
 | [`59-glyphs-and-circle-of-light.md`](docs/re/59-glyphs-and-circle-of-light.md) | **主線骨幹**：三個緋紅符印（tile `0x63`）→ 解咒扣 50 法力 → 旗標 `0x80` → 光之環放行；子地圖 55/56/66 → 索引 0/1/2 的映射；反組譯與攻略三方閉合 |
 | [`58-step-dispatch-and-plot-flags.md`](docs/re/58-step-dispatch-and-plot-flags.md) | **每走一步的回傳碼分派**（21 格，定性修正）：回傳碼產生條件全表、事件表經 `FUN_222f_0a90` 走同一張表、**主線劇情旗標 `+0x96`–`+0x98`**、字串錨定要驗起點 |
 | [`57-monster-summon-same-schema.md`](docs/re/57-monster-summon-same-schema.md) | **怪物表與召喚表同構**（96 個數值零誤差）：`unit+0x1a` 對怪物＝`MONSTER.DAT` level、戰鬥金幣定案；推翻 `num_attacks`／護甲索引／w5 未解／w7 死欄位四處判讀 |
@@ -1808,8 +1809,8 @@ SDD 的規格階段早就結束（九份 spec 全 READY），引擎 M1–M5 也�
 |---|---|---|
 | A1 | ~~事件動作分派表~~ → **移動回傳碼分派表 21 格** | **定性已修正**（`docs/re/58`）：選擇子來自 `222f:0b0e`（每走一步），不是 `DATA*.TXT` 的欄位。**語意已認出 12 格**（原約 5 格），另發現 3 格其實是被其他格呼叫的子常式。剩 `0x08`／`0x0f`／`0x10` 與 `0x0c`／`0x12` 的參數語意未解 |
 | A2 | **引擎沒有「走一步之後」的世界事件** | `scenario.Event` 只有 `Text`／`MonsterIDs`／`CombatSetting`／`Continuation`。要補的動作已具體化（`docs/re/58` §4）：取得（`Take:`）、推移（`Move:`）、陷阱偵測與觸發、水池、換地圖（重載 `EXITS.DAT`）、全隊死亡 |
-| A3 | **主線骨幹已解**（`docs/re/59`）| **三個緋紅符印 → 解咒 → 光之環**：站在 tile `0x63` 上施解咒，扣 50 點法力，把 `+0x96 + (子地圖−55)` 設成 `0x80`；三個都非 0 才進得了 Circle of Light。反組譯／攻略／譯名表**三方閉合**。⚠ 仍未解：`FUN_222f_0619`（符印的傷害）、光之環**裡面**、`WIN.TXT` 的觸發 —— **進得去 ≠ 破得了關** |
-| A5 | **把主線接進引擎** | `+0x96`–`+0x98` 還沒進 `scenario.Save`；解咒法術還沒有符印效果；tile `0x63` 還沒有語意。所需的每一塊（紮營施法、扣法力、子地圖 ID、tile 查詢、trailer 讀寫）本專案都已具備 |
+| A3 | **主線骨幹已解**（`docs/re/59`）| **三個緋紅符印 → 解咒 → 光之環**：站在 tile `0x63` 上施解咒，扣 50 點法力，把 `+0x96 + (子地圖−55)` 設成 `0x80`；三個都非 0 才進得了 Circle of Light。反組譯／攻略／譯名表**三方閉合**。**完整破關路徑見 `docs/re/60`**：① 三符印 UNCURSE（50 SP）② 光之環的門 ③ 子地圖 5 或 Y≤6 施 IMPRISON（100 SP）→ 重定位遠呼叫。⚠ 仍未解：`0000:3575` 指向哪、`WIN.TXT` 載入點、UNCURSE 選單怎麼叫出來、`FUN_222f_0619` 的傷害、光之環裡面 —— **路徑已知 ≠ 破得了關** |
+| A5 | **把主線接進引擎** | 五件事（`docs/re/60` §6）：存檔 `+0x96`–`+0x98`、tile `0x63` 語意、UNCURSE／IMPRISON 選單與判定（含「地點不對照扣法力」）、光之環的門、符印傷害。前四項所需機制本專案都已具備 |
 | A4 | **全程試玩** | 從沒做過。新開檔 → 建角 → 走主線 → 破關，**不得用任何 debug 捷徑**（`-battle-win`／`-give-item`／自動進城都不算） |
 
 A1 → A2 → A3 是一條鏈：讀完那 21 格才知道事件能做什麼，

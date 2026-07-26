@@ -104,7 +104,7 @@ ds:0x2e40 = "A crimson forcefield bars your entry to the Circle of Light"
 | 三塊狹長陸地 | `0x38` 在 `222f:0b0e` 依 Y 分三段（北 `Y<10`、南 `Y>0x16`、中央 `X` 33–54）|
 | 符印還在就傷害隊伍 | `FUN_222f_0619`（旗標 `< 0x80` 才呼叫，字串含 `died`）|
 | 走到符印上 | `cmp es:[bx+si],0x63` —— 腳下 tile 必須是 `0x63` |
-| 紮營施法 | 施法者索引由 `[bp+0x8]` 傳入（紮營施法路徑，`docs/re/42`）|
+| 紮營施法 | 觸發它的是 **UNCURSE／IMPRISON 專屬選單**（`docs/re/60`）。~~紮營施法路徑 `docs/re/42`~~ —— 那是錯的推測，`[bp+0x8]` 的簽名紮營各項都一樣，分不出是哪一個 |
 
 而 `translations/glossary.md` §209 早就從 `TOWN.TXT` 記下
 「**三個緋紅符印（three crimson Glyphs）**，使人靠近即腐化」——
@@ -130,6 +130,7 @@ ds:0x2e40 = "A crimson forcefield bars your entry to the Circle of Light"
 
 ## 6. 還沒解的部分
 
+- **禁錮與終局**：見 `docs/re/60`（本篇的續篇，完整破關路徑）。
 - **`FUN_222f_0619`**（`0x16509`，325 bytes）：符印還在時「在附近走動會傷害隊伍」
   的實作。字串裡有 ` died`。傷害量與判定範圍未讀。
 - **光之環裡面**：`0x1a5c5` 放行後只是 `return 3`，真正的內容在分派表下游；
