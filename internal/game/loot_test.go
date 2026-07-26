@@ -416,3 +416,40 @@ func TestGenerateDrop_CurseOnlyOnGear(t *testing.T) {
 		}
 	}
 }
+
+// 戰後經驗值：總和 ÷ 隊伍人數，被束縛／死亡的拿不到而且那一份消失。
+func TestAwardBattleExp(t *testing.T) {
+	party := []Character{
+		*campChar("甲"), *campChar("乙"), *campChar("丙"), *campChar("丁"),
+	}
+	for i := range party {
+		party[i].Experience = 100
+	}
+	// 中毒照樣拿；束縛與死亡拿不到。
+	statuses := []UnitStatus{StatusNormal, 1, expBoundStatus, StatusDead}
+
+	per := AwardBattleExp(party, statuses, 1000)
+	if want := 1000 / 4; per != want {
+		t.Fatalf("每人 %d，預期 %d（分母是全隊人數）", per, want)
+	}
+	got := []int{party[0].Experience, party[1].Experience,
+		party[2].Experience, party[3].Experience}
+	want := []int{350, 350, 100, 100}
+	for i := range got {
+		if got[i] != want[i] {
+			t.Errorf("第 %d 人 %d，預期 %d", i, got[i], want[i])
+		}
+	}
+
+	// 封頂：與 CapValue 同一個上限。
+	party[0].Experience = ValueCap
+	AwardBattleExp(party, statuses, 1000)
+	if party[0].Experience != ValueCap {
+		t.Errorf("封頂之後又長到 %d", party[0].Experience)
+	}
+
+	// 人數 0 不會除以零。
+	if got := BattleExpPerCharacter(100, 0); got != 0 {
+		t.Errorf("隊伍人數 0 應回 0，得到 %d", got)
+	}
+}

@@ -65,6 +65,7 @@ func (a *app) updateBattle() error {
 			a.settled = true
 			if out == game.Victory {
 				a.logf("怪物全滅")
+				a.awardExperience()
 				a.awardDrops()
 			} else {
 				a.logf("隊伍全滅")
@@ -1205,6 +1206,31 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 	}
 	a.font.Draw(dst, "方向鍵：轉向／前進　Enter：前進",
 		layout.BoxPadX, y+ui.LineHeight)
+}
+
+// awardExperience 發放戰鬥勝利的經驗值（`docs/re/56`）。
+//
+// 總經驗是每隻打倒的怪物的 `MONSTER.DAT` 經驗值相加，**除以隊伍人數**
+// 之後每人各拿一份 —— 原版的訊息就叫 "Exp per chr"。
+// 被束縛或死亡的隊員拿不到，而且**那一份直接消失**（分母是全隊人數）。
+func (a *app) awardExperience() {
+	total := 0
+	for _, u := range a.battle.Units() {
+		if u == nil || u.IsPlayer || u.Alive() {
+			continue
+		}
+		total += u.Experience
+	}
+	if total == 0 {
+		return
+	}
+	statuses := make([]game.UnitStatus, len(a.members))
+	for i := range a.members {
+		statuses[i] = game.UnitStatus(a.members[i].Status)
+	}
+	if per := game.AwardBattleExp(a.members, statuses, total); per > 0 {
+		a.logf("每人獲得 %d 點經驗", per)
+	}
 }
 
 // awardDrops 發放戰鬥勝利的戰利品。

@@ -681,7 +681,7 @@ func (a *app) startBattle(ids []int) {
 			Slot: i, Name: a.tr.Event(monsterSourceFile, id, m.Name),
 			X: x, Y: y, Facing: int(game.East),
 			Speed: speed, Strength: m.Strength, Skill: m.Skill,
-			Level: m.Level, Intellect: m.Level,
+			Level: m.Level, Intellect: m.Level, Experience: m.Experience,
 			HP: hp, MaxHP: hp,
 			WeaponIndex:   m.AttackType,
 			RaceOrElement: m.Special,

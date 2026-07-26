@@ -164,6 +164,12 @@ GLOBAL_OPCODES = {
     b"\x83\x3e": "cmp word ds:X, imm8",
     b"\x81\x3e": "cmp word ds:X, imm16",
     b"\x80\x3e": "cmp byte ds:X, imm8",
+    b"\x01\x06": "add word ds:X, ax",
+    b"\x11\x16": "adc word ds:X, dx",
+    b"\x29\x06": "sub word ds:X, ax",
+    b"\x19\x16": "sbb word ds:X, dx",
+    b"\x83\x06": "add word ds:X, imm8",
+    b"\x83\x2e": "sub word ds:X, imm8",
     b"\xc4\x1e": "les bx, ds:X",
     b"\xc5\x1e": "lds bx, ds:X",
 }

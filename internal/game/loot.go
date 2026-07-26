@@ -670,3 +670,43 @@ func RollBattleDrops(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 	}
 	return out
 }
+
+// --- 戰鬥勝利的經驗值（`1990:0d0e` 一帶，見 `docs/re/56`）---
+
+// expBoundStatus 是「拿不到經驗值」的狀態下界。
+//
+// 原版是 `if 角色[+0x102] >= 2 → 跳過`（`0xe264`）。角色記錄 `+0x102`
+// 是戰鬥狀態的**單一列舉值**：0 正常／1 中毒／2–4 束縛三級／5 死亡
+// （`docs/re/26`）。所以**中毒照樣拿經驗，被束縛或死亡就沒有** ——
+// 分界剛好切在「還能自己行動」與「不能」之間。
+const expBoundStatus = 2
+
+// BattleExpPerCharacter 回傳每人分到多少經驗值。
+//
+// **總經驗除以隊伍人數**（`0xe235` 的有號 32-bit 除法）——
+// 訊息「Exp per chr」的 per chr 就是這麼來的。**分母是全隊人數，
+// 不是拿得到經驗的人數**：有人被束縛或死亡時，那一份不會分給活著的人，
+// 直接消失。
+func BattleExpPerCharacter(total, partySize int) int {
+	if partySize <= 0 {
+		return 0
+	}
+	return total / partySize
+}
+
+// AwardBattleExp 把經驗值發給隊伍，回傳每人實際拿到多少。
+//
+// 封頂 `0x00FFFFFF`（`0xe289` 的 `cmp [+0xc6],0xff`），與 CapValue 同一個上限。
+func AwardBattleExp(party []Character, statuses []UnitStatus, total int) int {
+	per := BattleExpPerCharacter(total, len(party))
+	if per == 0 {
+		return 0
+	}
+	for i := range party {
+		if i < len(statuses) && statuses[i] >= expBoundStatus {
+			continue // 束縛或死亡：這一份就消失
+		}
+		party[i].Experience = CapValue(party[i].Experience + per)
+	}
+	return per
+}

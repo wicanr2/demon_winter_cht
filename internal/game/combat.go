@@ -96,6 +96,9 @@ type Unit struct {
 
 	Speed, Strength, Skill, Intellect int
 	Level                             int
+	// Experience 是打倒這隻怪能拿到的經驗值（`MONSTER.DAT`）。
+	// 玩家單位是 0 —— 這個欄位只給戰後結算用（`docs/re/56`）。
+	Experience int
 
 	HP, MaxHP int
 	Armor     int
