@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -124,6 +125,11 @@ func (a *app) updateFacility(t *townScreen) error {
 	}
 
 	switch *t.facility {
+	case game.FacilityInn:
+		if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+			a.restAtInn()
+			return nil
+		}
 	case game.FacilityDocks:
 		if inpututil.IsKeyJustPressed(ebiten.KeyB) {
 			if !t.visit.HasDocks() {
@@ -242,6 +248,29 @@ func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 	line("Esc：離開城鎮")
 }
 
+// restAtInn 在旅店睡一晚。
+//
+// 規則在 game.Rest（原版 2aed:03e4）。旅店那條分支不吃糧食、回復比紮營多，
+// 而且**讀到的常式沒有扣金錢**，所以這裡不收費。
+func (a *app) restAtInn() {
+	if !a.clock.CanSleep() {
+		a.town.message = "現在睡不著（原版：You are restless）"
+		return
+	}
+	res := game.Rest(a.rng, game.RestInn, a.members, a.clock, nil)
+
+	msg := fmt.Sprintf("睡了 %d 個時辰，%d 日 %d 時醒來",
+		res.Hours, a.clock.Day(), a.clock.Hour())
+	if len(res.Died) > 0 {
+		names := make([]string, 0, len(res.Died))
+		for _, i := range res.Died {
+			names = append(names, a.members[i].Name)
+		}
+		msg += "　" + strings.Join(names, "、") + " 沒有醒來"
+	}
+	a.town.message = msg
+}
+
 func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 	t := a.town
 	v := t.visit
@@ -302,7 +331,15 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		}
 
 	case game.FacilityInn:
-		line("休息回復法力。原版的休息與時間推進尚未接上。")
+		line(fmt.Sprintf("目前 %d 時（睡覺要在 15–24 時之間）", a.clock.Hour()))
+		line("")
+		if a.clock.CanSleep() {
+			line("R：睡一晚（HP +2、法力 +10）")
+		} else {
+			line("現在睡不著。")
+		}
+		line("")
+		line("※ 讀到的休息常式沒有扣金錢，所以這裡是免費的")
 	}
 
 	line("")

@@ -750,6 +750,8 @@ func main() {
 	// 一件都選不到 —— 沒有這個旗標就沒辦法驗「用道具真的會生效」。
 	giveItem := flag.String("give-item", "",
 		"偵錯：塞一件有效果的道具給第一名隊員，格式 `type,effect,power,次數`")
+	startHourFlag := flag.Int("hour", 0,
+		"偵錯：起始時辰（1–38）。0 代表照原版的 5 時")
 	flag.Parse()
 
 	if _, err := os.Stat(*dataDir); err != nil {
@@ -875,6 +877,12 @@ func main() {
 
 	a.canvas = ebiten.NewImage(layout.CanvasWidth, layout.CanvasHeight)
 
+	if *startHourFlag > 0 {
+		for a.clock.Hour() != *startHourFlag {
+			a.clock.AdvanceHour()
+		}
+		log.Printf("偵錯：時辰設為 %d", a.clock.Hour())
+	}
 	if *giveItem != "" {
 		if err := a.debugGiveItem(*giveItem); err != nil {
 			log.Fatalf("-give-item：%v", err)

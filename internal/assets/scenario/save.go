@@ -213,8 +213,9 @@ type Character struct {
 	WeaponSlotIndex byte
 	// ArmorSlotIndex 是目前裝備的護甲對應哪個道具槽。**待複核**（同上）。
 	ArmorSlotIndex byte
-	// CombatStatusFlags 是戰鬥狀態位元旗標（如中毒）。**待複核**（同上）。
-	CombatStatusFlags byte
+	// CombatStatus 是戰鬥狀態。**不是位元旗標，是單一列舉值** ——
+	// 舊名 `CombatStatusFlags` 誤導，已正名（見 CONTEXT 的推翻清單）。
+	CombatStatus CombatStatus
 	// Unknown103 是角色記錄最後一個未知 byte，值不固定，語意未知。
 	Unknown103 byte
 
@@ -222,6 +223,24 @@ type Character struct {
 	// decode 已知欄位之外的部分（包含前述所有「未知」區段）都能從這裡取得。
 	Raw []byte
 }
+
+// CombatStatus 是角色的戰鬥狀態（記錄 +0x102）。
+//
+// **是單一列舉值，不是位元旗標。** 專案一度把它當旗標，已推翻。
+type CombatStatus byte
+
+const (
+	// StatusNormal 正常。
+	StatusNormal CombatStatus = 0
+	// StatusPoison 中毒。睡覺時會依睡眠時數扣血（見 game.Rest）。
+	StatusPoison CombatStatus = 1
+	// StatusBound1／2／3 是束縛的三個等級。
+	StatusBound1 CombatStatus = 2
+	StatusBound2 CombatStatus = 3
+	StatusBound3 CombatStatus = 4
+	// StatusDead 死亡。
+	StatusDead CombatStatus = 5
+)
 
 // SaveGame 是 PARTY.DAT 解析後的乾淨表示：5 名角色 + 隊伍共用 trailer。
 type SaveGame struct {
@@ -376,7 +395,7 @@ func parseCharacter(rec []byte) (Character, error) {
 		CurrentSP:         attr(attrCurrentSPOffset),
 		WeaponSlotIndex:   rec[weaponSlotOffset],
 		ArmorSlotIndex:    rec[armorSlotOffset],
-		CombatStatusFlags: rec[combatFlagsOffset],
+		CombatStatus:      CombatStatus(rec[combatFlagsOffset]),
 		Unknown103:        rec[unknown103Offset],
 		Raw:               raw,
 	}, nil

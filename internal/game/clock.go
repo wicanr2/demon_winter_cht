@@ -141,6 +141,23 @@ func (c *Clock) CanSleep() bool {
 	return c.hour >= sleepEarliestHour && c.hour <= sleepLatestHour
 }
 
+// WakeAt 把時間設成隔天的指定時辰，供睡覺使用。
+//
+// 原版睡醒不是「加上睡了幾個時辰」——`2aed:06f0` 直接把時辰設成 `rnd(6)`，
+// 然後日 +1（含日／月兩層進位）。所以無論幾點躺下，都在清晨 1–6 時醒來。
+func (c *Clock) WakeAt(hour int) {
+	c.hour = hour
+	c.steps = 0
+	c.day++
+	if c.day == dayWrap {
+		c.day = 1
+		c.month++
+		if c.month == monthWrap {
+			c.month = 1
+		}
+	}
+}
+
 // AdvanceHour 推進一小時，並執行時／日／月三層進位。
 func (c *Clock) AdvanceHour() {
 	c.hour++

@@ -318,6 +318,32 @@ Go 依位元組補空白，中文那一列的數字欄整個往左跑。**法術
 同一輪清掉的另一條陳舊標記：城鎮選單抬頭的「座標對照尚未解出」——
 那是上一輪就解的（`DS:0x2f86` 的 25 筆座標表），自動進城早就在跑。
 
+### 這一輪（2026-07-26）：睡覺（`docs/re/26`）
+
+追「旅店休息尚未接上」時翻出**整個紮營子系統** —— Camp 是一個 13 選項的
+選單（Reorder／Sleep／Identify／Worship／Xorcise／View land／Trade／Drop／
+Equip／Use／Hunt／Cast／Quit），睡覺只是其中一項。
+
+睡覺的規則全部解出並實作（`internal/game/rest.go`）：
+
+- 時辰 15–24 才睡得著，否則 `You are restless`
+- 睡眠時數 =（27 − 時辰）+ rnd(6) − 1，但**時辰是直接設成 rnd(6)**，
+  所以幾點躺下都在清晨 1–6 時醒來、日期 +1
+- 旅店 HP+2／SP+10，野外紮營 HP+1／SP+5 並吃一份糧食（沒糧就每人 −2 HP）
+- 中毒者依睡眠時數扣血，種族 4 免疫
+- 紮營會重設光源、把道具的已用次數歸零（過夜充能）
+
+已接上旅店（城鎮設施 `I` → 按 `R`）。實機：20 時睡下，9 日 1 時醒來、睡 7 個時辰。
+
+**副產品：抓到一個標反的欄位。** 上一輪把道具槽 `+0x05`／`+0x06` 標成
+「已用次數／總次數」，**標反了**。使用端只有一道 `CMP` 兩邊對調完全等價，
+從那裡分不出來；睡覺常式把 `+0x06` 清成 0 才分得出 —— 清「已用次數」是
+過夜充能，清「上限」會讓道具永久失效。**分不出兩個對稱欄位誰是誰時，
+去找寫入端**：讀取端只說它們會被比較，寫入端才說它們是什麼。
+
+順帶正名 `scenario.CombatStatusFlags` → `CombatStatus`：CONTEXT 的推翻清單
+早就寫著「不是位元旗標，是單一列舉值」，欄位名卻沒改。
+
 **這已經是這個 session 第三次撞到同一種問題**（`unit+0x20`、可通行性分組、
 城鎮設施）。共通模式是：**結論寫進了 `docs/re/`，但把「未解」寫在程式碼註解
 或畫面文字上的那一份沒有跟著改**。`rulebook/63` 講的就是這個 ——
@@ -376,6 +402,7 @@ Go 依位元組補空白，中文那一列的數字欄整個往左跑。**法術
 | [`20-summon-and-combat-units.md`](docs/re/20-summon-and-combat-units.md) | **召喚／幻術**、戰鬥單位 19 欄結構、怪物進場擲點、傷害與排序邊界 |
 | [`21-skills-races-and-files-dat.md`](docs/re/21-skills-races-and-files-dat.md) | **遊戲內部技能 id 表**、種族系統與修正公式、`FILES.DAT` 完整布局 |
 | [`22-resource-arena-and-passability.md`](docs/re/22-resource-arena-and-passability.md) | **18 段資源記憶體區**、**可通行性表**、子地圖退出、**事件消費者** |
+| [`26-camp-and-rest.md`](docs/re/26-camp-and-rest.md) | **紮營選單（13 選項）**、睡覺的時間與回復公式、過夜充能；順帶抓到道具槽兩個欄位標反 |
 | [`25-item-effects.md`](docs/re/25-item-effects.md) | **道具效果索引欄位定位**（槽 `+0x05`–`+0x08`）、道具與法術共用效果表、`ITEMS.DAT` f3–f6 ＝效果類別候選、`DS:0x1941` 生成表 |
 | [`24-random-encounters.md`](docs/re/24-random-encounters.md) | **隨機遭遇**：地形＝可通行性值、18 個遭遇群組、1/64 觸發、隻數與等級公式；**七大地形對 tile 值定案** |
 | [`23-ai-spell-dispatch.md`](docs/re/23-ai-spell-dispatch.md) | **怪物 AI 的施法效果分派**（17 項跳表）、**K 的正負決定打自己人還是打玩家**、範圍法術的誤傷否決、**附身術公式**、`+0x20` 陣營欄位定案 |

@@ -3,8 +3,8 @@ package scenario
 // 道具槽的已解欄位（17 bytes，見 docs/formats/game-data-tables.md §1.3）。
 //
 //	+0x00  道具型別 = ITEMS.DAT 索引，0xFF 空槽
-//	+0x05  已用次數
-//	+0x06  總次數（與 +0x05 相等代表用完）
+//	+0x05  總次數（上限）
+//	+0x06  已用次數（與 +0x05 相等代表用完）
 //	+0x07  效果索引 —— 與法術共用同一張效果記錄表
 //	+0x08  效果強度，同時當「可不可用」旗標（0 = 不可用）
 //	+0x09  條件旗標 A，值 0x15 時啟用 +0x0a
@@ -20,6 +20,11 @@ package scenario
 //	17c5:1976  CMP byte ES:[BX+0x8],0x0 / JZ 跳過   ; 強度 0 → 這格不可用
 //	17c5:197d  AL = ES:[BX+0x5]
 //	17c5:1981  CMP AL,ES:[BX+0x6] / JZ 跳過         ; 次數用完 → 這格不可用
+//
+// **哪一邊是上限、哪一邊是計數，是從睡眠常式反推的**：`2aed:0471` 在睡覺時
+// 把 `+0x06` 清成 0（限 `+0x05 < 100` 且 `+0x06 != 0xff` 的道具）。
+// 清「已用次數」＝過夜充能，說得通；清「上限」則會讓道具永久失效。
+// 本專案一度把兩者標反 —— 只看使用端那道 `CMP` 分不出來，要找到寫入端才行。
 //	17c5:19dd  AL = ES:[BX+0x7]  → 效果索引
 //	17c5:19e6  AL = ES:[BX+0x8]  → 效果強度
 //	17c5:19ef  PUSH 效果索引 / CALLF 0x1000:114f    ; 載入 5-word 效果記錄
@@ -33,8 +38,8 @@ package scenario
 // 所以那些道具在原版的 Use 選單裡本來就選不到。
 const (
 	slotType       = 0x00
-	slotUsed       = 0x05
-	slotTotal      = 0x06
+	slotTotal      = 0x05
+	slotUsed       = 0x06
 	slotEffect     = 0x07
 	slotPower      = 0x08
 	slotCondA      = 0x09
@@ -70,8 +75,9 @@ type InventorySlot struct {
 	// Power 是效果強度，等同施法時「投入多少法力」那個參數。
 	// **0 代表這件道具沒有可用效果**。
 	Power int
-	// Used／Total 是使用次數。兩者相等代表用完。
-	Used, Total int
+	// Total 是使用次數上限，Used 是已用次數。兩者相等代表用完。
+	// **過夜會把 Used 歸零**（見 game.Rest）。
+	Total, Used int
 }
 
 // Usable 回報這件道具在戰鬥中選不選得到。
@@ -105,8 +111,8 @@ func parseInventorySlot(raw []byte) InventorySlot {
 	}
 	out.Effect = int(raw[slotEffect])
 	out.Power = int(raw[slotPower])
-	out.Used = int(raw[slotUsed])
 	out.Total = int(raw[slotTotal])
+	out.Used = int(raw[slotUsed])
 	out.Enchant = int(raw[slotEnchant]) - storedOffset
 	if raw[slotCondA] == effectCondEnabled {
 		out.WeaponEffect += int(raw[slotEffectA]) - storedOffset

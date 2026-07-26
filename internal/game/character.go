@@ -49,6 +49,9 @@ type Character struct {
 
 	// Inventory 是 10 格裝備／道具。
 	Inventory [InventorySlots]scenario.InventorySlot
+	// Status 是戰鬥狀態（存檔 +0x102）。中毒的人睡覺會掉血，見 Rest。
+	Status scenario.CombatStatus
+
 	// EquippedWeapon／EquippedArmor 是目前裝備的那一格的索引。
 	//
 	// **待複核**：兩個欄位是反組譯推得（存檔 +0x100／+0x101），
@@ -89,6 +92,7 @@ func FromSave(c scenario.Character) Character {
 		CurrentHP:  int(c.CurrentHP),
 		MaxSP:      int(c.MaxSPBonus),
 		CurrentSP:  int(c.CurrentSP),
+		Status:     c.CombatStatus,
 	}
 	out.EquippedWeapon = int(c.WeaponSlotIndex)
 	out.EquippedArmor = int(c.ArmorSlotIndex)

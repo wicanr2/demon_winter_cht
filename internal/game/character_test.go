@@ -334,7 +334,7 @@ func TestCharacter_FromSaveApplyToRoundTrip(t *testing.T) {
 func TestCharacter_ApplyToLeavesUnknownFields(t *testing.T) {
 	rec := scenario.Character{
 		Name: "X", WeaponSlotIndex: 3, ArmorSlotIndex: 8,
-		CombatStatusFlags: 0x21, Unknown103: 0x5a,
+		CombatStatus: scenario.StatusPoison, Unknown103: 0x5a,
 		StrengthBonus: 99, SkillBonus: 98, SpeedBonus: 97, MaxSPNatural: 96,
 	}
 	before := rec
@@ -342,7 +342,7 @@ func TestCharacter_ApplyToLeavesUnknownFields(t *testing.T) {
 
 	if rec.WeaponSlotIndex != before.WeaponSlotIndex ||
 		rec.ArmorSlotIndex != before.ArmorSlotIndex ||
-		rec.CombatStatusFlags != before.CombatStatusFlags ||
+		rec.CombatStatus != before.CombatStatus ||
 		rec.Unknown103 != before.Unknown103 {
 		t.Error("裝備槽／戰鬥旗標／未知欄位被改寫了")
 	}

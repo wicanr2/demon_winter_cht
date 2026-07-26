@@ -92,7 +92,7 @@ func (c *Character) encode() ([]byte, error) {
 
 	putByte(rec, weaponSlotOffset, c.WeaponSlotIndex)
 	putByte(rec, armorSlotOffset, c.ArmorSlotIndex)
-	putByte(rec, combatFlagsOffset, c.CombatStatusFlags)
+	putByte(rec, combatFlagsOffset, byte(c.CombatStatus))
 	putByte(rec, unknown103Offset, c.Unknown103)
 
 	return rec, nil
