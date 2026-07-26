@@ -73,3 +73,23 @@ A crimson forcefield bars your entry to the Circle of Light
 ## plot.allfell
 :: zh
 全隊都倒下了
+
+## rune.header
+:: zh
+牆上刻著一段符文
+
+## rune.hint1
+:: zh
+這是古代的密語，不是任何一種文字。
+
+## rune.hint2
+:: zh
+旅途中會遇到已知答案的符文 —— 記下對照，
+
+## rune.hint3
+:: zh
+其餘的密語就解讀得出來了。
+
+## rune.dismiss
+:: zh
+按任意鍵繼續

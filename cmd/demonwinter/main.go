@@ -143,6 +143,11 @@ type app struct {
 	// 結算要在「等玩家按空白鍵」之前完成，不然訊息只存在一幀。
 	settled bool
 
+	// runeBox 非 nil 代表正在顯示符文密語（`docs/re/72`）。
+	runeBox *runeScreen
+	// runeFont 是 CYPHER.SHP 的 27 個符文字形；讀不到時為 nil。
+	runeFont []*ebiten.Image
+
 	// won 在禁錮成功後為 true —— 遊戲通關（`docs/re/61`）。
 	// 原版此時跳結局畫面（`0x07175`，"CONGRATULATIONS! You have won
 	// Demon's Winter."）；本專案先顯示訊息，結局畫面另做。
@@ -197,6 +202,9 @@ func (a *app) Update() error {
 	}
 	if a.title != nil {
 		return a.updateTitle()
+	}
+	if a.runeBox != nil {
+		return a.updateRuneBox()
 	}
 	if a.create != nil {
 		return a.updateCreate()
@@ -310,6 +318,13 @@ func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
 	if a.won {
 		a.drawEnding(a.canvas)
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
+	if a.runeBox != nil {
+		a.drawRuneBox(a.canvas)
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 		op.GeoM.Scale(scale, scale)
 		screen.DrawImage(a.canvas, op)
@@ -619,6 +634,12 @@ func (a *app) checkEvent(tile byte) {
 		return
 	}
 
+	// 符文密語走自己的畫面（`docs/re/72`）—— 它是圖不是文字，
+	// 塞進一般文字框會變成一串看不懂的 ASCII。
+	if ev.IsRuneGlyph() {
+		a.openRuneBox(ev.RuneText())
+		return
+	}
 	a.box = ui.NewMixedTextBox(a.tr.Event(a.eventsFile, idx, ev.Text))
 	// Count != 0 代表這一格帶遭遇；文字讀完才開打。
 	a.pendingIDs = nil
@@ -914,6 +935,10 @@ func main() {
 	// 光之環的門與 IMPRISON 要三個符印都解完才驗得到，而符印散在
 	// 世界東南角三張子地圖上 —— 沒有這個旗標就得先跑完整段主線。
 	glyphsFlag := flag.Bool("glyphs", false, "偵錯：三個緋紅符印都當成已解除")
+	// 符文密語要走到特定事件格才看得到（原版共四筆），
+	// 而字型與排版是視覺產物、必須 dump 出來肉眼比對。
+	runeFlag := flag.String("rune", "",
+		"偵錯：直接顯示一段符文密語（例如 YMROS.IS...MINE）")
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
 	// xdotool 偶爾會漏掉一兩下，跑出來的畫面就不是預期的那座城。直接指定。
 	townFlag := flag.Int("town", 0, "偵錯：啟動後直接進入指定編號的城鎮（1–25）")
@@ -1049,6 +1074,7 @@ func main() {
 		font:       font,
 		speaker:    ui.NewSpeaker(*volume),
 		title:      loadTitle(*dataDir),
+		runeFont:   loadRuneFont(*dataDir),
 		save:       save,
 		torch:      save.LightSource,
 		savePath:   *savePath,
@@ -1075,6 +1101,10 @@ func main() {
 	if *goldFlag >= 0 {
 		a.setGold(*goldFlag)
 		log.Printf("偵錯：金幣設為 %d", a.gold())
+	}
+	if *runeFlag != "" {
+		a.openRuneBox(*runeFlag)
+		log.Printf("偵錯：顯示符文密語 %q", *runeFlag)
 	}
 	if *glyphsFlag {
 		for i := range a.save.GlyphFlags {

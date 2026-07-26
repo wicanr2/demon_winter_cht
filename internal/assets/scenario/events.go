@@ -296,3 +296,39 @@ func tokenizeNUL(data []byte) []string {
 	}
 	return out
 }
+
+// 符文字型的字碼規則（`FUN_25be_18fa`，`docs/re/02` §2.4、`docs/re/72`）。
+const (
+	// runeGlyphBase 是字元轉 glyph 編號的減量：`'A'`(0x41) → 1、`'Z'`(0x5a) → 26。
+	runeGlyphBase = 0x40
+	// runeBlankChar 是「空白 glyph」的專用替代字元。
+	//
+	// 原版不用 ASCII 空白（0x20）—— 那拿去算 `char − 0x40` 會變成負數、
+	// 撞到別的合法 glyph 編號。所以密語文字裡的空格全部寫成 `.`。
+	runeBlankChar = '.'
+	// RuneGridCols 是原版排版的欄數（`local_6%9+1, local_6/9+1`）。
+	RuneGridCols = 9
+	// RuneGlyphCount 是字型的 glyph 數：0 空白 + 1–26 字母。
+	// `CYPHER.SHP` 是 1728 bytes ÷ 64 ＝ 27 個 frame，正好對上。
+	RuneGlyphCount = 27
+)
+
+// RuneGlyphs 把符文文字轉成 glyph 索引序列。
+//
+// 超出 0–26 的字元回傳 -1（呼叫端該畫成空白或略過）——
+// 原版沒有防呆，但資料裡只有大寫字母與 `.`，所以那條路走不到；
+// 這裡不靜默改成 0，免得把「資料異常」偽裝成「空白」。
+func RuneGlyphs(text string) []int {
+	out := make([]int, 0, len(text))
+	for _, ch := range text {
+		switch {
+		case ch == runeBlankChar:
+			out = append(out, 0)
+		case ch >= 'A' && ch <= 'Z':
+			out = append(out, int(ch)-runeGlyphBase)
+		default:
+			out = append(out, -1)
+		}
+	}
+	return out
+}

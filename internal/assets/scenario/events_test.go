@@ -207,3 +207,34 @@ func intsEqual(a, b []int) bool {
 	}
 	return true
 }
+
+func TestRuneGlyphs(t *testing.T) {
+	// 'A' → 1、'Z' → 26、'.' → 0（docs/re/02 §2.4 的 char − 0x40）
+	got := RuneGlyphs("AZ.")
+	want := []int{1, 26, 0}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("RuneGlyphs(\"AZ.\")[%d] = %d，預期 %d", i, got[i], want[i])
+		}
+	}
+
+	// 原版密語的實際樣子
+	if g := RuneGlyphs("YMROS.IS...MINE"); len(g) != 15 {
+		t.Errorf("長度 %d，預期 15", len(g))
+	}
+
+	// 全部落在 0–26
+	for _, g := range RuneGlyphs("YMROS.IS...MINE") {
+		if g < 0 || g >= RuneGlyphCount {
+			t.Errorf("glyph %d 超出 0–%d", g, RuneGlyphCount-1)
+		}
+	}
+
+	// 非法字元回 -1，**不靜默當成空白** —— 那會把資料異常偽裝成正常
+	if g := RuneGlyphs("a 1")[0]; g != -1 {
+		t.Errorf("小寫字母應回 -1，得到 %d", g)
+	}
+	if g := RuneGlyphs(" ")[0]; g != -1 {
+		t.Errorf("ASCII 空白應回 -1（原版用 '.' 不用空白），得到 %d", g)
+	}
+}

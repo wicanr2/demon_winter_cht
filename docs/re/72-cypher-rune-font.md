@@ -152,6 +152,29 @@ FUN_25be_18fa：從 param_1+1 起，'.' → 0、其他 → char − 0x40，
 > 這是「中文化不等於把每個字元換成中文」的一個具體案例。
 > 符文是**謎題的載體**，翻掉它等於把謎題刪掉。
 
+### 已實作
+
+在這之前引擎**完全沒有顯示符文** —— `scenario.Event` 早有
+`IsRuneGlyph()`／`RuneText()`（commit `84f683e`），但**沒有任何呼叫端**，
+`checkEvent` 只顯示 `ev.Text`，`%` 開頭那四筆事件等於不存在。
+
+補上的部分：
+
+| 層 | 內容 |
+|---|---|
+| `internal/assets/scenario/events.go` | `RuneGlyphs(text)`：`'.' → 0`、`'A'–'Z' → char − 0x40`，非法字元回 **-1**（不靜默當空白，免得把資料異常偽裝成正常）|
+| `cmd/demonwinter/runebox.go` | 載入 `CYPHER.SHP`、9 欄網格繪製、中文說明 |
+| `cmd/demonwinter/main.go` | `checkEvent` 在 `IsRuneGlyph()` 時走符文畫面 |
+| `assets/lang/zh-Hant/ui.txt` | 五條說明文字（`rune.*`）|
+
+原版共四筆符文事件：`%RING.BELL...AT.....MIDNIGHT`（DATA1）、
+`%YMROS.IS...MINE`（DATA3）、`%.SECRET..ENTRANCE..TO.ICE..CATHEDRAL…`（DATA4）、
+`%...VOID`（DATA5）。
+
+實機：`workplace/dump/persist/84-rune-glyphs.png`
+（`-rune=YMROS.IS...MINE`，9 欄排版正確、中文說明在下方）。
+`-rune` 這個偵錯旗標是為驗收加的 —— 那四筆要走到特定事件格才看得到。
+
 
 ---
 
