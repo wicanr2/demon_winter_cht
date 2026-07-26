@@ -27,6 +27,9 @@ const endingColumns = (layout.CanvasWidth - layout.BoxPadX*3) / textlayout.CellW
 // storyContIndent 是續行的額外縮排。
 const storyContIndent = "  "
 
+// endingPixels 是結局畫面可用的像素寬（給 WrapMixed 用）。
+const endingPixels = layout.CanvasWidth - layout.BoxPadX*3
+
 // 結局序列（原版 `1000:3575` ＝ `0x07175`，見 `docs/re/04` §5.1）。
 //
 // 原版的流程：
@@ -173,12 +176,35 @@ func (a *app) creditLines() []string {
 		if i > 0 {
 			out = append(out, "　")
 		}
-		out = append(out, textlayout.WrapText(
-			fmt.Sprintf("%s %s", c.Name, a.winText.Fate(int(c.Class))),
-			endingColumns)...)
+		// **中文要用 WrapMixed，不能用 WrapText。**
+		// `WrapText` 按空白斷詞，中文整句沒有空白 → 被當成一個超長「單字」
+		// 獨佔一行，然後被畫面右緣裁掉。英文原文剛好有空白，所以第一版
+		// 只有英文看起來正常，接上中譯才炸開。
+		out = append(out, textlayout.WrapMixed(
+			fmt.Sprintf("%s %s", c.Name, a.fateFor(int(c.Class))),
+			endingPixels)...)
 	}
 	return out
 }
+
+// fateFor 取某個職業的結局句子，有中譯就用中譯。
+//
+// **這裡不能直接叫 `winText.Fate()`** —— 那讀的是英文原檔。
+// 名單那一頁在翻譯目錄裡是「一頁一條、十行對十個職業」，
+// 所以要照同樣的方式切。第一版忘了接，畫面上其他頁都中文了，
+// 只有名單還是英文 —— 而那正好是最後一幕。
+func (a *app) fateFor(class int) string {
+	if zh := a.tr.UI(storyKeyWinFates, ""); zh != "" {
+		lines := strings.Split(strings.TrimRight(zh, "\n"), "\n")
+		if class >= 0 && class < len(lines) {
+			return lines[class]
+		}
+	}
+	return a.winText.Fate(class)
+}
+
+// storyKeyWinFates 是結局名單那一頁的翻譯 key。
+const storyKeyWinFates = "story.WIN.6"
 
 // endingLinesPerPage 是名單一頁的行數，留兩行給提示。
 const endingLinesPerPage = 20

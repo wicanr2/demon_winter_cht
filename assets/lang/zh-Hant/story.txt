@@ -24,14 +24,28 @@ You may respond:
 2) "He cannot harm us as long as we hold
     the Demon Crystal of Kalek-Zin."
 :: zh
+大祭司艾瑞戈爾站在你面前。他身邊只剩兩名爪牙，
+神情卻異常篤定。他一側立著一面巨大的圓形黑鏡，
+散發出濃重的邪惡氣息；另一側，一面美麗的多面
+圓鏡以一條細線懸在天花板下。
 
+艾瑞戈爾對你說話：
+「你們這些蠢材以為自己很強。你們根本不知道
+真正的力量是什麼。我的主人馬利馮才是至高的
+力量。他讓你們活到現在，是你們走運。」
+
+你可以回答：
+1)「那不是運氣。我們比你或他都強。」
+2)「只要卡雷克．辛的惡魔水晶在我們手上，
+    他就傷不了我們。」
 
 ## story.EREGORE.1
 :: en
 "We shall see who is more powerful and
  who lives to see tomorrow."
 :: zh
-
+「那就看看誰比較強，
+　　誰能活到明天。」
 
 ## story.EREGORE.2
 :: en
@@ -48,13 +62,21 @@ You may respond:
 3) "Kalek-Zin is a great dragon from
     whom we stole this magical artifact"
 :: zh
+艾瑞戈爾狐疑地看了黑鏡一眼，才把目光轉回你身上。
+「卡雷克．辛是誰？」
 
+你可以回答：
+1)「他是白騎士團中最偉大的一位，可惜已經
+    死了好幾個世紀。」
+2)「他是遠古的神祇，古老種族的最後一位。」
+3)「卡雷克．辛是一頭巨龍，這件魔法遺物是
+    我們從他那裡奪來的。」
 
 ## story.EREGORE.3
 :: en
 "Let us see if he helps you now."
 :: zh
-
+「那就看看他現在幫不幫得了你們。」
 
 ## story.EREGORE.4
 :: en
@@ -62,7 +84,8 @@ You may respond:
 a great dragon than you should be able
 to defeat me with equal ease and grace."
 :: zh
-
+「既然屠殺那樣一頭巨龍對你們毫無困難，
+那要同樣輕鬆優雅地擊敗我，應該也不成問題。」
 
 ## story.EREGORE.5
 :: en
@@ -84,14 +107,25 @@ You may respond:
     why has he stolen the Shard of
     Spring?"
 :: zh
+艾瑞戈爾愈來愈焦躁。他有一種剛剛才握住大權的
+凡人氣息——與其說是憑自己的本事登上高位，
+不如說更像某個更大力量手裡的工具。
 
+他又一次望向鏡子求助，然後對你說：
+「白騎士團全死了。沒有人能阻止我拿下依姆羅斯。
+馬利馮會助我掌權，讓我成為這片土地的統治者。」
+
+你可以回答：
+1)「我們會阻止你。」
+2)「如果他打算幫你統治，
+    那他為什麼要偷走春之石？」
 
 ## story.EREGORE.6
 :: en
 "Even they are not powerful enough to
 defeat me."
 :: zh
-
+「就算是他們，也沒有強到能擊敗我。」
 
 ## story.EREGORE.7
 :: en
@@ -109,7 +143,19 @@ followers..."
 purpose was to free me. Now that you
 have done that I have no need of you."
 :: zh
+「胡說！」（他轉向黑鏡）
+「春之石在你手上嗎？」
 
+一個強大的聲音從黑鏡裡傳出：
+「在。」
+
+艾瑞戈爾嚇得發抖，說起話來像個孩子。
+「如果你毀掉春之石，冬天就會降臨這片土地。
+你當然會放過你忠心的追隨者吧……」
+
+那個聲音冷冷地說：
+「你的用處是把我放出來。你已經做到了，
+我不再需要你。」
 
 ## story.EREGORE.8
 :: en
@@ -133,7 +179,27 @@ limp to the floor.
    The voice laughs. "You are a fool.
 The Benevolent Ones are dead.
 :: zh
+艾瑞戈爾抖得像一片葉子。他用驚恐的聲音
+只擠出一個字：「為什麼？」
 
+馬利馮開口：
+
+　　我的冬天將洗淨
+　　這片土地上的凡人靈魂
+　　然後，寂靜將再一次
+　　擁抱長風
+　　而諸神將行走於大地
+
+艾瑞戈爾整個人癱了，像是有什麼把他身上的
+生氣抽乾。他喊了出來：
+「我錯了……我幫忙毀掉了這個世界。」
+
+他從斗篷底下取出一把彎刃匕首。
+「但願現在還有哪位仁慈的神看顧著我……」
+
+艾瑞戈爾軟軟地倒在地上。
+
+那個聲音笑了。「你這蠢材。仁慈的神早就死了。」
 
 ## story.EREGORE.9
 :: en
@@ -160,7 +226,26 @@ round one still remains. Eregore's
 henchman flee from the room in fear and
 Eregore lies dead at your feet.
 :: zh
+鏡子裡的聲音轉而對你說話：
 
+　　你們的干預
+　　已經成了我的芒刺。
+　　艾瑞戈爾死得像個蠢材，
+　　你們會死得更難看。
+　　現在我要碾碎你們珍愛的春之石，
+　　我的冬天就要開始。
+　　別以為你們已經領教完
+　　我的怒火。
+　　你們的痛苦是我的口糧，
+　　你們的血是我的飲品——
+　　我可不打算餓著。
+
+話音落下，一聲碎裂從大地深處傳來，
+震得你頭暈目眩，整片土地向你痛喊。
+
+黑鏡碎了，那面圓鏡卻還在。
+艾瑞戈爾的爪牙驚恐地逃出房間，
+艾瑞戈爾則死在你腳邊。
 
 ## story.T.0
 :: en
@@ -287,7 +372,15 @@ yourself enveloped in darkness, yet
 surrounded by light. In your mind can
 be heard the voice of the Ancient One.
 :: zh
+一聲響亮而蒼老的尖叫，從火山深處傳了出來。
+四周的牆壁震動、開始崩塌。禁錮的法術生效，
+馬利馮痛苦的聲音很快被壓了下去——
+但山壁依舊脆弱。
 
+就在四周即將塌陷的那一刻，
+你發現自己被黑暗包覆，卻又被光環繞。
+
+在你的意識裡，響起遠古者的聲音。
 
 ## story.WIN.1
 :: en
@@ -305,7 +398,16 @@ Evertime, destroy Malifon's High
 Temple, and eventually imprison
 Malifon itself.
 :: zh
+「你們做得很好。只要法術還撐著，
+馬利馮的邪惡就會被封在火山之內。
 
+「許多年輕的冒險者曾動身去摧毀這股邪惡的
+根源；許多人死在半路，也有許多人在找不到
+繼續下去的勇氣時放棄了。
+
+「只有你們，一次又一次地成功——擊敗澤瑞斯、
+取得恆世寶珠、摧毀馬利馮大神殿，
+最後把馬利馮本身禁錮起來。」
 
 ## story.WIN.2
 :: en
@@ -320,7 +422,15 @@ gods that the people of Ymros have
 relied upon for centuries are now dead
 and the people lose hope.
 :: zh
+「雖然馬利馮的邪惡已被封住，
+它留下的影響仍在依姆羅斯上。
 
+「春之石已經不在，這片土地依舊停在冬天裡。
+馬利馮的腐蝕雖然停了，許多城鎮卻已成廢墟。
+
+「而最糟的，也許是依姆羅斯的人們
+仰賴了幾百年的神祇如今都已死去，
+人心也隨之失去了指望。」
 
 ## story.WIN.3
 :: en
@@ -335,7 +445,17 @@ You may respond:
   2) I must decline. There is too much
      work to be done here on Ymros.
 :: zh
+「我不說這份功勞屬於你們，
+因為你們所行的善，遠超過這片土地
+所能償還的。
 
+「因此我要給你們回報：讓你們成為不朽，
+與我並肩統治，直到永恆的盡頭。」
+
+你可以回答：
+1) 我接受你的提議。
+2) 我必須婉拒。依姆羅斯還有太多事
+　　要做。
 
 ## story.WIN.4
 :: en
@@ -359,7 +479,22 @@ CONGRATULATIONS! You have won Demon's
 Winter. I hope you have enjoyed your
 adventure.
 :: zh
+「我很高興你們接受了。是時候讓新一代的
+冒險者接手你們開始的工作了。」
 
+一團綠色的霧氣包住你，難以想像的力量
+流過你的血脈。霧氣轉為藍色，接著雲層浮現。
+不久，依姆羅斯的大地在下方清晰可見——
+你一瞬間就能看見並掌握一切。
+
+歲月無聲流過。新的冒險者取代了你的位置，
+依姆羅斯慢慢癒合。
+
+一切都很好，直到遙遠的未來，
+那座火山又開始隆隆作響……
+
+恭喜！你通關了《冬之魔》。
+希望這趟旅程沒有辜負你的時間。
 
 ## story.WIN.5
 :: en
@@ -369,7 +504,11 @@ be granted. I will make sure the
 remainder of your lives are visited
 by good fortune and prosperity.'
 :: zh
+「你們確實高潔。既然凡人之身是你們的願望，
+那就如你們所願。
 
+「我會確保你們餘下的人生，
+處處有好運與豐足相隨。」
 
 ## story.WIN.6
 :: en
@@ -384,4 +523,13 @@ went to the hills to build a school of magic. It soon became famous and many of 
 served as advisor to the new King of Ymros. Due to his excellent advice and forsight, the land of Ymros remained in peace as long as he lived.
 devoted his life to studying the Battle of the Gods. His life's work was compiled into a tome of a thousand pages and stood as an example for all scholars to follow.
 :: zh
-
+回到了林蔭港，成為重建那座城的關鍵人物。城重新立起來之後，他就在那裡定居，一直活到高壽。
+著手統合依姆羅斯殘存的各族，很快成了這片土地的第一位國王。他明智地統治依姆羅斯，直到生命的盡頭。
+獨自走了，去對付馬利馮被禁錮後仍在四處遊蕩的怪物。他的勇氣傳遍依姆羅斯，至今仍活在傳說裡。
+漫遊了一陣子，然後消失在群山之中，再也沒有人見過他。有不少傳聞說，只要依姆羅斯再度需要他，他就會回來。
+成為兩千年來第一位遠古者的大祭司。他用累積的財富蓋起一座宏偉的神殿，把這位新神的名號傳了出去。
+在酒館聽說北方有一片富得無法想像的土地，就前去尋找那筆財富。他召集了一支隊伍、探遍許多地城，最後在富裕中退隱。
+踏上尋找生命之石的偉大旅程，想要打造一塊新的春之石。他沒能活著看見它完成，但那塊新的春之石以他為名，至今仍守護著依姆羅斯。
+到山丘上去開了一所魔法學校。學校很快聲名遠播，他的許多學生日後也各自成了傳奇。
+擔任依姆羅斯新國王的顧問。因為他出色的建言與遠見，依姆羅斯在他有生之年始終太平。
+把餘生投入研究諸神之戰。他畢生的心血編成一部千頁的巨著，成為所有學者效法的典範。
