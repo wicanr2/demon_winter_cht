@@ -385,3 +385,53 @@ undefined2 __cdecl16far FUN_1000_293d(void)
 5. 需要新的匯出邏輯，照 `tools/ghidra_scripts/ExportAnalysis.java` 的
    模式寫 Java GhidraScript（不要碰 `.py`，Ghidra 12.x 這個環境沒配
    PyGhidra）。
+
+
+---
+
+## 附錄：`tools/xref.py`（2026-07-26 加）
+
+Ghidra 對這個 16-bit 目標有兩個老問題：函式邊界常錯、switch 被
+decompiler 弄壞。`docs/re/50`–`53` 那幾輪的關鍵發現全部是繞過它、
+直接對原始位元組做的，手法固定成三招，收進 `tools/xref.py`：
+
+```bash
+tools/xref.py addr 278d:1fd1      # seg:off ↔ 檔案位移（含 +0x1000 編碼偏移）
+tools/xref.py call 278d:1fd1      # 誰 far call 這支
+tools/xref.py ptr  0x1b0cc        # 誰的遠指標指到這裡
+tools/xref.py global 0x4e2e       # 誰讀寫這個 DS 全域
+tools/xref.py str 0x38bd          # 讀 DS 上的字串
+tools/xref.py dis 278d:1fd1 -n 64 # 反組譯（自動換算位址）
+tools/xref.py table 0x16488 --seg 222f    # 解 switch 跳表
+tools/xref.py findtables 0x15ef0 0x1e400  # 掃範圍裡的跳表
+```
+
+**驗收方式是拿已知答案回測**：`table 0x16488 --seg 222f` 要重現
+`docs/re/50` §1.1 的 21 個事件動作（商隊在 `0x17`），
+`table 0x1e077 --seg 278d` 要重現 `docs/re/52` §2 的 14 個選單 case。
+兩張都對得上才算工具可用 —— 不然只是換一個地方算錯。
+
+### 為什麼是這三招
+
+| 手法 | 為什麼有效 |
+|---|---|
+| far call 掃描 | `9a <off16> <seg16>` 是定長編碼，位址算得出來就掃得到，不必依賴分析器建 xref |
+| 遠指標掃描 | 找「誰指到這支包裝函式」，`docs/re/50` §1 靠它從商隊常式一路回推到事件分派表 |
+| 跳表掃描 | **Turbo C 把 switch 分派放在函式最後面**，往前找永遠找不到；掃 `2e ff a7` 一次命中 |
+
+### `findtables` 掃出來還沒讀的分派表
+
+`0x15ef0`–`0x1e400` 有八張，其中兩張已解（`0x16488` 事件動作、
+`0x1e077` 市集／商隊選單），**剩下六張沒讀**：
+
+| 分派點 | 跳表 |
+|---|---|
+| `0x171ec` | `CS:0x12ce` |
+| `0x19ed7` | `CS:0x06dd` |
+| `0x1a5f3` | `CS:0x0deb` |
+| `0x1ab90` | `CS:0x139a` |
+| `0x1bddc` | `CS:0x08ec` |
+| `0x1c0d8` | `CS:0x0beb` |
+
+每一張都是一組成套的功能（前兩張各是 21 與 14 個），
+是接下來性價比最高的一批入口。
