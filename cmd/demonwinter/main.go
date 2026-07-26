@@ -1097,9 +1097,13 @@ func main() {
 		"原版資料目錄（玩家自備合法副本）")
 	etenDir := flag.String("eten", "workplace/eten",
 		"倚天中文字型目錄，需含 STDFONT.15 與 SPCFONT.15（自備）")
-	mapFile := flag.String("map", "MAP1.MAP",
-		"要載入的地圖：檔名（MAP1.MAP／MAP3.MAP／MAP5.MAP）或 SUM.MAP 的子地圖編號"+
-			"（如 34 = 起始大陸，見 docs/formats/town-and-map.md §2.5）")
+	// **預設空字串 ＝ 用存檔裡的 MapID。**
+	// 原本預設是 `MAP1.MAP`，於是載入的地圖與存檔的 `+0xa3` 無關 ——
+	// 出貨存檔剛好是圖 1，所以兩年都沒人發現。接上 `-newgame`（起始圖 34）
+	// 才炸出來：座標套用了、地圖還是圖 1，隊伍站在另一張圖的同一組座標上。
+	mapFile := flag.String("map", "",
+		"要載入的地圖：檔名（MAP1.MAP…）或 SUM.MAP 的子地圖編號（如 34）。"+
+			"留空 ＝ 用存檔裡的地圖編號")
 	dataFile := flag.String("events", "DATA1.TXT", "要載入的事件表")
 	seed := flag.Uint("seed", 0,
 		"亂數種子。0 = 依時間。指定固定值可讓截圖驗收重跑得到同一結果")
@@ -1174,6 +1178,10 @@ func main() {
 	// 兩道密語謎題各在一張地城深處，而且是全遊戲僅有的自由文字輸入。
 	// A4 全程試玩要能事後逐行核對「走了幾步、到了哪、觸發了什麼」。
 	// 只有截圖的話，漏掉一次按鍵在畫面上完全看不出來。
+	// 出貨的 PARTY.DAT 是玩過的存檔，不是新遊戲（`docs/re/87`）——
+	// 沒有這個旗標，遊戲永遠從地城深處的中段狀態開始。
+	newGameFlag := flag.Bool("newgame", false,
+		"開新遊戲：套用原版建角程式的起始狀態（世界地圖 34 的 (28,50)、75 金、20 份糧食）")
 	// 沒有這個，按鍵重播腳本永遠過不了第一場仗（`docs/playtest/01` §4）。
 	// **它不是捷徑** —— 下的是玩家下得出來的同一組指令。
 	autoFightFlag := flag.Bool("autofight", false,
@@ -1202,11 +1210,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入 FILES.DAT：%v", err)
 	}
-	m, mapID, err := loadMapArg(*dataDir, *mapFile)
-	if err != nil {
-		log.Fatalf("載入地圖：%v", err)
-	}
-
 	exits, err := world.LoadExits(filepath.Join(*dataDir, "EXITS.DAT"))
 	if err != nil {
 		log.Fatalf("載入 EXITS.DAT：%v", err)
@@ -1237,7 +1240,32 @@ func main() {
 	}
 	if fresh {
 		log.Printf("沒有進度存檔，用原版 PARTY.DAT 當起始狀態。存檔會寫到 %s", *savePath)
+		log.Printf("⚠ 那份 PARTY.DAT 是玩過的存檔（地城中段），不是新遊戲。"+
+			"要從頭開始請加 -newgame（見 docs/re/87）")
 	}
+	if *newGameFlag {
+		// 遭遇倒數原版是 rand(5)+14。用與遊戲同一顆種子的 RNG 擲，
+		// 這樣 `-seed` 固定時整場都重現得出來。
+		span := game.NewGameEncounterMax - game.NewGameEncounterMin + 1
+		game.ApplyNewGame(save, game.NewGameEncounterMin+
+			int(newRNG(*seed).Next())%span)
+		fresh = true // nSS.DAT 一定要從 ALL_SS.DAT 重建
+		log.Printf("新遊戲：地圖 %d 的 (%d,%d)，%d 金、%d 份糧食",
+			save.MapID, save.PositionX, save.PositionY, save.Gold, save.Rations)
+	}
+
+	// **地圖要在存檔（含 -newgame）決定之後才載。**
+	// 反過來的話 `-newgame` 把 MapID 設成 34 也沒用 —— 地圖已經載成圖 1 了，
+	// 隊伍會站在另一張圖的同一組座標上，而畫面上完全看不出是哪一張圖。
+	mapArg := *mapFile
+	if mapArg == "" {
+		mapArg = strconv.Itoa(int(save.MapID))
+	}
+	m, mapID, err := loadMapArg(*dataDir, mapArg)
+	if err != nil {
+		log.Fatalf("載入地圖：%v", err)
+	}
+
 	if *plotFlag >= 0 {
 		save.PlotStage = byte(*plotFlag)
 	}
