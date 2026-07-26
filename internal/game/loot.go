@@ -98,11 +98,7 @@ func LootItemType(r *rng.RNG) int { return r.Roll(lootTypeCount) - 1 }
 //
 // 當上限就完全講得通：1 級只掉得出 27 以下的雜魚裝，7 級以後全部解鎖。
 func LootPriceCap(level int) int {
-	p := 1.0
-	for i := 0; i < level; i++ {
-		p *= lootPriceBase
-	}
-	return int(float64(lootPricePerLv*level) + p)
+	return int(float64(lootPricePerLv*level) + intPow(lootPriceBase, level))
 }
 
 // LootItemTypeFor 擲出這個等級掉得出來的道具型別。
@@ -709,4 +705,48 @@ func AwardBattleExp(party []Character, statuses []UnitStatus, total int) int {
 		party[i].Experience = CapValue(party[i].Experience + per)
 	}
 	return per
+}
+
+// --- 戰鬥勝利的金幣（`0xe2bf`–`0xe3ab`，見 `docs/re/56`）---
+
+// 金幣的兩個底數在同一個常數池，中間只隔 8 bytes：
+// `1.7` 在 `1990:40f0`、`2.1` 在 `1990:40e8`。
+//
+// 指數是怪物的 `MONSTER.DAT` level（1–10）。原版讀的是 `unit+0x1a`，
+// 那一欄對玩家單位是附魔加成、對怪物是 level —— 兩張屬性表是同一套
+// schema，12 隻召喚生物與同名怪物有 96 個數值零誤差（`docs/re/57`）。
+const (
+	goldPowBase  = 1.7
+	goldRollBase = 2.1
+	// goldPerUnit 是每隻怪物固定加的 3（`0xe327` 連三個 inc ax）。
+	goldPerUnit = 3
+)
+
+// intPow 是 `1990:0a83`：acc 從 1.0 起跳，連乘 exp 次。
+//
+// 指數一律是整數 —— 全檔沒有任何非整數次方的證據，這個引擎也沒有
+// log／exp（`docs/re/55` §2）。
+func intPow(base float64, exp int) float64 {
+	p := 1.0
+	for i := 0; i < exp; i++ {
+		p *= base
+	}
+	return p
+}
+
+// BattleGold 擲出這一場戰鬥的金幣總額。
+//
+// 每隻怪物各出 `1.7^level + Roll(2.1^level) + 3`，`Roll` 回傳 1..n。
+// 量級：1 級怪 5–6 枚、5 級怪 18–57 枚、10 級怪 205–1871 枚。
+//
+// 原版掃的是**全部怪物單位**，不是「死掉的那些」（迴圈邊界是
+// `party+0xa6` 怪物數）。勝利的條件就是全滅，所以實務上等價。
+func BattleGold(r *rng.RNG, monsterLevels []int) int {
+	total := 0
+	for _, lv := range monsterLevels {
+		base := int(intPow(goldPowBase, lv))
+		spread := int(intPow(goldRollBase, lv))
+		total += base + r.Roll(spread) + goldPerUnit
+	}
+	return total
 }

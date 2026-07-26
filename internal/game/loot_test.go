@@ -453,3 +453,61 @@ func TestAwardBattleExp(t *testing.T) {
 		t.Errorf("隊伍人數 0 應回 0，得到 %d", got)
 	}
 }
+
+func TestBattleGold(t *testing.T) {
+	r := rng.NewWithSeed(1)
+
+	// 1 級怪：1.7^1 = 1（截斷）、Roll(2) ∈ {1,2}、+3 → 5 或 6
+	for i := 0; i < 200; i++ {
+		g := BattleGold(r, []int{1})
+		if g < 5 || g > 6 {
+			t.Fatalf("1 級怪金幣 %d，預期 5–6", g)
+		}
+	}
+
+	// 10 級怪：1.7^10 = 201、Roll(1667) ∈ 1..1667、+3 → 205–1871
+	lo, hi := 1<<30, 0
+	for i := 0; i < 2000; i++ {
+		g := BattleGold(r, []int{10})
+		if g < 205 || g > 1871 {
+			t.Fatalf("10 級怪金幣 %d，超出 205–1871", g)
+		}
+		if g < lo {
+			lo = g
+		}
+		if g > hi {
+			hi = g
+		}
+	}
+	if hi-lo < 800 {
+		t.Errorf("10 級怪金幣的散布只有 %d–%d，隨機項看起來沒生效", lo, hi)
+	}
+
+	// 多隻怪逐隻累加，不是取最大或平均
+	if g := BattleGold(r, []int{1, 1, 1}); g < 15 || g > 18 {
+		t.Errorf("三隻 1 級怪金幣 %d，預期 15–18", g)
+	}
+
+	// 沒有怪物就沒有金幣（避免對空 slice 誤加固定的 +3）
+	if g := BattleGold(r, nil); g != 0 {
+		t.Errorf("沒有怪物卻拿到 %d 金幣", g)
+	}
+}
+
+// TestBattleGoldMonotonic 釘住「等級越高金幣越多」——
+// 這是把 unit+0x1a 讀成 MONSTER.DAT level 的直接後果，讀錯就會失去單調性。
+func TestBattleGoldMonotonic(t *testing.T) {
+	r := rng.NewWithSeed(7)
+	prev := 0
+	for lv := 1; lv <= 10; lv++ {
+		sum := 0
+		for i := 0; i < 500; i++ {
+			sum += BattleGold(r, []int{lv})
+		}
+		avg := sum / 500
+		if avg <= prev {
+			t.Errorf("等級 %d 的平均金幣 %d 沒有高於等級 %d 的 %d", lv, avg, lv-1, prev)
+		}
+		prev = avg
+	}
+}

@@ -66,6 +66,7 @@ func (a *app) updateBattle() error {
 			if out == game.Victory {
 				a.logf("怪物全滅")
 				a.awardExperience()
+				a.awardGold()
 				a.awardDrops()
 			} else {
 				a.logf("隊伍全滅")
@@ -1231,6 +1232,28 @@ func (a *app) awardExperience() {
 	if per := game.AwardBattleExp(a.members, statuses, total); per > 0 {
 		a.logf("每人獲得 %d 點經驗", per)
 	}
+}
+
+// awardGold 發放戰鬥勝利的金幣（`docs/re/56` §3）。
+//
+// 每隻怪物各出 `1.7^level + Roll(2.1^level) + 3`。原版掃的是全部怪物
+// 單位而不是死掉的那些，這裡照做 —— 勝利的條件就是全滅，等價。
+//
+// 金幣進隊伍共有的錢包（存檔 `+0x0a`，4 bytes），封頂 `0x00FFFFFF`。
+func (a *app) awardGold() {
+	var levels []int
+	for _, u := range a.battle.Units() {
+		if u == nil || u.IsPlayer {
+			continue
+		}
+		levels = append(levels, u.Level)
+	}
+	gold := game.BattleGold(a.rng, levels)
+	if gold <= 0 {
+		return
+	}
+	a.setGold(game.CapValue(a.save.Gold + gold))
+	a.logf("撿到 %d 枚金幣", gold)
 }
 
 // awardDrops 發放戰鬥勝利的戰利品。

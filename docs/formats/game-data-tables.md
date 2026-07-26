@@ -274,9 +274,9 @@ reverse-confirm Y=34  facing=2（南）   ← Y 加 1，朝向轉回南
 | 4 | hp | 生命值 | 假設 | 「戰士」序列（Lvl 1 fighter → Lvl 15 fighter）此欄位是 `8,14,18,25,32,36,42,48,55`，單調遞增，量級合理，但沒有直接證據排除這其實是「耐力」屬性而非直接儲存的 HP（全表範圍 4–200，不是按強度排序的檔案，所以只能看單一序列的遞增趨勢，不能說整份檔案單調遞增） |
 | 5 | attack_type | 攻擊/武器類型索引，負值＝帶毒 | **已驗證** | 對照 `DEMON.INT` 字串裡的武器類型清單（`Hands, Dagger, Small ax, Shortsword, Mace, Morningstar, Broadsword, Battle ax, 2-hand sword, Mace, 2-hand sword, Battle ax, 2-hand sword, Bite`，索引 0–13），數值 `13` 精準對應到 `Bite`（蜘蛛、老鼠、蝙蝠等咬擊系怪物），數值 `0` 對應 `Hands`（殭屍、幽靈等徒手/不死系）。**所有蛇類怪物（Cobra、Death adder、Cobra mage、Pit viper、Rattlesnake、Silver snake、Salamander）這個欄位全部是負值 `-13`**，剛好是 `Bite` 的負版本，精準對應「毒咬」的遊戲機制（蛇類攻擊帶毒），這個模式在 99 隻怪物裡完全沒有例外 |
 | 6 | sprite_index | 圖像索引（`MONSTER.SHP`/`MONSTER.SHE`） | **已驗證** | 同種系怪物數值完全一致：4 種熊（Brown/Grizzly/Arctic/Cave bear）全部是 `7`；3 種狼系（Timber/Winter wolf、Devil dog）全部是 `8`；7 種龍（Baby/Small/Large/Great/Fire/Wind/Ice dragon）全部是 `27`；6 種蛇類全部是 `12`。這種「外觀相同的怪物共用同一個值」的規律，只有「圖像索引」能合理解釋，其餘欄位都不會有這種按「外觀種系」分組的規律 |
-| 7 | num_attacks | 每回合攻擊次數 | 假設 | 數列 fighter Lvl1→Lvl15 的這個欄位是 `1,2,3,4,4,4,5,6,6`，隨等級遞增後趨緩，符合「等級越高攻擊次數越多但有上限」的合理猜測，但沒有直接的戰鬥公式佐證 |
+| 7 | **armour** | **護甲點數**（原判讀「每回合攻擊次數」已推翻，見 `docs/re/57` §4.1）| **已驗證** | 這一欄搬進戰鬥單位的 `+0x0a`，而那個欄位被 `Armor: %3d pts.`（`ds:0x0b15`）印出來，命中判定時直接從命中值減掉（`0x9f4d`）。原本的依據「戰士序列 1,2,3,4,4,4,5,6,6 遞增」對護甲同樣成立，分不出兩者 |
 | 8 | experience | 擊殺經驗值 | **已驗證** | 「戰士」序列（Lvl 1 fighter → Lvl 15 fighter）此欄位是 `23,34,41,70,84,165,215,372,650`，單調遞增；全表範圍 23 → 10000（Guardian），終盤劇情怪物（Xeres 3500、Jesric/Eregore 各 5000、Guardian 10000）明顯高出一般怪物一個量級，且 `DEMON.INT` 字串裡有 `Exp per chr: %ld Gold: %ld` / `Exp per char: %d`（戰鬥結算畫面），證實遊戲確實有「每隻怪物對應經驗值」這個機制 |
-| 9 | level | 怪物等級/難度分級（1–10） | 假設 | 這欄位**不等於**怪物名稱裡的數字（例如 `Lvl 6 fighter` 這欄是 `5`、`Lvl 15 fighter` 是 `9`），推測是遊戲內部另一套與名稱脫鉤的難度分級，用途未知（可能是法術抗性判定或遭遇表分級），最高值 10 剛好被多隻終盤怪物（Guardian、Great dragon、Xeres 等）共用，符合「封頂難度」的直覺，但沒有進一步證據 |
+| 9 | level | 怪物等級／難度分級（1–10） | **已驗證** | **用途已解**（原標「用途未知」）：戰鬥勝利金幣的指數，每隻怪出 `1.7^level + Roll(2.1^level) + 3`（`docs/re/56`、`docs/re/57`）。這一欄搬進戰鬥單位的 `+0x1a`，與召喚生物表的 w8（成本基數）是同一個欄位，12 隻同名生物逐筆相同。仍然**不等於**怪物名稱裡的數字（`Lvl 6 fighter` 這欄是 `5`、`Lvl 15 fighter` 是 `9`）—— 是與名稱脫鉤的難度分級，最高 10 被多隻終盤怪物共用 |
 | 10 | sp | 法力值上限 | **已驗證** | 「法師」序列（Lvl 1 mage → Lvl 16 wizard）此欄位是 `8,12,18,24,35,40,45,50,55`，單調遞增且只有法師系怪物這個值明顯偏高，非法師系怪物大多是 `0`，跟 `PARTY.DAT` 的法力值屬性語意一致 |
 | 11 | special | 特殊能力/元素索引，`-1`＝無 | 假設 | 觀察到龍系怪物（Fire/Wind/Ice dragon）此欄位分別是 `8,9,10`（連續遞增，疑似「吐息屬性索引」），元素系怪物（Fire/Metal/Wind/Ice/Spirit elemental）分別是 `1,2,3,7,5`（不連續，跟猜測的「五大符文系順序」對不上），整體規律不夠乾淨，只能算假設 |
 
@@ -382,7 +382,7 @@ ASCII 姓名或道具名字串），也**不是** `MONSTER.DAT`/`ITEMS.DAT` 那�
 | `PARTY.DAT` | `0xb6`–`0xc3`（14 bytes）| 本存檔全零 | 動態 diff |
 | `PARTY.DAT` | 隊伍位置與朝向 | 陣型格（trailer `0x00-0x08`）已驗證，見 `docs/re/34`；朝向在 trailer `+0xa4` | — |
 | `PARTY.DAT` | 遊戲內時間（時/日/月）| 一度懷疑是 trailer `0x1a-0x1c`，已被 `PARTY.BAK` 交叉驗證推翻 | DOSBox 內讓遊戲時間流逝後 diff，鎖定規律遞增的 byte。**這同時是「一天幾小時（26 vs 38）」的驗證路徑** |
-| `MONSTER.DAT` | 12 個欄位的精確語意 | 有數值規律支持假設，缺直接佐證。**已知怪物的速度與 HP 基礎值會被戰鬥進場擲點讀走**（`docs/re/20` §8），可從那條路反推是哪兩個欄位 | 用擲點公式反推：對同一隻怪物觀察多場戰鬥的速度分布，除以 `[0.7,1.3)` 即可框出基礎值 |
+| `MONSTER.DAT` | 只剩 `special`（第 11 欄）| **11 個欄位已有 10 個定案**（`docs/re/57`）：與召喚生物表同構，12 隻同名生物有 96 個數值零誤差，欄位語意由召喚側已驗證的搬移目標帶過來。`num_attacks` → 護甲、`level` 用途兩處原本的假設在那一輪被推翻 | `special` 欄：龍系 `8,9,10` 疑似吐息屬性索引，元素系 `1,2,3,7,5` 對不上五大符文順序。召喚表同欄只有冰元素不同（4 vs 7），值得從那個差異切入 |
 | `ITEMS.DAT` | `f1`–`f6` 六個欄位 | 30 件商品的欄位已全部 dump（3. 節）。武器全是 `1 3 0 10 8 9`、護甲全是 `0 3 12 7 7 7`，看得出是「類別 + 可帶的能力類別」，逐欄語意未定。**`f0`（價格）已確認**，是市集定價的基礎值 | 比對手冊附錄 C（魔法道具）列出的「各類道具可帶哪些能力」與 `f4`–`f6` 的值 |
 | `TEMPLAT*.DAT` | 整體格式（疑似圖像）| 只完成用途定位，byte 級格式未解 | 比照已知 shape 檔格式，或 DOSBox 進到對應藏寶室截圖比對 |
 
@@ -396,7 +396,7 @@ ASCII 姓名或道具名字串），也**不是** `MONSTER.DAT`/`ITEMS.DAT` 那�
    確定為「已驗證」。
 2. **反組譯 `DEMON.EXE` 讀取 `PARTY.DAT`/`MONSTER.DAT`/`ITEMS.DAT` 的程式碼**：直接找到讀取這些檔案
    欄位的組合語言片段，可以不靠猜測直接讀出欄位順序與長度，尤其能解決 `MONSTER.DAT` 的
-   level/num_attacks/special 與 `ITEMS.DAT` 的 category/weapon_slot 這幾個「規律合理但語意不確定」
-   的欄位。`tools/ghidra_headless.sh` 已經在專案裡，可以直接用。
+   `special` 與 `ITEMS.DAT` 的 category/weapon_slot 這幾個「規律合理但語意不確定」
+   的欄位（level 與 num_attacks 已於 `docs/re/57` 解決）。`tools/ghidra_headless.sh` 已經在專案裡，可以直接用。
 3. **`TEMPLAT*.DAT` 的圖像格式解碼**：如果確認是點陣圖，跟 `MONSTER.SHP`/`MONSTER.SHE` 這類已知
    「shape 檔」格式做比對，可能可以共用同一套解碼邏輯。
