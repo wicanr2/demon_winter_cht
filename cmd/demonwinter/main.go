@@ -45,6 +45,7 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/i18n"
+	"github.com/wicanr2/demon_winter_cht/internal/manual"
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
@@ -155,6 +156,11 @@ type app struct {
 	// 第一段讀完才顯示，顯示完才開打。
 	pendingChain string
 
+	// manual／manualUI 是遊戲內手札（`F2`）—— 原版把這些資料印在紙本手冊上，
+	// 這裡搬進遊戲。manualUI 非 nil 時手札畫面開著。
+	manual   *manual.Manual
+	manualUI *manualScreen
+
 	// runeBox 非 nil 代表正在顯示符文密語（`docs/re/72`）。
 	runeBox *runeScreen
 	// runeFont 是 CYPHER.SHP 的 27 個符文字形；讀不到時為 nil。
@@ -214,6 +220,9 @@ func (a *app) Update() error {
 	}
 	if a.title != nil {
 		return a.updateTitle()
+	}
+	if a.manualUI != nil {
+		return a.updateManual()
 	}
 	if a.runeBox != nil {
 		return a.updateRuneBox()
@@ -320,6 +329,10 @@ func (a *app) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 		a.openCamp()
 	}
+	// F2：手札。原版沒有這個畫面（那些資料印在紙本手冊上），見 manualui.go。
+	if inpututil.IsKeyJustPressed(ebiten.KeyF2) {
+		a.openManual()
+	}
 	// F1 是建立角色。原版把它放在遊戲外的 Character Utilities 選單，
 	// 大地圖上根本沒有這個鍵 —— 所以挪到 F1 這種一看就是「不在原版裡」
 	// 的位置，把 `C` 讓回給紮營。
@@ -358,6 +371,17 @@ func (a *app) Draw(screen *ebiten.Image) {
 	}
 	if a.title != nil {
 		a.drawTitle(a.canvas)
+		if a.quitting {
+			a.drawQuitDialog(a.canvas)
+		}
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
+	if a.manualUI != nil {
+		a.canvas.Fill(color.Black)
+		a.drawManual(a.canvas)
 		if a.quitting {
 			a.drawQuitDialog(a.canvas)
 		}
@@ -894,6 +918,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"B：測試戰鬥（偵錯）",
 		"C：紮營",
 		"F1：建立角色（偵錯）",
+		"F2：手札",
 		"M：遇到商隊（偵錯）",
 		"S：存檔",
 		"空白鍵：翻頁",
@@ -982,6 +1007,8 @@ func main() {
 		"音效音量 0–1。原版沒有音量控制（喇叭只有開關），這是體貼現代耳朵")
 	savePath := flag.String("save", "workplace/save/PARTY.DAT",
 		"進度存檔路徑。刻意不預設在原版資料目錄，免得蓋掉玩家的原版存檔")
+	manualPath := flag.String("manual", "assets/manual/zh-Hant/manual.txt",
+		"遊戲內手札的內容檔（缺檔就是沒有手札，不影響遊玩）")
 	langDir := flag.String("lang", "assets/lang/zh-Hant",
 		"翻譯目錄。指向不存在的路徑即為原文模式")
 	startX := flag.Int("x", -1, "起始 X。負值代表用存檔裡的座標")
@@ -1098,6 +1125,10 @@ func main() {
 	}
 	// 特殊格清單要在存檔載入之後才決定來源 —— 全新開始要從 ALL_SS.DAT
 	// 重建，否則會沿用原版出廠那份「玩到一半」的狀態（docs/re/78 §2）。
+	man, err := manual.Load(*manualPath)
+	if err != nil {
+		log.Fatalf("載入手札：%v", err)
+	}
 	special, err := scenario.LoadSpecialTileSet(filepath.Dir(*savePath), *dataDir, fresh)
 	if err != nil {
 		log.Fatalf("載入特殊格清單：%v", err)
@@ -1169,6 +1200,7 @@ func main() {
 		drawTiles:  ditheredTiles(m, uint16(*seed), save.TempleRuins),
 		exits:      exits,
 		special:    special,
+		manual:     man,
 		events:     events,
 		tr:         tr,
 		eventsFile: *dataFile,
