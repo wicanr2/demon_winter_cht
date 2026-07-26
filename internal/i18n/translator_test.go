@@ -139,7 +139,7 @@ func TestLoad_RejectsCatalogWithoutSourceHeader(t *testing.T) {
 	}
 }
 
-// TestUICatalog 釘住介面文案目錄（語意化 key，`docs/re/77`）。
+// TestUICatalog 釘住介面文案目錄（語意化 key，`docs/i18n/ui-catalog.md`）。
 func TestUICatalog(t *testing.T) {
 	dir := t.TempDir()
 	body := `@@ UI

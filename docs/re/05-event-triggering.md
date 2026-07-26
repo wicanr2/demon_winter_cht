@@ -116,7 +116,15 @@ uint __cdecl16far FUN_222f_1321(void)
    要用的「第幾筆記錄」。兩個函式讀寫的是同一個記憶體位址 `0x52f4`，這是本文最關鍵的一條證據鏈。
 3. `type_byte` 拆成類別（高 3 bits, `/32`）與子值（低 5 bits, `%32`），類別驅動不同分支（§1.4）。
 
-### 1.3 `0x5514:0x5516` 指向的資料就是 `EXITS.DAT`（已驗證）
+### 1.3 `0x5514:0x5516` 指向的資料就是 `EXITS.DAT`（❌ **已被推翻，見 `docs/re/77`**）
+
+> **本節結論錯誤。** `0x5514:0x5516` 裝的是 **`nSS.DAT`（511 bytes）**，不是 `EXITS.DAT`（330 bytes）。
+> 真正的載入端在另一支函式（頂層 `222f:0003`，`0x16064`），檔名由 `sprintf(buf, "%dSS.DAT", 子地圖)`
+> 組出來（`ds:0x2011`），大小參數是 `0x1ff` ＝ **511**。
+> 本節下面那段「兩者最終指向同一塊已載入的 `EXITS.DAT` 資料」是**假設**，不是驗證 ——
+> 證據鏈到「`FUN_222f_32d4` 裡有一處把 EXITS.DAT 載入 `[0x4c94]`」就斷了，
+> 之後接的是推論。能戳破它的硬證據（兩個不同的大小參數 330／511）一直就在本節引文裡。
+> **`docs/re/05` §3 對 `EXITS.DAT` → `[0x4c94]` 的判讀本身沒錯**，錯的是把 `0x5514` 也算成它。
 
 在 `strings.csv` 找到 `31f0:2653,9,EXITS.DAT`。反查誰把這個位址的 offset 部分（`0x2653`）當立即數
 使用，鎖定 `FUN_222f_32d4`（`222f:32d4`，見 §3）內的載入呼叫（`disassembly.asm` 逐行核對）：
@@ -147,7 +155,15 @@ UI 相關指標）。**已驗證**：兩者最終指向同一塊已載入的 `EX
 以及在完全不同的函式 `FUN_1d9f_281a` 中被用來記錄「插圖繪製座標」——這是 16-bit 組語常見的暫存器/
 全域重用模式，讀後續分析時務必留意上下文，不要假設同一位址永遠代表同一件事）。
 
-### 1.4 真實 `EXITS.DAT` 資料驗證（本次分析新增）
+### 1.4 真實 `EXITS.DAT` 資料驗證（❌ **驗錯檔案，見 `docs/re/77`** §3）
+
+> **本節拿錯的檔案驗 3-byte 假說。** `FUN_222f_1321` 掃的是 `nSS.DAT`（511 bytes，
+> 3-byte 記錄），不是 `EXITS.DAT`（330 bytes，6-byte 記錄 —— 本文 §3 自己的判讀才對）。
+> 330 剛好能被 3 整除，所以錯的假說看起來自洽。
+>
+> 拿 `1SS.DAT`～`5SS.DAT` 重驗，**類別 0–6 全部出現**，所以下面
+> 「類別 3–7 用現有資料永遠走不到」「沒有真實資料佐證類別 4 傳送被觸發過」
+> **兩句都被推翻**：類別 4 在 5 個檔案裡共 14 筆，而且筆數與尾表座標對數 5/5 零誤差相符。
 
 用 Python 直接讀 `workplace/orig/demwin/DEM_DATA/EXITS.DAT`（330 bytes）套用「3-byte 記錄」假說：
 
@@ -311,10 +327,10 @@ undefined2 __cdecl16far FUN_222f_32d4(void)
   if (*(byte *)(struct+0xa3) < 10) {              // struct+0xa3 = dataset index（docs/re/02 已知欄位)
     iVar1 = struct.a3 - 1;                         // 轉 0-based
     *(undefined2 *)(iVar1*2 + 0x5c52) = 1;         // 標記「dataset iVar1 正在載入」
-    FUN_307c_0005(0x5514, 0x5516,                  // dest = EXITS.DAT 執行時緩衝區(遠指標)
-                  table[iVar1*4+0x551c],            // src  = 每個 dataset 各自的來源指標（陣列，4筆）
+    FUN_307c_0005(0x5514, 0x5516,                  // ★ src = nSS.DAT 執行時緩衝區（遠指標）
+                  table[iVar1*4+0x551c],            // ★ dst = 每個 dataset 各自的快取槽（陣列，4筆）
                   table[iVar1*4+0x551e],
-                  0x1ff, 0);                        // size = 0x1ff (511)
+                  0x1ff, 0);                        // size = 0x1ff (511) = nSS.DAT 大小
     if (struct.a3 != 2) {
       *(undefined2 *)(iVar1*2 + 0x5c52) = 0;       // 清除忙碌旗標(dataset==2例外，特殊處理)
       *(char *)(*(undefined4 *)0x1587) = struct.a3 + '0';   // 疑似組動態檔名的一個字元
@@ -331,7 +347,7 @@ undefined2 __cdecl16far FUN_222f_32d4(void)
     struct.a1 = buf[local_4+3];    // ★ 新的「錨點」X
     struct.a2 = buf[local_4+4];    // ★ 新的「錨點」Y
     struct.af = buf[local_4+5];    // 另一欄位（語意未解）
-    struct.a9 = 0;                 // 清 docs/re/02 已知的「自動接續重繪」旗標
+    struct.a9 = 0;                 // ★ 清 nSS.DAT 快取有效性旗標（docs/re/77）
     struct.a4 = *(byte*)0x4e32;    // 複製面向/方向
     if (struct.a3 != 5 || struct.a1 < 0x24) return 1;
     // 特殊情形：進入 dataset 5 且 X>=0x24(36) 時觸發一段寫死的劇情分支（DATA5 相關特殊場景）
@@ -348,6 +364,16 @@ undefined2 __cdecl16far FUN_222f_32d4(void)
   return 1;
 }
 ```
+
+> **三處更正（`docs/re/77`）：**
+> 1. **`FUN_307c_0005` 的參數方向本節註反了。** 反編譯裡是
+>    `*(undefined1 *)param_2 = *(undefined1 *)param_1` —— **`param_1` 是來源、`param_2` 是目的**。
+>    所以這一處是把 `0x5514` 的內容**存出去**到 per-dataset 快取槽，不是載入進來。
+>    對照組：`0x16024` 的同一支呼叫方向相反（槽 → `0x5514`），是**還原**。
+>    `ds:0x5c52[i]` 就是「槽 i 有沒有快取」的旗標。
+> 2. **`struct.a9` 與「自動接續重繪」無關。** `docs/re/02` 全文沒有 `+0xa9` ——
+>    那句「docs/re/02 已知的」是**假引用**。它是 `nSS.DAT` 的快取有效性旗標。
+> 3. 搬的是 `nSS.DAT`（511 bytes），不是 `EXITS.DAT`（330 bytes）。
 
 **已驗證**（`FUN_307c_0005` 反編譯確認是遠指標記憶體複製函式，非壓縮/RLE，見
 `decompiled/307c_0005_FUN_307c_0005.c`）：
