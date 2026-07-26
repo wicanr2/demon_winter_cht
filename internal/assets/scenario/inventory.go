@@ -56,15 +56,20 @@ const (
 	// slotEmpty 是空槽的型別值。
 	slotEmpty = 0xff
 
-	// slotUnknown0F 語意未解，但兩份原版存檔裡**每一件實物**都是 1。
-	// 依據不只是「看起來都是 1」：兩份存檔正好記錄了一次道具轉手
-	// （Wopple 的匕首到了 Stumpy 手上），接收端那一格是全新寫入的，
-	// 寫進去的值就是 1。所以新造一格時照樣填 1。
+	// slotMaterialClass 是**材質／品質類別**（`+0x0f`）。它有兩個讀取端：
+	//
+	//   - 名稱：掉寶結算用它查一張名稱表（`docs/re/30`）
+	//   - 價格：估價常式拿它查倍率表 `ds:0x18b3`
+	//     = `{0, 1, 2, 5, 20, 35, 50, 60, 75}`（`docs/re/44`）
+	//
+	// 所以「金匕首」貴在這個 byte 上 —— 同一個型別，倍率差 75 倍。
+	// 兩份原版存檔裡每一件實物都是 1（×1 = 原價），與「起始裝備都是
+	// 平凡貨」一致。新造一格時照樣填 1。
 	//
 	// 唯一的例外是 Wopple 已清空的第 2 格留著 2 —— 原版「交出道具」
 	// 只把型別寫成 0xFF，其餘 bytes 不動，那個 2 是前一件的殘值。
-	slotUnknown0F        = 0x0f
-	slotUnknown0FDefault = 1
+	slotMaterialClass        = 0x0f
+	slotMaterialClassDefault = 1
 
 	// effectCondEnabled 是「下一個位元組有效」的條件值。
 	effectCondEnabled = 0x15
@@ -95,6 +100,9 @@ type InventorySlot struct {
 	// Total 是使用次數上限，Used 是已用次數。兩者相等代表用完。
 	// **過夜會把 Used 歸零**（見 game.Rest）。
 	Total, Used int
+
+	// MaterialClass 是材質／品質類別（`+0x0f`），決定名稱前綴與價格倍率。
+	MaterialClass int
 
 	// ExorciseResist 是驅邪成功率（`+0x0d`）。紮營選單的 Xorcise
 	// 擲 `rnd(100)`，大於這個值就失敗 —— **越大越好驅**，
@@ -136,6 +144,7 @@ func parseInventorySlot(raw []byte) InventorySlot {
 	out.Total = int(raw[slotTotal])
 	out.Used = int(raw[slotUsed])
 	out.ExorciseResist = int(raw[slotExorcise])
+	out.MaterialClass = int(raw[slotMaterialClass])
 	out.Enchant = int(raw[slotEnchant]) - storedOffset
 	if raw[slotCondA] == effectCondEnabled {
 		out.WeaponEffect += int(raw[slotEffectA]) - storedOffset
@@ -170,6 +179,7 @@ func (s InventorySlot) encodeInto(raw []byte) {
 	raw[slotTotal] = byte(s.Total)
 	raw[slotUsed] = byte(s.Used)
 	raw[slotExorcise] = byte(s.ExorciseResist)
+	raw[slotMaterialClass] = byte(s.MaterialClass)
 	raw[slotEnchant] = byte(s.Enchant + storedOffset)
 	if s.Identified {
 		raw[slotIdentified] = 1
@@ -184,6 +194,6 @@ func (s InventorySlot) encodeInto(raw []byte) {
 // 黏到新道具身上。全部歸零再填 `+0x0f`，其餘由 encodeInto 覆蓋。
 func newSlotRaw() []byte {
 	raw := make([]byte, inventorySlotLen)
-	raw[slotUnknown0F] = slotUnknown0FDefault
+	raw[slotMaterialClass] = slotMaterialClassDefault
 	return raw
 }
