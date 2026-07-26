@@ -186,6 +186,9 @@ type app struct {
 	trace *tracer
 	// auto 非 nil 時由自動戰鬥驅動代打（`-autofight`），見 autofight.go。
 	auto *autoFighter
+	// dataDir 是原版資料目錄。換地圖要重新載入 `MAPn.MAP`／`SUM.MAP`，
+	// 所以路徑不能只留在 main 的區域變數裡（見 mapchange.go）。
+	dataDir string
 
 	// winText 是 WIN.TXT 的結局文字（`docs/re/82`）；讀不到時為 nil。
 	winText *scenario.StoryText
@@ -345,6 +348,12 @@ func (a *app) update() error {
 		if res == game.MoveOK {
 			a.stepBoat(tile)
 			a.stepHPTick()
+			// 出口要排在事件之前，而且命中就收工 —— 踩到樓梯是
+			// 「離開這張圖」，原地的事件與遭遇都不該再跑
+			// （`docs/re/05` §3：出口那條路徑不經過事件表）。
+			if a.checkExit(tile) {
+				return nil
+			}
 			a.checkEvent(tile)
 			a.checkMerchantEncounter()
 			a.checkRandomEncounter(tile)
@@ -1344,6 +1353,7 @@ func main() {
 		save:       save,
 		torch:      save.LightSource,
 		savePath:   *savePath,
+		dataDir:    *dataDir,
 	}
 
 	// 船停在海上，而海面在可通行性表裡是不可通行的 —— 沒有這一條，
