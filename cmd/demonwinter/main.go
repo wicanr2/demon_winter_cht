@@ -452,7 +452,7 @@ func loadMapArg(dataDir, arg string) (*world.Map, int, error) {
 //
 // seed 為 0 時用原版的初始種子；`-seed` 有指定就拿它當浪花種子，
 // 讓截圖比對可重現。
-func ditheredTiles(m *world.Map, seed uint16) []byte {
+func ditheredTiles(m *world.Map, seed uint16, templeRuins byte) []byte {
 	src := m.Tiles()
 	out := append([]byte(nil), src[:]...)
 	d := world.NewOceanDither()
@@ -460,8 +460,37 @@ func ditheredTiles(m *world.Map, seed uint16) []byte {
 		d = world.NewOceanDitherSeed(seed)
 	}
 	d.Apply(out)
+	applyTempleRuins(out, templeRuins)
 	return out
 }
+
+// applyTempleRuins 把神殿 tile 換成廢墟 tile —— 冬之魔降臨之後神殿全毀
+// （`docs/re/79`）。
+//
+// 原版是在**繪製**時逐格替換（`0x1739a`：讀地圖 tile、若旗標過門檻且
+// tile == `0x25` 就改寫成 `0x5b`，再寫進繪製緩衝區），規則判定用的地圖
+// 陣列不動。這裡沿用同一個分工 —— 改 drawTiles、不改 a.tiles，
+// 跟海面浪花是同一種「純外觀替換」。
+//
+// ⚠ 目前只在啟動時套一次。旗標是單向的（世界壞掉就回不去），
+// 而且引擎裡還沒有任何地方會設它，所以夠用；真的接上劇情觸發時
+// 這裡要改成旗標變動時重建。
+func applyTempleRuins(tiles []byte, templeRuins byte) {
+	if templeRuins <= scenario.TempleRuinsThreshold {
+		return
+	}
+	for i, t := range tiles {
+		if t&0x7f == templeTile {
+			tiles[i] = tiles[i]&0x80 | ruinsTile
+		}
+	}
+}
+
+// templeTile／ruinsTile 是神殿與廢墟的 tile 值。
+const (
+	templeTile = 0x25
+	ruinsTile  = 0x5b
+)
 
 func (a *app) drawWorld(dst *ebiten.Image) {
 	ts := a.tileset()
@@ -618,23 +647,27 @@ func (a *app) encounterLevel() int {
 }
 
 func (a *app) checkEvent(tile byte) {
-	// 城鎮格優先於事件鏈。原版就是這個順序：先比對剛踩到的 tile 是不是
-	// 0x2e／0x64，是就拿座標查城鎮編號，不再往事件表走
-	// （DEMON.INT 0x19192 的分支，見 gamedata.townSites 說明）。
-	if gamedata.IsTownTile(tile) {
-		a.enterTownAt(a.party.X(), a.party.Y())
-		return
-	}
-
 	idx := -1
 
 	switch game.TriggerFor(tile) {
 	case game.TriggerHardBlock, game.TriggerNone:
 		return
 
-	case game.TriggerDirectIndex:
-		// tile 值本身就是 DATA*.TXT 的記錄索引，不查 EXITS.DAT。
-		idx = int(tile)
+	case game.TriggerSite:
+		// 地點 tile：城鎮／神殿／學院／廢墟。**不是文字索引**
+		// —— 舊版把 tile 值當 DATA*.TXT 的記錄索引，見 `docs/re/79`。
+		switch game.SiteFor(tile, a.save.TempleRuins, a.save.TownRuins) {
+		case game.SiteTown:
+			a.enterTownAt(a.party.X(), a.party.Y())
+		case game.SiteRuins:
+			a.message = a.tr.UI("site.ruins", "隊伍走過一片廢墟")
+		case game.SiteTemple, game.SiteCollege:
+			// 世界地圖上的神殿與學院還沒接（`docs/re/74` 的 35 所學院、
+			// `docs/re/19` 的神殿三項服務目前只從城鎮進得去）。
+			// **明確標記未接**，不要靜默落到別的分支假裝有反應。
+			a.message = "（世界地圖上的設施還沒接）"
+		}
+		return
 
 	case game.TriggerLookup:
 		// 查的是這張子地圖的 `nSS.DAT`，不是 EXITS.DAT。
@@ -995,6 +1028,11 @@ func main() {
 	// 事件文字要走到特定座標才觸發，而續接碼 3 的第二段、符文、插圖
 	// 這些分支都在事件顯示路徑裡 —— 沒有這個旗標就只能靠導航去碰。
 	eventFlag := flag.Int("event", -1, "偵錯：直接觸發某一筆事件（DATA*.TXT 索引）")
+	// -ruins 讓「冬之魔降臨之後」的世界看得見。原版把這兩個旗標接在劇情上
+	// （`+0xb9 == 2` 觸發神殿全毀），而劇情觸發本身還沒接 ——
+	// 沒有這個旗標就沒辦法驗收 tile 替換與廢墟訊息（`docs/re/79`）。
+	ruinsFlag := flag.Bool("ruins", false,
+		"偵錯：世界已成廢墟（神殿 tile 畫成廢墟、城鎮不再進得去）")
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
 	// xdotool 偶爾會漏掉一兩下，跑出來的畫面就不是預期的那座城。直接指定。
 	townFlag := flag.Int("town", 0, "偵錯：啟動後直接進入指定編號的城鎮（1–25）")
@@ -1048,6 +1086,10 @@ func main() {
 	}
 	if fresh {
 		log.Printf("沒有進度存檔，用原版 PARTY.DAT 當起始狀態。存檔會寫到 %s", *savePath)
+	}
+	if *ruinsFlag {
+		save.TempleRuins = 0xff
+		save.TownRuins = 1
 	}
 	// 特殊格清單要在存檔載入之後才決定來源 —— 全新開始要從 ALL_SS.DAT
 	// 重建，否則會沿用原版出廠那份「玩到一半」的狀態（docs/re/78 §2）。
@@ -1119,7 +1161,7 @@ func main() {
 		clock:      game.ClockAt(int(save.Hour), int(save.Day), int(save.Month), int(save.TimeCounter)),
 		tiles:      m,
 		mapID:      mapID,
-		drawTiles:  ditheredTiles(m, uint16(*seed)),
+		drawTiles:  ditheredTiles(m, uint16(*seed), save.TempleRuins),
 		exits:      exits,
 		special:    special,
 		events:     events,

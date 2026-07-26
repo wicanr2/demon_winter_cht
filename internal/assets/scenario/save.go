@@ -253,6 +253,27 @@ const (
 
 	boatOffset = 0xb0
 
+	// templeRuinsOffset／townRuinsOffset：**世界變成廢墟的兩個旗標**
+	// （`docs/re/79`）。冬之魔降臨的機制實作 —— 地圖上的設施會消失。
+	//
+	//   - `+0xba > 0x7f` → 繪製時把神殿 tile `0x25` **換成廢墟 tile `0x5b`**
+	//     （`0x1739a`），而且踩上去印 `You are walking through ruins`。
+	//     它被寫的唯一時機是 `+0xb9 == 2`（`0x03ed0`），**同一段程式碼
+	//     還把全隊的薩滿與司祭技能清成 0**（`0x03eea`／`0x03efc`）——
+	//     那是整支執行檔裡對這兩個技能旗標的**唯一寫入**。
+	//     所以神殿被毀＝驅邪與祈禱永久失效。
+	//   - `+0xbe != 0` → 城鎮 tile `0x2e` 走同一條廢墟路徑（`0x19135`），
+	//     不再進城。它是單向閂鎖（11 處存取沒有一處寫 0，`docs/re/78` §6）。
+	//
+	// 兩者都是**只增不減**：世界一旦壞掉就回不去了。
+	templeRuinsOffset = 0xba
+	townRuinsOffset   = 0xbe
+
+	// TempleRuinsThreshold 是神殿旗標的判斷門檻（原版 `cmp 0x7f / jbe`）。
+	// 注意它與城鎮旗標的門檻**不同**（那邊是 `!= 0`）——
+	// 兩個旗標語意相近但比較方式不一樣，照原版分開寫，不要統一。
+	TempleRuinsThreshold = 0x7f
+
 	// unknownC1Offset 是 trailer 的**最後一個 byte**。語意未解，
 	// 唯一已知的讀取端是紮營選單的 Drop：型別 0x1d 的道具要這個值
 	// 不為 0 才丟得掉（`1000:21fe`，見 `docs/re/33` §3）。
@@ -408,6 +429,12 @@ type SaveGame struct {
 	// GlyphFlags 是三個緋紅符印的劇情旗標（見 glyphFlagsOffset 註解）。
 	GlyphFlags [glyphCount]byte
 
+	// TempleRuins／TownRuins 是世界變成廢墟的兩個旗標
+	// （見 templeRuinsOffset 註解）。保留原始 byte 而不是 bool ——
+	// 兩者的判斷門檻不同（`> 0x7f` vs `!= 0`），轉成 bool 會把差別磨掉。
+	TempleRuins byte
+	TownRuins   byte
+
 	// MerchantBase 是商隊規模的基準值（見 merchantBaseOffset 註解）。
 	MerchantBase byte
 
@@ -498,6 +525,8 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.LightSource = trailer[lightSourceOffset]
 	save.MerchantBase = trailer[merchantBaseOffset]
 	copy(save.GlyphFlags[:], trailer[glyphFlagsOffset:glyphFlagsOffset+glyphCount])
+	save.TempleRuins = trailer[templeRuinsOffset]
+	save.TownRuins = trailer[townRuinsOffset]
 	save.EncounterCountdown = trailer[encounterCountdownOffset]
 	save.PartySize = trailer[partySizeOffset]
 	save.Rations = trailer[rationsOffset]

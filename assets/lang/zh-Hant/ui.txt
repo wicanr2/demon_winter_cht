@@ -93,3 +93,9 @@ A crimson forcefield bars your entry to the Circle of Light
 ## rune.dismiss
 :: zh
 按任意鍵繼續
+
+## site.ruins
+:: en
+You are walking through ruins
+:: zh
+隊伍走過一片廢墟
