@@ -193,6 +193,12 @@ const (
 	// `格號+1`，上岸時 `0x16dd6` 清成 0。見 `docs/re/31`。
 	boatOffset = 0xb0
 
+	// unknownC1Offset 是 trailer 的**最後一個 byte**。語意未解，
+	// 唯一已知的讀取端是紮營選單的 Drop：型別 0x1d 的道具要這個值
+	// 不為 0 才丟得掉（`1000:21fe`，見 `docs/re/33` §3）。
+	// 起始存檔是 0。
+	unknownC1Offset = 0xc1
+
 	// facingOffset：**待複核**，中高信心（單一角色樣本，反向確認未做）。
 	// DOSBox 動態 diff 顯示對應順時針四方位，推測 0=北 1=東 2=南 3=西。
 	facingOffset = 0xa4
@@ -336,6 +342,10 @@ type SaveGame struct {
 	// 見 boatOffset 註解與 ship.go。
 	Boat byte
 
+	// UnknownC1 是 trailer 最後一個 byte。語意未解，只知道它會擋掉
+	// 型別 0x1d 道具的丟棄（見 unknownC1Offset 註解）。
+	UnknownC1 byte
+
 	// Hour 是遊戲內時辰（已驗證，見 hourOffset 註解）。
 	Hour byte
 
@@ -413,6 +423,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.Unknown9C = trailer[unknown9COffset]
 	save.Ships = parseShips(trailer)
 	save.Boat = trailer[boatOffset]
+	save.UnknownC1 = trailer[unknownC1Offset]
 
 	return &save, nil
 }

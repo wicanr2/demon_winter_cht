@@ -13,7 +13,7 @@ func TestEncounterTriggered(t *testing.T) {
 		t.Error("0x34 應該命中")
 	}
 	// 遮罩只看低 6 bit，高位不影響。
-	for _, v := range []int{0x74, 0xb4, 0x1234 &^ 0x3f | 0x34} {
+	for _, v := range []int{0x74, 0xb4, 0x1234&^0x3f | 0x34} {
 		if !EncounterTriggered(v) {
 			t.Errorf("0x%x 的低 6 bit 是 0x34，應該命中", v)
 		}

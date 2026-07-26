@@ -157,9 +157,9 @@ func TestBreathTargets_SkipsDead(t *testing.T) {
 func TestBreathDamage(t *testing.T) {
 	for _, c := range []struct{ hp, roll, want int }{
 		{30, 1, 1}, {30, 10, 10},
-		{29, 9, 9},  // 29/3 = 9
-		{5, 1, 1},   // 5/3 = 1
-		{2, 1, 0},   // 不到 3：商 0，原版會拿 0 去擲
+		{29, 9, 9}, // 29/3 = 9
+		{5, 1, 1},  // 5/3 = 1
+		{2, 1, 0},  // 不到 3：商 0，原版會拿 0 去擲
 		{0, 1, 0},
 	} {
 		got := BreathDamage(&fixedRolls{vals: []int{c.roll}}, c.hp)

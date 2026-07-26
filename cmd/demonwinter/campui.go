@@ -14,7 +14,7 @@ import (
 
 // 紮營畫面。
 //
-// 原版的紮營選單有 13 個選項（見 `docs/re/26` §1）：
+// 原版的紮營選單有 **14 個**選項（`docs/re/33` §1）：
 // Reorder／Sleep／Identify／Worship／Xorcise／View land／Trade／Drop／
 // Equip／Use／Hunt／Cast／Quit。**這裡只做了規則已經解出來的那幾個** ——
 // 睡覺與打獵。其餘標成「尚未實作」列出來，不假裝沒有。
@@ -30,6 +30,9 @@ type campScreen struct {
 	// equipMember／equipSlot 是換裝選單的兩層游標；
 	// equipMember 為 -1 代表選單沒開，equipSlot 為 -1 代表還在選人。
 	equipMember, equipSlot int
+
+	// items 是 Drop／Trade 共用的游標；nil 代表沒在進行（見 campitems.go）。
+	items *itemPicker
 }
 
 // openCamp 進入紮營畫面。
@@ -46,6 +49,9 @@ func (a *app) updateCamp() error {
 	}
 	if c.equipMember >= 0 {
 		return a.updateEquipPicker()
+	}
+	if c.items != nil {
+		return a.updateItemPicker()
 	}
 
 	switch {
@@ -65,6 +71,10 @@ func (a *app) updateCamp() error {
 			return nil
 		}
 		c.equipMember, c.equipSlot = 0, -1
+	case inpututil.IsKeyJustPressed(ebiten.KeyD):
+		a.openItemAction(itemActionDrop)
+	case inpututil.IsKeyJustPressed(ebiten.KeyT):
+		a.openItemAction(itemActionTrade)
 	}
 	return nil
 }
@@ -199,6 +209,11 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		return
 	}
 
+	if c.items != nil {
+		a.drawItemPicker(line)
+		return
+	}
+
 	if a.clock.CanSleep() {
 		line("  S 睡覺")
 	} else {
@@ -206,6 +221,7 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 	}
 	line("  H 打獵")
 	line("  E 換裝")
+	line("  D 丟棄　T 交給隊友")
 	line("")
 	line("Esc：收帳篷")
 	line("")
@@ -213,8 +229,8 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		line(c.message)
 		line("")
 	}
-	line("※ 原版的紮營選單有 13 項，這裡只做了規則已解出的")
-	line("　 睡覺、打獵、換裝三項，其餘見 docs/re/26")
+	line("※ 原版的紮營選單有 14 項，這裡只做了規則已解出的")
+	line("　 睡覺、打獵、換裝、丟棄、轉手，其餘見 docs/re/33")
 }
 
 func (a *app) drawEquipPicker(line func(string)) {

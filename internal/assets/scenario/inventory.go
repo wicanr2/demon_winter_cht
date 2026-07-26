@@ -69,6 +69,9 @@ const (
 	storedOffset = 10
 )
 
+// SlotEmpty 是空槽的型別值，給 game 層清空用。
+const SlotEmpty = slotEmpty
+
 // InventorySlot 是一格裝備／道具。
 type InventorySlot struct {
 	// Type 是 ITEMS.DAT 的記錄索引。空槽是 0xFF。

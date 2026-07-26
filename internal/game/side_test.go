@@ -97,9 +97,9 @@ func TestPossessionChance(t *testing.T) {
 	for _, c := range []struct{ invested, hp, sp, want int }{
 		{10, 10, 10, 100}, // 3000 / 30
 		{5, 10, 10, 50},
-		{1, 30, 0, 5},   // 300 / 60
+		{1, 30, 0, 5},    // 300 / 60
 		{20, 1, 0, 3000}, // 沒有鉗制，超過 100 就是必中
-		{10, 0, 0, 0},   // 分母 0：原版會當掉，這裡回 0
+		{10, 0, 0, 0},    // 分母 0：原版會當掉，這裡回 0
 	} {
 		if got := PossessionChance(c.invested, c.hp, c.sp); got != c.want {
 			t.Errorf("投入 %d、HP %d、法力 %d：成功率 %d，預期 %d",
