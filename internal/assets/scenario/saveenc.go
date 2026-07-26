@@ -113,6 +113,8 @@ func (c *Character) encode() ([]byte, error) {
 	attr(attrMaxSPBonusOffset, c.MaxSPBonus)
 	attr(attrCurrentSPOffset, c.CurrentSP)
 
+	putBool(rec, identifiedTodayOffset, c.IdentifiedToday)
+
 	putByte(rec, prayChanceOffset, c.PrayChance)
 	putByte(rec, bindLevelOffset, c.BindLevel)
 	putByte(rec, deityOffset, c.Deity)
@@ -137,6 +139,15 @@ func putName(rec []byte, name string) {
 	}
 	copy(rec, b)
 	rec[len(b)] = 0
+}
+
+// putBool 把旗標寫成 0／1。
+func putBool(buf []byte, off int, v bool) {
+	var x byte
+	if v {
+		x = 1
+	}
+	putByte(buf, off, x)
 }
 
 func putByte(buf []byte, off int, v byte) {

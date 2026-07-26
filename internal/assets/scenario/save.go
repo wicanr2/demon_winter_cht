@@ -54,6 +54,10 @@ const (
 	//	+0xec  束縛效果的等級。治療所的解束縛費用 = 它 × 費率，復活時清零。
 	//	+0xf0  信奉的神祇編號。**0 代表沒有信仰**；非 0 時減一才是
 	//	       神祇名表（FILES.DTT `[153:164]`）的索引，見 docs/re/27 §4。
+	// identifiedTodayOffset 是「本日已研究過道具」的旗標（`1000:1ee9` 設 1，
+	// 睡覺 `2aed:0513` 清 0）。與打獵的 `+0xef` 是同一組「每日一次」旗標。
+	identifiedTodayOffset = 0xed
+
 	prayChanceOffset = 0xeb
 	bindLevelOffset  = 0xec
 	deityOffset      = 0xf0
@@ -272,6 +276,9 @@ type Character struct {
 	CurrentHP       byte // 目前生命值
 	MaxSPBonus      byte // 最大法力值（含裝備加成）
 	CurrentSP       byte // 目前法力值
+
+	// IdentifiedToday 是「本日已在營地研究過道具」（+0xed），睡一晚清掉。
+	IdentifiedToday bool
 
 	// PrayChance 是祈禱（呼喚神祇）的成功率百分比（+0xeb）。
 	// BindLevel 是束縛效果的等級（+0xec），解除束縛的費用依它計價。
@@ -495,6 +502,7 @@ func parseCharacter(rec []byte) (Character, error) {
 		CurrentHP:         attr(attrCurrentHPOffset),
 		MaxSPBonus:        attr(attrMaxSPBonusOffset),
 		CurrentSP:         attr(attrCurrentSPOffset),
+		IdentifiedToday:   rec[identifiedTodayOffset] != 0,
 		PrayChance:        rec[prayChanceOffset],
 		BindLevel:         rec[bindLevelOffset],
 		Deity:             rec[deityOffset],

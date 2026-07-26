@@ -47,6 +47,10 @@ type Character struct {
 	// Skills 是已學技能，索引即遊戲內部技能 id。
 	Skills [gamedata.NumSkills]bool
 
+	// IdentifiedToday 是「本日已在營地研究過道具」，睡一晚清掉
+	// （存檔 `+0xed`，見 identify.go）。
+	IdentifiedToday bool
+
 	// Inventory 是 10 格裝備／道具。
 	Inventory [InventorySlots]scenario.InventorySlot
 	// Status 是戰鬥狀態（存檔 +0x102）。中毒的人睡覺會掉血，見 Rest。
@@ -107,6 +111,7 @@ func FromSave(c scenario.Character) Character {
 	out.EquippedWeapon = int(c.WeaponSlotIndex)
 	out.EquippedArmor = int(c.ArmorSlotIndex)
 	out.PrayChance = int(c.PrayChance)
+	out.IdentifiedToday = c.IdentifiedToday
 	out.Deity = int(c.Deity)
 	out.BindLevel = int(c.BindLevel)
 	out.Inventory = c.Inventory
@@ -319,6 +324,7 @@ func (c Character) ApplyTo(rec *scenario.Character) {
 	rec.ArmorSlotIndex = slotIndexByte(c.EquippedArmor)
 	rec.CombatStatus = c.Status
 	rec.PrayChance = byte(c.PrayChance)
+	rec.IdentifiedToday = c.IdentifiedToday
 	rec.Deity = byte(c.Deity)
 	rec.BindLevel = byte(c.BindLevel)
 

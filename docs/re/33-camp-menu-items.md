@@ -26,9 +26,9 @@
 | # | 名稱 | 鍵 | 處理常式 |
 |---|---|---|---|
 | 0 | Party | `P` | `1000:33e8` |
-| 1 | Reorder | `R` | `1000:0379` |
+| 1 | **Reorder** | `R` | `1000:0379`（見 `docs/re/34`）|
 | 2 | **Sleep** | `S` | `1000:0206` |
-| 3 | Identify | `I` | `1000:1e46` |
+| 3 | **Identify** | `I` | `1000:1e46`（見 `docs/re/37`）|
 | 4 | Worship | `W` | `1000:0ed0` |
 | 5 | Xorcise | `X` | `1000:1959` |
 | 6 | View land | `V` | `1000:097b` |
@@ -160,7 +160,7 @@ Wopple 的匕首是裝備中的武器，Drop 與 Trade 都在**選道具那一�
 （來源那一格的 `+0x0e`/`+0x0f` 就是 `0a`/`01`），所以結果相同，
 但成因不同 —— 如果哪天遇到來源 `+0x0f != 1` 的道具，兩邊就會分岔。
 
-**沒實作**：Party／Reorder／Identify／Worship／Xorcise／View land／Use／Cast
+**沒實作**：Party／Worship／Xorcise／View land／Use／Cast
 （入口位址都在 §1 的表裡，規則沒讀）。
 `Use`（`1000:2262`）已知的一角：狀態 `char[+0x102] > 1` 不能用道具，
 型別 0x1a／0x1b 用完即消失。

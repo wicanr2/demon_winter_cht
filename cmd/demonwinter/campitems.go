@@ -14,8 +14,9 @@ import (
 //
 // 兩者的流程只差最後一步：
 //
-//	Drop  選人 → 選道具 → 丟掉
-//	Trade 選人 → 選道具 → 選收方 → 交出去
+//	Drop     選人 → 選道具 → 丟掉
+//	Identify 選人 → 選道具 → 研究（每人每天一次）
+//	Trade    選人 → 選道具 → 選收方 → 交出去
 //
 // 所以共用同一組游標，用 itemAction 區分。
 
@@ -25,6 +26,7 @@ const (
 	itemActionNone itemAction = iota
 	itemActionDrop
 	itemActionTrade
+	itemActionIdentify
 )
 
 // itemPicker 是 Drop／Trade 共用的三層游標。
@@ -95,7 +97,12 @@ func (a *app) updateItemSlot(p *itemPicker) error {
 			p.target = (p.member + 1) % len(a.members)
 			return nil
 		}
-		a.dropSelected(p)
+		switch p.action {
+		case itemActionIdentify:
+			a.identifySelected(p)
+		default:
+			a.dropSelected(p)
+		}
 	}
 	return nil
 }
@@ -140,6 +147,24 @@ func (a *app) dropSelected(p *itemPicker) {
 	a.camp.items = nil
 }
 
+func (a *app) identifySelected(p *itemPicker) {
+	m := &a.members[p.member]
+	label := a.itemLabel(m.Inventory[p.slot])
+	res := game.Identify(a.rng, m, p.slot)
+	if !res.OK {
+		a.camp.message = res.Reason
+		return
+	}
+	if res.Success {
+		a.camp.message = fmt.Sprintf("%s 看懂了%s（成功率 %d%%）",
+			m.Name, label, res.Chance)
+	} else {
+		a.camp.message = fmt.Sprintf("%s 研究了一整天也看不出名堂（成功率 %d%%）",
+			m.Name, res.Chance)
+	}
+	a.camp.items = nil
+}
+
 func (a *app) giveSelected(p *itemPicker) {
 	if p.member == p.target {
 		a.camp.message = "不能給自己"
@@ -173,8 +198,11 @@ func (a *app) drawItemPicker(line func(string)) {
 	switch {
 	case p.slot < 0:
 		verb := "丟東西"
-		if p.action == itemActionTrade {
+		switch p.action {
+		case itemActionTrade:
 			verb = "交出東西"
+		case itemActionIdentify:
+			verb = "研究道具"
 		}
 		line("誰要" + verb + "？")
 		line("")
@@ -184,8 +212,11 @@ func (a *app) drawItemPicker(line func(string)) {
 
 	case p.target < 0:
 		head := "要丟掉哪一件？"
-		if p.action == itemActionTrade {
+		switch p.action {
+		case itemActionTrade:
 			head = "要交出哪一件？"
+		case itemActionIdentify:
+			head = "要研究哪一件？"
 		}
 		line(fmt.Sprintf("%s %s", m.Name, head))
 		line("")
@@ -205,6 +236,18 @@ func (a *app) drawItemPicker(line func(string)) {
 					note = "（護甲）"
 				case it.Type == game.ItemTypeDungeon:
 					note = "（地城道具）"
+				}
+				// 鑑定時把「看不懂」與「已鑑定」先標出來 ——
+				// 一天只能試一次，讓人白白浪費一天不厚道。
+				if p.action == itemActionIdentify {
+					switch {
+					case it.Identified:
+						note = "（已鑑定）"
+					case !m.HasSkill(game.LoreSkillFor(it.Type)):
+						note = "（看不懂）"
+					default:
+						note = "（未鑑定）"
+					}
 				}
 			}
 			line(fmt.Sprintf("%s%s%s", mark, textlayout.PadCells(name, 12), note))
