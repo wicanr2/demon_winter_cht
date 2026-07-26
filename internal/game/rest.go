@@ -168,8 +168,11 @@ func Rest(r RollSource, kind RestKind, members []Character, clock *Clock,
 			res.Died = append(res.Died, i)
 		}
 		// 每日一次的旗標由睡覺清掉（`2aed:0513` 那個迴圈）：
-		// 打獵是 `+0xef`（HuntedToday 尚未實作），鑑定是 `+0xed`。
+		// 鑑定 `+0xed`、敬拜 `+0xf1`、驅邪 `+0xf2`
+		// （打獵的 `+0xef` 尚未在規則層建模）。
 		c.IdentifiedToday = false
+		c.WorshipedToday = false
+		c.ExorcisedToday = false
 
 		if kind == RestCamp {
 			rechargeItems(c)

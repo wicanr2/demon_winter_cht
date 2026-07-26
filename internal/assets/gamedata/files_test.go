@@ -263,3 +263,40 @@ func TestTables_OutOfRangeArgs(t *testing.T) {
 		t.Error("召喚表索引為負應回傳錯誤")
 	}
 }
+
+// 神祇賜予的法術表：11 個 word，最後一位不賜法術。
+//
+// 位置是從資源競技場的指標鏈推的（docs/re/43），這條測試同時釘住
+// 「長度 11」與「值域落在法術表之內」——鏈算錯一段，兩者都會爆。
+func TestTables_DeitySpell(t *testing.T) {
+	tb := loadTestTables(t)
+
+	if _, err := tb.DeitySpell(0); err == nil {
+		t.Error("神祇 0 不存在，應該回 error")
+	}
+	if _, err := tb.DeitySpell(NumDeities + 1); err == nil {
+		t.Error("超出範圍應該回 error")
+	}
+
+	granted := 0
+	for d := 1; d <= NumDeities; d++ {
+		id, err := tb.DeitySpell(d)
+		if err != nil {
+			t.Fatalf("神祇 %d: %v", d, err)
+		}
+		if id == -1 {
+			continue
+		}
+		granted++
+		if id < 0 || id >= tb.NumSpells() {
+			t.Errorf("神祇 %d 的法術 id %d 不在 0..%d", d, id, tb.NumSpells()-1)
+		}
+		if sp, err := tb.Spell(id); err != nil || sp.Empty() {
+			t.Errorf("神祇 %d 指向空法術 %d", d, id)
+		}
+	}
+	if granted != NumDeities-1 {
+		t.Errorf("有 %d 位神祇賜法術，預期 %d 位（只有最後一位不賜）",
+			granted, NumDeities-1)
+	}
+}

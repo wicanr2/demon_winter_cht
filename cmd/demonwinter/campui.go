@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -15,9 +16,9 @@ import (
 // 紮營畫面。
 //
 // 原版的紮營選單有 **14 個**選項（`docs/re/33` §1）：
-// Reorder／Sleep／Identify／Worship／Xorcise／View land／Trade／Drop／
-// Equip／Use／Hunt／Cast／Quit。**這裡只做了規則已經解出來的那幾個** ——
-// 睡覺與打獵。其餘標成「尚未實作」列出來，不假裝沒有。
+// Party／Reorder／Sleep／Identify／Worship／Xorcise／View land／Trade／
+// Drop／Equip／Use／Hunt／Cast／Quit。**十四項全部接上了** ——
+// 對照表與各自的出處見 `docs/re/33` §1。
 //
 // **進入鍵是本作自己選的 `R`**：原版用哪個鍵沒查（手冊那句「按 P 鍵」指的是
 // 紮營畫面裡的另一個功能，不是進入鍵），而 `P` 在本作已經是隊伍名冊。
@@ -45,6 +46,9 @@ type campScreen struct {
 
 	// cast 是營地施法的狀態；nil 代表沒在進行（見 campcast.go）。
 	cast *castScreen
+
+	// worship 是敬拜的狀態；nil 代表沒在進行（見 campcast.go）。
+	worship *worshipScreen
 }
 
 // openCamp 進入紮營畫面。
@@ -76,6 +80,9 @@ func (a *app) updateCamp() error {
 	}
 	if c.cast != nil {
 		return a.updateCampCast()
+	}
+	if c.worship != nil {
+		return a.updateWorship()
 	}
 
 	switch {
@@ -113,6 +120,8 @@ func (a *app) updateCamp() error {
 		a.openItemAction(itemActionExorcise)
 	case inpututil.IsKeyJustPressed(ebiten.KeyC):
 		a.openCampCast()
+	case inpututil.IsKeyJustPressed(ebiten.KeyW):
+		a.openWorship()
 	}
 	return nil
 }
@@ -280,6 +289,11 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		return
 	}
 
+	if c.worship != nil {
+		a.drawWorship(line)
+		return
+	}
+
 	if a.clock.CanSleep() {
 		line("  S 睡覺")
 	} else {
@@ -289,18 +303,17 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 	line("  E 換裝")
 	line("  D 丟棄　T 交給隊友")
 	line("  R 排列陣型　I 鑑定道具　V 觀地　U 使用")
-	line("  P 角色卡　X 驅邪　C 施法")
+	line("  P 角色卡　X 驅邪　C 施法　W 敬拜")
 	line("")
 	line("Esc：收帳篷")
 	line("")
 	if c.message != "" {
-		line(c.message)
+		for _, l := range strings.Split(c.message, "\n") {
+			line(l)
+		}
 		line("")
 	}
-	line("※ 原版的紮營選單有 14 項，這裡只做了規則已解出的")
-	line("　 睡覺、打獵、換裝、丟棄、轉手、陣型、鑑定、觀地、使用、")
-	line("　 角色卡、驅邪、施法，")
-	line("　 其餘見 docs/re/33")
+	line("※ 原版紮營選單的 14 項已全部接上（見 docs/re/33）")
 }
 
 func (a *app) drawEquipPicker(line func(string)) {

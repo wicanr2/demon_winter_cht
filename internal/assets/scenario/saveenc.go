@@ -115,6 +115,7 @@ func (c *Character) encode() ([]byte, error) {
 	attr(attrCurrentSPOffset, c.CurrentSP)
 
 	putBool(rec, identifiedTodayOffset, c.IdentifiedToday)
+	putBool(rec, worshipedTodayOffset, c.WorshipedToday)
 	putBool(rec, exorcisedTodayOffset, c.ExorcisedToday)
 
 	putByte(rec, prayChanceOffset, c.PrayChance)

@@ -59,6 +59,9 @@ type Character struct {
 	// （存檔 `+0xed`，見 identify.go）。
 	IdentifiedToday bool
 
+	// WorshipedToday 是「本日已敬拜」（存檔 `+0xf1`，見 worship.go）。
+	WorshipedToday bool
+
 	// ExorcisedToday 是「本日已驅邪」（存檔 `+0xf2`，見 exorcise.go）。
 	ExorcisedToday bool
 
@@ -127,6 +130,7 @@ func FromSave(c scenario.Character) Character {
 	out.EquippedArmor = int(c.ArmorSlotIndex)
 	out.PrayChance = int(c.PrayChance)
 	out.IdentifiedToday = c.IdentifiedToday
+	out.WorshipedToday = c.WorshipedToday
 	out.ExorcisedToday = c.ExorcisedToday
 	out.Deity = int(c.Deity)
 	out.BindLevel = int(c.BindLevel)
@@ -343,6 +347,7 @@ func (c Character) ApplyTo(rec *scenario.Character) {
 	rec.CombatStatus = c.Status
 	rec.PrayChance = byte(c.PrayChance)
 	rec.IdentifiedToday = c.IdentifiedToday
+	rec.WorshipedToday = c.WorshipedToday
 	rec.ExorcisedToday = c.ExorcisedToday
 	rec.Deity = byte(c.Deity)
 	rec.BindLevel = byte(c.BindLevel)

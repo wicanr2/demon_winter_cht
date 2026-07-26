@@ -163,6 +163,7 @@ type Tables struct {
 	raceBonus   [NumRaces]SkillID
 	summons     [numSummons]SummonEntry
 	spells      [numSpells]Spell
+	deitySpell  [NumDeities]int
 	sight       *SightShadow
 
 	// terrainGroups／encounters 是隨機遭遇的兩張表，見 encounter.go。
@@ -234,6 +235,10 @@ func ParseTables(data []byte) (*Tables, error) {
 		}
 	}
 
+	for i := 0; i < NumDeities; i++ {
+		t.deitySpell[i] = int(int16(binary.LittleEndian.Uint16(data[offDeitySpell+i*2:])))
+	}
+
 	for i := 0; i < numSpells; i++ {
 		base := offSpells + i*10
 		w := func(k int) int {
@@ -243,6 +248,15 @@ func ParseTables(data []byte) (*Tables, error) {
 	}
 
 	return t, nil
+}
+
+// DeitySpell 回傳這位神祇賜予的法術 id。**deity 是 1-based**（存檔
+// `char+0xf0` 的值），回傳 −1 代表這位神祇不賜法術。
+func (t *Tables) DeitySpell(deity int) (int, error) {
+	if deity < 1 || deity > NumDeities {
+		return 0, fmt.Errorf("神祇編號 %d 超出 1..%d", deity, NumDeities)
+	}
+	return t.deitySpell[deity-1], nil
 }
 
 // Passability 查 tile 的可通行性。tile 應已遮罩過 &0x7f。
@@ -316,6 +330,21 @@ func (t *Tables) NumSummons() int { return numSummons }
 // 索引 0..42 與 FILES.DTT 的「名稱 + 訊息」字串順序 1:1。
 const (
 	offSpells = 0x45e
+
+	// offDeitySpell/NumDeities：**每位神祇賜予的法術 id**（11 個 word，
+	// −1 = 這位不賜法術）。紮營選單的 Worship 拿它查要放哪一個法術。
+	//
+	// 位置是從資源競技場的指標鏈推出來的（`docs/re/43`）：
+	//
+	//	[0x4e28] = [0x5510] + 0x3c      ; 法術表
+	//	[0x5300] = [0x4e28] + 0x1ae     ; 43 法術 × 10 bytes = 0x1ae
+	//	[0x4cc4] = [0x5300] + 0x1a4     ; 30 道具 × 14 bytes = 0x1a4
+	//	[0x51d4] = [0x4cc4] + 0x16      ; 11 word = 0x16
+	//
+	// 反推 `[0x5510]` = 0x422（種族上限表），一路加下來就是 0x7ae。
+	// 每一段的長度都與已知的表大小分毫不差 —— 這條鏈自己就把位置釘死了。
+	offDeitySpell = 0x7ae
+	NumDeities    = 11
 	numSpells = 43
 )
 

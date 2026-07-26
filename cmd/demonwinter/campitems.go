@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -296,9 +297,12 @@ func (a *app) drawItemPicker(line func(string)) {
 
 	// 拒絕的理由要留在原畫面 —— 只印在主選單的話，按下去像是沒反應。
 	defer func() {
-		if a.camp.message != "" {
-			line("")
-			line(a.camp.message)
+		if a.camp.message == "" {
+			return
+		}
+		line("")
+		for _, l := range strings.Split(a.camp.message, "\n") {
+			line(l)
 		}
 	}()
 

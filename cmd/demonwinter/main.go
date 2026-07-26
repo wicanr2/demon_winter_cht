@@ -822,6 +822,9 @@ func main() {
 	// headless 驗收時因此一步都走不到。
 	giveSkill := flag.String("give-skill", "",
 		"偵錯：教第一名隊員幾個技能（技能 id，逗號分隔）")
+	// 起始隊伍沒有人有信仰，敬拜那一項在 headless 驗收時走不到最後一步。
+	deityFlag := flag.Int("deity", 0,
+		"偵錯：給第一名隊員一個信仰（神祇 1–11）與 20% 祈禱成功率")
 	startHourFlag := flag.Int("hour", 0,
 		"偵錯：起始時辰（1–38）。0 代表照原版的 5 時")
 	// 城鎮的貴服務（復活、修船、買船）在起始存檔的 65 金之下全都試不到。
@@ -1007,6 +1010,17 @@ func main() {
 		if err := a.debugGiveSkill(*giveSkill); err != nil {
 			log.Fatalf("-give-skill：%v", err)
 		}
+	}
+	if *deityFlag != 0 {
+		if len(a.members) == 0 {
+			log.Fatalf("-deity：隊伍是空的")
+		}
+		if *deityFlag < game.DeityMin || *deityFlag > game.DeityMax {
+			log.Fatalf("-deity：神祇 %d 超出 %d–%d",
+				*deityFlag, game.DeityMin, game.DeityMax)
+		}
+		a.members[0].Deity = *deityFlag
+		a.members[0].PrayChance = game.PrayInitialChance
 	}
 	if *startBattle {
 		picks := debugBattleMonsters

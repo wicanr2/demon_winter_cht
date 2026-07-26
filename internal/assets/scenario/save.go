@@ -60,6 +60,9 @@ const (
 
 	// exorcisedTodayOffset 是「本日已驅邪」的旗標（`1000:19bd` 設 1）。
 	// 與 `+0xed`（鑑定）、`+0xef`（打獵）同一組每人每天一次。
+	// worshipedTodayOffset 是「本日已敬拜」的旗標（`1000:0f0c` 設 1）。
+	worshipedTodayOffset = 0xf1
+
 	exorcisedTodayOffset = 0xf2
 
 	prayChanceOffset = 0xeb
@@ -289,6 +292,9 @@ type Character struct {
 
 	// IdentifiedToday 是「本日已在營地研究過道具」（+0xed），睡一晚清掉。
 	IdentifiedToday bool
+
+	// WorshipedToday 是「本日已敬拜」（+0xf1）。
+	WorshipedToday bool
 
 	// ExorcisedToday 是「本日已驅邪」（+0xf2）。
 	ExorcisedToday bool
@@ -520,6 +526,7 @@ func parseCharacter(rec []byte) (Character, error) {
 		MaxSPBonus:        attr(attrMaxSPBonusOffset),
 		CurrentSP:         attr(attrCurrentSPOffset),
 		IdentifiedToday:   rec[identifiedTodayOffset] != 0,
+		WorshipedToday:    rec[worshipedTodayOffset] != 0,
 		ExorcisedToday:    rec[exorcisedTodayOffset] != 0,
 		PrayChance:        rec[prayChanceOffset],
 		BindLevel:         rec[bindLevelOffset],
