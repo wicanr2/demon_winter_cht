@@ -46,6 +46,10 @@ const (
 	slotEffectA    = 0x0a
 	slotCondB      = 0x0b
 	slotEffectB    = 0x0c
+
+	// slotExorcise 是驅邪成功率（`1000:19c8`：`rnd(100) > 它` 就失敗）。
+	// 值越大越好驅。這個 byte 一度標在「語意未解」那一排。
+	slotExorcise = 0x0d
 	slotEnchant    = 0x0e
 	slotIdentified = 0x10
 
@@ -91,6 +95,11 @@ type InventorySlot struct {
 	// Total 是使用次數上限，Used 是已用次數。兩者相等代表用完。
 	// **過夜會把 Used 歸零**（見 game.Rest）。
 	Total, Used int
+
+	// ExorciseResist 是驅邪成功率（`+0x0d`）。紮營選單的 Xorcise
+	// 擲 `rnd(100)`，大於這個值就失敗 —— **越大越好驅**，
+	// 所以嚴格說是「好驅程度」不是抗性（見 `docs/re/41`）。
+	ExorciseResist int
 }
 
 // Usable 回報這件道具在戰鬥中選不選得到。
@@ -126,6 +135,7 @@ func parseInventorySlot(raw []byte) InventorySlot {
 	out.Power = int(raw[slotPower])
 	out.Total = int(raw[slotTotal])
 	out.Used = int(raw[slotUsed])
+	out.ExorciseResist = int(raw[slotExorcise])
 	out.Enchant = int(raw[slotEnchant]) - storedOffset
 	if raw[slotCondA] == effectCondEnabled {
 		out.WeaponEffect += int(raw[slotEffectA]) - storedOffset
@@ -139,7 +149,7 @@ func parseInventorySlot(raw []byte) InventorySlot {
 // encodeInto 把已解欄位寫回一格的原始 bytes。
 //
 // **只覆蓋 parseInventorySlot 讀得出來的那些欄位**，其餘（`+0x01`–`+0x04`、
-// `+0x0d`、`+0x0f`…）留原值 —— 那些 byte 的語意還沒解，寫進去等於亂猜。
+// `+0x0f`…）留原值 —— 那些 byte 的語意還沒解，寫進去等於亂猜。
 //
 // `WeaponEffect` 是兩組「條件旗標＋特效值」相加出來的**衍生值**，
 // 拆不回去（3 = 3+0 還是 1+2？），所以不寫；那四個 byte 一律留原樣。
@@ -159,6 +169,7 @@ func (s InventorySlot) encodeInto(raw []byte) {
 	raw[slotPower] = byte(s.Power)
 	raw[slotTotal] = byte(s.Total)
 	raw[slotUsed] = byte(s.Used)
+	raw[slotExorcise] = byte(s.ExorciseResist)
 	raw[slotEnchant] = byte(s.Enchant + storedOffset)
 	if s.Identified {
 		raw[slotIdentified] = 1

@@ -17,6 +17,7 @@ import (
 //	Drop     選人 → 選道具 → 丟掉
 //	Identify 選人 → 選道具 → 研究（每人每天一次）
 //	Use      選人 → 選道具 → 用掉（目前只走得通光源那一條）
+//	Xorcise  選施術者 → 選對象 → 選身上的裝備 → 驅邪
 //	Trade    選人 → 選道具 → 選收方 → 交出去
 //
 // 所以共用同一組游標，用 itemAction 區分。
@@ -29,6 +30,7 @@ const (
 	itemActionTrade
 	itemActionIdentify
 	itemActionUse
+	itemActionExorcise
 )
 
 // itemPicker 是 Drop／Trade 共用的三層游標。
@@ -38,6 +40,8 @@ type itemPicker struct {
 	member, slot int
 	// target 是 Trade 的收方，−1 代表還沒進到選收方那一步。
 	target int
+	// caster 是 Xorcise 的施術者，−1 代表還在選他。
+	caster int
 }
 
 func (a *app) openItemAction(act itemAction) {
@@ -46,12 +50,28 @@ func (a *app) openItemAction(act itemAction) {
 		return
 	}
 	a.camp.message = ""
-	a.camp.items = &itemPicker{action: act, member: 0, slot: -1, target: -1}
+	p := &itemPicker{action: act, member: 0, slot: -1, target: -1, caster: -1}
+	if act != itemActionExorcise {
+		p.caster = 0 // 只有驅邪要先選施術者
+	}
+	a.camp.items = p
 }
 
 func (a *app) updateItemPicker() error {
 	c := a.camp
 	p := c.items
+
+	// 驅邪的順序與其他三項相反：先選施術者、再選對象，最後才選裝備。
+	if p.action == itemActionExorcise {
+		switch {
+		case p.caster < 0:
+			return a.updateExorciseCaster(p)
+		case p.slot < 0:
+			return a.updateItemOwner(p)
+		default:
+			return a.updateItemSlot(p)
+		}
+	}
 
 	switch {
 	case p.slot < 0:
@@ -63,10 +83,32 @@ func (a *app) updateItemPicker() error {
 	}
 }
 
+// updateExorciseCaster 選施術者（只有 Xorcise 會走到）。
+func (a *app) updateExorciseCaster(p *itemPicker) error {
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
+		a.camp.items = nil
+	case inpututil.IsKeyJustPressed(ebiten.KeyDown):
+		p.caster = (p.caster + 1 + len(a.members)) % len(a.members)
+	case inpututil.IsKeyJustPressed(ebiten.KeyUp):
+		p.caster = (p.caster - 1 + len(a.members)) % len(a.members)
+	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
+		if p.caster < 0 {
+			p.caster = 0
+		}
+		p.member = 0
+	}
+	return nil
+}
+
 // updateItemOwner 選持有人。
 func (a *app) updateItemOwner(p *itemPicker) error {
 	switch {
 	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
+		if p.action == itemActionExorcise {
+			p.caster = -1
+			return nil
+		}
 		a.camp.items = nil
 	case inpututil.IsKeyJustPressed(ebiten.KeyDown):
 		p.member = (p.member + 1) % len(a.members)
@@ -104,6 +146,8 @@ func (a *app) updateItemSlot(p *itemPicker) error {
 			a.identifySelected(p)
 		case itemActionUse:
 			a.useSelected(p)
+		case itemActionExorcise:
+			a.exorciseSelected(p)
 		default:
 			a.dropSelected(p)
 		}
@@ -183,6 +227,28 @@ func (a *app) useSelected(p *itemPicker) {
 	a.camp.items = nil
 }
 
+func (a *app) exorciseSelected(p *itemPicker) {
+	caster, target := &a.members[p.caster], &a.members[p.member]
+	label := a.itemLabel(target.Inventory[p.slot])
+	res := game.Exorcise(a.rng, caster, target, p.slot)
+	if !res.OK {
+		a.camp.message = res.Reason
+		return
+	}
+	if res.Success {
+		msg := fmt.Sprintf("%s 解開了%s的詛咒（成功率 %d%%）",
+			caster.Name, label, res.Chance)
+		if res.Freed > 0 {
+			msg += fmt.Sprintf("　%s 找回 %d 項技能", target.Name, res.Freed)
+		}
+		a.camp.message = msg
+	} else {
+		a.camp.message = fmt.Sprintf("%s 驅不動%s（成功率 %d%%）",
+			caster.Name, label, res.Chance)
+	}
+	a.camp.items = nil
+}
+
 func (a *app) giveSelected(p *itemPicker) {
 	if p.member == p.target {
 		a.camp.message = "不能給自己"
@@ -203,6 +269,29 @@ func (a *app) giveSelected(p *itemPicker) {
 
 func (a *app) drawItemPicker(line func(string)) {
 	p := a.camp.items
+
+	if p.caster < 0 {
+		line("誰來驅邪？")
+		line("")
+		a.drawMemberList(line, 0, func(i int) string {
+			c := a.members[i]
+			if !c.HasSkill(game.SkillShaman) && !c.HasSkill(game.SkillPriesthood) {
+				return "（不會驅邪）"
+			}
+			if c.ExorcisedToday {
+				return "（今天驅過了）"
+			}
+			return ""
+		})
+		line("")
+		line("↑↓：選擇　Enter：確定　Esc：取消")
+		if a.camp.message != "" {
+			line("")
+			line(a.camp.message)
+		}
+		return
+	}
+
 	m := a.members[p.member]
 
 	// 拒絕的理由要留在原畫面 —— 只印在主選單的話，按下去像是沒反應。
@@ -223,6 +312,8 @@ func (a *app) drawItemPicker(line func(string)) {
 			verb = "研究道具"
 		case itemActionUse:
 			verb = "用東西"
+		case itemActionExorcise:
+			verb = "被驅邪"
 		}
 		line("誰要" + verb + "？")
 		line("")
@@ -239,6 +330,8 @@ func (a *app) drawItemPicker(line func(string)) {
 			head = "要研究哪一件？"
 		case itemActionUse:
 			head = "要用哪一件？"
+		case itemActionExorcise:
+			head = "要驅哪一件？"
 		}
 		line(fmt.Sprintf("%s %s", m.Name, head))
 		line("")
@@ -261,6 +354,16 @@ func (a *app) drawItemPicker(line func(string)) {
 				}
 				// 鑑定時把「看不懂」與「已鑑定」先標出來 ——
 				// 一天只能試一次，讓人白白浪費一天不厚道。
+				if p.action == itemActionExorcise {
+					switch i {
+					case m.EquippedWeapon:
+						note = "（武器，可驅）"
+					case m.EquippedArmor:
+						note = "（護甲，可驅）"
+					default:
+						note = "（沒穿在身上）"
+					}
+				}
 				if p.action == itemActionUse {
 					if lv := game.LightSourceLevel(it.Type); lv != 0 {
 						note = fmt.Sprintf("（點起來，光源 %d）", lv)

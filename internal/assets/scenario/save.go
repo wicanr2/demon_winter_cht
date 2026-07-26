@@ -58,6 +58,10 @@ const (
 	// 睡覺 `2aed:0513` 清 0）。與打獵的 `+0xef` 是同一組「每日一次」旗標。
 	identifiedTodayOffset = 0xed
 
+	// exorcisedTodayOffset 是「本日已驅邪」的旗標（`1000:19bd` 設 1）。
+	// 與 `+0xed`（鑑定）、`+0xef`（打獵）同一組每人每天一次。
+	exorcisedTodayOffset = 0xf2
+
 	prayChanceOffset = 0xeb
 	bindLevelOffset  = 0xec
 	deityOffset      = 0xf0
@@ -286,6 +290,9 @@ type Character struct {
 	// IdentifiedToday 是「本日已在營地研究過道具」（+0xed），睡一晚清掉。
 	IdentifiedToday bool
 
+	// ExorcisedToday 是「本日已驅邪」（+0xf2）。
+	ExorcisedToday bool
+
 	// PrayChance 是祈禱（呼喚神祇）的成功率百分比（+0xeb）。
 	// BindLevel 是束縛效果的等級（+0xec），解除束縛的費用依它計價。
 	// Deity 是信奉的神祇編號（+0xf0），0 代表沒有信仰。
@@ -513,6 +520,7 @@ func parseCharacter(rec []byte) (Character, error) {
 		MaxSPBonus:        attr(attrMaxSPBonusOffset),
 		CurrentSP:         attr(attrCurrentSPOffset),
 		IdentifiedToday:   rec[identifiedTodayOffset] != 0,
+		ExorcisedToday:    rec[exorcisedTodayOffset] != 0,
 		PrayChance:        rec[prayChanceOffset],
 		BindLevel:         rec[bindLevelOffset],
 		Deity:             rec[deityOffset],

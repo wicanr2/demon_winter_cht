@@ -47,9 +47,20 @@ type Character struct {
 	// Skills 是已學技能，索引即遊戲內部技能 id。
 	Skills [gamedata.NumSkills]bool
 
+	// CursedSkills 是**被詛咒封住**的技能。存檔的技能旗標不是布林：
+	// 1 = 已學、**2 = 學過但被詛咒封住**（驅邪會把 2 清成 0，見
+	// `docs/re/41`）。旗標值 2 的技能在 Skills 裡是 false —— 用不出來。
+	//
+	// 分成兩個陣列不是為了好看：只留 Skills 的話，寫回存檔時 2 會變成 0，
+	// **詛咒就這樣被存檔悄悄解掉了**。
+	CursedSkills [gamedata.NumSkills]bool
+
 	// IdentifiedToday 是「本日已在營地研究過道具」，睡一晚清掉
 	// （存檔 `+0xed`，見 identify.go）。
 	IdentifiedToday bool
+
+	// ExorcisedToday 是「本日已驅邪」（存檔 `+0xf2`，見 exorcise.go）。
+	ExorcisedToday bool
 
 	// Inventory 是 10 格裝備／道具。
 	Inventory [InventorySlots]scenario.InventorySlot
@@ -76,6 +87,10 @@ type Character struct {
 
 // InventorySlots 是每個角色的道具欄格數。
 const InventorySlots = 10
+
+// skillFlagCursed 是技能旗標的第三種值：**學過但被詛咒封住**。
+// 驅邪成功時把所有 2 清成 0（`1000:19f4`，見 `docs/re/41`）。
+const skillFlagCursed = 2
 
 // Weapon 回傳目前裝備的武器那一格。沒裝備時回傳空槽。
 func (c *Character) Weapon() scenario.InventorySlot {
@@ -112,6 +127,7 @@ func FromSave(c scenario.Character) Character {
 	out.EquippedArmor = int(c.ArmorSlotIndex)
 	out.PrayChance = int(c.PrayChance)
 	out.IdentifiedToday = c.IdentifiedToday
+	out.ExorcisedToday = c.ExorcisedToday
 	out.Deity = int(c.Deity)
 	out.BindLevel = int(c.BindLevel)
 	out.Inventory = c.Inventory
@@ -123,9 +139,11 @@ func FromSave(c scenario.Character) Character {
 	out.Traits[gamedata.Skill] = int(c.SkillNatural)
 
 	for i, on := range c.SkillFlags {
-		if i < gamedata.NumSkills {
-			out.Skills[i] = on == 1
+		if i >= gamedata.NumSkills {
+			continue
 		}
+		out.Skills[i] = on == 1
+		out.CursedSkills[i] = on == skillFlagCursed
 	}
 	return out
 }
@@ -325,6 +343,7 @@ func (c Character) ApplyTo(rec *scenario.Character) {
 	rec.CombatStatus = c.Status
 	rec.PrayChance = byte(c.PrayChance)
 	rec.IdentifiedToday = c.IdentifiedToday
+	rec.ExorcisedToday = c.ExorcisedToday
 	rec.Deity = byte(c.Deity)
 	rec.BindLevel = byte(c.BindLevel)
 
@@ -348,9 +367,12 @@ func (c Character) ApplyTo(rec *scenario.Character) {
 		if i >= gamedata.NumSkills {
 			break
 		}
-		if c.Skills[i] {
+		switch {
+		case c.Skills[i]:
 			rec.SkillFlags[i] = 1
-		} else {
+		case c.CursedSkills[i]:
+			rec.SkillFlags[i] = skillFlagCursed
+		default:
 			rec.SkillFlags[i] = 0
 		}
 	}
