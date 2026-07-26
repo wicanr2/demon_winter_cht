@@ -132,6 +132,25 @@ const (
 	SkillPowerLeech   SkillID = 34 // 黑暗精靈
 )
 
+// raceSkillNames 是四個種族天生能力的原文名。
+//
+// **它們不在 `FILES.DTT` 的技能表裡**（那張只有 0–30 的真技能）——
+// 名字在 `DEMON.INT` 自己的資料段，`ds:0x18fc` 有一張四筆的遠指標表
+// 指到 `ds:0x1910`／`0x191c`／`0x1928`／`0x1934`。
+//
+// 原版那張表的順序是 Detect aura／Dark vision／Power leech／Regeneration，
+// 與本檔的偽 id（31 起算，Regeneration 排第一）**不同** —— 這裡照 id 排，
+// 要對回原版的表就記得換順序。
+var raceSkillNames = map[SkillID]string{
+	SkillRegeneration: "Regeneration",
+	SkillDetectAura:   "Detect aura",
+	SkillDarkVision:   "Dark vision",
+	SkillPowerLeech:   "Power leech",
+}
+
+// RaceSkillName 回傳種族天生能力的原文名；不是天生能力就回空字串。
+func RaceSkillName(s SkillID) string { return raceSkillNames[s] }
+
 // SummonEntry 是召喚／幻術生物表的一筆記錄。
 //
 // 22 bytes 中只有部分欄位語意已確認；未確認的以 Word 索引保留原值，

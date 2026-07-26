@@ -481,12 +481,20 @@ const skillSourceFile = "SKILLS"
 
 // skillName 回傳技能的顯示名稱（已翻譯）。原文來自 FILES.DTT 的技能名段。
 func (a *app) skillName(s gamedata.SkillID) string {
+	// 種族天生能力（偽 id 31–34）的名字不在 FILES.DTT 的技能表裡，
+	// 另外走 RACESKILL 目錄（見 gamedata.RaceSkillName）。
+	if en := gamedata.RaceSkillName(s); en != "" {
+		return a.tr.Event(raceSkillSourceFile, int(s)-int(gamedata.SkillRegeneration), en)
+	}
 	names := a.strings.SkillNames()
 	if int(s) < 0 || int(s) >= len(names) {
 		return fmt.Sprintf("技能 %d", s)
 	}
 	return a.tr.Event(skillSourceFile, int(s), names[s])
 }
+
+// raceSkillSourceFile 是種族天生能力譯名目錄的 key。
+const raceSkillSourceFile = "RACESKILL"
 
 func (a *app) drawCollege(t *townScreen, line func(string)) {
 	colleges := t.visit.Town.Facilities.Colleges

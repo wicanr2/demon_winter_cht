@@ -122,13 +122,24 @@ func (a *app) drawPartySheet(p *partyScreen, line func(string)) {
 	line("↑↓：換人　Enter／Esc：收起")
 }
 
-// learnedSkillNames 列出這名角色學過的技能名稱（已翻譯）。
+// learnedSkillNames 列出這名角色的技能名稱（已翻譯）。
+//
+// **包含種族天生能力。** 那是拿原版對出來的（`docs/re/54` §5）：
+// 精靈 Wopple 的技能旗標只有兩格是 1，原版的角色卡卻列三項 ——
+// 多出來的 `Detect aura` 不在旗標陣列裡，是種族給的
+// （`gamedata.RaceBonusSkill`，偽技能 id 31–34）。
+//
+// 那支函式早就解出來了卻**從來沒有被呼叫過** —— 解碼做完、沒接上去，
+// 只看程式碼看不出來，要有畫面並排才會發現。
 func (a *app) learnedSkillNames(c game.Character) []string {
 	var out []string
 	for i := 0; i < gamedata.NumSkills; i++ {
 		if c.Skills[i] {
 			out = append(out, textlayout.PadCells(a.skillName(gamedata.SkillID(i)), 8))
 		}
+	}
+	if id, err := a.tables.RaceBonusSkill(gamedata.Race(c.Race)); err == nil && id != 0 {
+		out = append(out, textlayout.PadCells(a.skillName(id), 8))
 	}
 	return out
 }
