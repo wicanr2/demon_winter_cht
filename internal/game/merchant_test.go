@@ -138,16 +138,7 @@ func TestBuyFromMerchant_Success(t *testing.T) {
 	tb, items := loadTables(t), loadItems(t)
 	m := RollMerchant(rng.NewWithSeed(11), tb, items, 5, 8)
 
-	i := -1
-	for n, w := range m.Wares {
-		if w.PriceExact {
-			i = n
-			break
-		}
-	}
-	if i < 0 {
-		t.Skip("這一支商隊沒有算得出價錢的貨")
-	}
+	const i = 0
 	want := m.Wares[i].Item
 	price := m.Wares[i].Price
 
@@ -172,7 +163,7 @@ func TestBuyFromMerchant_Success(t *testing.T) {
 
 func TestBuyFromMerchant_Refusals(t *testing.T) {
 	full := *campChar("滿", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
-	base := MerchantWare{Item: scenario.InventorySlot{Type: 3}, Price: 50, PriceExact: true}
+	base := MerchantWare{Item: scenario.InventorySlot{Type: 3}, Price: 50}
 
 	cases := []struct {
 		name   string
@@ -182,9 +173,7 @@ func TestBuyFromMerchant_Refusals(t *testing.T) {
 		reason string
 	}{
 		{"金幣不夠", base, 10, *campChar("窮"), "金幣不夠"},
-		{"算不出價錢", MerchantWare{Item: base.Item, Price: 50}, 999, *campChar("A"),
-			"商人說不出這件的價錢"},
-		{"已經賣掉", MerchantWare{Item: base.Item, Price: 50, PriceExact: true, Sold: true},
+		{"已經賣掉", MerchantWare{Item: base.Item, Price: 50, Sold: true},
 			999, *campChar("A"), "這件已經賣掉了"},
 		{"包包滿了", base, 999, full, "全隊的道具欄都滿了"},
 	}

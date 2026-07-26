@@ -7,8 +7,7 @@ import (
 
 // 道具估價（`278d:1c1b`，見 `docs/re/44`）。
 //
-// 這是商隊售價那條線的核心。**目前只解出第一項** —— 底價乘上材質倍率；
-// 另外兩項（鑑定加價、效果加價）還沒讀完，見 §「沒解的部分」。
+// 這是商隊售價那條線的核心。六項全部解出來了，見 ItemValue。
 
 // materialMultiplier 是材質／品質類別（道具槽 `+0x0f`）的價格倍率。
 //
@@ -75,26 +74,104 @@ func chargeBonus(slot scenario.InventorySlot) int {
 	}
 }
 
-// ItemValue 回傳道具的估價，以及這個數字**準不準**。
+// 估價的第四、五項：兩組特效值（`278d:1e13`／`1e97`，見 `docs/re/49`）。
 //
-// 原版的公式有四項（`docs/re/44` §3、`docs/re/46`）：
+//	n = 槽[+0x0a] − 10
+//	加價 = trunc(1.4 × |n| × 250) × sign(n)
+//
+// `+0x0c` 那一組一模一樣。這兩個 byte 是掉寶生成器寫的特效級數
+// （`docs/re/48` §6.1），**詛咒品是負的，所以會扣分**。
+//
+// **這裡不能用「1.4 × 250 = 350」的整數捷徑。** 原版先算 `1.4 × |n|`
+// 再乘 250，浮點誤差在第一步就進去了：`n = 3` 時算出來是 1049 不是 1050。
+// 第二、三項可以用整數（270／214）是因為它們**先乘整數再乘小數**，
+// 順序不同結果就不同 —— 同一個「小數乘出整數」的樣子，安全性不一樣。
+const (
+	effectValueBase = 1.4
+	effectValueMul  = 250.0
+)
+
+// 估價的第六項：附魔（`278d:1eeb`）。
+//
+//	加價 = trunc(1.7 × |附魔| × (武器 350／護甲 700))
+//
+// **取的是絕對值而且沒有補回符號** —— 負附魔（詛咒品）在這一項照樣加分。
+// 型別 13 以上（王冠、飾品、藥水）完全沒有這一項，與掉寶生成器
+// 「飾品以上不長附魔」剛好對得起來（`docs/re/48` §4）。
+const (
+	enchantValueBase   = 1.7
+	enchantValueWeapon = 350.0
+	enchantValueArmour = 700.0
+	// 型別分界（這支常式直接讀槽 `+0x00`，是 0-based）。
+	valueWeaponMax = 7
+	valueArmourMax = 12
+)
+
+// effectValueTerm 算一組特效值的加價。raw 是槽裡的原始 byte。
+func effectValueTerm(raw int) int {
+	if raw == 0 {
+		return 0
+	}
+	n := raw - storedOffset
+	magnitude := float64(n)
+	if magnitude < 0 {
+		magnitude = -magnitude
+	}
+	v := int(effectValueBase * magnitude * effectValueMul)
+	if n < 0 {
+		return -v
+	}
+	return v
+}
+
+// enchantValueTerm 算附魔的加價。
+func enchantValueTerm(slot scenario.InventorySlot) int {
+	if int(slot.Type) > valueArmourMax {
+		return 0
+	}
+	coefficient := enchantValueWeapon
+	if int(slot.Type) > valueWeaponMax {
+		coefficient = enchantValueArmour
+	}
+	magnitude := float64(slot.Enchant)
+	if magnitude < 0 {
+		magnitude = -magnitude
+	}
+	return int(enchantValueBase * magnitude * coefficient)
+}
+
+// ItemValue 回傳道具的估價。
+//
+// 六項全部解出來了（`docs/re/44`／`46`／`49`）：
 //
 //  1. 底價 × 材質倍率
-//  2. 已鑑定的話加 `(槽+0x02 + 槽+0x04) × 270`
+//  2. 已鑑定的話加 `(兩組附帶法術的強度相加) × 270`
 //  3. 強度不為 0 的話加 chargeBonus（三條分支）
-//  4. `槽+0x0a` 不為 0 的話還有一段以 1.4 為底的加價 —— **還沒解**
+//  4. 特效值 A 不為 0 的話加 `trunc(1.4 × |n| × 250) × sign(n)`
+//  5. 特效值 B 同上
+//  6. 附魔（武器 ×350、護甲 ×700，取絕對值）
 //
-// 所以 `exact` 的條件是「第四項不會觸發」。呼叫端**不該把 exact=false 的
-// 數字當價錢用** —— 那是缺了一整項的下界，不是估計值。
-func ItemValue(basePrice int, slot scenario.InventorySlot) (value int, exact bool) {
-	value = ItemValueBase(basePrice, slot)
+// 最後兩道鉗制：**有驅邪成功率（＝掉落生的詛咒品）就一文不值**，
+// 算出負數也歸零。
+func ItemValue(basePrice int, slot scenario.InventorySlot) int {
+	value := ItemValueBase(basePrice, slot)
 	if slot.Identified {
 		value += (slot.SpellAPower + slot.SpellBPower) * identifiedBonusMul
 	}
 	if slot.Power != 0 {
 		value += chargeBonus(slot)
 	}
-	return value, slot.EffectAByte == 0
+	value += effectValueTerm(slot.EffectAByte)
+	value += effectValueTerm(slot.EffectBByte)
+	value += enchantValueTerm(slot)
+
+	if slot.ExorciseResist != 0 {
+		return 0
+	}
+	if value < 0 {
+		return 0
+	}
+	return value
 }
 
 // 商隊售價（`0x1d6e1`–`0x1d727`，見 `docs/re/45`）。

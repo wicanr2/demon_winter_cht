@@ -64,10 +64,7 @@ func TestItemValue_IdentifiedBonus(t *testing.T) {
 		Type: 3, MaterialClass: 1, Identified: true,
 		SpellAPower: 2, SpellBPower: 3,
 	}
-	got, exact := ItemValue(30, slot)
-	if !exact {
-		t.Error("強度 0 的道具應該算得出確切售價")
-	}
+	got := ItemValue(30, slot)
 	if want := 30 + 5*270; got != want {
 		t.Errorf("估價 %d，預期 %d", got, want)
 	}
@@ -76,7 +73,7 @@ func TestItemValue_IdentifiedBonus(t *testing.T) {
 // 未鑑定就沒有第二項。
 func TestItemValue_UnidentifiedSkipsBonus(t *testing.T) {
 	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, SpellAPower: 2, SpellBPower: 3}
-	if got, _ := ItemValue(30, slot); got != 30 {
+	if got := ItemValue(30, slot); got != 30 {
 		t.Errorf("未鑑定的估價 %d，預期 30", got)
 	}
 }
@@ -99,7 +96,7 @@ func TestItemValue_ChargeBonusBranches(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, _ := ItemValue(30, tc.slot)
+			got := ItemValue(30, tc.slot)
 			if want := 30 + tc.want; got != want {
 				t.Errorf("估價 %d，預期 %d", got, want)
 			}
@@ -110,10 +107,9 @@ func TestItemValue_ChargeBonusBranches(t *testing.T) {
 // 上限剛好 101 時除數是 1 —— 分界正好把除以 0 擋在外面。
 func TestItemValue_ManyChargesBoundary(t *testing.T) {
 	at := func(total int) int {
-		v, _ := ItemValue(0, scenario.InventorySlot{
+		return ItemValue(0, scenario.InventorySlot{
 			Type: 3, MaterialClass: 1, Power: 2, Total: total,
 		})
-		return v
 	}
 	if got, want := at(101), 500*2*2/1; got != want {
 		t.Errorf("上限 101 的加價 %d，預期 %d", got, want)
@@ -123,15 +119,67 @@ func TestItemValue_ManyChargesBoundary(t *testing.T) {
 	}
 }
 
-// 第四項還沒解 —— +0x0a 不為 0 就不能說算得準。
-func TestItemValue_EffectAMakesItInexact(t *testing.T) {
-	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectAByte: 12}
-	if _, exact := ItemValue(30, slot); exact {
-		t.Error("+0x0a 不為 0 還缺第四項，不該說算得準")
+// 第四、五項：兩組特效值。**不能用 350×n 的整數捷徑** ——
+// 原版先算 1.4×|n| 再乘 250，n=3 時算出來是 1049 不是 1050。
+func TestItemValue_EffectTerms(t *testing.T) {
+	cases := []struct{ raw, want int }{
+		{0, 0},     // 沒有這一項
+		{11, 350},  // n = 1
+		{13, 1049}, // n = 3 —— 捷徑會算成 1050
+		{9, -350},  // n = −1，詛咒品扣分
+		{7, -1049}, // n = −3
 	}
-	slot.EffectAByte = 0
-	if _, exact := ItemValue(30, slot); !exact {
-		t.Error("+0x0a 為 0 時前三項就是全部，應該算得準")
+	for _, tc := range cases {
+		slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectAByte: tc.raw}
+		if got := ItemValue(0, slot); got != max0(tc.want) {
+			t.Errorf("+0x0a = %d 的估價 %d，預期 %d", tc.raw, got, max0(tc.want))
+		}
+	}
+	// 兩組是獨立相加的。
+	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectAByte: 11, EffectBByte: 11}
+	if got := ItemValue(0, slot); got != 700 {
+		t.Errorf("兩組各 +1 的估價 %d，預期 700", got)
+	}
+}
+
+// max0 是估價最後那道「負數歸零」的鉗制。
+func max0(v int) int {
+	if v < 0 {
+		return 0
+	}
+	return v
+}
+
+// 第六項：附魔。武器 ×350、護甲 ×700，型別 13 以上完全沒有這一項。
+func TestItemValue_EnchantTerm(t *testing.T) {
+	cases := []struct {
+		typ, enchant, want int
+	}{
+		{3, 2, 1190},  // 武器 +2：trunc(1.7×2×350)
+		{3, 3, 1784},  // 武器 +3：捷徑 595×3 = 1785，實際少 1
+		{10, 2, 2380}, // 護甲 +2：係數加倍
+		{3, -2, 1190}, // **負附魔照樣加分** —— 原版取絕對值沒補回符號
+		{19, 4, 0},    // 寶石：型別 13 以上沒有這一項
+	}
+	for _, tc := range cases {
+		slot := scenario.InventorySlot{
+			Type: byte(tc.typ), MaterialClass: 0, Enchant: tc.enchant,
+		}
+		if got := ItemValue(0, slot); got != tc.want {
+			t.Errorf("型別 %d 附魔 %+d 的估價 %d，預期 %d",
+				tc.typ, tc.enchant, got, tc.want)
+		}
+	}
+}
+
+// 有驅邪成功率（掉落生的詛咒品）就一文不值。
+func TestItemValue_CursedIsWorthless(t *testing.T) {
+	slot := scenario.InventorySlot{
+		Type: 3, MaterialClass: 8, Identified: true,
+		SpellAPower: 5, SpellBPower: 5, ExorciseResist: 20,
+	}
+	if got := ItemValue(500, slot); got != 0 {
+		t.Errorf("詛咒品的估價 %d，應該是 0", got)
 	}
 }
 

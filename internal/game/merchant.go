@@ -90,9 +90,6 @@ type MerchantWare struct {
 	// Price 是這一家開的價（`docs/re/45`）。**同一件東西在不同商隊
 	// 手上差價可以到兩倍多** —— 那是隨機係數，不是議價。
 	Price int
-	// PriceExact 為 false 代表估價還缺一項（`docs/re/46` §3）。
-	// 這種貨**不賣** —— 標一個算不準的價錢比不賣更糟。
-	PriceExact bool
 	// Sold 為 true 代表已經被買走。
 	Sold bool
 	// Guaranteed 是原版逐件記下來的那個旗標（`ds:0x4e2e`）：這一件跳過了
@@ -146,11 +143,9 @@ func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 		slot, guaranteed := GenerateWare(r, t, item, typ, level, m.EffectChance)
 		slot.Identified = true
 
-		value, exact := ItemValue(item.Price, slot)
 		m.Wares = append(m.Wares, MerchantWare{
 			Item:       slot,
-			Price:      MerchantPrice(r, value),
-			PriceExact: exact,
+			Price:      MerchantPrice(r, ItemValue(item.Price, slot)),
 			Guaranteed: guaranteed,
 		})
 	}
@@ -159,8 +154,8 @@ func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 
 // BuyFromMerchant 買下第 i 件貨。
 //
-// **算不準價錢的貨不賣**（`PriceExact == false`）—— 估價還缺一項
-// （`docs/re/46` §3），標一個湊出來的數字給玩家比不賣更糟。
+// 估價六項全解之後（`docs/re/49`）就沒有「說不出價」這回事了 ——
+// 那個狀態是公式缺一項時的自保，補齊就拿掉。
 func BuyFromMerchant(m *Merchant, i int, members []Character, gold int) TradeResult {
 	if m == nil || i < 0 || i >= len(m.Wares) {
 		return TradeResult{Reason: "沒有這一件", Gold: gold}
@@ -169,8 +164,6 @@ func BuyFromMerchant(m *Merchant, i int, members []Character, gold int) TradeRes
 	switch {
 	case w.Sold:
 		return TradeResult{Reason: "這件已經賣掉了", Gold: gold}
-	case !w.PriceExact:
-		return TradeResult{Reason: "商人說不出這件的價錢", Gold: gold}
 	case w.Price > gold:
 		return TradeResult{Reason: "金幣不夠", Gold: gold, Slot: -1}
 	}

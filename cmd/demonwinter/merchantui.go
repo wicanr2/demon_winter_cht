@@ -112,11 +112,8 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 			mark = " > "
 		}
 		price := fmt.Sprintf("%d", w.Price)
-		switch {
-		case w.Sold:
+		if w.Sold {
 			price = "已售出"
-		case !w.PriceExact:
-			price = "說不出價"
 		}
 		note := ""
 		if w.Item.Enchant != 0 {
