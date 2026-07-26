@@ -1,0 +1,67 @@
+# 商隊規模的形容詞。**不是 cmd/dwstrings 產生的** ——
+# 原文在 DEMON.INT 的資料段（ds:0x3632 遠指標表），不在任何資料檔裡，
+# 所以這一份是照 internal/game/merchant.go 的 merchantAdjectives 手寫的。
+#
+# 索引是**規模 0–9**（不是形容詞編號）：規模 2/3、6/7、8/9 各自共用一個詞，
+# 對照表見 docs/re/32 §1。這裡把十種規模各寫一行，介面才不必再查一次表。
+@@ MERCHANT
+
+## 0
+:: en
+ragged looking
+:: zh
+衣衫襤褸
+
+## 1
+:: en
+poor looking
+:: zh
+寒酸
+
+## 2
+:: en
+travelling
+:: zh
+行腳
+
+## 3
+:: en
+travelling
+:: zh
+行腳
+
+## 4
+:: en
+adventuring
+:: zh
+闖蕩四方
+
+## 5
+:: en
+well dressed
+:: zh
+衣著體面
+
+## 6
+:: en
+upper class
+:: zh
+上流
+
+## 7
+:: en
+upper class
+:: zh
+上流
+
+## 8
+:: en
+wealthy
+:: zh
+豪富
+
+## 9
+:: en
+wealthy
+:: zh
+豪富

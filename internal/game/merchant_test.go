@@ -3,6 +3,8 @@ package game
 import (
 	"testing"
 
+	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
+
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 )
 
@@ -84,9 +86,13 @@ func TestRollMerchant_WaresAreUnidentified(t *testing.T) {
 		if len(m.Wares) < 7 || len(m.Wares) > 10 {
 			t.Fatalf("帶了 %d 件貨", len(m.Wares))
 		}
-		for _, w := range m.Wares {
-			if w.Identified {
-				t.Fatal("商隊的貨不該是已鑑定的")
+		for _, ware := range m.Wares {
+			w := ware.Item
+			if !w.Identified {
+				t.Fatal("列出來的貨應該標成已鑑定（docs/re/44 §2）")
+			}
+			if ware.Price <= 0 {
+				t.Fatalf("開價 %d 不合理：%+v", ware.Price, w)
 			}
 			if w.Enchant < 0 {
 				cursed++
@@ -118,10 +124,83 @@ func TestRollMerchant_CleanCaravanHasNoCurse(t *testing.T) {
 		if m.CurseChance != 0 {
 			continue
 		}
-		for _, w := range m.Wares {
-			if w.Enchant < 0 {
-				t.Fatalf("詛咒機率 0 的商隊卻有詛咒品：%+v", w)
+		for _, ware := range m.Wares {
+			if ware.Item.Enchant < 0 {
+				t.Fatalf("詛咒機率 0 的商隊卻有詛咒品：%+v", ware.Item)
 			}
 		}
+	}
+}
+
+// 買一件貨：扣錢、進包包、標成已賣。
+func TestBuyFromMerchant_Success(t *testing.T) {
+	tb, items := loadTables(t), loadItems(t)
+	m := RollMerchant(rng.NewWithSeed(11), tb, items, 5, 8)
+
+	i := -1
+	for n, w := range m.Wares {
+		if w.PriceExact {
+			i = n
+			break
+		}
+	}
+	if i < 0 {
+		t.Skip("這一支商隊沒有算得出價錢的貨")
+	}
+	want := m.Wares[i].Item
+	price := m.Wares[i].Price
+
+	members := []Character{*campChar("買家")}
+	res := BuyFromMerchant(&m, i, members, price+100)
+	if !res.OK {
+		t.Fatalf("應該買得成：%s", res.Reason)
+	}
+	if res.Gold != 100 {
+		t.Errorf("剩 %d 金幣，預期 100", res.Gold)
+	}
+	if members[0].Inventory[res.Slot] != want {
+		t.Errorf("拿到 %+v，預期 %+v", members[0].Inventory[res.Slot], want)
+	}
+	if !m.Wares[i].Sold {
+		t.Error("那一件應該標成已賣")
+	}
+	if res := BuyFromMerchant(&m, i, members, 10000); res.OK {
+		t.Error("同一件不該買得到第二次")
+	}
+}
+
+func TestBuyFromMerchant_Refusals(t *testing.T) {
+	full := *campChar("滿", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	base := MerchantWare{Item: scenario.InventorySlot{Type: 3}, Price: 50, PriceExact: true}
+
+	cases := []struct {
+		name   string
+		ware   MerchantWare
+		gold   int
+		member Character
+		reason string
+	}{
+		{"金幣不夠", base, 10, *campChar("窮"), "金幣不夠"},
+		{"算不出價錢", MerchantWare{Item: base.Item, Price: 50}, 999, *campChar("A"),
+			"商人說不出這件的價錢"},
+		{"已經賣掉", MerchantWare{Item: base.Item, Price: 50, PriceExact: true, Sold: true},
+			999, *campChar("A"), "這件已經賣掉了"},
+		{"包包滿了", base, 999, full, "全隊的道具欄都滿了"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := Merchant{Wares: []MerchantWare{tc.ware}}
+			members := []Character{tc.member}
+			res := BuyFromMerchant(&m, 0, members, tc.gold)
+			if res.OK {
+				t.Fatal("預期擋下來")
+			}
+			if res.Reason != tc.reason {
+				t.Errorf("理由 %q，預期 %q", res.Reason, tc.reason)
+			}
+		})
+	}
+	if res := BuyFromMerchant(nil, 0, nil, 100); res.OK {
+		t.Error("nil 商隊不該買得到東西")
 	}
 }

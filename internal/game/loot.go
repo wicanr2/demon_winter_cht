@@ -187,7 +187,16 @@ func LootCharges(r *rng.RNG, kind, level, itemType, strength int) (total, used i
 // 兩道效果門檻沒過就回傳平凡裝備（只有附魔，沒有效果）。
 // 被詛咒的道具**一定沒有效果**（`1990:1363`）。
 func GenerateLoot(r *rng.RNG, t *gamedata.Tables, item gamedata.Item, itemType, level int, cursed bool) scenario.InventorySlot {
-	slot := scenario.InventorySlot{Type: byte(itemType)}
+	// 材質類別預設 1（×1 = 原價）。
+	//
+	// **原版的規則沒讀完** —— 生成器在 `1990:11b9`–`1228` 算 `+0x0f`，
+	// 那一段還沒解（見 `docs/re/30` 的未解表、`docs/re/47` §1）。1 是兩份原版存檔裡
+	// **每一件實物**的值，也是「平凡貨」的意思，拿它當預設最保守：
+	// 估價（`docs/re/44`）因此等於底價，不會憑空放大或歸零。
+	slot := scenario.InventorySlot{
+		Type:          byte(itemType),
+		MaterialClass: 1,
+	}
 
 	enchant := LootEnchant(r, level, itemType)
 	if cursed {

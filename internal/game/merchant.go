@@ -75,6 +75,19 @@ func MerchantWareCount(r *rng.RNG) int {
 	return r.Roll(merchantWaresDie) + merchantWaresBase
 }
 
+// MerchantWare 是商隊的一件貨：東西本身，加上這一家的開價。
+type MerchantWare struct {
+	Item scenario.InventorySlot
+	// Price 是這一家開的價（`docs/re/45`）。**同一件東西在不同商隊
+	// 手上差價可以到兩倍多** —— 那是隨機係數，不是議價。
+	Price int
+	// PriceExact 為 false 代表估價還缺一項（`docs/re/46` §3）。
+	// 這種貨**不賣** —— 標一個算不準的價錢比不賣更糟。
+	PriceExact bool
+	// Sold 為 true 代表已經被買走。
+	Sold bool
+}
+
 // Merchant 是一支商隊。
 type Merchant struct {
 	// Size 是規模，決定形容詞。
@@ -83,20 +96,24 @@ type Merchant struct {
 	Level int
 	// CurseChance 是每件貨被詛咒的百分比機率。
 	CurseChance int
-	// Wares 是他們帶的 7–10 件貨，全部未鑑定。
-	Wares []scenario.InventorySlot
+	// Wares 是他們帶的 7–10 件貨。
+	//
+	// **生成時未鑑定，列出來給玩家看的時候標成已鑑定**
+	// （原版 `0x1d6c8`，見 `docs/re/44` §2）—— 商人願意讓你看清楚，
+	// 但那不改變東西本身可能帶詛咒的事實。
+	Wares []MerchantWare
 }
 
 // Adjective 回傳這支商隊的形容詞（原文）。
 func (m Merchant) Adjective() string { return MerchantAdjective(m.Size) }
 
-// RollMerchant 生出一支商隊的貨。
+// RollMerchant 生出一支商隊的貨，連同各自的開價。
 //
 // 每件貨各自擲一次詛咒（`rnd(100) < 詛咒機率`），中的那件附魔取負且
 // **一定沒有效果** —— 詛咒品在 GenerateLoot 裡就被擋掉效果了。
 //
-// 這裡不決定價格：**價格公式還沒解出來**，所以本專案還沒有購買介面
-// （見 `docs/re/32` §4）。生成本身是完整的。
+// 開價的順序照原版（`0x1d6c8`–`0x1d737`）：**先標成已鑑定，再估價** ——
+// 已鑑定會讓估價多一項，所以順序不能對調。
 func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 	size, level int) Merchant {
 
@@ -113,7 +130,44 @@ func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 			continue
 		}
 		cursed := r.Roll(100) < m.CurseChance
-		m.Wares = append(m.Wares, GenerateLoot(r, t, item, typ, level, cursed))
+		slot := GenerateLoot(r, t, item, typ, level, cursed)
+		slot.Identified = true
+
+		value, exact := ItemValue(item.Price, slot)
+		m.Wares = append(m.Wares, MerchantWare{
+			Item:       slot,
+			Price:      MerchantPrice(r, value),
+			PriceExact: exact,
+		})
 	}
 	return m
+}
+
+// BuyFromMerchant 買下第 i 件貨。
+//
+// **算不準價錢的貨不賣**（`PriceExact == false`）—— 估價還缺一項
+// （`docs/re/46` §3），標一個湊出來的數字給玩家比不賣更糟。
+func BuyFromMerchant(m *Merchant, i int, members []Character, gold int) TradeResult {
+	if m == nil || i < 0 || i >= len(m.Wares) {
+		return TradeResult{Reason: "沒有這一件", Gold: gold}
+	}
+	w := &m.Wares[i]
+	switch {
+	case w.Sold:
+		return TradeResult{Reason: "這件已經賣掉了", Gold: gold}
+	case !w.PriceExact:
+		return TradeResult{Reason: "商人說不出這件的價錢", Gold: gold}
+	case w.Price > gold:
+		return TradeResult{Reason: "金幣不夠", Gold: gold, Slot: -1}
+	}
+	for n := range members {
+		slot := members[n].FreeSlot()
+		if slot < 0 {
+			continue
+		}
+		members[n].Inventory[slot] = w.Item
+		w.Sold = true
+		return TradeResult{OK: true, Gold: gold - w.Price, Slot: slot, Member: n}
+	}
+	return TradeResult{Reason: "全隊的道具欄都滿了", Gold: gold}
 }
