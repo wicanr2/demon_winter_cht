@@ -806,6 +806,10 @@ func main() {
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
 	// xdotool 偶爾會漏掉一兩下，跑出來的畫面就不是預期的那座城。直接指定。
 	townFlag := flag.Int("town", 0, "偵錯：啟動後直接進入指定編號的城鎮（1–25）")
+	// 掉寶生成解出來了（docs/re/30），但「什麼時候掉」還沒追出來，
+	// 所以沒有正規入口。這個旗標是唯一能在遊戲裡看到成品的路徑。
+	lootFlag := flag.String("loot", "",
+		"偵錯：用掉寶生成器發道具給第一名隊員，格式 `type,等級[,件數]`")
 	flag.Parse()
 
 	if _, err := os.Stat(*dataDir); err != nil {
@@ -960,6 +964,11 @@ func main() {
 		a.title = nil // 直接跳過標題畫面，不然還要多送一次按鍵
 		log.Printf("偵錯：直接進入 %s", town.Name)
 	}
+	if *lootFlag != "" {
+		if err := a.debugLoot(*lootFlag); err != nil {
+			log.Fatalf("-loot：%v", err)
+		}
+	}
 	if *giveItem != "" {
 		if err := a.debugGiveItem(*giveItem); err != nil {
 			log.Fatalf("-give-item：%v", err)
@@ -995,4 +1004,60 @@ func (a *app) weaponLabel(c game.Character) string {
 		return "徒手"
 	}
 	return a.itemLabel(w)
+}
+
+// debugLoot 用掉寶生成器發道具給第一名隊員（格式 `type,等級[,件數]`）。
+//
+// 掉寶生成的規則解出來了（`docs/re/30`），但**「什麼時候掉」還沒追出來** ——
+// 戰鬥勝利與寶箱的判定不在已解範圍內，所以沒有正規入口。
+// 沒有這個旗標就沒辦法在遊戲裡看到生成器的成品。
+func (a *app) debugLoot(spec string) error {
+	f := strings.Split(spec, ",")
+	if len(f) < 2 || len(f) > 3 {
+		return fmt.Errorf("格式是 type,等級[,件數]，拿到 %q", spec)
+	}
+	n := make([]int, len(f))
+	for i, part := range f {
+		v, err := strconv.Atoi(strings.TrimSpace(part))
+		if err != nil {
+			return fmt.Errorf("第 %d 個欄位 %q 不是數字", i+1, part)
+		}
+		n[i] = v
+	}
+	count := 1
+	if len(n) == 3 {
+		count = n[2]
+	}
+	if len(a.members) == 0 {
+		return fmt.Errorf("隊伍是空的")
+	}
+	item, err := a.items.ByIndex(n[0])
+	if err != nil {
+		return err
+	}
+
+	given := 0
+	for mi := range a.members {
+		c := &a.members[mi]
+		for i := range c.Inventory {
+			if given >= count {
+				return nil
+			}
+			if !c.Inventory[i].Empty() {
+				continue
+			}
+			slot := game.GenerateLoot(a.rng, a.tables, item, n[0], n[1], false)
+			c.Inventory[i] = slot
+			given++
+			// 已用次數印原始值，不印「剩幾次」—— 充能種類 1 的 255 是
+			// 「不計次」的哨兵而不是計數，減出來會是負的。
+			log.Printf("偵錯：%s 第 %d 格 → %s 附魔%+d 效果%d 強度%d 次數上限%d 已用%d",
+				c.Name, i, item.Name, slot.Enchant, slot.Effect, slot.Power,
+				slot.Total, slot.Used)
+		}
+	}
+	if given == 0 {
+		return fmt.Errorf("全隊的道具欄都滿了")
+	}
+	return nil
 }
