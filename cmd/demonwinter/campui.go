@@ -93,6 +93,8 @@ func (a *app) updateCamp() error {
 		a.openItemAction(itemActionIdentify)
 	case inpututil.IsKeyJustPressed(ebiten.KeyV):
 		a.openViewLand()
+	case inpututil.IsKeyJustPressed(ebiten.KeyU):
+		a.openItemAction(itemActionUse)
 	}
 	return nil
 }
@@ -258,7 +260,7 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 	line("  H 打獵")
 	line("  E 換裝")
 	line("  D 丟棄　T 交給隊友")
-	line("  R 排列陣型　I 鑑定道具　V 觀地")
+	line("  R 排列陣型　I 鑑定道具　V 觀地　U 使用")
 	line("")
 	line("Esc：收帳篷")
 	line("")
@@ -267,7 +269,7 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		line("")
 	}
 	line("※ 原版的紮營選單有 14 項，這裡只做了規則已解出的")
-	line("　 睡覺、打獵、換裝、丟棄、轉手、陣型、鑑定、觀地，")
+	line("　 睡覺、打獵、換裝、丟棄、轉手、陣型、鑑定、觀地、使用，")
 	line("　 其餘見 docs/re/33")
 }
 

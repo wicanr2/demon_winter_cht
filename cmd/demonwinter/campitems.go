@@ -16,6 +16,7 @@ import (
 //
 //	Drop     選人 → 選道具 → 丟掉
 //	Identify 選人 → 選道具 → 研究（每人每天一次）
+//	Use      選人 → 選道具 → 用掉（目前只走得通光源那一條）
 //	Trade    選人 → 選道具 → 選收方 → 交出去
 //
 // 所以共用同一組游標，用 itemAction 區分。
@@ -27,6 +28,7 @@ const (
 	itemActionDrop
 	itemActionTrade
 	itemActionIdentify
+	itemActionUse
 )
 
 // itemPicker 是 Drop／Trade 共用的三層游標。
@@ -100,6 +102,8 @@ func (a *app) updateItemSlot(p *itemPicker) error {
 		switch p.action {
 		case itemActionIdentify:
 			a.identifySelected(p)
+		case itemActionUse:
+			a.useSelected(p)
 		default:
 			a.dropSelected(p)
 		}
@@ -165,6 +169,20 @@ func (a *app) identifySelected(p *itemPicker) {
 	a.camp.items = nil
 }
 
+func (a *app) useSelected(p *itemPicker) {
+	m := &a.members[p.member]
+	label := a.itemLabel(m.Inventory[p.slot])
+	res := game.UseInCamp(m, p.slot)
+	if !res.OK {
+		a.camp.message = res.Reason
+		return
+	}
+	a.torch = byte(res.Light)
+	a.save.LightSource = byte(res.Light)
+	a.camp.message = fmt.Sprintf("%s 點起了%s（光源 %d）", m.Name, label, res.Light)
+	a.camp.items = nil
+}
+
 func (a *app) giveSelected(p *itemPicker) {
 	if p.member == p.target {
 		a.camp.message = "不能給自己"
@@ -203,6 +221,8 @@ func (a *app) drawItemPicker(line func(string)) {
 			verb = "交出東西"
 		case itemActionIdentify:
 			verb = "研究道具"
+		case itemActionUse:
+			verb = "用東西"
 		}
 		line("誰要" + verb + "？")
 		line("")
@@ -217,6 +237,8 @@ func (a *app) drawItemPicker(line func(string)) {
 			head = "要交出哪一件？"
 		case itemActionIdentify:
 			head = "要研究哪一件？"
+		case itemActionUse:
+			head = "要用哪一件？"
 		}
 		line(fmt.Sprintf("%s %s", m.Name, head))
 		line("")
@@ -239,6 +261,15 @@ func (a *app) drawItemPicker(line func(string)) {
 				}
 				// 鑑定時把「看不懂」與「已鑑定」先標出來 ——
 				// 一天只能試一次，讓人白白浪費一天不厚道。
+				if p.action == itemActionUse {
+					if lv := game.LightSourceLevel(it.Type); lv != 0 {
+						note = fmt.Sprintf("（點起來，光源 %d）", lv)
+					} else if !it.Usable() {
+						note = "（用不了）"
+					} else {
+						note = "（戰鬥中才能用）"
+					}
+				}
 				if p.action == itemActionIdentify {
 					switch {
 					case it.Identified:
