@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
+	"github.com/wicanr2/demon_winter_cht/internal/rng"
 )
 
 func TestMaterialMultiplier_Table(t *testing.T) {
@@ -85,5 +86,38 @@ func TestItemValue_PoweredItemIsNotExact(t *testing.T) {
 	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, Power: 5}
 	if _, exact := ItemValue(30, slot); exact {
 		t.Error("有強度的道具還缺第三項，不該說算得準")
+	}
+}
+
+// 商隊開價落在估價的 [0.6, 1.4) 之間 —— ±40% 的浮動。
+func TestMerchantPrice_StaysWithinSpread(t *testing.T) {
+	r := rng.NewWithSeed(7)
+	const value = 1000
+	lo, hi := value, 0
+	for i := 0; i < 5000; i++ {
+		p := MerchantPrice(r, value)
+		if p < int(float64(value)*0.6) || p >= int(float64(value)*1.4) {
+			t.Fatalf("開價 %d 超出 [0.6, 1.4) × %d", p, value)
+		}
+		if p < lo {
+			lo = p
+		}
+		if p > hi {
+			hi = p
+		}
+	}
+	// 五千次應該把兩端都掃到 —— 否則係數的算法八成錯了。
+	if lo > 610 || hi < 1390 {
+		t.Errorf("五千次的範圍只有 %d–%d，預期接近 600–1399", lo, hi)
+	}
+}
+
+// 估價 0 的東西開價也是 0，不會因為浮動變出錢來。
+func TestMerchantPrice_ZeroStaysZero(t *testing.T) {
+	r := rng.NewWithSeed(1)
+	for i := 0; i < 100; i++ {
+		if p := MerchantPrice(r, 0); p != 0 {
+			t.Fatalf("估價 0 卻開價 %d", p)
+		}
 	}
 }

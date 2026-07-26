@@ -71,6 +71,19 @@ func (r *RNG) State() uint32 { return r.state }
 // SetState 直接設定內部狀態，供讀檔或對拍除錯用。
 func (r *RNG) SetState(s uint32) { r.state = s }
 
+// Uniform 推進一步並回傳 [0, 1) 的均勻亂數。
+//
+// 這就是原版 `1d9f:0dd4`（→ `30c2:0006`）留在軟浮點暫存器 A 裡的值：
+// LCG 推進之後**立刻除以 2796203.0**（IEEE double）。`Roll` 是它的
+// 整數等價版本（見下），但有些地方（例如商隊售價的 ±40% 浮動，
+// `docs/re/45`）需要那個小數本身。
+//
+// **這裡刻意用 float64 而不是有理數**：呼叫端接著要做的乘加也是原版的
+// IEEE double 運算，用同一組型別與同一個順序才逐位元相同。
+func (r *RNG) Uniform() float64 {
+	return float64(r.Next()) / float64(Modulus)
+}
+
 // Roll 擲一個 n 面骰，回傳 [1, n]。
 //
 // 對應原版的頂層擲骰函式 FUN_1d9f_0e0b（1d9f:0e0b，全域 234 處呼叫）：

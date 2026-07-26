@@ -1,6 +1,9 @@
 package game
 
-import "github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
+import (
+	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
+	"github.com/wicanr2/demon_winter_cht/internal/rng"
+)
 
 // 道具估價（`278d:1c1b`，見 `docs/re/44`）。
 //
@@ -55,4 +58,25 @@ func ItemValue(basePrice int, slot scenario.InventorySlot) (value int, exact boo
 		value += (slot.Unknown02 + slot.Unknown04) * identifiedBonusMul
 	}
 	return value, slot.Power == 0
+}
+
+// 商隊售價（`0x1d6e1`–`0x1d727`，見 `docs/re/45`）。
+//
+// 商人不會照估價賣 —— 每一件貨在列出來的時候乘上一個隨機係數：
+//
+//	售價 = trunc( 估價 × (uniform() × 0.8 + 0.6) )
+//
+// 也就是 **[0.6, 1.4) 的 ±40% 浮動**。同一件東西在不同商隊手上差價可以到兩倍多。
+const (
+	merchantPriceSpread = 0.8
+	merchantPriceFloor  = 0.6
+)
+
+// MerchantPrice 把估價換算成商隊的開價。
+//
+// **用 float64 而不是有理數**：原版就是這三步 IEEE double 運算
+// （`uniform × 0.8`、`+ 0.6`、`× 估價`，最後截斷），同型別同順序才逐位元相同。
+func MerchantPrice(r *rng.RNG, value int) int {
+	scale := r.Uniform()*merchantPriceSpread + merchantPriceFloor
+	return int(float64(value) * scale)
 }
