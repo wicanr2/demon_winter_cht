@@ -93,12 +93,16 @@ const (
 // HealerQuote 依角色狀態決定服務項目與費用。
 //
 // 死亡優先於束縛、束縛優先於中毒、都沒有才看傷勢。
-func (e Economy) HealerQuote(status UnitStatus, level, damage int) (HealerService, int) {
+//
+// **解束縛乘的是束縛等級（角色記錄 +0xec），不是角色等級。** 畫面標籤
+// 印的是 `Unbind %3d/lvl`，那個 lvl 指的是束縛法術的等級 —— 本專案一度
+// 拿角色等級去乘，與 `docs/re/19` §5.2 的 `char.field(+0xec) × 費率` 不符。
+func (e Economy) HealerQuote(status UnitStatus, level, bindLevel, damage int) (HealerService, int) {
 	switch {
 	case status == StatusDead:
 		return HealerResurrect, level * e.ResurrectRate()
 	case status >= StatusBindLow:
-		return HealerUnbind, level * e.UnbindRate()
+		return HealerUnbind, bindLevel * e.UnbindRate()
 	case status == StatusPoison:
 		return HealerUnpoison, e.UnpoisonRate()
 	case damage > 0:

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -27,6 +28,14 @@ type townScreen struct {
 	// 這個選單留著當偵錯用：T 鍵可以直接跳進任何一座城鎮，不用先走到那格。
 	picking bool
 	cursor  int
+
+	// member 是設施內的隊員游標（治療所／神殿／公會共用）。
+	member int
+
+	// amount 非 nil 時「輸入數量」的小框開著（捐獻、買糧）。
+	amount *amountInput
+	// sell 非 nil 時市集的出售選擇器開著。
+	sell *sellPicker
 
 	// message 是最近一次操作的結果。
 	message string
@@ -118,6 +127,19 @@ func (a *app) updateTownPicker(t *townScreen) error {
 
 // updateFacility 處理設施內的操作。
 func (a *app) updateFacility(t *townScreen) error {
+	// 疊在設施上的兩個子畫面自己吃掉輸入（含 Esc），不然按一次 Esc
+	// 會連設施一起退掉 —— ESC 只退一層。
+	if t.amount != nil {
+		if t.amount.update() {
+			t.amount = nil
+		}
+		return nil
+	}
+	if t.sell != nil {
+		a.updateSellPicker(t)
+		return nil
+	}
+
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		t.facility = nil
 		t.message = ""
@@ -129,6 +151,28 @@ func (a *app) updateFacility(t *townScreen) error {
 		if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 			a.restAtInn()
 			return nil
+		}
+	case game.FacilityHealers:
+		a.moveMemberCursor(t)
+		if inpututil.IsKeyJustPressed(ebiten.KeyH) {
+			a.healCurrent(t)
+		}
+	case game.FacilityPub:
+		if inpututil.IsKeyJustPressed(ebiten.KeyB) {
+			a.openRationInput(t)
+		}
+	case game.FacilityChurch:
+		a.moveMemberCursor(t)
+		if inpututil.IsKeyJustPressed(ebiten.KeyP) {
+			a.prayCurrent(t)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyD) {
+			a.openDonateInput(t)
+		}
+	case game.FacilityGuild:
+		a.moveMemberCursor(t)
+		if inpututil.IsKeyJustPressed(ebiten.KeyL) {
+			a.levelUpCurrent(t)
 		}
 	case game.FacilityDocks:
 		if inpututil.IsKeyJustPressed(ebiten.KeyB) {
@@ -151,6 +195,13 @@ func (a *app) updateFacility(t *townScreen) error {
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyB) {
 			a.buyCurrent(t)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyS) {
+			if len(a.members) == 0 {
+				t.message = "隊伍是空的"
+				return nil
+			}
+			t.sell = &sellPicker{slot: -1}
 		}
 	}
 	return nil
@@ -313,6 +364,16 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 	line(fmt.Sprintf("%s — %s", a.townName(v.Town), game.FacilityName(*t.facility)))
 	line("")
 
+	// 疊在設施上的子畫面自己畫完就結束，不要把價目表也一起畫出來。
+	if t.amount != nil {
+		t.amount.draw(line)
+		return
+	}
+	if t.sell != nil {
+		a.drawSellPicker(t, line)
+		return
+	}
+
 	switch *t.facility {
 	case game.FacilityMarket:
 		a.drawMarket(t, line)
@@ -323,19 +384,26 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		line(fmt.Sprintf("解除束縛　每級 %d 金", e.UnbindRate()))
 		line(fmt.Sprintf("復活　每級 %d 金", e.ResurrectRate()))
 		line("")
-		for _, c := range a.members {
-			svc, cost := e.HealerQuote(game.StatusNormal, c.Level, c.MaxHP-c.CurrentHP)
+		for i, c := range a.members {
+			mark := memberMark(t.member, i)
+			svc, cost := e.HealerQuote(game.UnitStatus(c.Status), c.Level,
+				c.BindLevel, c.MaxHP-c.CurrentHP)
 			if svc == game.HealerNone {
-				line(fmt.Sprintf("%s 狀態良好", textlayout.PadCells(c.Name, 8)))
+				line(fmt.Sprintf("%s%s 狀態良好", mark, textlayout.PadCells(c.Name, 8)))
 				continue
 			}
-			line(fmt.Sprintf("%s %s %d 金",
+			line(fmt.Sprintf("%s%s %s %d 金", mark,
 				textlayout.PadCells(c.Name, 8), healerServiceName(svc), cost))
 		}
+		line("")
+		line("↑↓：選擇隊員　H：接受治療")
 
 	case game.FacilityPub:
 		line(fmt.Sprintf("糧食　每份 %d 金（一次可買 %d–%d 份）",
 			e.RationUnitPrice(), game.MinRations, game.MaxRations))
+		line(fmt.Sprintf("隊伍目前 %d 份", a.save.Rations))
+		line("")
+		line("B：買糧")
 
 	case game.FacilityDocks:
 		if v.HasDocks() {
@@ -349,20 +417,36 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		line("B：詢問船價")
 
 	case game.FacilityChurch:
-		line("捐獻　1 金換 1 點經驗")
+		line(fmt.Sprintf("供奉 %s　捐獻 1 金換 1 點經驗",
+			a.deityName(v.Town.Facilities.Church)))
 		line("")
-		for _, c := range a.members {
-			line(fmt.Sprintf("%s 祈禱 %d 金",
-				textlayout.PadCells(c.Name, 8), game.PrayCost(c.Level)))
+		for i, c := range a.members {
+			line(fmt.Sprintf("%s%s 信 %s　成功率 %d%%　祈禱 %d 金",
+				memberMark(t.member, i), textlayout.PadCells(c.Name, 8),
+				textlayout.PadCells(a.deityName(c.Deity), 8),
+				c.PrayChance, game.PrayCost(c.Level)))
 		}
+		line("")
+		line("↑↓：選擇隊員　P：祈禱　D：捐獻")
 
 	case game.FacilityGuild:
 		line("升級　免費")
 		line("")
-		for _, c := range a.members {
-			line(fmt.Sprintf("%s %d 級　經驗 %d",
-				textlayout.PadCells(c.Name, 8), c.Level, c.Experience))
+		for i, c := range a.members {
+			need := ""
+			if ok, short := c.CanLevelUp(); ok {
+				need = "可升級"
+			} else if short > 0 {
+				need = fmt.Sprintf("還差 %d", short)
+			} else {
+				need = "已達頂級"
+			}
+			line(fmt.Sprintf("%s%s %2d 級　經驗 %-8d %s",
+				memberMark(t.member, i), textlayout.PadCells(c.Name, 8),
+				c.Level, c.Experience, need))
 		}
+		line("")
+		line("↑↓：選擇隊員　L：升級")
 
 	case game.FacilityInn:
 		line(fmt.Sprintf("目前 %d 時（睡覺要在 15–24 時之間）", a.clock.Hour()))
@@ -378,7 +462,10 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 
 	line("")
 	if t.message != "" {
-		line(t.message)
+		// 訊息可以多行（升級的成長明細一行放不下，硬塞會超出畫布被裁掉）。
+		for _, l := range strings.Split(t.message, "\n") {
+			line(l)
+		}
 		line("")
 	}
 	line("Esc：回到設施選單")
@@ -394,9 +481,11 @@ func (a *app) drawMarket(t *townScreen, line func(string)) {
 	//
 	// 表頭與資料列都用同一組欄寬常數排 —— 手動數空白排出來的表頭，
 	// 只要品名欄寬一改就會歪掉。
+	// 兩個價格欄的數值是**右靠齊**的，欄名也要右靠齊 —— 欄名用 PadCells
+	// （左靠齊）就會比數字往左偏 3 格，看起來像兩欄各自對不上自己的標題。
 	line(textlayout.PadCells("   商品", marketNameCells) +
-		textlayout.PadCells("  買價", marketPriceCells) +
-		textlayout.PadCells("  賣價", marketPriceCells))
+		textlayout.PadCellsLeft("買價", marketPriceCells) +
+		textlayout.PadCellsLeft("賣價", marketPriceCells))
 
 	const window = 8
 	start := t.cursor - window/2
@@ -419,16 +508,17 @@ func (a *app) drawMarket(t *townScreen, line func(string)) {
 		// 被觸怒後的商品不能顯示價格。HagglePrice 對 s >= 1000 會算出
 		// 下限 2 金 —— 那個數字看起來像「跳樓大拍賣」，實際上是商人拒賣。
 		row := mark + textlayout.PadCells(name, marketNameCells-len([]rune(mark)))
-		sell := fmt.Sprintf("%*d", marketPriceCells, t.visit.Economy.SellPrice(item.Price))
+		sell := textlayout.PadCellsLeft(
+			strconv.Itoa(t.visit.Economy.SellPrice(item.Price)), marketPriceCells)
 		if t.visit.HaggleState(i).Refused() {
 			line(row + textlayout.PadCellsLeft("拒賣", marketPriceCells) + sell)
 			continue
 		}
-		line(row + fmt.Sprintf("%*d", marketPriceCells,
-			t.visit.Price(i, item.Price)) + sell)
+		line(row + textlayout.PadCellsLeft(
+			strconv.Itoa(t.visit.Price(i, item.Price)), marketPriceCells) + sell)
 	}
 	line("")
-	line(fmt.Sprintf("↑↓：選商品　H：議價　B：買下　（金幣 %d）", a.gold()))
+	line(fmt.Sprintf("↑↓：選商品　H：議價　B：買下　S：出售　（金幣 %d）", a.gold()))
 }
 
 func healerServiceName(s game.HealerService) string {

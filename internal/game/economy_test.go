@@ -88,18 +88,20 @@ func TestEconomy_HealerQuotePriority(t *testing.T) {
 		name    string
 		status  UnitStatus
 		level   int
+		bind    int
 		damage  int
 		service HealerService
 		cost    int
 	}{
-		{"死亡", StatusDead, 4, 10, HealerResurrect, 4 * 30 * 10},
-		{"束縛", StatusBindLow, 4, 10, HealerUnbind, 4 * (47 * 30 / 5)},
-		{"中毒", StatusPoison, 4, 10, HealerUnpoison, 30 * 4},
-		{"受傷", StatusNormal, 4, 10, HealerHeal, 10 * (30 / 5)},
-		{"健康", StatusNormal, 4, 0, HealerNone, 0},
+		{"死亡", StatusDead, 4, 3, 10, HealerResurrect, 4 * 30 * 10},
+		// 解束縛乘的是**束縛等級**（3），不是角色等級（4）。
+		{"束縛", StatusBindLow, 4, 3, 10, HealerUnbind, 3 * (47 * 30 / 5)},
+		{"中毒", StatusPoison, 4, 3, 10, HealerUnpoison, 30 * 4},
+		{"受傷", StatusNormal, 4, 3, 10, HealerHeal, 10 * (30 / 5)},
+		{"健康", StatusNormal, 4, 3, 0, HealerNone, 0},
 	}
 	for _, c := range cases {
-		svc, cost := e.HealerQuote(c.status, c.level, c.damage)
+		svc, cost := e.HealerQuote(c.status, c.level, c.bind, c.damage)
 		if svc != c.service {
 			t.Errorf("%s：服務 = %d，預期 %d", c.name, svc, c.service)
 		}

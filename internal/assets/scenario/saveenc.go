@@ -111,6 +111,10 @@ func (c *Character) encode() ([]byte, error) {
 	attr(attrMaxSPBonusOffset, c.MaxSPBonus)
 	attr(attrCurrentSPOffset, c.CurrentSP)
 
+	putByte(rec, prayChanceOffset, c.PrayChance)
+	putByte(rec, bindLevelOffset, c.BindLevel)
+	putByte(rec, deityOffset, c.Deity)
+
 	putByte(rec, weaponSlotOffset, c.WeaponSlotIndex)
 	putByte(rec, armorSlotOffset, c.ArmorSlotIndex)
 	putByte(rec, combatFlagsOffset, byte(c.CombatStatus))

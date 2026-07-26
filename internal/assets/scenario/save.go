@@ -47,6 +47,17 @@ const (
 	skillFlagsOffset = 0xc8
 	skillFlagsLen    = 31
 
+	// 神殿相關的三個 1-byte 欄位（`docs/re/19` §8，全部已驗證）。
+	//
+	//	+0xeb  祈禱成功率，直接存百分比（0–20）。改宗與祈禱都寫成 20，
+	//	       戰鬥中每次呼喚成功 −5。
+	//	+0xec  束縛效果的等級。治療所的解束縛費用 = 它 × 費率，復活時清零。
+	//	+0xf0  信奉的神祇編號。**0 代表沒有信仰**；非 0 時減一才是
+	//	       神祇名表（FILES.DTT `[153:164]`）的索引，見 docs/re/27 §4。
+	prayChanceOffset = 0xeb
+	bindLevelOffset  = 0xec
+	deityOffset      = 0xf0
+
 	// levelOffset/raceOffset/classOffset 是三個 1-byte 欄位。
 	//
 	// 種族**在 0xf5**，不是先前記載的 0x0c —— 那個位移其實是道具槽陣列的起點。
@@ -228,6 +239,13 @@ type Character struct {
 	CurrentHP       byte // 目前生命值
 	MaxSPBonus      byte // 最大法力值（含裝備加成）
 	CurrentSP       byte // 目前法力值
+
+	// PrayChance 是祈禱（呼喚神祇）的成功率百分比（+0xeb）。
+	// BindLevel 是束縛效果的等級（+0xec），解除束縛的費用依它計價。
+	// Deity 是信奉的神祇編號（+0xf0），0 代表沒有信仰。
+	PrayChance byte
+	BindLevel  byte
+	Deity      byte
 
 	// WeaponSlotIndex 是目前裝備的武器對應哪個道具槽。**待複核**（反組譯推得，
 	// docs/re/06-combat-system.md，尚未動態複核）。
@@ -427,6 +445,9 @@ func parseCharacter(rec []byte) (Character, error) {
 		CurrentHP:         attr(attrCurrentHPOffset),
 		MaxSPBonus:        attr(attrMaxSPBonusOffset),
 		CurrentSP:         attr(attrCurrentSPOffset),
+		PrayChance:        rec[prayChanceOffset],
+		BindLevel:         rec[bindLevelOffset],
+		Deity:             rec[deityOffset],
 		WeaponSlotIndex:   rec[weaponSlotOffset],
 		ArmorSlotIndex:    rec[armorSlotOffset],
 		CombatStatus:      CombatStatus(rec[combatFlagsOffset]),

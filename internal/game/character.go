@@ -58,6 +58,16 @@ type Character struct {
 	// 尚未做 DOSBox 動態複核。
 	EquippedWeapon int
 	EquippedArmor  int
+
+	// PrayChance 是呼喚神祇的成功率（存檔 +0xeb，百分比）。
+	// Deity 是信奉的神祇編號（+0xf0），0 代表沒有信仰。
+	// BindLevel 是束縛效果的等級（+0xec），治療所解束縛依它計價。
+	//
+	// 三個都是**每個角色各自一份**的持久欄位 —— 祈禱成功率一度被實作成
+	// 整隊共用一個值，那是錯的（見 docs/re/19 §3.3）。
+	PrayChance int
+	Deity      int
+	BindLevel  int
 }
 
 // InventorySlots 是每個角色的道具欄格數。
@@ -96,6 +106,9 @@ func FromSave(c scenario.Character) Character {
 	}
 	out.EquippedWeapon = int(c.WeaponSlotIndex)
 	out.EquippedArmor = int(c.ArmorSlotIndex)
+	out.PrayChance = int(c.PrayChance)
+	out.Deity = int(c.Deity)
+	out.BindLevel = int(c.BindLevel)
 	out.Inventory = c.Inventory
 
 	out.Traits[gamedata.Speed] = int(c.SpeedNatural)
@@ -305,6 +318,9 @@ func (c Character) ApplyTo(rec *scenario.Character) {
 	rec.WeaponSlotIndex = slotIndexByte(c.EquippedWeapon)
 	rec.ArmorSlotIndex = slotIndexByte(c.EquippedArmor)
 	rec.CombatStatus = c.Status
+	rec.PrayChance = byte(c.PrayChance)
+	rec.Deity = byte(c.Deity)
+	rec.BindLevel = byte(c.BindLevel)
 
 	rec.Name = c.Name
 	rec.RaceByte = byte(c.Race)
