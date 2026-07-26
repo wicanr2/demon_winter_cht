@@ -70,10 +70,25 @@ func WriteCatalog(path string, c *Catalog) error {
 	b.WriteString(markSource + c.Source + "\n")
 
 	entries := append([]Entry(nil), c.Entries...)
-	sort.Slice(entries, func(i, j int) bool { return entries[i].Index < entries[j].Index })
+	// 數字型在前、名稱型在後；同型別各自照自己的鍵排序。
+	// 名稱型（Index == -1）不能跟數字型混排，不然 -1 會全部跑到最前面。
+	sort.SliceStable(entries, func(i, j int) bool {
+		a, bb := entries[i], entries[j]
+		if (a.Name == "") != (bb.Name == "") {
+			return a.Name == ""
+		}
+		if a.Name != "" {
+			return a.Name < bb.Name
+		}
+		return a.Index < bb.Index
+	})
 
 	for _, e := range entries {
-		b.WriteString("\n" + markIndex + strconv.Itoa(e.Index) + "\n")
+		mark := strconv.Itoa(e.Index)
+		if e.Name != "" {
+			mark = e.Name
+		}
+		b.WriteString("\n" + markIndex + mark + "\n")
 		if e.NeedsReview {
 			b.WriteString(markReview + "原文已變動，請複查譯文\n")
 		}

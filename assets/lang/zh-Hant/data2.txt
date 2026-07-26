@@ -73,3 +73,15 @@ The Fire Chamber of Kalek-Zin. A wall of fire illuminates this room but gives of
 The Painting Room. Paintings of the ancient warriors adorn the walls. They all appear strong and noble
 :: zh
 畫室。牆上掛滿古代戰士的畫像，個個看來強壯而高貴。
+
+## chain.DATA2.TXT.3
+:: en
+You've done it! Uffuspgot lies dead. Your mission in the Kobold camp is complete
+:: zh
+你辦到了！烏夫斯普戈倒下了。你在狗頭人營地的任務完成了。
+
+## chain.DATA2.TXT.5
+:: en
+The woman thanks you and runs out the tent
+:: zh
+那名女子向你道謝，跑出了帳篷。

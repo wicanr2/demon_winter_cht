@@ -143,6 +143,10 @@ type app struct {
 	// 結算要在「等玩家按空白鍵」之前完成，不然訊息只存在一幀。
 	settled bool
 
+	// pendingChain 是續接碼 3 的第二段文字（`docs/re/02` §2.4 [F]）。
+	// 第一段讀完才顯示，顯示完才開打。
+	pendingChain string
+
 	// runeBox 非 nil 代表正在顯示符文密語（`docs/re/72`）。
 	runeBox *runeScreen
 	// runeFont 是 CYPHER.SHP 的 27 個符文字形；讀不到時為 nil。
@@ -228,10 +232,19 @@ func (a *app) Update() error {
 		if inpututil.IsKeyJustPressed(ebiten.KeySpace) ||
 			inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 			a.box.Advance()
-			// 敘述讀完才開打。
-			if !a.box.Active() && a.pendingIDs != nil {
-				a.startBattle(a.pendingIDs)
-				a.pendingIDs = nil
+			if !a.box.Active() {
+				// 續接碼 3：同一次事件處理內再顯示一段文字
+				// （原版 `+0xa5 == 3` 帶 param_2=1 重跑迴圈，
+				// 顯示 field F 跳過開頭 '3' 之後的內容，見 `docs/re/02` §2.4 [F]）。
+				// **排在開打之前** —— 那是事件處理函式內的事，戰鬥由外層驅動。
+				if a.pendingChain != "" {
+					a.box = ui.NewMixedTextBox(a.pendingChain)
+					a.pendingChain = ""
+				} else if a.pendingIDs != nil {
+					// 敘述讀完才開打。
+					a.startBattle(a.pendingIDs)
+					a.pendingIDs = nil
+				}
 			}
 		}
 		// ESC 只關掉文字視窗，不結束遊戲。
@@ -628,6 +641,14 @@ func (a *app) checkEvent(tile byte) {
 		idx = q.Index
 	}
 
+	a.showEvent(idx)
+}
+
+// showEvent 顯示一筆事件：文字 → 續接碼第二段 → 開打。
+//
+// 從 checkEvent 抽出來，因為觸發（座標／tile）與顯示是兩件事 ——
+// 抽開之後 `-event=N` 偵錯旗標才驗得到顯示路徑的每個分支。
+func (a *app) showEvent(idx int) {
 	ev, err := a.events.ByIndex(idx)
 	if err != nil {
 		a.message = fmt.Sprintf("事件 %d 超出範圍", idx)
@@ -641,6 +662,19 @@ func (a *app) checkEvent(tile byte) {
 		return
 	}
 	a.box = ui.NewMixedTextBox(a.tr.Event(a.eventsFile, idx, ev.Text))
+
+	// 續接碼 3 的第二段（例如 "3With Remondadin dead..."）。
+	// `IsChainRedraw()` 早就實作了，但一直**沒有呼叫端** ——
+	// 與符文（`docs/re/72`）是同一類「解碼做完沒接上」的洞。
+	a.pendingChain = ""
+	if ev.IsChainRedraw() {
+		orig := ev.ChainRedrawText()
+		// 名稱型 key —— 第二段不是獨立記錄，沒有自己的索引
+		// （`cmd/dwstrings` 產生的是 `chain.<檔名>.<索引>`）。
+		a.pendingChain = a.tr.UI(
+			fmt.Sprintf("chain.%s.%d", strings.ToUpper(a.eventsFile), idx), orig)
+	}
+
 	// Count != 0 代表這一格帶遭遇；文字讀完才開打。
 	a.pendingIDs = nil
 	if ev.Count != 0 {
@@ -939,6 +973,9 @@ func main() {
 	// 而字型與排版是視覺產物、必須 dump 出來肉眼比對。
 	runeFlag := flag.String("rune", "",
 		"偵錯：直接顯示一段符文密語（例如 YMROS.IS...MINE）")
+	// 事件文字要走到特定座標才觸發，而續接碼 3 的第二段、符文、插圖
+	// 這些分支都在事件顯示路徑裡 —— 沒有這個旗標就只能靠導航去碰。
+	eventFlag := flag.Int("event", -1, "偵錯：直接觸發某一筆事件（DATA*.TXT 索引）")
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
 	// xdotool 偶爾會漏掉一兩下，跑出來的畫面就不是預期的那座城。直接指定。
 	townFlag := flag.Int("town", 0, "偵錯：啟動後直接進入指定編號的城鎮（1–25）")
@@ -1101,6 +1138,10 @@ func main() {
 	if *goldFlag >= 0 {
 		a.setGold(*goldFlag)
 		log.Printf("偵錯：金幣設為 %d", a.gold())
+	}
+	if *eventFlag >= 0 {
+		a.showEvent(*eventFlag)
+		log.Printf("偵錯：觸發事件 %d", *eventFlag)
 	}
 	if *runeFlag != "" {
 		a.openRuneBox(*runeFlag)

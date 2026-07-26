@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/cjk"
@@ -62,14 +63,34 @@ func check(args []string) {
 			name, done, review, todo, len(cat.Entries))
 
 		for _, e := range cat.Entries {
+			// 名稱型條目（`chain.<檔名>.<索引>`）比對的是**續接碼第二段**，
+			// 不是 Event.Text。它不是獨立記錄，所以沒有自己的數字索引
+			// （見 internal/i18n 的 Entry.Name）。
+			label := fmt.Sprintf("#%d", e.Index)
+			if e.Name != "" {
+				label = e.Name
+			}
+
 			// 1. 原文必須與現在的資料一致 —— 這是查表 key。
-			switch {
-			case e.Index < 0 || e.Index >= len(events):
-				report("%s #%d：索引超出事件表範圍（共 %d 筆）", name, e.Index, len(events))
-				continue
-			case normalise(e.Source) != normalise(events[e.Index].Text):
-				report("%s #%d：原文與 %s 對不上，譯文會整條退回英文", name, e.Index, name)
-				continue
+			if e.Name != "" {
+				idx, ok := chainIndex(e.Name)
+				switch {
+				case !ok || idx < 0 || idx >= len(events):
+					report("%s %s：名稱裡的索引解不出來或超出範圍（共 %d 筆）", name, label, len(events))
+					continue
+				case normalise(e.Source) != normalise(events[idx].ChainRedrawText()):
+					report("%s %s：原文與續接碼第二段對不上，譯文會退回英文", name, label)
+					continue
+				}
+			} else {
+				switch {
+				case e.Index < 0 || e.Index >= len(events):
+					report("%s %s：索引超出事件表範圍（共 %d 筆）", name, label, len(events))
+					continue
+				case normalise(e.Source) != normalise(events[e.Index].Text):
+					report("%s %s：原文與 %s 對不上，譯文會整條退回英文", name, label, name)
+					continue
+				}
 			}
 			if e.Target == "" {
 				continue
@@ -77,13 +98,13 @@ func check(args []string) {
 
 			// 2. 控制序列的數量與順序。
 			if a, b := verbs(e.Source), verbs(e.Target); !equalSlices(a, b) {
-				report("%s #%d：控制序列不符，原文 %v、譯文 %v", name, e.Index, a, b)
+				report("%s %s：控制序列不符，原文 %v、譯文 %v", name, label, a, b)
 			}
 
 			// 3. Big5 以外的字沒有字模，畫面上會變成空白。
 			if bad := nonBig5(e.Target); len(bad) > 0 {
-				report("%s #%d：以下字元不在 Big5，畫面上會缺字：%s",
-					name, e.Index, string(bad))
+				report("%s %s：以下字元不在 Big5，畫面上會缺字：%s",
+					name, label, string(bad))
 			}
 
 			// 4. 長度失控。一頁 5 行 × 38 格，超太多就得多翻一頁。
@@ -251,4 +272,19 @@ func coveredByCompound(term glossaryTerm, all []glossaryTerm, src, dst string) b
 		}
 	}
 	return false
+}
+
+// chainIndex 從 `chain.<檔名>.<索引>` 取出記錄索引。
+//
+// 名稱型 key 的格式由 dumpEvents 產生，這裡是它的反向 —— 兩處要一起改。
+func chainIndex(name string) (int, bool) {
+	i := strings.LastIndex(name, ".")
+	if i < 0 || !strings.HasPrefix(name, "chain.") {
+		return 0, false
+	}
+	n, err := strconv.Atoi(name[i+1:])
+	if err != nil {
+		return 0, false
+	}
+	return n, true
 }

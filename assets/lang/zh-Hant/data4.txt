@@ -127,3 +127,21 @@ The Crystal Cave. This is a cave carved out of a large glacier at the base of th
 Before you can be seen two ghosts speaking to each other. One appears to be a kind-looking priest while the other is a large evil looking man. They appear to have been arguing when you entered
 :: zh
 你面前有兩個幽魂正在交談。一個看起來像是面容和善的祭司，另一個是身材高大、面相凶惡的男人。你進來時，他們似乎正在爭吵。
+
+## chain.DATA4.TXT.17
+:: en
+With the evil priest dead you notice the glint of a medallion around his neck. The High Temple of Malifon is getting to be a thorn in your side...
+:: zh
+邪惡祭司死了，你注意到他頸上一枚獎章的微光。馬利馮大神殿越來越像一根扎在你身上的刺……
+
+## chain.DATA4.TXT.2
+:: en
+Xeres speaks in a voice that bellows throughout the City- 'Woe the mortal who stands in my way for Death shall follow swift my hand...'
+:: zh
+澤瑞斯的聲音在全城迴盪 ——「擋我路的凡人有禍了，死亡將緊隨我手而至……」
+
+## chain.DATA4.TXT.3
+:: en
+Through the archway you see the town of Idlewood. With Xeres dead it seems much more peaceful but for some reason your mind is not at rest. You have completed your quest but yet you feel it is incomplete
+:: zh
+穿過拱門，你看見閒林鎮。澤瑞斯死了，鎮上顯得平靜許多，但你的心裡不知為何仍不安定。你完成了任務，卻覺得它並未結束。

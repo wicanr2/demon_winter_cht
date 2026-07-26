@@ -84,10 +84,19 @@ func dumpEvents(args []string) {
 
 		cat := &i18n.Catalog{Source: name}
 		for i, ev := range tbl.All() {
-			if strings.TrimSpace(ev.Text) == "" {
-				continue
+			if strings.TrimSpace(ev.Text) != "" {
+				cat.Entries = append(cat.Entries, i18n.Entry{Index: i, Source: ev.Text})
 			}
-			cat.Entries = append(cat.Entries, i18n.Entry{Index: i, Source: ev.Text})
+			// 續接碼 3 的第二段也是玩家會讀到的敘述（`docs/re/02` §2.4 [F]）。
+			// 用**名稱型 key**（`chain.<索引>`）而不是數字 —— 它不是獨立的
+			// 一筆記錄，是同一筆的第二段，沒有自己的記錄索引可用。
+			if ev.IsChainRedraw() && strings.TrimSpace(ev.ChainRedrawText()) != "" {
+				cat.Entries = append(cat.Entries, i18n.Entry{
+					Index: -1,
+					Name:  fmt.Sprintf("chain.%s.%d", strings.ToUpper(name), i),
+					Source: ev.ChainRedrawText(),
+				})
+			}
 		}
 
 		out := filepath.Join(*outDir, i18n.CatalogFileName(name))

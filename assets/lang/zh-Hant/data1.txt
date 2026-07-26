@@ -211,3 +211,27 @@ The walls of this room are fully covered by a complex spell and have been cracke
 This room is full of maps. One shows a volcano south of this island and the Dark Chapel on an island south of that
 :: zh
 這個房間堆滿地圖。其中一張畫著本島南方的一座火山，以及再往南一座島上的黑暗禮拜堂。
+
+## chain.DATA1.TXT.11
+:: en
+With Remondadin dead the black room is strangely silent. These catacombs are only part of a small cult that worships Xeres-the demon who destroyed Ildryn. It seems appearant that now you must find Xeres himself before he finds you
+:: zh
+雷蒙達丁死了，黑色房間安靜得詭異。這片地下墓穴只是一個小教派的一部分，他們崇奉澤瑞斯 —— 毀滅伊爾德林的那個惡魔。看來你得在澤瑞斯找到你之前先找到他。
+
+## chain.DATA1.TXT.20
+:: en
+Examining the footprints seems futile. While many of them exist they all seem to lead into East wall and stop
+:: zh
+檢查這些腳印似乎沒有意義。數量雖多，卻全都通向東邊的牆然後就沒了。
+
+## chain.DATA1.TXT.23
+:: en
+Just as the Bellkeeper breathes his last breath you feel a cold force fly past you followed by the ringing of a massive bell west of this room.
+:: zh
+守鐘人吐出最後一口氣的同時，你感到一股冷冽的力量掠過身邊，接著這個房間西邊傳來巨鐘的鳴響。
+
+## chain.DATA1.TXT.32
+:: en
+Eregore stands before a large black mirror at the northern edge of the room and a look of horror has come across his face. He stands waiting for you to advance. You sense great power before you
+:: zh
+艾瑞戈爾站在房間北緣一面巨大的黑鏡前，臉上浮現驚駭。他站著等你上前。你感覺到眼前有強大的力量。

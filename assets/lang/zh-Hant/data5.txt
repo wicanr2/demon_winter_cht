@@ -67,3 +67,9 @@ The Hall of Illusion. Purple mist sways back and forth as if alive. As you peer 
 A golden bridge spans the lake of fire before you. Two great dragons guard the bridge and a huge demon commands them
 :: zh
 一座金橋橫跨你面前的火湖。兩條巨龍守著這座橋，一隻巨大的惡魔指揮牠們。
+
+## chain.DATA5.TXT.8
+:: en
+The statue turns back to stone and quietly resumes its place in the room. Sulfuric mist flows freely down the staircase
+:: zh
+雕像重新化為石頭，安靜地回到房間裡原本的位置。硫磺的霧氣毫無阻礙地順著階梯流下。

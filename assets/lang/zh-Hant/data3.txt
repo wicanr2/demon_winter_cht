@@ -157,3 +157,15 @@ The wall to your left is made of silver bricks and beyond it you see a fabulous 
 Exit this way
 :: zh
 出口在這邊。
+
+## chain.DATA3.TXT.17
+:: en
+With the Slavers dead the Human (an old man) thanks you for saving his life. He says he is the groundskeeper for the Silver Palace and that a secret entrance exists on the East wall of the garden
+:: zh
+奴役惡魔都死了，那名人類（一位老人）感謝你救了他的命。他說自己是銀色宮殿的園丁，花園東邊的牆上有一道密門。
+
+## chain.DATA3.TXT.20
+:: en
+The Gravekeeper dissolves into a grey ooze which then turns to smoke and floats away with the mist. A dark ominous tunnel leads into the mound and heat and a sulfurous odor are emitted from it
+:: zh
+墓地看守者化成一團灰色黏液，隨即變為煙霧，隨薄霧飄散。一條陰暗不祥的通道通進土丘，裡頭湧出熱氣與硫磺的氣味。
