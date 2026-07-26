@@ -109,7 +109,7 @@ The voice from the mirror now speaks to you:
 "Your meddling has become a t[hreat]…"
 ```
 
-`EREGORE.TXT` 共 11 頁，是**艾瑞戈爾（高階祭司）與黑鏡**那場戲：
+`EREGORE.TXT` 共 10 頁（0–9），是**艾瑞戈爾（高階祭司）與黑鏡**那場戲：
 他愈來愈慌張、不斷向鏡子求助，最後鏡子裡的聲音（馬利馮）直接對玩家說話。
 
 **所以 `+0xbe`（城鎮全成廢墟）就是這場戲的結果。**
@@ -137,7 +137,7 @@ The voice from the mirror now speaks to you:
 |---|---|---|---|
 | `T.TXT` | 1670 | 3 | 三場夢 |
 | `WIN.TXT` | 3987 | 7 | 結局 |
-| `EREGORE.TXT` | 3621 | 11 | 艾瑞戈爾與黑鏡 |
+| `EREGORE.TXT` | 3621 | 10 | 艾瑞戈爾與黑鏡 |
 
 目前引擎**一頁都還沒接** —— `docs/re/61` §2 的結局是拿寫死的
 `ds:0x066a` 那一句頂著，夢境與艾瑞戈爾整段都沒有。
