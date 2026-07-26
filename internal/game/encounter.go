@@ -5,7 +5,10 @@ import "github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 // 野外隨機遭遇。
 //
 // 原版是 `FUN_222f_2a5b`（Ghidra `222f:2a5b` = DEMON.INT 檔位移 `0x2694b`），
-// 觸發在 `FUN_222f_0763`（時間推進）。資料表的來歷與「地形就是可通行性值」
+// 掛在事件動作分派表的 `case 0x16`。**觸發條件是倒數計時器
+// `隊伍[+0x9c]` 歸零**（`0x16aee`），不是機率 —— 本文原本寫的
+// 「觸發在 FUN_222f_0763（時間推進）」是把商隊那一擲當成了戰鬥，
+// 見 `docs/re/51`。計時器的重設規則還沒解。資料表的來歷與「地形就是可通行性值」
 // 這個結論見 `internal/assets/gamedata/encounter.go` 與 `docs/re/24`。
 //
 // # 流程
@@ -29,8 +32,16 @@ import "github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 // 所以沼澤那一組（十筆全是 `>= 100`）出來的一定是清一色的鬼火群或鬼墳族群，
 // 不會混雜。這解釋了為什麼手冊要特別提醒那兩隻。
 const (
-	// EncounterChanceMask／EncounterChanceHit 是每走一步的遭遇擲點
-	// （222f:081b–0823）：`rnd_raw() & 0x3f == 0x34`，也就是 1/64。
+	// EncounterChanceMask／EncounterChanceHit 是 `222f:081b–0823` 的
+	// 1/64 擲點：`rnd_raw() & 0x3f == 0x34`。
+	//
+	// ⚠ **那一擲不是隨機戰鬥，是商隊**（`docs/re/51`）。它設的回傳碼是
+	// `0x17`，而動作分派表的 `case 0x17` 是商隊遭遇；挑怪那一支
+	// （`222f:2a5b`）掛在 `case 0x16`，由**倒數計時器 `隊伍[+0x9c]`**
+	// 歸零觸發，不是機率。
+	//
+	// 常數本身沒錯，錯的是它接到哪裡。本專案現在拿它觸發商隊；
+	// 隨機戰鬥另外擲一次同樣機率的**替身**（倒數計時器的重設值還沒解）。
 	EncounterChanceMask = 0x3f
 	EncounterChanceHit  = 0x34
 

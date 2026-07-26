@@ -245,6 +245,7 @@ func (a *app) Update() error {
 		if res == game.MoveOK {
 			a.stepBoat(tile)
 			a.checkEvent(tile)
+			a.checkMerchantEncounter()
 			a.checkRandomEncounter(tile)
 		}
 	}
@@ -436,9 +437,32 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 // 目前的難度取隊伍最高等級，鉗在 1–10。原版存在 `ds:0x5c60`，會隨劇情推進
 // 被加值（`222f:2b5f`），那條加值路徑的觸發條件還沒追出來，所以先用隊伍等級
 // 近似 —— 這是**本作自己的取捨**，不是原版行為。
+// checkMerchantEncounter 擲原版那道 1/64（`222f:081b`，見 `docs/re/51`）。
+//
+// **這一擲的回傳碼是 `0x17`，而動作分派表的 `case 0x17` 是商隊** ——
+// 本專案原本把它接到隨機戰鬥上，接錯了。條件與戰鬥那條一樣：
+// 戶外（子地圖編號 >= 9）、而且不在別的畫面裡。
+func (a *app) checkMerchantEncounter() {
+	if a.mapID < worldMapMinID || a.battle != nil || a.box.Active() ||
+		a.merchant != nil || a.camp != nil {
+		return
+	}
+	if !game.EncounterTriggered(int(a.rng.Next())) {
+		return
+	}
+	a.openMerchant()
+}
+
+// checkRandomEncounter 擲隨機戰鬥。
+//
+// ⚠ **原版的觸發是倒數計時器 `隊伍[+0x9c]` 歸零**（`0x16aee` → 動作碼
+// `0x16` → `222f:2a5b`），不是機率。計時器的重設規則還沒解
+// （`docs/re/51` §4），所以這裡先用同樣的 1/64 當**替身** ——
+// 不接的話野外就完全不會打架，那比接一個標明是替身的機率更失真。
 func (a *app) checkRandomEncounter(tile byte) {
-	if a.mapID < worldMapMinID || a.battle != nil || a.box.Active() {
-		return // 地城不擲；已經在戰鬥或讀敘述時也不擲
+	if a.mapID < worldMapMinID || a.battle != nil || a.box.Active() ||
+		a.merchant != nil {
+		return // 地城不擲；已經在戰鬥、讀敘述或看貨時也不擲
 	}
 	if !game.EncounterTriggered(int(a.rng.Next())) {
 		return
