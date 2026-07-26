@@ -181,8 +181,13 @@ func check(args []string) {
 				continue
 			}
 			if bad := nonBig5(e.Target); len(bad) > 0 {
-				report("%s #%d：以下字元不在 Big5，畫面上會缺字：%s",
-					src, e.Index, string(bad))
+				// 名稱型條目的 Index 是 −1，印出來沒有意義。
+				where := fmt.Sprintf("#%d", e.Index)
+				if e.Name != "" {
+					where = e.Name
+				}
+				report("%s %s：以下字元不在 Big5，畫面上會缺字：%s",
+					src, where, string(bad))
 			}
 		}
 	}
@@ -200,7 +205,11 @@ func check(args []string) {
 
 // nameCatalogs 是「純名稱」的翻譯目錄，沒有控制序列也沒有長度限制，
 // 只需要驗 Big5 與完成度。
-var nameCatalogs = []string{itemSource, monsterSource, townSource, monthSource, skillSource}
+var nameCatalogs = []string{itemSource, monsterSource, townSource, monthSource, skillSource,
+	// STORY 是三場夢／結局／艾瑞戈爾的分頁文字（`docs/re/82`）。
+	// **一定要算進進度**：它有 20 頁，不算的話 `check` 會在 17 頁還是英文的
+	// 情況下回報「100%」—— 就是上面那句「進度數字漏算比沒有數字更糟」。
+	storyCatalogSource}
 
 // verbSeq 抓 printf 風格的控制序列。
 var verbSeq = regexp.MustCompile(`%[-+ #0]*\d*(?:\.\d+)?[a-zA-Z%]`)

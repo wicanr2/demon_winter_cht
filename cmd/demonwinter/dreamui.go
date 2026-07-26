@@ -35,9 +35,9 @@ func (a *app) drawDream(dst *ebiten.Image) {
 		a.font.Draw(dst, s, layout.BoxPadX*2, y)
 		y += ui.LineHeight
 	}
-	// 原版斷行是照它的 40 欄畫面，這裡是 37 欄 —— 要再斷一次，
-	// 不然字尾會被切掉（見 storyLines）。
-	for _, l := range storyLines(a.dreamText.Page(a.dreamPage)) {
+	// 有中譯就用中譯（整頁一條，自帶換行）；沒有就把英文原文重斷行 ——
+	// 原版是照它的 40 欄畫面斷的，這裡只有 37 欄，不重斷字尾會被切掉。
+	for _, l := range a.storyPage("T", a.dreamPage, a.dreamText.Page(a.dreamPage)) {
 		line(l)
 	}
 	line("　")

@@ -190,9 +190,21 @@ func (a *app) drawEndingPage(line func(string), page int) {
 		a.drawEndingFallback(line)
 		return
 	}
-	for _, l := range storyLines(lines) {
+	for _, l := range a.storyPage("WIN", page, lines) {
 		line(l)
 	}
+}
+
+// storyPage 取一頁劇情文字，有中譯就用中譯。
+//
+// 譯文以**整頁**為單位（`dwstrings story`）—— 原版的行是照它 40 欄畫面斷的，
+// 中文的斷點本來就不一樣，逐行對譯會逼譯者遷就英文的斷點。
+// 所以譯文自己帶換行，這裡照它的換行切開就好，不再套 storyLines 的重斷。
+func (a *app) storyPage(file string, page int, src []string) []string {
+	if zh := a.tr.UI(fmt.Sprintf("story.%s.%d", file, page), ""); zh != "" {
+		return strings.Split(zh, "\n")
+	}
+	return storyLines(src)
 }
 
 // storyLines 把劇情文字的一頁調整成這個畫面放得下的行。

@@ -1,0 +1,387 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ STORY
+
+## story.EREGORE.0
+:: en
+Eregore, the High Priest stands before
+you, unusually confident with only 2 of
+his henchmen remaining. To his side is a
+large, round, ominous black mirror from
+which a feeling of greet evil eminates.
+To the other side of him a beautiful,
+round, multi-faceted mirror hangs by a
+thin thread from the ceiling. Eregore
+speaks to you:
+"You fools believe you are so powerful.
+You have no idea what true power is.
+Malifon, my master, is the supreme
+power. You are lucky he let you live so
+long."
+You may respond:
+1) "It was no luck. We are more powerful
+    than you or him."
+2) "He cannot harm us as long as we hold
+    the Demon Crystal of Kalek-Zin."
+:: zh
+
+
+## story.EREGORE.1
+:: en
+"We shall see who is more powerful and
+ who lives to see tomorrow."
+:: zh
+
+
+## story.EREGORE.2
+:: en
+Eregore looks at the black mirror with
+a questioning glance and then returns
+his gaze to you. "Who is this
+Kalek-Zin?"
+You may respond:
+1) "He was the greatest of the White
+   Knights, but alas, has been dead for
+   centuries"
+2) "He is an ancient God, the last of an
+    old race."
+3) "Kalek-Zin is a great dragon from
+    whom we stole this magical artifact"
+:: zh
+
+
+## story.EREGORE.3
+:: en
+"Let us see if he helps you now."
+:: zh
+
+
+## story.EREGORE.4
+:: en
+"If you had no trouble in slaying such
+a great dragon than you should be able
+to defeat me with equal ease and grace."
+:: zh
+
+
+## story.EREGORE.5
+:: en
+Eregore is becoming more upset. He has
+the air of a simple man who has only
+recently come to hold great power. He
+appears more a tool of some greater
+power than one who has risen to
+greatness by his own accord. Again he
+looks to the mirror for guidance and
+then speaks to you. "All the White
+Knights are dead. There is no one to
+stop me from taking over Ymros. Malifon
+will help me take power and make me
+ruler of all these lands."
+You may respond:
+1) "We will stop you."
+2) "If he plans to help you rule then
+    why has he stolen the Shard of
+    Spring?"
+:: zh
+
+
+## story.EREGORE.6
+:: en
+"Even they are not powerful enough to
+defeat me."
+:: zh
+
+
+## story.EREGORE.7
+:: en
+"That's not true!" (He turns to
+the black mirror and speaks) "Do you
+have the Shard of Spring?"
+   A powerful voice speaks from the
+black mirror: "Yes"
+   Eregore is shaking with fright. He
+now speaks like a child. "If you destroy
+the Shard a Winter will strike the land.
+Of course you will spare your loyal
+followers..."
+   The voice speaks firmly: "Your
+purpose was to free me. Now that you
+have done that I have no need of you."
+:: zh
+
+
+## story.EREGORE.8
+:: en
+   Eregore is now shaking like a leaf.
+In a scared tone of voice he utters a
+single word: "Why?"
+   Malifon speaks:
+   "My Winter shall cleanse
+       the land of mortal souls
+    And, once again,
+       Silence shall embrace the Wind
+          and Gods shall walk the Earth"
+   Eregore appears in total shock, as if
+some spirit has drained the life from
+his body. He cries out "I was wrong...
+I've helped destroy the world." From
+beneath his cloak he produces a curved
+dagger. "May there be a benevolent god
+to watch over me now..." Eregore falls
+limp to the floor.
+   The voice laughs. "You are a fool.
+The Benevolent Ones are dead.
+:: zh
+
+
+## story.EREGORE.9
+:: en
+   The voice from the mirror now speaks
+to you:
+   "Your meddling has become
+       a thorn in my side.
+    Eregore died a fool's death
+       yours will be worse.
+    For now I shall shatter your
+       precious Shard and
+    My Winter shall begin.
+    Do not believe you have felt
+       the last of my wrath.
+    Your pain is my sustenance
+       your blood my drink,
+    I do not intend to starve."
+   With those words a shattering is
+heard that shakes the bowels of the
+earth and your head reels as the land
+screams out to you in pain.
+   The black mirror shatters but the
+round one still remains. Eregore's
+henchman flee from the room in fear and
+Eregore lies dead at your feet.
+:: zh
+
+
+## story.T.0
+:: en
+Your sleep is disturbed by horrible
+dreams. You dream that a great evil kept
+dormant for eons has just been unleashed
+on the world. A powerful voice- too real
+to be a nightmare- speaks to you from
+the darkness of your sleep-
+     Like the Night I have come
+     But at dawn I shall stay
+     To reap of the land that
+     Once was my own.
+     The Ancients that banished me
+     One thousand eons past
+     To spaceless void
+     Now are gone
+     And leave no fickle trace behind.
+     Come the morrow the sun shall rise
+     But never again as bright
+     Until the land in icy winter
+     Returns to face the Night
+:: zh
+睡夢被可怕的惡夢攪亂。你夢見一股沈睡了萬古的
+巨大邪惡，剛剛被釋放到這個世界上。一個聲音
+——真實得不像惡夢——從睡眠的黑暗中對你說話：
+
+　　如夜而來
+　　破曉不去
+　　收割這片
+　　曾屬於我的土地。
+
+　　將我放逐的遠古種族
+　　千萬紀元之前的事了
+　　放逐到無涯的虛空
+　　如今他們都已不在
+　　連一絲痕跡也沒有留下。
+
+　　明日太陽仍會升起
+　　卻再也不會那樣明亮
+　　直到這片土地在冰封的冬天裡
+　　回頭直視長夜
+
+## story.T.1
+:: en
+The Orb of Evertime now is yours
+   But your quest remains in vain
+I was alive before mortals touched the
+   Earth
+   And no mortal there can touch me.
+It is true that with the Demon crystal
+   I can lay not tooth nor claw upon you
+But I can make you wish
+   you were never born
+Let these the words of Malifon be heard-
+The sky shall Flame
+   The Earth shall Bleed
+All that is Dark shall rise up in glory
+   And all that is Light
+      Shall be trampled underfoot
+:: zh
+恆世寶珠如今是你的了
+　　但你的追尋仍是徒勞
+在凡人觸及大地之前我就已存在
+　　沒有任何凡人碰得到我。
+確實，有了惡魔水晶
+　　我無法對你伸出獠牙與利爪
+但我能讓你但願
+　　自己從未出生
+且聽馬利馮之言——
+天空將燃燒
+　　大地將流血
+一切黑暗之物都將榮耀地升起
+　　而一切光明之物
+　　　　都將被踐踏在腳下
+
+## story.T.2
+:: en
+As you sleep a thousand images pass
+through your mind- images of dark and
+gloomy forests and rivers of flame
+Images of great battles being fought
+between gods and a black force with
+power beyond comprehension. One by one
+the gods are killed- the Eagle. The Swan
+The Raven. The Woman of Colors. The
+Tiger. One by one they are defeated and
+fall into the flaming waters below
+Clerics all over Ymros wake up with the
+feeling that something has been torn
+from their souls. Images of
+great flaming thunderbolts turning
+temples to ruins appear again and again.
+     The gods are dead.
+:: zh
+睡夢中有千萬個影像掠過你的腦海——
+陰暗幽森的森林，燃燒著火焰的河流。
+諸神與一股黑暗力量交戰的景象，
+那股力量強大得無法理解。
+神祇一位接一位被殺——鷹、天鵝、
+烏鴉、彩衣女子、猛虎。
+一位接一位被擊敗，墜入下方燃燒的水中。
+
+依姆羅斯各地的祭司在同一刻醒來，
+感覺有什麼東西從自己的靈魂裡被撕走了。
+巨大的火焰雷霆把神殿化為廢墟——
+這個景象一再一再地出現。
+
+　　　　諸神已死。
+
+## story.WIN.0
+:: en
+A resounding, primevil scream is heard
+from deep within the bowels of the
+volcano.  The walls shake and begin to
+crumble around you. As the Imprison
+spell takes effect, the sounds of
+Malifon's agony are quickly stifled,
+but the walls of the mountain are
+still weak.
+Just as the collapse of the walls
+around you seems imminent you find
+yourself enveloped in darkness, yet
+surrounded by light. In your mind can
+be heard the voice of the Ancient One.
+:: zh
+
+
+## story.WIN.1
+:: en
+'You have done well. As long as the
+spell holds, Malifon's evil is
+contained within the Volcano.
+'Many young adventurers set out to
+destroy the root of this evil; many
+died along the way and many gave up
+the quest when they could not find the
+courage within them to continue. You
+alone have succeeded, time and again,
+to defeat Xeres, acquire the Orb of
+Evertime, destroy Malifon's High
+Temple, and eventually imprison
+Malifon itself.
+:: zh
+
+
+## story.WIN.2
+:: en
+'Although Malifon's evil has been
+contained, the effects of its evil are
+still felt on Ymros. With the Shard
+gone, the land still lies in Winter
+and, though Malifon's Corruption is
+now ended, many towns have been turned
+to ruins. Perhaps worst of all, the
+gods that the people of Ymros have
+relied upon for centuries are now dead
+and the people lose hope.
+:: zh
+
+
+## story.WIN.3
+:: en
+'I do not say this work is yours, for
+you have done more good than this land
+can ever repay. For this reason I
+offer to reward you by making you
+immortal and you shall rule by my side
+for the rest of eternity.'
+You may respond:
+  1) I accept your offer.
+  2) I must decline. There is too much
+     work to be done here on Ymros.
+:: zh
+
+
+## story.WIN.4
+:: en
+'I am glad you have accepted. It is
+time that a new breed of adventurers
+complete the work you have started.'
+A green mist seems to surround you and
+incredible power flows through your
+veins.  The mist changes to blue and
+then clouds appear.  Soon the land-
+scape of Ymros can be seen clearly
+below and, at once, you can see and
+control everything with ease.
+The ages pass by without notice.  New
+adventurers take your place and Ymros
+is slowly healed.
+All is well until, in a distant
+future, the volcano begins to
+rumble ...
+CONGRATULATIONS! You have won Demon's
+Winter. I hope you have enjoyed your
+adventure.
+:: zh
+
+
+## story.WIN.5
+:: en
+'You are indeed noble, and if
+mortality is your wish, then it shall
+be granted. I will make sure the
+remainder of your lives are visited
+by good fortune and prosperity.'
+:: zh
+
+
+## story.WIN.6
+:: en
+went back to the town of Woodhaven and was instrumental in its reconstruction. After rebuilding the city, he settled down there and lived to a ripe old age
+went on to unite the remaining peoples of Ymros and quickly became its first King. He ruled Ymros wisely until the end of his days.
+walked off alone to fight the monsters that still wandered aimlessly after Malifon was imprisoned. His bravery became well known throughout Ymros and he still lives on in legends.
+wandered for a while and then dissapeared into the mountains, never to be seen again. Many a tale says he will return to Ymros if ever needed again.
+became the first in two millenium to take the title of High Priest of the Ancient One. With his accumulated wealth, he built an enormous temple to the Ancients and spread word of the new god.
+heard in the tavern of untold wealth in lands to the North and went in search of the fortune. He gathered a party and explored many dungeons, eventually retiring in luxury.
+went on a great quest for the Lifestone in order to build a new Shard of Spring. While he did not live to see its completion, the new Shard was named in memory of him and still protects Ymros.
+went to the hills to build a school of magic. It soon became famous and many of his pupils later became legends in their own right.
+served as advisor to the new King of Ymros. Due to his excellent advice and forsight, the land of Ymros remained in peace as long as he lived.
+devoted his life to studying the Battle of the Gods. His life's work was compiled into a tome of a thousand pages and stood as an example for all scholars to follow.
+:: zh
+
