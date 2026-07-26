@@ -210,3 +210,41 @@ func TestUIAndIndexCoexist(t *testing.T) {
 		t.Errorf("名稱型條目跑進 byIndex 了：%q", got)
 	}
 }
+
+// TestVerify_IgnoresNameTypeEntries 釘住「名稱型條目不參與索引核實」。
+//
+// 續接碼第二段用的是名稱型 key（`chain.DATA1.TXT.3`），沒有數字索引。
+// 曾經因為沒跳過它們，每一條都被 `Index < 0` 判成「索引超出範圍」，
+// 實機一啟動就印「4 條譯文的原文對不上，重跑 dwstrings events」——
+// 而譯文完全正確，`dwstrings check` 那邊是 368/368 通過的。
+func TestVerify_IgnoresNameTypeEntries(t *testing.T) {
+	dir := t.TempDir()
+	body := `@@ DATA1.TXT
+
+## 0
+:: en
+Two guards are in the room
+:: zh
+房裡有兩名衛兵。
+
+## chain.DATA1.TXT.3
+:: zh
+續接碼第二段
+`
+	if err := os.WriteFile(filepath.Join(dir, "data1.txt"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	tr, err := Load(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := tr.Verify(dir, "DATA1.TXT", []string{"Two guards are in the room"}); err != nil {
+		t.Fatal(err)
+	}
+	if n := len(tr.Mismatched()); n != 0 {
+		t.Errorf("名稱型條目不該被判定脫節，卻回報了 %d 條", n)
+	}
+	if got := tr.UI("chain.DATA1.TXT.3", "X"); got != "續接碼第二段" {
+		t.Errorf("名稱型譯文應保留，得到 %q", got)
+	}
+}

@@ -113,6 +113,16 @@ func (t *Translator) Verify(dir, source string, texts []string) error {
 		return err
 	}
 	for _, e := range c.Entries {
+		// 名稱型條目（`chain.DATA1.TXT.3` 這種）沒有數字索引，
+		// 它們的原文核實是 `dwstrings check` 對 `ChainRedrawText()` 做的，
+		// 不是拿 texts[i] 比。這裡不跳過的話，每一條都會因為 Index < 0
+		// 被當成「索引超出事件表範圍」報上來 —— 譯文其實好好的，
+		// 卻叫使用者去重跑 `dwstrings events`。
+		//
+		// 會叫錯的閘門比沒有閘門更糟：它一旦開始誤報，真的警告就會被當雜訊。
+		if e.Name != "" {
+			continue
+		}
 		if e.Index < 0 || e.Index >= len(texts) {
 			t.mismatched = append(t.mismatched, Mismatch{Source: source, Index: e.Index})
 			delete(t.byIndex, key(source, e.Index))

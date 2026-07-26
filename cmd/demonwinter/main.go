@@ -7,7 +7,7 @@
 //
 //   - 走動：原版地圖（含 SUM.MAP 的世界子地圖）、可通行性表、困難地形、
 //     日夜與時間推進、常態／雪地圖塊切換
-//   - 事件：EXITS.DAT 查表與直接索引兩條觸發路徑、敘述文字、傳送、遭遇
+//   - 事件：`nSS.DAT` 查表與直接索引兩條觸發路徑、敘述文字、傳送、遭遇
 //   - 戰鬥：行動點、移動與轉向、攻擊、法術（含範圍法術與選點游標）、
 //     驅散不死、祈禱、汲取法力、閃避、道具、戰場地形與視線遮蔽
 //   - 城鎮：走到城鎮格自動進城、七種設施、市集議價
@@ -84,7 +84,15 @@ type app struct {
 	useWinter      bool
 	font           *ui.MixedFont
 
-	exits  *world.ExitTable
+	// exits 是 EXITS.DAT。**事件查表已經不用它了** —— 那是 `docs/re/05` §1.3
+	// 誤判造成的（見 special 欄位）。留著是因為 EXITS.DAT 本身確實存在、
+	// 而且是 6-byte 記錄，只是它的消費端還沒解出來（`docs/re/77` §3）。
+	exits *world.ExitTable
+
+	// special 是每張子地圖的特殊格清單（`nSS.DAT`）—— 事件與傳送的真正來源。
+	// key 是子地圖編號（1–5）。沒有這張表的子地圖查不到就是沒有事件。
+	special map[int]*scenario.SpecialTiles
+
 	events *scenario.EventTable
 	tables *gamedata.Tables
 
@@ -629,16 +637,27 @@ func (a *app) checkEvent(tile byte) {
 		idx = int(tile)
 
 	case game.TriggerLookup:
-		q := game.LookupEvent(a.exits, byte(a.party.X()), byte(a.party.Y()), nil)
-		if !q.Found {
+		// 查的是這張子地圖的 `nSS.DAT`，不是 EXITS.DAT。
+		// 之前餵 EXITS.DAT 是照 `docs/re/05` §1.3 的誤判做的，而那個檔
+		// 其實是 6-byte 記錄 —— 用 3-byte 切開，每一筆的座標與類別都是錯的
+		// （`docs/re/77` §3）。
+		st := a.special[a.mapID]
+		if st == nil {
 			return
 		}
-		if q.Category == game.CatTeleport {
-			a.party.TeleportTo(int(q.TeleportX), int(q.TeleportY))
-			a.message = fmt.Sprintf("被傳送到 (%d,%d)", q.TeleportX, q.TeleportY)
+		hit := st.Lookup(byte(a.party.X()), byte(a.party.Y()))
+		if hit == nil {
 			return
 		}
-		idx = q.Index
+		if hit.Teleport {
+			a.party.TeleportTo(int(hit.Dest.X), int(hit.Dest.Y))
+			a.message = fmt.Sprintf("被傳送到 (%d,%d)", hit.Dest.X, hit.Dest.Y)
+			return
+		}
+		idx = hit.EventIndex
+		// 記錄「看過了」：類別留著，記錄之後照樣命中（`docs/re/78` §3）。
+		// ⚠ 這個改動目前只留在記憶體 —— 存回 `nSS.DAT` 還沒做（見 CONTEXT §7 A2）。
+		st.MarkVisited(hit.Index)
 	}
 
 	a.showEvent(idx)
@@ -1003,6 +1022,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入 EXITS.DAT：%v", err)
 	}
+	special, err := loadSpecialTiles(*dataDir)
+	if err != nil {
+		log.Fatalf("載入特殊格清單：%v", err)
+	}
 	events, err := scenario.LoadEventTable(filepath.Join(*dataDir, *dataFile))
 	if err != nil {
 		log.Fatalf("載入事件表：%v", err)
@@ -1096,6 +1119,7 @@ func main() {
 		mapID:      mapID,
 		drawTiles:  ditheredTiles(m, uint16(*seed)),
 		exits:      exits,
+		special:    special,
 		events:     events,
 		tr:         tr,
 		eventsFile: *dataFile,
@@ -1341,4 +1365,29 @@ func (a *app) stepHPTick() {
 	if res.AllDead {
 		a.message = a.tr.UI("plot.allfell", "全隊都倒下了")
 	}
+}
+
+// loadSpecialTiles 載入五張子地圖的特殊格清單（`1SS.DAT`–`5SS.DAT`）。
+//
+// 缺檔不算錯 —— 大地圖與城鎮本來就沒有清單（原版只在子地圖 < 10 才載入，
+// 見 `docs/re/77` §2），而且原版資料目錄只有 1–5 這五個檔。
+// 查不到就是「這張圖沒有特殊格」，不是失敗。
+func loadSpecialTiles(dir string) (map[int]*scenario.SpecialTiles, error) {
+	out := make(map[int]*scenario.SpecialTiles)
+	for id := 1; id <= scenario.SpecialTileMapCount; id++ {
+		path := filepath.Join(dir, scenario.SpecialTileFileName(id))
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, err
+		}
+		st, err := scenario.ParseSpecialTiles(raw)
+		if err != nil {
+			return nil, fmt.Errorf("%s：%w", path, err)
+		}
+		out[id] = st
+	}
+	return out, nil
 }
