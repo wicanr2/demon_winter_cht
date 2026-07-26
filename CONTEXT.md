@@ -1488,6 +1488,7 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`35-battle-deployment.md`](docs/re/35-battle-deployment.md) | **開戰擺位**：隊伍照陣型站中央、怪物散在 ±2、地圖兼作佔位表；單位結構間距 38、玩家從槽位 7 起；9×9 是捲動視窗不是邊界 |
 | [`34-formation-grid.md`](docs/re/34-formation-grid.md) | **3×3 陣型格**（trailer `+0x00`–`+0x08`）：四個呼叫端、Reorder 是整張重填、佈陣的座標換算（讀出來但未接）|
 | [`33-camp-menu-items.md`](docs/re/33-camp-menu-items.md) | **紮營選單 14 項**的完整對照（名稱／快捷鍵／處理常式）＋ Drop 與 Trade 的規則；訂正 `docs/re/26` 的 13 項與「順序對不上」|
+| [`71-eregore-t-cypher.md`](docs/re/71-eregore-t-cypher.md) | **`EREGORE.TXT`／`T.TXT` 沒有載入路徑**（掃過六種定址模式零命中，與 `OPEN.PIE`／`TITLE.PIC` 同一類「資料在、程式沒接」）；`CYPHER.SHP` 載入點 `0x1b0da` |
 | [`70-t2c-t2d-trigger.md`](docs/re/70-t2c-t2d-trigger.md) | **`T2C`／`T2D` 的觸發**：子地圖 <3 或 ≥3，讀不同偏移；兩者是同一個字串被就地改寫第 3 個 byte（`T2D.TXT` 在檔案裡不存在）；更正 `docs/re/60` §3 記錯的表位址 |
 | [`69-remaining-step-actions.md`](docs/re/69-remaining-step-actions.md) | **移動分派表最後四格**：`0x08` 地城探索地圖、`0x0c` Use／`0x0a` Examine（參數選提示詞）、`0x0f` 觀室、`0x10` 鑑物（技能 27／28）；更正「`0x0c`／`0x12` 成對」|
 | [`68-dungeon-traps.md`](docs/re/68-dungeon-traps.md) | **地城陷阱的數值**：毒針 `Roll(4)` 完整追過並接上動作 `0x18` 全滅；其餘四種列擲點位置；更正「兩格＝偵測／踩到」為「普通版／有害版」 |
