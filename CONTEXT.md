@@ -1141,6 +1141,15 @@ Go 的零值剛好落在那一格。不是估價公式錯，**是掉寶生成器
 沒有證據裁決，所以不猜；本專案的 `LootItemTypeFor` 用光次數退回匕首，
 症狀（清一色匕首）留在畫面上看得見。偵錯旗標 `-merchant-base N` 是為此加的。
 
+**順帶把事件動作分派表整張挖出來（`docs/re/50` §1.1）。** Turbo C 把 switch
+的分派放在**函式最後面**，往前找沒有用；掃 `jmp word ptr cs:[bx+d16]` 的
+指令碼 `2e ff a7` 直接命中。`sub ax,6 / cmp ax,0x15` →
+**動作碼值域 6–26（21 個）**，跳表在 `222f:0563`。商隊是 **`0x17`**；
+另外三個靠字串認出來：`0x0d`「It's too crowded here」、
+`0x19`「Your crew refuses to sail any further…」（航到世界邊緣）、
+`0x1a`「The sun is rising」（天亮）。
+`docs/re/05` 卡住的「誰在什麼時候用什麼參數重新呼叫」現在有骨架可以對。
+
 ## 3. 文件索引
 
 ### 規格層 `docs/spec/` — 實作的唯一依據
