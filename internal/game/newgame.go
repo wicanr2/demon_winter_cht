@@ -98,6 +98,12 @@ func ApplyNewGame(s *scenario.SaveGame, encounterCountdown int) {
 	}
 	s.EncounterCountdown = byte(encounterCountdown)
 
+	// **隊伍人數歸零。** 原版的建角程式每造好一個角色就 `inc trailer[+0x9a]`
+	// （`0x15109`），所以一支還沒建角的隊伍是 0 人。
+	// 出貨存檔是 5，不歸零的話「建到一半就存檔」會寫出「5 人」但其中
+	// 幾個還是別人的角色 —— 而讀回來完全看不出來。
+	s.PartySize = 0
+
 	// 船隻陣列先全部清空，再放那一艘 —— 出貨存檔裡有兩艘船，
 	// 只覆蓋第 9 格的話會把別人玩剩的船帶進新遊戲。
 	for i := range s.Ships {

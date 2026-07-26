@@ -319,6 +319,10 @@ func (a *app) advanceNewGameParty() {
 		return
 	}
 	a.newGameSlots--
+	// 隊伍人數跟著建好的數量走（原版是每造一個就 `inc trailer[+0x9a]`，
+	// `0x15109`）。**只在強制流程裡動** —— `F1` 是覆寫既有槽位，
+	// 那條路加人數會愈換愈多。
+	a.save.PartySize = byte(len(a.members) - a.newGameSlots)
 	if a.newGameSlots == 0 {
 		a.message = "隊伍組好了。按 S 存檔。"
 		return

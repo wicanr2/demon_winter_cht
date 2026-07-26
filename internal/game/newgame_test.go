@@ -92,6 +92,11 @@ func TestApplyNewGame(t *testing.T) {
 		}
 	}
 
+	// 隊伍人數歸零 —— 原版建角是「每造一個 +1」（`0x15109`）。
+	if s.PartySize != 0 {
+		t.Errorf("隊伍人數 = %d，新遊戲還沒建角應該是 0", s.PartySize)
+	}
+
 	// 陣型格全部是 0xff（空），**不是 0** —— 0 是合法的槽位編號。
 	for i, f := range s.Formation {
 		if f != newGameFormationEmpty {

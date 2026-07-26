@@ -66,9 +66,10 @@ Xvfb :99 -screen 0 1600x900x24 >/tmp/xvfb.log 2>&1 &
 XVFB_PID=$!
 for i in $(seq 1 50); do xdpyinfo -display :99 >/dev/null 2>&1 && break; sleep 0.1; done
 
-# 存檔寫到暫存目錄：試玩會存檔，絕不可寫回 workplace/orig（唯讀）。
-mkdir -p /tmp/pt-save
-DISPLAY=:99 /tmp/demonwinter -trace /out/trace.txt -save /tmp/pt-save/PARTY.DAT '"$*"' \
+# **存檔寫到輸出目錄**，不是容器內的暫存目錄 ——
+# 試玩產生的存檔本身就是驗收對象（人數對不對、背包清空了沒），
+# 寫在容器裡等於跑完就丟。絕不可寫回 workplace/orig（唯讀）。
+DISPLAY=:99 /tmp/demonwinter -trace /out/trace.txt -save /out/PARTY.DAT '"$*"' \
     >/tmp/app.log 2>&1 &
 APP_PID=$!
 sleep 3
