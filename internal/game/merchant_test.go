@@ -224,3 +224,41 @@ func TestMerchantSize(t *testing.T) {
 		t.Errorf("等級 %d != 規模 %d", m.Level, m.Size)
 	}
 }
+
+// 商隊議價：第一次一定成功、降 6%、翻臉之後那件貨不賣。
+func TestHaggleWithMerchant(t *testing.T) {
+	tb, items := loadTables(t), loadItems(t)
+	m := RollMerchant(rng.NewWithSeed(83), tb, items, 8)
+	if len(m.Wares) == 0 {
+		t.Fatal("這支商隊沒有貨")
+	}
+	r := rng.NewWithSeed(84)
+
+	// 商隊的議價一律從 0 開始 —— 不吃市集那個說服技能的初值加成。
+	for i, w := range m.Wares {
+		if w.Haggle != 0 {
+			t.Fatalf("第 %d 件的議價初值是 %d，商隊應該一律 0", i, w.Haggle)
+		}
+	}
+
+	list := m.Wares[0].Price
+	outcome, ok := HaggleWith(r, &m, 0)
+	if !ok || outcome != HaggleSuccess {
+		t.Fatalf("第一次議價應該一定成功，得到 %v（ok=%v）", outcome, ok)
+	}
+	if got, want := m.Wares[0].WarePrice(), HagglePrice(list, 1); got != want {
+		t.Errorf("殺價後要價 %d，預期 %d（標價 %d 打 6%%）", got, want, list)
+	}
+
+	// 一路議到翻臉，那一件就買不到了。
+	for n := 0; n < 200 && !m.Wares[0].Haggle.Refused(); n++ {
+		HaggleWith(r, &m, 0)
+	}
+	if !m.Wares[0].Haggle.Refused() {
+		t.Fatal("議了 200 次都沒翻臉，機率算式不對")
+	}
+	res := BuyFromMerchant(&m, 0, []Character{*campChar("買家")}, 999999)
+	if res.OK {
+		t.Error("翻臉之後那件不該買得到")
+	}
+}

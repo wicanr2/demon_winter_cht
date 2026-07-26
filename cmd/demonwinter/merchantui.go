@@ -74,8 +74,29 @@ func (a *app) updateMerchant() error {
 		s.cursor = (s.cursor - 1 + len(s.m.Wares)) % len(s.m.Wares)
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 		a.buyFromMerchant(s)
+	case inpututil.IsKeyJustPressed(ebiten.KeyH):
+		a.haggleWithMerchant(s)
 	}
 	return nil
+}
+
+// haggleWithMerchant 對游標上那一件議價一次（原版的 Haggle，`docs/re/52` §3）。
+func (a *app) haggleWithMerchant(s *merchantScreen) {
+	label := a.itemLabel(s.m.Wares[s.cursor].Item)
+	outcome, ok := game.HaggleWith(a.rng, &s.m, s.cursor)
+	if !ok {
+		s.message = "這件沒得談了"
+		return
+	}
+	switch outcome {
+	case game.HaggleSuccess:
+		s.message = fmt.Sprintf("殺價成功，%s 降到 %d 金幣",
+			label, s.m.Wares[s.cursor].WarePrice())
+	case game.HaggleUnmoved:
+		s.message = "商人不為所動"
+	default:
+		s.message = fmt.Sprintf("你冒犯了商人，%s 他不賣了", label)
+	}
 }
 
 func (a *app) buyFromMerchant(s *merchantScreen) {
@@ -116,9 +137,12 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 		if i == s.cursor {
 			mark = " > "
 		}
-		price := fmt.Sprintf("%d", w.Price)
-		if w.Sold {
+		price := fmt.Sprintf("%d", w.WarePrice())
+		switch {
+		case w.Sold:
 			price = "已售出"
+		case w.Haggle.Refused():
+			price = "不賣"
 		}
 		note := ""
 		if w.Item.Enchant != 0 {
@@ -133,7 +157,7 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 		line(s.message)
 		line("")
 	}
-	line("↑↓：選擇　Enter：買下　Esc：走開")
+	line("↑↓：選擇　Enter：買下　H：殺價　Esc：走開")
 }
 
 // merchantAdjective 回傳商隊規模的形容詞（已翻譯）。

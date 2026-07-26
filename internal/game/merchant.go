@@ -121,6 +121,11 @@ type MerchantWare struct {
 	Price int
 	// Sold 為 true 代表已經被買走。
 	Sold bool
+	// Haggle 是這一件的議價狀態（`docs/re/52` §3）。
+	//
+	// **商隊的議價一律從 0 開始** —— 原版開畫面時把 31 格計數器全部清 0
+	// （`0x1d52e`），不吃市集那個「隊伍裡有人會說服就給初值」的加成。
+	Haggle HaggleState
 	// Guaranteed 是原版逐件記下來的那個旗標（`ds:0x4e2e`）：這一件跳過了
 	// 第一道效果門檻。**商隊後續拿它做什麼還沒讀**（`docs/re/48` §5），
 	// 所以目前只保存不使用。
@@ -182,6 +187,29 @@ func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 	return m
 }
 
+// WarePrice 回傳這一件目前的要價（開價套上議價折扣）。
+//
+// 議價的規則與市集共用同一段程式（`docs/re/52` §2 的 case 4），
+// 所以這裡直接用 `HagglePrice` —— 每成功一次打掉 6%，下限 2 金。
+func (w MerchantWare) WarePrice() int { return HagglePrice(w.Price, w.Haggle) }
+
+// HaggleWith 對第 i 件貨議價一次。
+//
+// **第一次一定成功**（狀態 0 → 兩道門檻都是 0）。之後越議越危險：
+// 翻臉的代價是**那一件貨報廢**，不是整支商隊走人。
+func HaggleWith(r *rng.RNG, m *Merchant, i int) (HaggleOutcome, bool) {
+	if m == nil || i < 0 || i >= len(m.Wares) {
+		return HaggleOffended, false
+	}
+	w := &m.Wares[i]
+	if w.Sold || w.Haggle.Refused() {
+		return HaggleOffended, false
+	}
+	outcome, next := Haggle(r, w.Haggle)
+	w.Haggle = next
+	return outcome, true
+}
+
 // BuyFromMerchant 買下第 i 件貨。
 //
 // 估價六項全解之後（`docs/re/49`）就沒有「說不出價」這回事了 ——
@@ -194,7 +222,9 @@ func BuyFromMerchant(m *Merchant, i int, members []Character, gold int) TradeRes
 	switch {
 	case w.Sold:
 		return TradeResult{Reason: "這件已經賣掉了", Gold: gold}
-	case w.Price > gold:
+	case w.Haggle.Refused():
+		return TradeResult{Reason: "商人不肯賣這件給你了", Gold: gold}
+	case w.WarePrice() > gold:
 		return TradeResult{Reason: "金幣不夠", Gold: gold, Slot: -1}
 	}
 	for n := range members {
@@ -204,7 +234,7 @@ func BuyFromMerchant(m *Merchant, i int, members []Character, gold int) TradeRes
 		}
 		members[n].Inventory[slot] = w.Item
 		w.Sold = true
-		return TradeResult{OK: true, Gold: gold - w.Price, Slot: slot, Member: n}
+		return TradeResult{OK: true, Gold: gold - w.WarePrice(), Slot: slot, Member: n}
 	}
 	return TradeResult{Reason: "全隊的道具欄都滿了", Gold: gold}
 }
