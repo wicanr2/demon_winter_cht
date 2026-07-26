@@ -73,8 +73,8 @@ const (
 // SightBlockerTiles 是會擋住視線的地形 tile。
 //
 // 判斷式在 0x17472：`0x5d < tile < 0x62` 這一段，加上五個個別列舉的值。
-// 這些 tile 的地形語意還沒逐一對上（見 task「七大地形」），但「哪些會擋
-// 視線」本身是從機器碼直接讀出來的，不依賴那個對照。
+// 這些 tile 的地形語意已經對上了（見 encounter.go 的 Terrain 與 `docs/re/24`），
+// 不過「哪些會擋視線」是從機器碼直接讀出來的，不依賴那個對照。
 var SightBlockerTiles = []byte{
 	0x0d, 0x12, 0x13, 0x2a, 0x31,
 	0x5e, 0x5f, 0x60, 0x61,
