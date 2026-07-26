@@ -13,6 +13,12 @@ import "github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 
 // 觸發閘門用到的 tile 值。移動後看落點 tile 決定要不要查特殊格清單。
 // 見 docs/spec/03-events.md「觸發閘門」與「第二路徑」。
+//
+// ⚠ **`tileHardBlock` 這個名字是被推翻的斷言**（`docs/re/90`）。`0x35` 不是牆，
+// 是一口**治療用的水池**：走向它不會移動，但要選一名角色喝水回 1–4 HP，
+// 額度是隊伍共用、一天七次（trailer `+0xaa`，睡覺補回 7）。
+// 原版的動作 `0x11` ＝ `222f:37c4`，空了才印 `The pool is empty`。
+// 目前引擎照舊當成「什麼都不發生」，接上之前這個名字先留著並標記。
 const (
 	tileEventGateA = 0x11
 	tileEventGateB = 0x53
