@@ -187,3 +187,30 @@ func PadCells(s string, n int) string {
 	}
 	return s + strings.Repeat(" ", n-len(rs))
 }
+
+// PadCellsLeft 把 s 右靠齊在 n 個排版格內（左邊補空白）。
+//
+// 與 PadCells 同理，不要用 `%*s`：Go 依**位元組**算寬度，
+// 一個中文字 3 bytes，中文欄位會少補兩格。
+func PadCellsLeft(s string, n int) string {
+	rs := []rune(s)
+	if len(rs) >= n {
+		return string(rs[len(rs)-n:])
+	}
+	return strings.Repeat(" ", n-len(rs)) + s
+}
+
+// TruncateCells 把 s 截到最多 n 個排版格，不補空白。
+//
+// 與 PadCells 的差別只在「不足時不補」—— 用在會溢出欄寬的單行訊息上
+// （例如狀態欄的存檔路徑），補空白反而會把後面的東西推掉。
+func TruncateCells(s string, n int) string {
+	if n <= 0 {
+		return ""
+	}
+	rs := []rune(s)
+	if len(rs) <= n {
+		return s
+	}
+	return string(rs[:n])
+}

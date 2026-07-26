@@ -62,3 +62,9 @@ const TextBoxTop = CanvasHeight - BoxHeight
 // 姓名／等級／職業、種族／生命、法力／未用點數、武器／護甲 —— 共四行。
 // 名冊開著時文字視窗不會同時出現，所以它可以用滿整張畫布的高度。
 const RosterLinesPerMember = 4
+
+// StatusCells 是狀態欄一行放得下幾個排版格。
+//
+// 溢出的字會畫到畫布外被裁掉，看起來像訊息被砍一半（存檔路徑就踩過）。
+// 呼叫端用 textlayout.TruncateCells 收在這個寬度內。
+const StatusCells = (CanvasWidth - StatusX) / textlayout.CellWidthCJK

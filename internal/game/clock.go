@@ -4,19 +4,26 @@
 // 依據是 docs/spec/ 底下標 READY 的規格。
 package game
 
-// 三層時間計數器的進位常數。全部 1-based：重設值是 1，不是 0。
+// 三層時間計數器的進位常數。**進位後的重設值都是 1，不是 0。**
 // 依據 docs/spec/06-time.md（原始位元組已核對）。
 const (
 	hourWrap  = 38 // 小時到 38 → 歸 1、日 +1，故實際單位數 37
 	dayWrap   = 35 // 日到 35 → 歸 1、月 +1，故一個月 34 天
-	monthWrap = 23 // 月到 23 → 歸 1，故一年 22 個月
+	monthWrap = 23 // 月到 23 → 歸 1
 
 	// 步數計數器達這個值才推進一小時。是 11 不是 10。
 	stepsPerHour = 11
 
-	// 新遊戲的起始時間。Hour 5 正好是全日照的第一個小時。
-	startHour = 5
-	startDay  = 8
+	// 新遊戲的起始時間，來自初始化那一段（DEMON.INT 0x14908／0x1490e）：
+	// 它只寫日 = 8、時 = 5，**月完全沒寫**，所以第一個月是 0。
+	// Hour 5 正好是全日照的第一個小時。
+	startHour  = 5
+	startDay   = 8
+	startMonth = 0
+
+	// NumMonths 是月份名稱的數量。月是 0-based 的名稱索引
+	// （狀態列印 "in the Month of the Ruby"），不是序數。
+	NumMonths = 22
 )
 
 // LightLevel 是視野／光照等級，0 最亮、4 最暗。
@@ -113,9 +120,36 @@ type Clock struct {
 	steps int
 }
 
-// NewClock 回傳新遊戲的起始時間（Hour 5、Day 8、Month 1）。
+// NewClock 回傳新遊戲的起始時間（Hour 5、Day 8、Month 0 ＝ Ruby）。
 func NewClock() *Clock {
-	return &Clock{hour: startHour, day: startDay, month: 1}
+	return &Clock{hour: startHour, day: startDay, month: startMonth}
+}
+
+// ClockAt 從存檔的四個位元組還原時間。
+//
+// 越界的值一律退回起始值 —— 存檔的這幾格若被寫壞，讓它從 Ruby 月 8 日
+// 重新開始，比讓月份索引跑出名稱表外要好。
+//
+// steps 是一小時之內的步數計數（存檔 +0xa0）。原版把它重設成 1 而不是 0，
+// 所以壞值也退回 1，不退回 0 —— 退回 0 會讓那一小時多走一步。
+func ClockAt(hour, day, month, steps int) *Clock {
+	c := &Clock{hour: hour, day: day, month: month, steps: steps}
+	if steps < 1 || steps >= stepsPerHour {
+		c.steps = 1
+	}
+	if hour < 1 || hour >= hourWrap {
+		c.hour = startHour
+	}
+	if day < 1 || day >= dayWrap {
+		c.day = startDay
+	}
+	// 上界用 NumMonths 而不是 monthWrap：原版的進位是「到 23 才歸 1」，
+	// 但名稱只有 22 個，月 = 22 會讀到名稱表外（原版的 off-by-one，
+	// 要走滿 22 個月才碰得到，實務上遇不到）。這裡收在有名字的範圍內。
+	if month < 0 || month >= NumMonths {
+		c.month = startMonth
+	}
+	return c
 }
 
 func (c *Clock) Hour() int  { return c.hour }

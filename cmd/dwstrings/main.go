@@ -49,6 +49,8 @@ func main() {
 		dumpMonsters(os.Args[2:])
 	case "towns":
 		dumpTowns(os.Args[2:])
+	case "months":
+		dumpMonths(os.Args[2:])
 	case "check":
 		check(os.Args[2:])
 	default:
@@ -57,7 +59,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|monsters|towns|ui|check [選項]")
+	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|monsters|towns|months|ui|check [選項]")
 	os.Exit(2)
 }
 
@@ -270,6 +272,44 @@ func dumpTowns(args []string) {
 	}
 	fmt.Printf("%-10s %3d 個城鎮名（新增 %d、原文變動 %d）→ %s\n",
 		townSource, len(merged.Entries), added, drifted, out)
+}
+
+// monthSource 是月份名稱翻譯目錄的 key。
+//
+// **它不是檔名。** 月份名躺在 FILES.DTT 裡（第 467–488 條），但那個 key
+// 已經被法術名用掉，而且法術用的是「法術索引」、月份用的是「月編號」，
+// 兩套索引擠在同一個目錄裡只會讓人對錯條目。所以另開一個目錄。
+const monthSource = "MONTHS"
+
+// dumpMonths 把 22 個月份名稱抽成翻譯目錄。
+//
+// 索引就是隊伍欄位 `+0x9d` 的值（0-based）。原版狀態列印的是
+// "in the Month of the Ruby"，所以這些字是會出現在畫面上的專有名詞。
+func dumpMonths(args []string) {
+	fs := flag.NewFlagSet("months", flag.ExitOnError)
+	dataDir := fs.String("data", "workplace/orig/demwin/DEM_DATA", "原版資料目錄")
+	outDir := fs.String("out", "assets/lang/zh-Hant", "翻譯目錄輸出位置")
+	_ = fs.Parse(args)
+
+	pool, err := gamedata.LoadStringPool(filepath.Join(*dataDir, spellSource))
+	if err != nil {
+		fatal(err)
+	}
+	cat := &i18n.Catalog{Source: monthSource}
+	for i, name := range pool.MonthNames() {
+		cat.Entries = append(cat.Entries, i18n.Entry{Index: i, Source: name})
+	}
+
+	if err := os.MkdirAll(*outDir, 0o755); err != nil {
+		fatal(err)
+	}
+	out := filepath.Join(*outDir, i18n.CatalogFileName(monthSource))
+	merged, added, drifted := mergeInto(out, cat)
+	if err := i18n.WriteCatalog(out, merged); err != nil {
+		fatal(err)
+	}
+	fmt.Printf("%-10s %3d 個月份名（新增 %d、原文變動 %d）→ %s\n",
+		monthSource, len(merged.Entries), added, drifted, out)
 }
 
 // spellNames 讀出 43 個法術的英文名稱。

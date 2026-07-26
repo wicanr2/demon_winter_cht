@@ -30,7 +30,14 @@
 `FILES.DTT`（5,829 bytes）是一串以 `\x00` 結尾的字串，共 **501 筆**（122 筆為空字串，379 筆非空）。
 沒有任何長度前綴或位移表頭——純粹是字串一個接一個排列，用 NUL 分隔。
 
-### 1.2 分段對照（已驗證，逐項比對 `translations/glossary.md` 與 `DEMON.INT`）
+### 1.2 分段對照
+
+**邊界的來源已從「內容比對」升級成「原版程式碼直說」**：`DEMON.INT 0x11d5d` 是把整個
+blob 切成遠指標陣列的常式，它依序填 8 張表，每張的筆數就寫在迴圈的 `cmp` 常數裡，
+八張相加正好 501 —— 一個不差（見 [`docs/re/27`](../re/27-string-table-loader.md)）。
+下表的範圍已依此更正，**其中兩段原本猜錯**（`[136:151]`／`[151:164]` 的切點、
+`[467:489]` 的用途），見表格備註。
+
 
 | index 範圍 | 內容 | 驗證依據 |
 |---|---|---|
@@ -39,10 +46,10 @@
 | `[91:123]` | 技能名，共 **32 個** | 與 glossary.md 第5節「技能」**數量與內容完全吻合**，且保留遊戲原始拼字 `Shamen`（glossary.md 備註明確記載遊戲內誤拼為 `Shamen`，本檔案內容與此吻合，反向印證判讀正確） |
 | `[123:131]` | 武器類型名（8 個：dagger, small axe, short sword, mace, morning star, broad sword, battle axe, 2-hand sword） | 與 `DEMON.INT` 字串表中同一組武器名（約 line 2445-2452, 2556-2563）同序 |
 | `[131:136]` | 護甲類型名（5 個：cloth, leather, chain, scale, plate） | 與 `DEMON.INT` 字串表同序（約 line 2439-2443） |
-| `[136:151]` | 裝備／飾品類別名（15 個：crown, vial, ring, wand, staff, rod, gem, amulet, medallion, figurine, talisman, salve, vial, torch, lantern） | 內容與遊戲道具類型自洽（`vial` 出現兩次，可能對應兩種容量／已用未用狀態） |
-| `[151:164]` | 特殊神器／劇情物品名（13 個：Demon Crystal, Orb/Evertime, Omizeh, Balmur, Gamur, Vemarkn, Acisc, Maldorath, Volobews, Illo, Theryni, Camear, Ancient） | `Orb/Evertime` 對應 glossary.md 第1節「Orb of Evertime 恆世寶珠」；`Demon Crystal` 在後段的物件描述文字中被直接提及（見下） |
+| `[136:153]` | 器物類別名（17 個：crown, vial, ring, wand, staff, rod, gem, amulet, medallion, figurine, talisman, salve, vial, torch, lantern, **Demon Crystal, Orb/Evertime**） | `vial` 出現兩次，語意未解。**`[123:153]` 其實是一整張 30 條的道具型別名表**（切表常式的第 4 張），而 `ITEMS.DAT` 剛好 30 筆 —— 所以 `ITEMS.DAT 索引 i` 的名稱就是 `123+i`，最後兩件劇情物品是型別 28、29。原本把它們切成另一張「神器表」是**錯的** |
+| `[153:164]` | **神祇名**（11 個：Omizeh, Balmur, Gamur, Vemarkn, Acisc, Maldorath, Volobews, Illo, Theryni, Camear, Ancient） | 讀取端 `DEMON.INT 0x4bea`：角色記錄 `+0xf0`（信奉的神祇編號）減一，×4 當索引查 `ds:0x4c98`。祈禱的訊息「Omizeh hears you!」就是從這裡取名字（見 `docs/re/09` §2.2、`docs/re/27` §4）|
 | `[164:467]` | 大量「物件／地點互動」文字記錄（見 1.3） | 內容包含完整劇情文字（Qoorik 惡魔之城、Asaht 聖城等），與遊戲已知劇情吻合 |
-| `[467:489]` | 22 個材質／概念形容詞（Ruby, Ebony, Gold, Comet, Spirit, Dragon, Rose, Sword, Unicorn, Metal, Lotus, Axe, Panther, Ice, Mandrake, Aurora, Onyx, Phoenix, Wind, Jade, Fire, Hyacinth） | **假設，未證實**：此字表混合寶石／元素／生物／植物詞彙，形態上很像老 RPG 常見的「隨機物品命名詞庫」（如「Comet Sword」「Hyacinth Ring」這種形容詞+名詞組合），但未能在其他資料檔中找到直接引用此表的證據 |
+| `[467:489]` | **月份名**（22 個：Ruby, Ebony, Gold, Comet, Spirit, Dragon, Rose, Sword, Unicorn, Metal, Lotus, Axe, Panther, Ice, Mandrake, Aurora, Onyx, Phoenix, Wind, Jade, Fire, Hyacinth） | 讀取端 `DEMON.INT 0x70ac`：隊伍欄位 `+0x9d`（月）×4 查 `ds:0x50f2`，套進狀態列的 `"Hour %d, Day %d in the Month of the %s"`。原本標成「隨機物品命名詞庫」，**已推翻** —— 只看內容只能得到「像什麼」，找到讀取端才知道「是什麼」|
 | `[489:501]` | 幻術／召喚生物名，共 **12 個**：Coyote, Zombie, Brown bear, Small dragon, Ogre, Evil spirit, Fire demon, Fire elemental, Metal elemental, Wind elemental, Ice elemental, Spirit elemental | 與 glossary.md 第7節「幻術／召喚生物」**12 項、順序、內容完全吻合** |
 
 ### 1.3 `[164:467]` 物件互動文字表的結構觀察（事實，語意部分為推測）
@@ -183,6 +190,5 @@
 4. **`FILES.DAT` 與 `FILES.DTT` 的載入關係**——兩者在 `DEMON.INT` 字串表中緊鄰出現，但數值上
    查無強索引關係；若要進一步確認，需要反組譯找到實際載入這兩個檔案的函式，看程式碼裡怎麼配對使用它們，
    純資料面分析已經到極限。
-5. **`[467:489]` 的 22 個形容詞表是否為隨機物品命名詞庫**——僅為觀察形態後的假設，未證實；
-   若能在其他檔案（如未列入本次分析範圍的 ITEM/MONSTER 相關檔）中找到直接引用此表的索引，
-   即可確認或否證。
+5. ~~`[467:489]` 的 22 個形容詞表是否為隨機物品命名詞庫~~ ——**已解**：是月份名，
+   讀取端在狀態列（`docs/re/27` §3）。

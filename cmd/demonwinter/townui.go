@@ -149,8 +149,42 @@ func (a *app) updateFacility(t *townScreen) error {
 		if inpututil.IsKeyJustPressed(ebiten.KeyH) {
 			a.haggleCurrent(t)
 		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyB) {
+			a.buyCurrent(t)
+		}
 	}
 	return nil
+}
+
+// 市集表格的欄寬（排版格）。表頭與資料列共用，改一個就兩邊一起動。
+const (
+	marketNameCells  = 18
+	marketPriceCells = 7
+)
+
+// buyCurrent 買下游標指的商品。
+//
+// 付的是議價後的價格（TownVisit.Price）。買到的是**沒有效果的平凡裝備** ——
+// 原版有效果的道具是掉寶生成的，店裡不賣（見 game.Buy 與 docs/re/25）。
+func (a *app) buyCurrent(t *townScreen) {
+	item, err := a.items.ByIndex(t.cursor)
+	if err != nil {
+		return
+	}
+	if t.visit.HaggleState(t.cursor).Refused() {
+		t.message = "商人不肯賣這件給你"
+		return
+	}
+	price := t.visit.Price(t.cursor, item.Price)
+	res := game.Buy(a.members, a.gold(), price, t.cursor)
+	if !res.OK {
+		t.message = res.Reason
+		return
+	}
+	a.setGold(res.Gold)
+	t.message = fmt.Sprintf("%s 買下%s，付 %d 金（剩 %d）",
+		a.members[res.Member].Name,
+		a.tr.Event(itemSourceFile, t.cursor, item.Name), price, res.Gold)
 }
 
 // haggleCurrent 對游標指的商品議價一次。
@@ -357,7 +391,12 @@ func (a *app) drawMarket(t *townScreen, line func(string)) {
 	// 欄名放表頭，不要每列重複。
 	// 中文字模 16×15 塞在 16 像素行高裡只剩 1 像素間隙，整欄相同的密集字
 	// （每列都寫「買」「賣」）會黏成一片糊，看不出是哪個字。
-	line("   商品             買價   賣價")
+	//
+	// 表頭與資料列都用同一組欄寬常數排 —— 手動數空白排出來的表頭，
+	// 只要品名欄寬一改就會歪掉。
+	line(textlayout.PadCells("   商品", marketNameCells) +
+		textlayout.PadCells("  買價", marketPriceCells) +
+		textlayout.PadCells("  賣價", marketPriceCells))
 
 	const window = 8
 	start := t.cursor - window/2
@@ -379,16 +418,17 @@ func (a *app) drawMarket(t *townScreen, line func(string)) {
 		name := a.tr.Event(itemSourceFile, i, item.Name)
 		// 被觸怒後的商品不能顯示價格。HagglePrice 對 s >= 1000 會算出
 		// 下限 2 金 —— 那個數字看起來像「跳樓大拍賣」，實際上是商人拒賣。
+		row := mark + textlayout.PadCells(name, marketNameCells-len([]rune(mark)))
+		sell := fmt.Sprintf("%*d", marketPriceCells, t.visit.Economy.SellPrice(item.Price))
 		if t.visit.HaggleState(i).Refused() {
-			line(fmt.Sprintf("%s%s %5s  %5d", mark, textlayout.PadCells(name, 14), "拒賣",
-				t.visit.Economy.SellPrice(item.Price)))
+			line(row + textlayout.PadCellsLeft("拒賣", marketPriceCells) + sell)
 			continue
 		}
-		line(fmt.Sprintf("%s%s %5d  %5d", mark, textlayout.PadCells(name, 14),
-			t.visit.Price(i, item.Price), t.visit.Economy.SellPrice(item.Price)))
+		line(row + fmt.Sprintf("%*d", marketPriceCells,
+			t.visit.Price(i, item.Price)) + sell)
 	}
 	line("")
-	line("↑↓：選商品　H：議價")
+	line(fmt.Sprintf("↑↓：選商品　H：議價　B：買下　（金幣 %d）", a.gold()))
 }
 
 func healerServiceName(s game.HealerService) string {

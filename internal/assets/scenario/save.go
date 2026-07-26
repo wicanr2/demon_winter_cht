@@ -131,6 +131,19 @@ const (
 	// 與 timeCounterOffset 反向連動，候選是口糧／體力，未對到遊戲內 UI 確認。
 	unknown9COffset = 0x9c
 
+	// monthOffset／dayOffset：**月與日**（已驗證，反組譯）。睡覺常式
+	// `0x1f1d0` 起那一段是完整的兩層進位：
+	//
+	//	inc [bx+0x9e] / cmp al,0x23 / jb skip / mov [bx+0x9e],1   ; 日，34 天一個月
+	//	inc [bx+0x9d] / cmp al,0x17 / jb skip / mov [bx+0x9d],1   ; 月
+	//
+	// 狀態列（`0x70ac`）把 `+0x9d` 乘 4 當索引查 `ds:0x50f2` 的遠指標表，
+	// 取出**月份名稱**再套進 `"Hour %d, Day %d in the Month of the %s"`。
+	// 所以月是 0-based 的名稱索引 —— 原版存檔的 0 是合法值，不是未初始化。
+	// 日則是 1-based：新遊戲初始化（`0x14908`）寫的是 8。
+	monthOffset = 0x9d
+	dayOffset   = 0x9e
+
 	// timeCounterOffset：**一小時之內的步數計數**（已升級為已驗證）。
 	// DOSBox 動態 diff 早就看到「移動時每步 +1」；反組譯補上了另一半 ——
 	// 0x164ed 把它設回 1、同時把 hourOffset `inc`，所以它是進位到時辰的
@@ -294,6 +307,11 @@ type SaveGame struct {
 	// Hour 是遊戲內時辰（已驗證，見 hourOffset 註解）。
 	Hour byte
 
+	// Day 是日（1-based，34 天進一個月）、Month 是月（**0-based**，
+	// 直接當月份名稱表的索引）。見 dayOffset／monthOffset 註解。
+	Day   byte
+	Month byte
+
 	// TimeCounter 是疑似遊戲內時間／回合計數的候選欄位。**待複核**，中信心
 	// （見 timeCounterOffset 註解）。
 	TimeCounter byte
@@ -310,10 +328,9 @@ type SaveGame struct {
 // LoadSaveGame 解析指定路徑的 PARTY.DAT（或 PARTY.BAK），回傳 5 名角色與
 // 隊伍共用資料。
 //
-// 只做讀取（decode）。寫入（encode，讓存檔能與原版互通）需要更多 DOSBox 動態
-// 驗證（見本檔多處「待複核」欄位），這一輪不做——TODO(encode): 補齊裝備欄、
-// 隊形順序表、金幣長度等待複核欄位的動態驗證後，再實作 SaveGame -> []byte
-// 的編碼路徑，並用「讀出來再寫回去 byte-for-byte 相同」當最低驗收標準。
+// 只做讀取（decode）；寫入在 saveenc.go（`Encode`／`SaveTo`），驗收標準是
+// 「讀出來再寫回去 byte-for-byte 相同」。仍有「待複核」的欄位（金幣寬度、
+// 隊形順序表）採保守策略：只覆蓋已解出的部分，其餘 bytes 原封不動。
 //
 // 呼叫端負責傳入檔案路徑；本函式一律用唯讀方式開檔（os.ReadFile），不會寫入
 // 任何檔案，PARTY.DAT 這類原版存檔可放心以唯讀路徑傳入。
@@ -351,6 +368,8 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.PartySize = trailer[partySizeOffset]
 	save.Rations = trailer[rationsOffset]
 	save.Hour = trailer[hourOffset]
+	save.Day = trailer[dayOffset]
+	save.Month = trailer[monthOffset]
 	save.PositionX = trailer[positionXOffset]
 	save.PositionY = trailer[positionYOffset]
 	save.Facing = trailer[facingOffset]

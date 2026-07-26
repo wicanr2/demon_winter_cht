@@ -340,11 +340,15 @@ func TestCharacter_ApplyToLeavesUnknownFields(t *testing.T) {
 	before := rec
 	FromSave(rec).ApplyTo(&rec)
 
+	if rec.Unknown103 != before.Unknown103 {
+		t.Error("未知欄位被改寫了")
+	}
+	// 裝備槽與戰鬥狀態**現在是規則層會改的**（換裝、中毒、死亡），
+	// 所以要原值進、原值出，而不是「不准動」。
 	if rec.WeaponSlotIndex != before.WeaponSlotIndex ||
 		rec.ArmorSlotIndex != before.ArmorSlotIndex ||
-		rec.CombatStatus != before.CombatStatus ||
-		rec.Unknown103 != before.Unknown103 {
-		t.Error("裝備槽／戰鬥旗標／未知欄位被改寫了")
+		rec.CombatStatus != before.CombatStatus {
+		t.Error("裝備槽／戰鬥狀態沒有原樣寫回")
 	}
 	// 「含裝備加成」的欄位由裝備推導，規則層不該直接寫。
 	if rec.StrengthBonus != before.StrengthBonus ||

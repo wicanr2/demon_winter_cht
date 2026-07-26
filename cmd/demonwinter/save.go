@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -39,6 +40,11 @@ func loadSave(savePath, dataDir string) (*scenario.SaveGame, bool, error) {
 }
 
 // writeSave 把目前的隊伍狀態寫回存檔檔案。
+//
+// **這裡漏一個欄位，玩家就會丟掉那部分進度而且畫面上看不出來** ——
+// 買的東西、睡掉的時間、打來的糧食都在 app 這一層，不主動同步回
+// `a.save` 的話，寫出去的還是載入時那份。金幣（`a.gold`／`a.setGold`）
+// 直接操作 `a.save`，所以不在這裡列。
 func (a *app) writeSave() error {
 	for i := range a.members {
 		if i >= len(a.save.Characters) {
@@ -49,6 +55,13 @@ func (a *app) writeSave() error {
 	a.save.PositionX = byte(a.party.X())
 	a.save.PositionY = byte(a.party.Y())
 	a.save.Facing = byte(a.party.Facing())
+	a.save.MapID = byte(a.mapID)
+	a.save.LightSource = a.torch
+
+	a.save.Hour = byte(a.clock.Hour())
+	a.save.Day = byte(a.clock.Day())
+	a.save.Month = byte(a.clock.Month())
+	a.save.TimeCounter = byte(a.clock.Steps())
 
 	if err := os.MkdirAll(filepath.Dir(a.savePath), 0o755); err != nil {
 		return fmt.Errorf("建立存檔目錄失敗: %w", err)
@@ -62,7 +75,11 @@ func (a *app) saveNow() {
 		a.message = fmt.Sprintf("存檔失敗：%v", err)
 		return
 	}
-	a.message = fmt.Sprintf("已存檔 → %s", a.savePath)
+	// 訊息要塞進狀態欄的 21 格，完整路徑放不下（會被裁一半，看起來像壞掉）。
+	a.message = "已存檔"
+	if logToStderr {
+		log.Printf("存檔寫到 %s", a.savePath)
+	}
 }
 
 // updateQuitDialog 處理離開確認。回傳 true 代表這一幀已被對話框吃掉。

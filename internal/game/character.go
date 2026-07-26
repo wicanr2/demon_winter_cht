@@ -295,12 +295,17 @@ func min(a, b int) int {
 // ApplyTo 把規則層的角色狀態寫回存檔記錄。
 //
 // **只覆蓋 FromSave 讀進來的那些欄位。** 存檔還有一大片未解區域
-// （道具槽內部語意、戰鬥旗標、Unknown103 等），那些一律留原值 ——
+// （道具槽的部分 byte、Unknown103 等），那些一律留原值 ——
 // 規則層根本不知道它們代表什麼，寫進去等於亂猜。
 //
 // 這是 FromSave 的反向操作，兩者必須成對維護：FromSave 多讀一個欄位，
 // 這裡就要多寫一個，否則那個欄位會在存檔時悄悄退回舊值。
 func (c Character) ApplyTo(rec *scenario.Character) {
+	rec.Inventory = c.Inventory
+	rec.WeaponSlotIndex = slotIndexByte(c.EquippedWeapon)
+	rec.ArmorSlotIndex = slotIndexByte(c.EquippedArmor)
+	rec.CombatStatus = c.Status
+
 	rec.Name = c.Name
 	rec.RaceByte = byte(c.Race)
 	rec.ClassByte = byte(c.Class)
@@ -327,6 +332,17 @@ func (c Character) ApplyTo(rec *scenario.Character) {
 			rec.SkillFlags[i] = 0
 		}
 	}
+}
+
+// slotIndexByte 把裝備槽索引寫回存檔用的 byte。
+//
+// 存檔用 0xFF 表示「沒有裝備」（原版 Stumpy 的護甲欄就是 255）。
+// 規則層另有 −1 這種寫法（測試夾具、還沒配裝的新角色），一併收斂成 0xFF。
+func slotIndexByte(i int) byte {
+	if i < 0 || i >= InventorySlots {
+		return 0xff
+	}
+	return byte(i)
 }
 
 // 裝備換算成戰鬥數值。

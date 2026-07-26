@@ -36,6 +36,13 @@ func (s *SaveGame) Encode() ([]byte, error) {
 	putByte(trailer[:], facingOffset, s.Facing)
 	putByte(trailer[:], timeCounterOffset, s.TimeCounter)
 	putByte(trailer[:], unknown9COffset, s.Unknown9C)
+	putByte(trailer[:], hourOffset, s.Hour)
+	putByte(trailer[:], dayOffset, s.Day)
+	putByte(trailer[:], monthOffset, s.Month)
+	putByte(trailer[:], mapIDOffset, s.MapID)
+	putByte(trailer[:], lightSourceOffset, s.LightSource)
+	putByte(trailer[:], partySizeOffset, s.PartySize)
+	putByte(trailer[:], rationsOffset, s.Rations)
 	copy(trailer[formationOrderOffset:], s.FormationOrder[:])
 	copy(trailer[ldFlagsOffset:], s.LDFlags[:])
 	// 金幣的欄位寬度未知（見 goldOffset 註解）。decode 讀 3 bytes，
@@ -66,11 +73,25 @@ func (c *Character) encode() ([]byte, error) {
 	putByte(rec, classOffset, c.ClassByte)
 	copy(rec[skillFlagsOffset:], c.SkillFlags[:])
 
+	// 道具槽：從原始 bytes 出發，把已解欄位蓋回去。
+	//
+	// **換上另一件東西就整格重造。** 沿用舊 bytes 會讓前一件的次數、附魔、
+	// 武器特效黏在新道具身上。
+	//
+	// 清空則相反 —— 只寫 0xFF，其餘留原樣，照原版的作法
+	// （兩份原版存檔裡交出去的那幾格都還留著前一件的殘值）。
 	for i, slot := range c.InventorySlotsRaw {
 		if len(slot) != inventorySlotLen {
 			continue
 		}
-		copy(rec[inventoryStart+i*inventorySlotLen:], slot)
+		raw := make([]byte, inventorySlotLen)
+		if it := c.Inventory[i]; !it.Empty() && it.Type != slot[slotType] {
+			raw = newSlotRaw()
+		} else {
+			copy(raw, slot)
+		}
+		c.Inventory[i].encodeInto(raw)
+		copy(rec[inventoryStart+i*inventorySlotLen:], raw)
 	}
 
 	putLE4(rec, expOffset, c.Experience)

@@ -52,6 +52,16 @@ const (
 	// slotEmpty 是空槽的型別值。
 	slotEmpty = 0xff
 
+	// slotUnknown0F 語意未解，但兩份原版存檔裡**每一件實物**都是 1。
+	// 依據不只是「看起來都是 1」：兩份存檔正好記錄了一次道具轉手
+	// （Wopple 的匕首到了 Stumpy 手上），接收端那一格是全新寫入的，
+	// 寫進去的值就是 1。所以新造一格時照樣填 1。
+	//
+	// 唯一的例外是 Wopple 已清空的第 2 格留著 2 —— 原版「交出道具」
+	// 只把型別寫成 0xFF，其餘 bytes 不動，那個 2 是前一件的殘值。
+	slotUnknown0F        = 0x0f
+	slotUnknown0FDefault = 1
+
 	// effectCondEnabled 是「下一個位元組有效」的條件值。
 	effectCondEnabled = 0x15
 
@@ -121,4 +131,45 @@ func parseInventorySlot(raw []byte) InventorySlot {
 		out.WeaponEffect += int(raw[slotEffectB]) - storedOffset
 	}
 	return out
+}
+
+// encodeInto 把已解欄位寫回一格的原始 bytes。
+//
+// **只覆蓋 parseInventorySlot 讀得出來的那些欄位**，其餘（`+0x01`–`+0x04`、
+// `+0x0d`、`+0x0f`…）留原值 —— 那些 byte 的語意還沒解，寫進去等於亂猜。
+//
+// `WeaponEffect` 是兩組「條件旗標＋特效值」相加出來的**衍生值**，
+// 拆不回去（3 = 3+0 還是 1+2？），所以不寫；那四個 byte 一律留原樣。
+// 規則層要改武器特效時得直接動 raw，目前沒有這種需求。
+//
+// 空槽只寫型別。這是照原版做的：交出道具時它也只把 `+0x00` 寫成 0xFF，
+// 剩下的 bytes 就留在那裡（兩份原版存檔都看得到這種殘值）。
+func (s InventorySlot) encodeInto(raw []byte) {
+	if len(raw) < inventorySlotLen {
+		return
+	}
+	raw[slotType] = s.Type
+	if s.Empty() {
+		return
+	}
+	raw[slotEffect] = byte(s.Effect)
+	raw[slotPower] = byte(s.Power)
+	raw[slotTotal] = byte(s.Total)
+	raw[slotUsed] = byte(s.Used)
+	raw[slotEnchant] = byte(s.Enchant + storedOffset)
+	if s.Identified {
+		raw[slotIdentified] = 1
+	} else {
+		raw[slotIdentified] = 0
+	}
+}
+
+// newSlotRaw 造一格全新的原始 bytes，給「這一格換了另一件東西」用。
+//
+// 換了東西就不能沿用舊 bytes：舊道具的次數、附魔、武器特效會整批
+// 黏到新道具身上。全部歸零再填 `+0x0f`，其餘由 encodeInto 覆蓋。
+func newSlotRaw() []byte {
+	raw := make([]byte, inventorySlotLen)
+	raw[slotUnknown0F] = slotUnknown0FDefault
+	return raw
 }

@@ -482,6 +482,19 @@ func (a *app) debugGiveItem(spec string) error {
 	return fmt.Errorf("%s 的道具欄滿了", c.Name)
 }
 
+// gold／setGold 存取隊伍金幣。
+//
+// 存檔那一格的長度未定案（3 或 4 bytes，見 scenario 的 goldOffset 註解），
+// 這裡沿用解析端的 3-byte 讀法，第 4 個 byte 原封不動留在 TrailerRaw。
+func (a *app) gold() int { return a.save.GoldRaw3 }
+
+func (a *app) setGold(v int) {
+	if v < 0 {
+		v = 0
+	}
+	a.save.GoldRaw3 = v
+}
+
 // encounterLevel 回傳目前的遭遇難度（1–10）。
 func (a *app) encounterLevel() int {
 	level := 1
@@ -650,9 +663,28 @@ const battleLogLines = 8
 
 var facingName = []string{"北", "東", "南", "西"}
 
+// monthSourceFile 是月份名稱翻譯目錄的 key，與 dwstrings 產生時一致。
+const monthSourceFile = "MONTHS"
+
+// monthName 回傳目前月份的名稱。
+//
+// 原版的月份不是序數而是名字：狀態列印的是
+// "Hour 13, Day 17 in the Month of the Ruby"。
+//
+// 月編號超出名稱表時退回數字 —— 原版在這裡會讀到表外的野指標
+// （進位到 23 才歸 1，但只有 22 個名字），不照抄那個 bug。
+func (a *app) monthName() string {
+	names := a.strings.MonthNames()
+	m := a.clock.Month()
+	if m < 0 || m >= len(names) {
+		return fmt.Sprintf("%d", m)
+	}
+	return a.tr.Event(monthSourceFile, m, names[m])
+}
+
 func (a *app) drawStatus(dst *ebiten.Image) {
 	lines := []string{
-		fmt.Sprintf("%2d時 %2d日 %2d月", a.clock.Hour(), a.clock.Day(), a.clock.Month()),
+		fmt.Sprintf("%2d時 %2d日 %s月", a.clock.Hour(), a.clock.Day(), a.monthName()),
 		fmt.Sprintf("步數 %2d  光照 %d", a.clock.Steps(), a.clock.Light()),
 		fmt.Sprintf("座標 %2d,%-2d 面向%s", a.party.X(), a.party.Y(), facingName[a.party.Facing()]),
 		fmt.Sprintf("地形 %3d  深度 %d", a.lastTile, a.party.Depth()),
@@ -670,6 +702,11 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"S：存檔",
 		"空白鍵：翻頁",
 		"F10：離開遊戲",
+	}
+	// 溢出欄寬的字會畫到畫布外被裁掉 —— 看起來像訊息被砍一半，
+	// 而不是「這行太長」。存檔路徑就踩過這個。
+	for i, s := range lines {
+		lines[i] = textlayout.TruncateCells(s, layout.StatusCells)
 	}
 	a.font.DrawLines(dst, lines, layout.StatusX, layout.StatusY)
 }
@@ -751,8 +788,8 @@ func main() {
 		"進度存檔路徑。刻意不預設在原版資料目錄，免得蓋掉玩家的原版存檔")
 	langDir := flag.String("lang", "assets/lang/zh-Hant",
 		"翻譯目錄。指向不存在的路徑即為原文模式")
-	startX := flag.Int("x", 32, "起始 X")
-	startY := flag.Int("y", 32, "起始 Y")
+	startX := flag.Int("x", -1, "起始 X。負值代表用存檔裡的座標")
+	startY := flag.Int("y", -1, "起始 Y。負值代表用存檔裡的座標")
 	// B 鍵那條偵錯路徑在 headless 截圖底下不好按（xdotool 送的鍵不一定
 	// 進得了 ebiten 的輸入佇列）。開一個旗標走同一條路，讓截圖驗收可重跑。
 	startBattle := flag.Bool("battle", false, "啟動後直接開一場測試戰鬥（偵錯）")
@@ -859,10 +896,20 @@ func main() {
 		log.Fatalf("建立混排字型：%v", err)
 	}
 
+	// 座標預設跟著存檔走 —— 存了位置卻從固定點開場，等於沒存。
+	// 旗標給非負值時才覆蓋，那是偵錯用的傳送。
+	px, py := int(save.PositionX), int(save.PositionY)
+	if *startX >= 0 {
+		px = *startX
+	}
+	if *startY >= 0 {
+		py = *startY
+	}
+
 	a := &app{
 		world:      game.NewWorld(m, tables),
-		party:      game.NewParty(*startX, *startY, game.South, 0),
-		clock:      game.NewClock(),
+		party:      game.NewParty(px, py, game.Facing(save.Facing), 0),
+		clock:      game.ClockAt(int(save.Hour), int(save.Day), int(save.Month), int(save.TimeCounter)),
 		tiles:      m,
 		mapID:      mapID,
 		drawTiles:  ditheredTiles(m, uint16(*seed)),

@@ -2,10 +2,12 @@ package game
 
 import "testing"
 
+// 起始時間照原版的初始化那一段（DEMON.INT 0x14908 起）：只寫日 8、時 5，
+// **月沒寫** —— 所以第一個月是 0，也就是名稱表的第一個名字（Ruby）。
 func TestNewClock_StartValues(t *testing.T) {
 	c := NewClock()
-	if c.Hour() != 5 || c.Day() != 8 || c.Month() != 1 {
-		t.Errorf("起始時間應為 Hour 5 / Day 8 / Month 1，得到 %d/%d/%d",
+	if c.Hour() != 5 || c.Day() != 8 || c.Month() != 0 {
+		t.Errorf("起始時間應為 Hour 5 / Day 8 / Month 0，得到 %d/%d/%d",
 			c.Hour(), c.Day(), c.Month())
 	}
 	if c.Light() != LightFull {

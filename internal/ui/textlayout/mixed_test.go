@@ -304,3 +304,28 @@ func TestPadCells_UniformPixelWidth(t *testing.T) {
 		}
 	}
 }
+
+// 右靠齊也要按格算 —— `%*s` 對中文會少補兩格。
+func TestPadCellsLeft(t *testing.T) {
+	for _, c := range []struct {
+		in   string
+		n    int
+		want string
+	}{
+		{"12", 5, "   12"},
+		{"拒賣", 5, "   拒賣"},
+		{"拒賣", 2, "拒賣"},
+		{"拒賣不賣", 2, "不賣"}, // 超長時保留右邊
+	} {
+		if got := PadCellsLeft(c.in, c.n); got != c.want {
+			t.Errorf("PadCellsLeft(%q, %d) = %q，預期 %q", c.in, c.n, got, c.want)
+		}
+	}
+	// 中英混排右靠齊之後像素寬相同。
+	want := TextWidth(PadCellsLeft("12", 7))
+	for _, s := range []string{"拒賣", "1234", "拒"} {
+		if got := TextWidth(PadCellsLeft(s, 7)); got != want {
+			t.Errorf("%q 右靠齊 7 格是 %d 像素，與基準 %d 不同", s, got, want)
+		}
+	}
+}

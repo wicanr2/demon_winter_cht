@@ -326,8 +326,11 @@ func DodgeHitModifier(dodgeCount int) int { return dodgeCount * -4 }
 
 // PrayInitialChance 是祈禱的初始成功率。
 //
-// 來自手冊記載的 20%。反組譯確認了「成功後 chance −= 5」的遞減，
-// 但**初始化位置未逐指令確認**（見 docs/spec/02-combat.md）。
+// 手冊記載 20%，**初始化點也已找到**：神殿那一支（`DEMON.INT 0x1c54f`）
+// 在寫入信奉的神祇（角色記錄 `+0xf0`）的同一段裡把 `+0xeb` 設成 0x14 = 20。
+// 所以 20 不只是手冊數字，是原版寫進存檔的初值。
+// 配合「成功後 −5」，成功率序列是 20 → 15 → 10 → 5 → 0。
+// 見 docs/re/27 §4。
 const PrayInitialChance = 20
 
 // Pray 執行祈禱（動作 case 12）。

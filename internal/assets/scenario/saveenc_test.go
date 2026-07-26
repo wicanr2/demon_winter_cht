@@ -82,6 +82,12 @@ func TestSaveGame_EditedFieldsPersist(t *testing.T) {
 	save.PositionY = 41
 	save.Facing = 3
 	save.GoldRaw3 = 65432
+	save.Hour = 22
+	save.Day = 19
+	save.Month = 6
+	save.Rations = 31
+	save.MapID = 47
+	save.LightSource = 3
 
 	data, err := save.Encode()
 	if err != nil {
@@ -109,6 +115,12 @@ func TestSaveGame_EditedFieldsPersist(t *testing.T) {
 		{"隊伍 Y", back.PositionY, byte(41)},
 		{"面向", back.Facing, byte(3)},
 		{"金幣", back.GoldRaw3, 65432},
+		{"時辰", back.Hour, byte(22)},
+		{"日", back.Day, byte(19)},
+		{"月", back.Month, byte(6)},
+		{"糧食", back.Rations, byte(31)},
+		{"子地圖", back.MapID, byte(47)},
+		{"光源", back.LightSource, byte(3)},
 	}
 	for _, c := range checks {
 		if c.got != c.want {
@@ -345,4 +357,87 @@ func sameRanges(got, want []byteRange) bool {
 		}
 	}
 	return true
+}
+
+// 道具槽要真的寫得回去 —— 買到的東西不能在存檔時人間蒸發。
+//
+// 這是很容易漏的一條：encode 原本只把 InventorySlotsRaw 抄回去，
+// 規則層改的是解析後的 Inventory，兩者不同步的話買賣與換裝全都是假的，
+// 而且遊戲不會報錯，玩家只會發現「東西買了又不見」。
+func TestSaveGame_InventoryChangesPersist(t *testing.T) {
+	save, err := LoadSaveGame(filepath.Join(dataDir, "PARTY.DAT"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	c := &save.Characters[1] // Stumpy：只有第 0 格有東西
+	if !c.Inventory[5].Empty() {
+		t.Fatalf("前提不成立：第 5 格不是空的（%+v）", c.Inventory[5])
+	}
+	c.Inventory[5] = InventorySlot{Type: 4, Identified: true}
+	c.Inventory[6] = InventorySlot{Type: 16, Effect: 3, Power: 8, Total: 5, Used: 2, Enchant: 2}
+	c.Inventory[0] = InventorySlot{Type: slotEmpty} // 賣掉原本那件
+	c.WeaponSlotIndex = 5
+
+	data, err := save.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmp := filepath.Join(t.TempDir(), "PARTY.DAT")
+	if err := os.WriteFile(tmp, data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	back, err := LoadSaveGame(tmp)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	got := back.Characters[1]
+	if got.Inventory[5].Type != 4 || !got.Inventory[5].Identified {
+		t.Errorf("買到的道具沒寫回去：%+v", got.Inventory[5])
+	}
+	// 新造的一格不能帶著舊道具的附魔或次數。
+	if got.Inventory[5].Enchant != 0 || got.Inventory[5].Total != 0 {
+		t.Errorf("新道具帶了殘值：%+v", got.Inventory[5])
+	}
+	want := InventorySlot{Type: 16, Effect: 3, Power: 8, Total: 5, Used: 2, Enchant: 2}
+	if got.Inventory[6] != want {
+		t.Errorf("有效果的道具走樣：\n得到 %+v\n預期 %+v", got.Inventory[6], want)
+	}
+	if !got.Inventory[0].Empty() {
+		t.Errorf("賣掉的那一格還在：%+v", got.Inventory[0])
+	}
+	if got.WeaponSlotIndex != 5 {
+		t.Errorf("裝備槽索引 %d，預期 5", got.WeaponSlotIndex)
+	}
+}
+
+// 清空一格只寫型別，其餘 bytes 留原樣 —— 照原版做的。
+//
+// 兩份原版存檔都看得到這種殘值：Wopple 交出去的那幾格型別是 0xFF，
+// 附魔與 +0x0f 還留著前一件的值。清成 0 會讓存檔與原版不再等價。
+func TestSaveGame_ClearedSlotKeepsTrailingBytes(t *testing.T) {
+	path := filepath.Join(dataDir, "PARTY.DAT")
+	original, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	save, err := LoadSaveGame(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	save.Characters[0].Inventory[0] = InventorySlot{Type: slotEmpty}
+
+	data, err := save.Encode()
+	if err != nil {
+		t.Fatal(err)
+	}
+	base := inventoryStart
+	if data[base] != slotEmpty {
+		t.Errorf("型別 = %#02x，預期 %#02x", data[base], slotEmpty)
+	}
+	if !bytes.Equal(data[base+1:base+inventorySlotLen], original[base+1:base+inventorySlotLen]) {
+		t.Errorf("清空那一格的其餘 bytes 被動了：\n原 % x\n新 % x",
+			original[base+1:base+inventorySlotLen], data[base+1:base+inventorySlotLen])
+	}
 }

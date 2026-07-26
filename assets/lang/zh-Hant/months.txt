@@ -1,0 +1,135 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ MONTHS
+
+## 0
+:: en
+Ruby
+:: zh
+紅玉
+
+## 1
+:: en
+Ebony
+:: zh
+烏木
+
+## 2
+:: en
+Gold
+:: zh
+黃金
+
+## 3
+:: en
+Comet
+:: zh
+彗星
+
+## 4
+:: en
+Spirit
+:: zh
+靈魂
+
+## 5
+:: en
+Dragon
+:: zh
+巨龍
+
+## 6
+:: en
+Rose
+:: zh
+薔薇
+
+## 7
+:: en
+Sword
+:: zh
+長劍
+
+## 8
+:: en
+Unicorn
+:: zh
+獨角獸
+
+## 9
+:: en
+Metal
+:: zh
+金屬
+
+## 10
+:: en
+Lotus
+:: zh
+蓮花
+
+## 11
+:: en
+Axe
+:: zh
+戰斧
+
+## 12
+:: en
+Panther
+:: zh
+黑豹
+
+## 13
+:: en
+Ice
+:: zh
+寒冰
+
+## 14
+:: en
+Mandrake
+:: zh
+曼德拉草
+
+## 15
+:: en
+Aurora
+:: zh
+極光
+
+## 16
+:: en
+Onyx
+:: zh
+縞瑪瑙
+
+## 17
+:: en
+Phoenix
+:: zh
+鳳凰
+
+## 18
+:: en
+Wind
+:: zh
+長風
+
+## 19
+:: en
+Jade
+:: zh
+翠玉
+
+## 20
+:: en
+Fire
+:: zh
+烈火
+
+## 21
+:: en
+Hyacinth
+:: zh
+風信子
