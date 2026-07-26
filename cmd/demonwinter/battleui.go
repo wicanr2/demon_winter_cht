@@ -110,6 +110,9 @@ type spellEntry struct {
 	index int
 	name  string
 	spell gamedata.Spell
+	// plot 非 plotNone 時，這一格不是法術而是主線動作
+	// （UNCURSE／IMPRISON，見 campcast.go 的 plotAction）。
+	plot plotAction
 }
 
 // openSpellMenu 列出施法者目前選得到的法術。

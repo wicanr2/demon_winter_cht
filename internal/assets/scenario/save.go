@@ -230,6 +230,20 @@ const (
 	// 兩份原版存檔是 56 與 34，正好落在「戰鬥後重設 28–77」的範圍內。
 	encounterCountdownOffset = 0x9c
 
+	// glyphFlagsOffset：**三個緋紅符印的劇情旗標**（`docs/re/59`）。
+	//
+	// 索引 ＝ 子地圖編號 − 55（子地圖 66 特判成 2），對應世界東南角
+	// 那三塊狹長陸地。`0` ＝ 符印還在、`0x80` ＝ 已用 UNCURSE 解除。
+	//
+	// 這是本專案目前唯一的主線進度：三個都非 0，才進得了光之環
+	// （`0x1a569`），否則被 crimson forcefield 擋下。符印還在時
+	// 在附近走動會被 `FUN_222f_0619` 傷害。
+	//
+	// 原版對這三個 byte 只有讀，沒有以常數定址的寫入 ——
+	// 寫入端用 `es:[bx+si+0x96]`，三格共用同一段程式碼（`docs/re/59` §1）。
+	glyphFlagsOffset = 0x96
+	glyphCount       = 3
+
 	// merchantBaseOffset：**商隊規模的基準值**（`docs/re/50`）。
 	// 進地圖時 `0x15f5d` 把它讀進 `ds:0x5c60`；在戶外（子地圖編號 > 9）
 	// 會被地圖記錄自帶的參數覆蓋。商隊遭遇拿它算
@@ -391,6 +405,9 @@ type SaveGame struct {
 	// LightSource 是地城的光源強度（見 lightSourceOffset 註解）。
 	LightSource byte
 
+	// GlyphFlags 是三個緋紅符印的劇情旗標（見 glyphFlagsOffset 註解）。
+	GlyphFlags [glyphCount]byte
+
 	// MerchantBase 是商隊規模的基準值（見 merchantBaseOffset 註解）。
 	MerchantBase byte
 
@@ -480,6 +497,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.MapID = trailer[mapIDOffset]
 	save.LightSource = trailer[lightSourceOffset]
 	save.MerchantBase = trailer[merchantBaseOffset]
+	copy(save.GlyphFlags[:], trailer[glyphFlagsOffset:glyphFlagsOffset+glyphCount])
 	save.EncounterCountdown = trailer[encounterCountdownOffset]
 	save.PartySize = trailer[partySizeOffset]
 	save.Rations = trailer[rationsOffset]

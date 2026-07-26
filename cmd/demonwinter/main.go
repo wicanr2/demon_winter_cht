@@ -143,6 +143,11 @@ type app struct {
 	// 結算要在「等玩家按空白鍵」之前完成，不然訊息只存在一幀。
 	settled bool
 
+	// won 在禁錮成功後為 true —— 遊戲通關（`docs/re/61`）。
+	// 原版此時跳結局畫面（`0x07175`，"CONGRATULATIONS! You have won
+	// Demon's Winter."）；本專案先顯示訊息，結局畫面另做。
+	won bool
+
 	// mapID 是目前所在的子地圖編號。11–77 是世界地圖，10 以下是地城 ——
 	// 兩者的戰場視野來源不同（時辰表 vs 光源），見 terrainForBattle。
 	mapID int
@@ -232,6 +237,13 @@ func (a *app) Update() error {
 			continue
 		}
 		a.party.Turn(kf.f)
+		// 光之環的門：三個符印沒解完就擋下（`docs/re/59` §3）。
+		// 原版是走進去之後才擋並把玩家推開；這裡在移動前擋，
+		// 效果一樣而且不必實作推開 —— 差異記在 docs/re/62。
+		if a.mapID == game.ImprisonSubMap && !game.CircleOfLightOpen(a.save.GlyphFlags) {
+			a.message = "緋紅的力場擋住了通往光之環的路"
+			return nil
+		}
 		res, tile, advanced := a.world.Walk(a.party, a.clock)
 		a.lastTile = tile
 
@@ -884,6 +896,9 @@ func main() {
 		"偵錯：起始時辰（1–38）。0 代表照原版的 5 時")
 	// 城鎮的貴服務（復活、修船、買船）在起始存檔的 65 金之下全都試不到。
 	goldFlag := flag.Int("gold", -1, "偵錯：起始金幣。負值代表用存檔裡的")
+	// 主線的 UNCURSE／IMPRISON 要 50／100 點法力，起始隊伍最高只有 29 ——
+	// 沒有這個旗標就驗不到成功路徑（`docs/re/62`）。
+	spFlag := flag.Int("sp", -1, "偵錯：全隊目前法力。負值代表用存檔裡的")
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
 	// xdotool 偶爾會漏掉一兩下，跑出來的畫面就不是預期的那座城。直接指定。
 	townFlag := flag.Int("town", 0, "偵錯：啟動後直接進入指定編號的城鎮（1–25）")
@@ -1045,6 +1060,15 @@ func main() {
 	if *goldFlag >= 0 {
 		a.setGold(*goldFlag)
 		log.Printf("偵錯：金幣設為 %d", a.gold())
+	}
+	if *spFlag >= 0 {
+		for i := range a.members {
+			a.members[i].CurrentSP = *spFlag
+			if a.members[i].MaxSP < *spFlag {
+				a.members[i].MaxSP = *spFlag
+			}
+		}
+		log.Printf("偵錯：全隊法力設為 %d", *spFlag)
 	}
 	if *townFlag > 0 {
 		town, err := towns.ByNumber(*townFlag)

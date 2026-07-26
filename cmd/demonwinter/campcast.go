@@ -136,6 +136,18 @@ func (a *app) drawWorship(line func(string)) {
 }
 
 // castScreen 是營地施法的狀態。
+// plotAction 標記選單裡那兩個**不是法術**的主線動作（`docs/re/59`–`61`）。
+//
+// UNCURSE／IMPRISON 不在 `FILES.DTT` 的 43 筆法術表裡，原版是把它們
+// 換進同一支施法選單當另一組選項（熱鍵 U／I）。
+type plotAction int
+
+const (
+	plotNone plotAction = iota
+	plotUncurse
+	plotImprison
+)
+
 type castScreen struct {
 	// step 是目前在哪一步。
 	step castStep
@@ -175,6 +187,7 @@ func (a *app) openCampCast() {
 			index: i, name: a.tr.Event(spellSourceFile, i, name), spell: sp,
 		})
 	}
+	c.entries = append(c.entries, a.plotCastEntries()...)
 	if len(c.entries) == 0 {
 		a.camp.message = "沒有能在營地放的法術"
 		return
@@ -208,6 +221,12 @@ func (a *app) updateCampCast() error {
 		case inpututil.IsKeyJustPressed(ebiten.KeyUp):
 			c.spell = (c.spell - 1 + len(c.entries)) % len(c.entries)
 		case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
+			// 主線動作是固定花費、目標就是腳下那個符印 ——
+			// 沒有「投入多少」也沒有目標可選，直接執行。
+			if c.entries[c.spell].plot != plotNone {
+				a.doPlotCast(c)
+				return nil
+			}
 			// 預設就投最低需求 —— 一按 Enter 就能放，不必先加半天。
 			c.power = c.entries[c.spell].spell.M
 			c.step = castPickPower
@@ -247,6 +266,9 @@ func (a *app) updateCampCast() error {
 }
 
 func (a *app) doCampCast(c *castScreen) {
+	if a.doPlotCast(c) {
+		return
+	}
 	caster, target := &a.members[c.caster], &a.members[c.target]
 	e := c.entries[c.spell]
 
@@ -296,8 +318,13 @@ func (a *app) drawCampCast(line func(string)) {
 			if i == c.spell {
 				mark = " > "
 			}
+			cost := e.spell.M
+			if e.plot != plotNone {
+				// 主線動作是固定花費，不走法術表的最低法力
+				cost = plotCost(e.plot)
+			}
 			line(fmt.Sprintf("%s%s最低 %d 點",
-				mark, textlayout.PadCells(e.name, 14), e.spell.M))
+				mark, textlayout.PadCells(e.name, 14), cost))
 		}
 		line("")
 		line("↑↓：選擇　Enter：確定　Esc：返回")
@@ -330,4 +357,81 @@ func (a *app) drawCampCast(line func(string)) {
 			line(l)
 		}
 	}
+}
+
+// plotCastEntries 依隊伍目前的位置，決定要不要在施法選單裡放主線動作。
+//
+// 原版把 UNCURSE／IMPRISON 換進同一支施法選單（`docs/re/61` §3），
+// **但切換條件還沒反組譯出來**（掃過 `0x6300`–`0x6a14` 的近跳全部沒命中，
+// 可能來自跳表）。所以這裡的條件是本專案依機制推導的設計決定：
+//
+//   - 腳下是符印圖塊（`0x63`）且在三張符印子地圖之一 → 給 UNCURSE
+//   - 在禁錮判定過得了的地方 → 給 IMPRISON
+//
+// 兩者都對得上攻略「趕到每個符印上紮營，然後施展解咒」的玩法。
+// 等切換條件解出來再換掉這一段。
+func (a *app) plotCastEntries() []spellEntry {
+	var out []spellEntry
+	tile, err := a.tiles.TileAt(a.party.X(), a.party.Y())
+	if err == nil && tile == game.GlyphTile && game.GlyphIndexFor(a.mapID) >= 0 {
+		out = append(out, spellEntry{name: "解咒", plot: plotUncurse})
+	}
+	if a.mapID == game.ImprisonSubMap || a.party.Y() <= game.ImprisonMaxY {
+		out = append(out, spellEntry{name: "禁錮", plot: plotImprison})
+	}
+	return out
+}
+
+// plotCost 是主線動作的固定花費（`docs/re/59`、`60`）。
+func plotCost(p plotAction) int {
+	switch p {
+	case plotUncurse:
+		return game.UncurseCost
+	case plotImprison:
+		return game.ImprisonCost
+	}
+	return 0
+}
+
+// doPlotCast 執行主線動作。回傳 false 代表這一格不是主線動作。
+//
+// UNCURSE 的法力檢查在扣費之前，IMPRISON 則是**先扣再檢查地點** ——
+// 兩者不一致是原版的行為，照抄（`docs/re/60` §2）。
+func (a *app) doPlotCast(c *castScreen) bool {
+	e := c.entries[c.spell]
+	caster := &a.members[c.caster]
+
+	switch e.plot {
+	case plotUncurse:
+		tile, err := a.tiles.TileAt(a.party.X(), a.party.Y())
+		if err != nil {
+			return false
+		}
+		switch game.Uncurse(caster, tile, a.mapID, &a.save.GlyphFlags) {
+		case game.GlyphNoGlyph:
+			a.camp.message = "這裡沒有符印"
+		case game.GlyphAlreadyDone:
+			a.camp.message = "這個符印已經失效了"
+		case game.GlyphNotEnoughSP:
+			a.camp.message = fmt.Sprintf("那需要 %d 點法力", game.UncurseCost)
+		case game.GlyphDestroyed:
+			a.camp.message = "力量閃現，符印的魔法被摧毀了"
+		}
+
+	case plotImprison:
+		switch game.Imprison(caster, a.mapID, a.party.Y()) {
+		case game.ImprisonNotEnoughSP:
+			a.camp.message = fmt.Sprintf("那需要 %d 點法力", game.ImprisonCost)
+		case game.ImprisonFizzles:
+			a.camp.message = "法術消散了……"
+		case game.ImprisonWon:
+			a.won = true
+			a.camp.message = "惡魔被禁錮了"
+		}
+
+	default:
+		return false
+	}
+	a.camp.cast = nil
+	return true
 }

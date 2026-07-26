@@ -346,3 +346,46 @@ func TestInventory_WeaponEffectConditions(t *testing.T) {
 		t.Errorf("兩組都啟用時特效 = %d，預期 3+4 = 7", got)
 	}
 }
+
+// TestGlyphFlagsRoundTrip 釘住三個符印旗標的往返（`docs/re/59`）。
+//
+// 這是主線唯一的進度欄位，寫錯會讓玩家的破關進度消失。
+func TestGlyphFlagsRoundTrip(t *testing.T) {
+	path := partyDatPath()
+	skipIfMissing(t, path)
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("讀取 %s 失敗: %v", path, err)
+	}
+	sg := loadTestSave(t)
+
+	// 起始存檔三個符印都還在
+	if sg.GlyphFlags != [3]byte{0, 0, 0} {
+		t.Errorf("起始存檔的符印旗標是 %v，預期全 0", sg.GlyphFlags)
+	}
+
+	sg.GlyphFlags = [3]byte{0x80, 0, 0x80}
+	out, err := sg.Encode()
+	if err != nil {
+		t.Fatalf("Encode 失敗: %v", err)
+	}
+	got := [3]byte{
+		out[trailerStart+glyphFlagsOffset],
+		out[trailerStart+glyphFlagsOffset+1],
+		out[trailerStart+glyphFlagsOffset+2],
+	}
+	if got != [3]byte{0x80, 0, 0x80} {
+		t.Errorf("寫回去的旗標是 %v", got)
+	}
+
+	// 只能動那三個 byte 裡改過的兩個 —— 未解區域一個 byte 都不許動
+	diff := 0
+	for i := range raw {
+		if i < len(out) && raw[i] != out[i] {
+			diff++
+		}
+	}
+	if diff != 2 {
+		t.Errorf("只改兩個旗標卻動了 %d 個 byte", diff)
+	}
+}
