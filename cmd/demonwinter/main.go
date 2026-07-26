@@ -166,6 +166,11 @@ type app struct {
 	// runeFont 是 CYPHER.SHP 的 27 個符文字形；讀不到時為 nil。
 	runeFont []*ebiten.Image
 
+	// winText 是 WIN.TXT 的結局文字（`docs/re/82`）；讀不到時為 nil。
+	winText *scenario.StoryText
+	// ending 是結局序列的播放狀態。
+	ending *endingScreen
+
 	// won 在禁錮成功後為 true —— 遊戲通關（`docs/re/61`）。
 	// 原版此時跳結局畫面（`0x07175`，"CONGRATULATIONS! You have won
 	// Demon's Winter."）；本專案先顯示訊息，結局畫面另做。
@@ -1063,6 +1068,8 @@ func main() {
 	// -ruins 讓「冬之魔降臨之後」的世界看得見。原版把這兩個旗標接在劇情上
 	// （`+0xb9 == 2` 觸發神殿全毀），而劇情觸發本身還沒接 ——
 	// 沒有這個旗標就沒辦法驗收 tile 替換與廢墟訊息（`docs/re/79`）。
+	endingFlag := flag.Bool("ending", false,
+		"偵錯：啟動後直接播結局序列（不必真的破關）")
 	ruinsFlag := flag.Bool("ruins", false,
 		"偵錯：世界已成廢墟（神殿 tile 畫成廢墟、城鎮不再進得去）")
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
@@ -1201,6 +1208,10 @@ func main() {
 		exits:      exits,
 		special:    special,
 		manual:     man,
+		winText:    loadWinText(*dataDir),
+		// -ending 直接跳結局序列。破關要走完整條主線，沒有這個旗標
+		// 就沒辦法驗收結局畫面（同 -glyphs／-ruins 的性質）。
+		won: *endingFlag,
 		events:     events,
 		tr:         tr,
 		eventsFile: *dataFile,
