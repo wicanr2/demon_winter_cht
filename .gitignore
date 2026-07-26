@@ -17,3 +17,7 @@ bin/
 .DS_Store
 *.log
 demonwinter_walkthrough.txt
+
+# Python 快取（tools/*.py）
+__pycache__/
+*.pyc
