@@ -283,3 +283,30 @@ func TestCreation_RerollBudgetMatchesOriginalLoop(t *testing.T) {
 			MaxRerolls, originalRollRounds, originalRollRounds-1)
 	}
 }
+
+// 新建的角色是**徒手空背包**，不是十把匕首。
+//
+// `scenario.InventorySlot` 的零值是 `Type == 0`，而 `0` 是匕首那個道具型別；
+// 空槽的值是 `0xff`。不明確清空的話，剛建好的角色名冊上會顯示「匕首」。
+//
+// **這個 bug 只有真的開新遊戲時才看得到** —— 從存檔載入的角色每一格都是
+// 真資料，零值永遠不會出現。它躲過了 `-newgame` 之前所有的驗收。
+func TestFinishClearsInventory(t *testing.T) {
+	out := newCreation(t, gamedata.Human).Finish("Test", gamedata.Ranger)
+
+	for i, slot := range out.Inventory {
+		if !slot.Empty() {
+			t.Errorf("背包第 %d 格 type=0x%02x，預期空槽 0x%02x（0 是匕首）",
+				i, slot.Type, scenario.SlotEmpty)
+		}
+	}
+	if !out.Weapon().Empty() {
+		t.Error("新角色應該徒手")
+	}
+	if !out.Armor().Empty() {
+		t.Error("新角色應該沒有護甲")
+	}
+	if out.ArmorRating() != 0 {
+		t.Errorf("護甲值 = %d，預期 0", out.ArmorRating())
+	}
+}

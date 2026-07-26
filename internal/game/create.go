@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
+	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 )
 
@@ -154,6 +155,19 @@ func (c *CharacterCreation) Finish(name string, class gamedata.Class) Character 
 		Level:  1,
 		Traits: c.Traits,
 	}
+	// **背包要明確清成空槽。** `InventorySlot` 的零值是 `Type == 0`，
+	// 而 `0` 是**匕首**這個道具型別 —— 空槽的值是 `0xff`（`scenario.SlotEmpty`）。
+	// 不清的話新建的角色十格全是匕首，名冊上顯示「匕首」而不是「徒手」。
+	//
+	// 這個 bug 只有在**真的開新遊戲**時才看得到：從出貨存檔載入的角色
+	// 每一格都是真資料，零值永遠不會出現。所以它躲過了到目前為止
+	// 所有的測試與截圖驗收（`docs/playtest/07`）。
+	for i := range out.Inventory {
+		out.Inventory[i] = scenario.InventorySlot{Type: scenario.SlotEmpty}
+	}
+	out.EquippedWeapon = -1
+	out.EquippedArmor = -1
+
 	out.MaxHP = c.Traits[gamedata.Endurance]
 	out.CurrentHP = out.MaxHP
 	out.MaxSP = initialSP(class, c.Traits[gamedata.Intellect])

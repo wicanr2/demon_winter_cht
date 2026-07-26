@@ -65,12 +65,42 @@ func (a *app) openCreate() {
 	a.create = &createScreen{stage: stageRace}
 }
 
+// openNewGameParty 開始「開新遊戲要建滿五個角色」的流程。
+//
+// 原版的建角在遊戲外（`Character Utilities`），玩家必須先造好隊伍
+// 才有存檔可以載。本作沒有那支獨立程式，所以把它做成
+// **新遊戲開場的一段強制流程**：五個槽位都建過才走得動。
+//
+// 為什麼要強制：`-newgame` 只改隊伍共用欄位（位置、時間、金幣……），
+// 角色仍是出貨存檔那五個。不強制的話玩家會拿著**別人玩過的角色**
+// 從正確的起點開始 —— 而畫面上看不出那五個人不是自己建的
+//（`docs/re/87` §6）。
+func (a *app) openNewGameParty() {
+	a.newGameSlots = len(a.members)
+	a.createSlot = 0
+	a.openCreate()
+}
+
+// newGamePending 回報還在建角流程中。
+//
+// 這期間**擋掉世界地圖的輸入** —— 不擋的話玩家可以按 ESC 溜出去，
+// 帶著半套自建、半套出貨的隊伍上路，那是最難察覺的一種壞狀態。
+func (a *app) newGamePending() bool { return a.newGameSlots > 0 }
+
 func (a *app) updateCreate() error {
 	c := a.create
 
 	// ESC 一律只退回上一階段，退到底就關掉建角畫面。離開遊戲走 F10。
+	//
+	// **新遊戲的強制流程例外**：退到底也不關 —— 五個角色沒建完就沒有隊伍，
+	// 關掉只會讓玩家卡在一個沒有隊伍的世界地圖上。
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		if c.stage == stageRace {
+			if a.newGamePending() {
+				c.message = fmt.Sprintf("開新遊戲要建滿 %d 個角色（還剩 %d 個）",
+					len(a.members), a.newGameSlots)
+				return nil
+			}
 			a.create = nil
 			return nil
 		}
@@ -139,7 +169,12 @@ func (a *app) updateCreate() error {
 		a.editName(c)
 		if inpututil.IsKeyJustPressed(ebiten.KeyEnter) && len(c.name) > 0 {
 			c.stage = stageSlot
+			// 強制流程裡游標直接指到該建的那一個 —— 讓玩家一路按 Enter
+			// 就能照順序建滿，不必自己記「剛才建到第幾個」。
 			c.cursor = 0
+			if a.newGamePending() {
+				c.cursor = a.createSlot
+			}
 		}
 
 	case stageSlot:
@@ -153,6 +188,7 @@ func (a *app) updateCreate() error {
 			a.message = fmt.Sprintf("%s 已加入隊伍第 %d 位（按 S 存檔才會留下）",
 				string(c.name), c.cursor+1)
 			a.create = nil
+			a.advanceNewGameParty()
 		}
 	}
 	return nil
@@ -275,4 +311,18 @@ func (a *app) drawTraitStage(c *createScreen, line func(string)) {
 	line("")
 	line("※ 原版是選好按 ESC 重擲；本作 ESC 一律是「退回上一步」，")
 	line("　 所以改用 R，免得按錯就退出建角")
+}
+
+// advanceNewGameParty 在強制流程裡接著建下一個角色。
+func (a *app) advanceNewGameParty() {
+	if !a.newGamePending() {
+		return
+	}
+	a.newGameSlots--
+	if a.newGameSlots == 0 {
+		a.message = "隊伍組好了。按 S 存檔。"
+		return
+	}
+	a.createSlot++
+	a.openCreate()
 }

@@ -190,6 +190,12 @@ type app struct {
 	// 所以路徑不能只留在 main 的區域變數裡（見 mapchange.go）。
 	dataDir string
 
+	// newGameSlots 是開新遊戲時還有幾個角色沒建（見 createui.go）。
+	// 大於 0 時世界地圖不吃輸入。
+	newGameSlots int
+	// createSlot 是強制流程建到第幾個槽位，用來預選游標。
+	createSlot int
+
 	// winText 是 WIN.TXT 的結局文字（`docs/re/82`）；讀不到時為 nil。
 	winText *scenario.StoryText
 	// ending 是結局序列的播放狀態。
@@ -271,6 +277,12 @@ func (a *app) update() error {
 	}
 	if a.runeBox != nil {
 		return a.updateRuneBox()
+	}
+	// 強制建角流程中，建角畫面被關掉就立刻開回來 ——
+	// 沒有這一道的話，任何一條把 `a.create` 設成 nil 的路徑都會讓玩家
+	// 帶著半套隊伍溜到世界地圖上，而畫面上看不出隊伍是半套的。
+	if a.create == nil && a.newGamePending() {
+		a.openCreate()
 	}
 	if a.create != nil {
 		return a.updateCreate()
@@ -1408,6 +1420,10 @@ func main() {
 	if *riddleFlag >= 0 {
 		a.openRiddle(*riddleFlag)
 		log.Printf("偵錯：密語謎題 %d", *riddleFlag)
+	}
+	if *newGameFlag {
+		a.openNewGameParty()
+		log.Printf("新遊戲：要建 %d 個角色", len(a.members))
 	}
 	if *eregoreFlag >= 0 {
 		a.openEregore(*eregoreFlag == 1)
