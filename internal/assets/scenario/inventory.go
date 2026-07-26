@@ -114,6 +114,11 @@ type InventorySlot struct {
 	// （見 slotUnknown02 的註解）。
 	Unknown02, Unknown04 int
 
+	// EffectAByte 是 `+0x0a` 的**原始值**（沒扣掉 storedOffset，也不管
+	// `+0x09` 的條件旗標）。`WeaponEffect` 是兩組相加後的衍生值，
+	// 拆不回來 —— 估價的第四項要的是這個原始 byte（`docs/re/46` §4）。
+	EffectAByte int
+
 	// ExorciseResist 是驅邪成功率（`+0x0d`）。紮營選單的 Xorcise
 	// 擲 `rnd(100)`，大於這個值就失敗 —— **越大越好驅**，
 	// 所以嚴格說是「好驅程度」不是抗性（見 `docs/re/41`）。
@@ -157,6 +162,7 @@ func parseInventorySlot(raw []byte) InventorySlot {
 	out.MaterialClass = int(raw[slotMaterialClass])
 	out.Unknown02 = int(raw[slotUnknown02])
 	out.Unknown04 = int(raw[slotUnknown04])
+	out.EffectAByte = int(raw[slotEffectA])
 	out.Enchant = int(raw[slotEnchant]) - storedOffset
 	if raw[slotCondA] == effectCondEnabled {
 		out.WeaponEffect += int(raw[slotEffectA]) - storedOffset

@@ -81,11 +81,57 @@ func TestItemValue_UnidentifiedSkipsBonus(t *testing.T) {
 	}
 }
 
-// 強度不為 0 就缺第三項 —— 一定要回報 exact=false。
-func TestItemValue_PoweredItemIsNotExact(t *testing.T) {
-	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, Power: 5}
+// 強度加價的三條分支。
+func TestItemValue_ChargeBonusBranches(t *testing.T) {
+	base := func(power, total, used int) scenario.InventorySlot {
+		return scenario.InventorySlot{
+			Type: 3, MaterialClass: 1, Power: power, Total: total, Used: used,
+		}
+	}
+	cases := []struct {
+		name string
+		slot scenario.InventorySlot
+		want int
+	}{
+		{"無限次數", base(4, 10, 0xff), int(float64(5*4*4*10) * 0.9)},
+		{"上限 > 100", base(4, 150, 0), 500 * 4 * 4 / 50},
+		{"一般次數", base(4, 10, 0), 10 * 4 * 214},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, _ := ItemValue(30, tc.slot)
+			if want := 30 + tc.want; got != want {
+				t.Errorf("估價 %d，預期 %d", got, want)
+			}
+		})
+	}
+}
+
+// 上限剛好 101 時除數是 1 —— 分界正好把除以 0 擋在外面。
+func TestItemValue_ManyChargesBoundary(t *testing.T) {
+	at := func(total int) int {
+		v, _ := ItemValue(0, scenario.InventorySlot{
+			Type: 3, MaterialClass: 1, Power: 2, Total: total,
+		})
+		return v
+	}
+	if got, want := at(101), 500*2*2/1; got != want {
+		t.Errorf("上限 101 的加價 %d，預期 %d", got, want)
+	}
+	if got, want := at(100), 100*2*214; got != want {
+		t.Errorf("上限 100 走的是另一條，加價 %d，預期 %d", got, want)
+	}
+}
+
+// 第四項還沒解 —— +0x0a 不為 0 就不能說算得準。
+func TestItemValue_EffectAMakesItInexact(t *testing.T) {
+	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectAByte: 12}
 	if _, exact := ItemValue(30, slot); exact {
-		t.Error("有強度的道具還缺第三項，不該說算得準")
+		t.Error("+0x0a 不為 0 還缺第四項，不該說算得準")
+	}
+	slot.EffectAByte = 0
+	if _, exact := ItemValue(30, slot); !exact {
+		t.Error("+0x0a 為 0 時前三項就是全部，應該算得準")
 	}
 }
 

@@ -42,22 +42,59 @@ func ItemValueBase(basePrice int, slot scenario.InventorySlot) int {
 // 編譯器把 `* 1.2` 直譯的結果，這裡直接用 270，值完全相同。
 const identifiedBonusMul = 270
 
+// 強度加價的三條分支（`docs/re/46` §3）。三個係數都是「浮點常數乘出整數」
+// 的同一個套路：`0.9`、`1.07 × 200 = 214`。
+const (
+	// 無限次數（`+0x06 == 0xff`）：`5 × 強度² × 次數上限 × 0.9`。
+	chargeUnlimitedMul   = 5
+	chargeUnlimitedScale = 0.9
+	// 次數上限 > 100：`500 × 強度² ÷ (上限 − 100)`，整數除法。
+	chargeManyMul   = 500
+	chargeManySplit = 100
+	// 其餘：`上限 × 強度 × 1.07 × 200`。
+	chargeFewMul = 214
+
+	// slotUsedUnlimited 是「無限次數」的哨兵。
+	slotUsedUnlimited = 0xff
+)
+
+// chargeBonus 是估價的第三項：強度帶來的加價。
+//
+// 三條分支的分界不是隨便切的：`上限 > 100` 那條要除以 `上限 − 100`，
+// **分界正好把除數 0 與負數擋在外面**。守衛與除數對得起來，
+// 這是判讀正確的旁證之一。
+func chargeBonus(slot scenario.InventorySlot) int {
+	p := slot.Power
+	switch {
+	case slot.Used == slotUsedUnlimited:
+		return int(float64(chargeUnlimitedMul*p*p*slot.Total) * chargeUnlimitedScale)
+	case slot.Total > chargeManySplit:
+		return chargeManyMul * p * p / (slot.Total - chargeManySplit)
+	default:
+		return slot.Total * p * chargeFewMul
+	}
+}
+
 // ItemValue 回傳道具的估價，以及這個數字**準不準**。
 //
-// 原版的公式有三項（`docs/re/44` §3）：
+// 原版的公式有四項（`docs/re/44` §3、`docs/re/46`）：
 //
 //  1. 底價 × 材質倍率
 //  2. 已鑑定的話加 `(槽+0x02 + 槽+0x04) × 270`
-//  3. **強度不為 0 的話**再加一段與 `5 × 強度²` 有關的浮點項 —— 還沒解
+//  3. 強度不為 0 的話加 chargeBonus（三條分支）
+//  4. `槽+0x0a` 不為 0 的話還有一段以 1.4 為底的加價 —— **還沒解**
 //
-// 所以 `exact` 只在強度為 0 時為 true。呼叫端**不該把 exact=false 的數字
-// 當價錢用** —— 那是缺了一整項的下界，不是估計值。
+// 所以 `exact` 的條件是「第四項不會觸發」。呼叫端**不該把 exact=false 的
+// 數字當價錢用** —— 那是缺了一整項的下界，不是估計值。
 func ItemValue(basePrice int, slot scenario.InventorySlot) (value int, exact bool) {
 	value = ItemValueBase(basePrice, slot)
 	if slot.Identified {
 		value += (slot.Unknown02 + slot.Unknown04) * identifiedBonusMul
 	}
-	return value, slot.Power == 0
+	if slot.Power != 0 {
+		value += chargeBonus(slot)
+	}
+	return value, slot.EffectAByte == 0
 }
 
 // 商隊售價（`0x1d6e1`–`0x1d727`，見 `docs/re/45`）。
