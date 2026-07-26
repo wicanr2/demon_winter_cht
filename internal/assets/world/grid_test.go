@@ -14,11 +14,11 @@ func TestCrossEdge_FourDirections(t *testing.T) {
 	const start = 44 // 欄 4、列 4，四面都有鄰居
 
 	for _, c := range []struct {
-		name       string
-		x, y       int
-		wantID     int
-		wantX      int
-		wantY      int
+		name   string
+		x, y   int
+		wantID int
+		wantX  int
+		wantY  int
 	}{
 		{"往西", edgeLow, 30, 34, WalkMax, 30},
 		{"往東", edgeHigh, 30, 54, WalkMin, 30},

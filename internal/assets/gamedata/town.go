@@ -132,7 +132,7 @@ const (
 // TownFacilities 是一座城鎮有哪些設施。
 type TownFacilities struct {
 	// Market 恆為 true —— 原版無條件顯示，不查旗標。
-	Market bool
+	Market                          bool
 	Healers, Inn, Guild, Docks, Pub bool
 
 	// Church 是神殿所屬神祇的編號，0 代表沒有神殿。
@@ -219,14 +219,14 @@ func LoadTownTable(dataDir string) (*TownTable, error) {
 			name = names[i-1]
 		}
 		t.towns = append(t.towns, Town{
-			Number:   i,
-			Name:     name,
+			Number:     i,
+			Name:       name,
 			Facilities: parseFacilities(raw),
-			X:        townSites[i-1][0],
-			Y:        townSites[i-1][1],
-			Economy:  int(raw[offTownEconomy]),
-			ShipBase: int(raw[offTownShipBase]),
-			raw:      raw,
+			X:          townSites[i-1][0],
+			Y:          townSites[i-1][1],
+			Economy:    int(raw[offTownEconomy]),
+			ShipBase:   int(raw[offTownShipBase]),
+			raw:        raw,
 		})
 	}
 	return t, nil

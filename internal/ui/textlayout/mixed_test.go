@@ -1,9 +1,9 @@
 package textlayout
 
 import (
-	"unicode/utf8"
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 func TestCellWidth(t *testing.T) {

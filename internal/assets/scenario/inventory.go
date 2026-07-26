@@ -25,6 +25,7 @@ package scenario
 // 把 `+0x06` 清成 0（限 `+0x05 < 100` 且 `+0x06 != 0xff` 的道具）。
 // 清「已用次數」＝過夜充能，說得通；清「上限」則會讓道具永久失效。
 // 本專案一度把兩者標反 —— 只看使用端那道 `CMP` 分不出來，要找到寫入端才行。
+//
 //	17c5:19dd  AL = ES:[BX+0x7]  → 效果索引
 //	17c5:19e6  AL = ES:[BX+0x8]  → 效果強度
 //	17c5:19ef  PUSH 效果索引 / CALLF 0x1000:114f    ; 載入 5-word 效果記錄
@@ -37,19 +38,24 @@ package scenario
 // 原版起始存檔裡每一件都是 `+0x07 = +0x08 = 0` 的平凡武具，
 // 所以那些道具在原版的 Use 選單裡本來就選不到。
 const (
-	slotType       = 0x00
-	slotTotal      = 0x05
-	slotUsed       = 0x06
-	slotEffect     = 0x07
-	slotPower      = 0x08
-	slotCondA      = 0x09
-	slotEffectA    = 0x0a
-	slotCondB      = 0x0b
-	slotEffectB    = 0x0c
+	slotType = 0x00
+	// slotUnknown02／slotUnknown04 語意未解。**唯一已知的讀取端是估價常式**
+	// （`278d:1c1b`）：已鑑定的道具加價 `(這兩個相加) × 270`（`docs/re/44` §3）。
+	// 兩份原版存檔裡每一件都是 0，所以看不出它們平常代表什麼。
+	slotUnknown02 = 0x02
+	slotUnknown04 = 0x04
+	slotTotal     = 0x05
+	slotUsed      = 0x06
+	slotEffect    = 0x07
+	slotPower     = 0x08
+	slotCondA     = 0x09
+	slotEffectA   = 0x0a
+	slotCondB     = 0x0b
+	slotEffectB   = 0x0c
 
 	// slotExorcise 是驅邪成功率（`1000:19c8`：`rnd(100) > 它` 就失敗）。
 	// 值越大越好驅。這個 byte 一度標在「語意未解」那一排。
-	slotExorcise = 0x0d
+	slotExorcise   = 0x0d
 	slotEnchant    = 0x0e
 	slotIdentified = 0x10
 
@@ -104,6 +110,10 @@ type InventorySlot struct {
 	// MaterialClass 是材質／品質類別（`+0x0f`），決定名稱前綴與價格倍率。
 	MaterialClass int
 
+	// Unknown02／Unknown04 語意未解，只知道它們一起決定已鑑定道具的加價
+	// （見 slotUnknown02 的註解）。
+	Unknown02, Unknown04 int
+
 	// ExorciseResist 是驅邪成功率（`+0x0d`）。紮營選單的 Xorcise
 	// 擲 `rnd(100)`，大於這個值就失敗 —— **越大越好驅**，
 	// 所以嚴格說是「好驅程度」不是抗性（見 `docs/re/41`）。
@@ -145,6 +155,8 @@ func parseInventorySlot(raw []byte) InventorySlot {
 	out.Used = int(raw[slotUsed])
 	out.ExorciseResist = int(raw[slotExorcise])
 	out.MaterialClass = int(raw[slotMaterialClass])
+	out.Unknown02 = int(raw[slotUnknown02])
+	out.Unknown04 = int(raw[slotUnknown04])
 	out.Enchant = int(raw[slotEnchant]) - storedOffset
 	if raw[slotCondA] == effectCondEnabled {
 		out.WeaponEffect += int(raw[slotEffectA]) - storedOffset
@@ -157,8 +169,8 @@ func parseInventorySlot(raw []byte) InventorySlot {
 
 // encodeInto 把已解欄位寫回一格的原始 bytes。
 //
-// **只覆蓋 parseInventorySlot 讀得出來的那些欄位**，其餘（`+0x01`–`+0x04`、
-// `+0x0f`…）留原值 —— 那些 byte 的語意還沒解，寫進去等於亂猜。
+// **只覆蓋 parseInventorySlot 讀得出來的那些欄位**，其餘（`+0x01`、`+0x03`、
+// `+0x09`–`+0x0c`…）留原值 —— 那些 byte 的語意還沒解，寫進去等於亂猜。
 //
 // `WeaponEffect` 是兩組「條件旗標＋特效值」相加出來的**衍生值**，
 // 拆不回去（3 = 3+0 還是 1+2？），所以不寫；那四個 byte 一律留原樣。
@@ -180,6 +192,8 @@ func (s InventorySlot) encodeInto(raw []byte) {
 	raw[slotUsed] = byte(s.Used)
 	raw[slotExorcise] = byte(s.ExorciseResist)
 	raw[slotMaterialClass] = byte(s.MaterialClass)
+	raw[slotUnknown02] = byte(s.Unknown02)
+	raw[slotUnknown04] = byte(s.Unknown04)
 	raw[slotEnchant] = byte(s.Enchant + storedOffset)
 	if s.Identified {
 		raw[slotIdentified] = 1

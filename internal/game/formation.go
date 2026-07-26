@@ -101,7 +101,7 @@ func (f *Formation) RemoveMember(member int) {
 }
 
 // AddMember 把新成員放進第一個空格，回傳格號；沒有空格回 −1
-//（`0x15089`）。
+// （`0x15089`）。
 func (f *Formation) AddMember(member int) int {
 	for i, v := range f {
 		if v == FormationEmpty {

@@ -27,16 +27,32 @@ func MaterialMultiplier(class int) int {
 	return materialMultiplier[class]
 }
 
-// ItemValueBase 回傳道具的基礎估價：`ITEMS.DAT 的底價 × 材質倍率`。
-//
-// **這不是完整的售價。** 原版還會加上兩項（`docs/re/44` §3）：
-//
-//   - 已鑑定的話加 `(槽+0x02 + 槽+0x04) × 225 × 1.2`
-//   - 強度不為 0 的話再加一段與 `5 × 強度²` 有關的軟浮點項
-//
-// 那兩項的浮點運算順序還沒讀完，所以這裡只給第一項。
-// 起始存檔的十件裝備 `+0x02`／`+0x04`／強度全是 0、材質類別都是 1 ——
-// 對它們來說 `ItemValueBase` 就是完整售價，剛好等於底價。
+// ItemValueBase 回傳估價的第一項：`ITEMS.DAT 的底價 × 材質倍率`。
 func ItemValueBase(basePrice int, slot scenario.InventorySlot) int {
 	return basePrice * MaterialMultiplier(slot.MaterialClass)
+}
+
+// identifiedBonusMul 是已鑑定道具的加價係數。
+//
+// 原版是 `(槽+0x02 + 槽+0x04) × 225`，再乘上一個 `push` 進去的 double 1.2
+// （`1c80`–`1ca1`）。**225 × 1.2 = 270 剛好是整數** —— 用浮點繞一圈只是
+// 編譯器把 `* 1.2` 直譯的結果，這裡直接用 270，值完全相同。
+const identifiedBonusMul = 270
+
+// ItemValue 回傳道具的估價，以及這個數字**準不準**。
+//
+// 原版的公式有三項（`docs/re/44` §3）：
+//
+//  1. 底價 × 材質倍率
+//  2. 已鑑定的話加 `(槽+0x02 + 槽+0x04) × 270`
+//  3. **強度不為 0 的話**再加一段與 `5 × 強度²` 有關的浮點項 —— 還沒解
+//
+// 所以 `exact` 只在強度為 0 時為 true。呼叫端**不該把 exact=false 的數字
+// 當價錢用** —— 那是缺了一整項的下界，不是估計值。
+func ItemValue(basePrice int, slot scenario.InventorySlot) (value int, exact bool) {
+	value = ItemValueBase(basePrice, slot)
+	if slot.Identified {
+		value += (slot.Unknown02 + slot.Unknown04) * identifiedBonusMul
+	}
+	return value, slot.Power == 0
 }

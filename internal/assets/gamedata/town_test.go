@@ -176,15 +176,15 @@ func TestLoadTownTable_FillsSites(t *testing.T) {
 func TestTownFacilities_MatchesDisassembly(t *testing.T) {
 	tb := loadTowns(t)
 	for _, c := range []struct {
-		num                             int
-		heal, inn, guild, docks, pub    bool
-		church                          int
-		colleges                        int
+		num                          int
+		heal, inn, guild, docks, pub bool
+		church                       int
+		colleges                     int
 	}{
-		{1, true, true, false, false, true, 10, 0},   // Seaside
-		{8, false, false, true, true, false, 0, 0},   // New Gleon
+		{1, true, true, false, false, true, 10, 0},    // Seaside
+		{8, false, false, true, true, false, 0, 0},    // New Gleon
 		{15, false, false, false, false, false, 0, 0}, // Irondome
-		{18, true, true, true, false, false, 8, 3},   // Woodhaven
+		{18, true, true, true, false, false, 8, 3},    // Woodhaven
 	} {
 		town, err := tb.ByNumber(c.num)
 		if err != nil {

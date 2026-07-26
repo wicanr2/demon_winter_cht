@@ -19,8 +19,8 @@ const (
 	// 只有前 101 個是有效 tile。）
 
 	offSkillCost = 0x158 // 31 技能 × 10 職業，1 byte／格
-	offRaceMax     = 0x422 // 5 種族 × 6 words
-	offSummon      = 0x7c6 // 12 筆 × 22 bytes
+	offRaceMax   = 0x422 // 5 種族 × 6 words
+	offSummon    = 0x7c6 // 12 筆 × 22 bytes
 
 	numTiles    = 101
 	NumSkills   = 31
@@ -345,7 +345,7 @@ const (
 	// 每一段的長度都與已知的表大小分毫不差 —— 這條鏈自己就把位置釘死了。
 	offDeitySpell = 0x7ae
 	NumDeities    = 11
-	numSpells = 43
+	numSpells     = 43
 )
 
 // Spell 是法術參數表的一筆記錄。五個 signed 16-bit word。

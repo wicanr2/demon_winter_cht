@@ -142,8 +142,8 @@ func TestTerrainSwamp_HasManualNamedMonsters(t *testing.T) {
 // 對應到資料就是「有賊那一組、沒有探險者那兩組」。
 func TestTerrainDesert_NoAdventurers(t *testing.T) {
 	const (
-		dervish    = 94
-		salamander = 90
+		dervish     = 94
+		salamander  = 90
 		lvl1Fighter = 0 // 探險者組的代表
 	)
 	tb := encounterTables(t)
