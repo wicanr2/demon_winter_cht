@@ -1488,6 +1488,7 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`35-battle-deployment.md`](docs/re/35-battle-deployment.md) | **開戰擺位**：隊伍照陣型站中央、怪物散在 ±2、地圖兼作佔位表；單位結構間距 38、玩家從槽位 7 起；9×9 是捲動視窗不是邊界 |
 | [`34-formation-grid.md`](docs/re/34-formation-grid.md) | **3×3 陣型格**（trailer `+0x00`–`+0x08`）：四個呼叫端、Reorder 是整張重填、佈陣的座標換算（讀出來但未接）|
 | [`33-camp-menu-items.md`](docs/re/33-camp-menu-items.md) | **紮營選單 14 項**的完整對照（名稱／快捷鍵／處理常式）＋ Drop 與 Trade 的規則；訂正 `docs/re/26` 的 13 項與「順序對不上」|
+| [`72-cypher-rune-font.md`](docs/re/72-cypher-rune-font.md) | **`CYPHER.SHP` 是符文字型**（27 個 16×16 字形）：`%` 開頭觸發載入、大小自證、dump 肉眼確認，四條獨立證據；`%RING.BELL...AT.....MIDNIGHT` 首次接上 `docs/re/65` case 12 的鐘 |
 | [`71-eregore-t-cypher.md`](docs/re/71-eregore-t-cypher.md) | **`EREGORE.TXT`／`T.TXT` 沒有載入路徑**（掃過六種定址模式零命中，與 `OPEN.PIE`／`TITLE.PIC` 同一類「資料在、程式沒接」）；`CYPHER.SHP` 載入點 `0x1b0da` |
 | [`70-t2c-t2d-trigger.md`](docs/re/70-t2c-t2d-trigger.md) | **`T2C`／`T2D` 的觸發**：子地圖 <3 或 ≥3，讀不同偏移；兩者是同一個字串被就地改寫第 3 個 byte（`T2D.TXT` 在檔案裡不存在）；更正 `docs/re/60` §3 記錯的表位址 |
 | [`69-remaining-step-actions.md`](docs/re/69-remaining-step-actions.md) | **移動分派表最後四格**：`0x08` 地城探索地圖、`0x0c` Use／`0x0a` Examine（參數選提示詞）、`0x0f` 觀室、`0x10` 鑑物（技能 27／28）；更正「`0x0c`／`0x12` 成對」|
@@ -1848,6 +1849,7 @@ A1 → A2 → A3 是一條鏈：讀完那 21 格才知道事件能做什麼，
 | # | 項目 | 現況 |
 |---|---|---|
 | C1 | **介面文案硬編在 Go**（優先度最低）| 七個目錄 356 條資料型字串 100% 翻完並有品質閘，但**介面文字直接寫在 `cmd/demonwinter/*.go` 裡**（`main.go` 294 行、`battleui.go` 278 行含中文）。不影響玩，影響可維護性與日後其他語言。⚠ `cmd/dwstrings ui` 抽的那 840 條是 `DEMON.INT` 的參考清單（**引擎不讀它**，而且含大量把機器碼誤判成字串的雜訊），不是這一項的工作內容 |
+| C3 | **密語提示怎麼中文化**（新增，未決）| 那些提示（`%YMROS.IS...MINE`、`%RING.BELL...AT.....MIDNIGHT`）原版是用 `CYPHER.SHP` 的**符文**畫出來的，玩家看不懂才是設計意圖（`docs/re/72` §6）。三種選擇：照原版用符文／改中文（破壞解謎）／符文＋對照。`docs/manual-cht/` 可能有 1990 年代理版的處理方式，還沒查 |
 | C2 | 標題已有中文名，**花體 logo 刻意不重繪** | 「冬之魔」（1990 軟體世界官方中文標題）放在圖上方的黑邊，原版美術一格未動 —— 花體 `DEMON'S WINTER`、移植署名、SSI／Novotrade 標記都是 1988 年的歷史紀錄，重繪成中文等於塗掉它們（`rulebook/83`／`93`）。`81-title.png` |
 
 ### D. 素材與打包
