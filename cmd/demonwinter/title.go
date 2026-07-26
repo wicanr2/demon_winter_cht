@@ -10,6 +10,7 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
+	"github.com/wicanr2/demon_winter_cht/internal/ui/textlayout"
 )
 
 // 開場標題畫面。
@@ -43,11 +44,25 @@ func (a *app) updateTitle() error {
 }
 
 // drawTitle 把標題畫面置中畫在畫布上。
+//
+// **原版美術不動。** 花體 `DEMON'S WINTER` logo、移植署名
+// （Judit Buczolich／Laszlo Fazekas）、SSI 與 Novotrade 的標記
+// 都是 1988 年的歷史紀錄，重繪成中文等於把它們塗掉
+// （`rulebook/83` 保全歷史、`rulebook/93` 素材用原版）。
+//
+// 中文標題改放在**圖上方的黑邊**：玩家一開遊戲就看得到「冬之魔」，
+// 原版畫面也一格都沒動。
 func (a *app) drawTitle(dst *ebiten.Image) {
 	b := a.title.Bounds()
 	x := (layout.CanvasWidth - b.Dx()) / 2
 	y := (layout.CanvasHeight - b.Dy()) / 2
 	ui.DrawImageAt(dst, a.title, x, y)
+
+	// 「冬之魔」是 1990 年軟體世界代理版的官方中文標題，
+	// 不是本專案另取的譯名（`translations/glossary.md` §23）。
+	const zhTitle = "冬之魔"
+	tw := textlayout.TextWidth(zhTitle)
+	a.font.Draw(dst, zhTitle, (layout.CanvasWidth-tw)/2, (y-ui.LineHeight)/2)
 
 	// 提示放在圖下方的黑邊裡，不蓋到美術。
 	a.font.Draw(dst, "按任意鍵開始", layout.BoxPadX,
