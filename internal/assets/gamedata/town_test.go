@@ -167,3 +167,69 @@ func TestLoadTownTable_FillsSites(t *testing.T) {
 		}
 	}
 }
+
+// 城鎮設施旗標對得上 docs/re/02 §3.4 的 dump。
+//
+// 抽三座代表：海濱鎮（有治療所旅店酒館、沒公會沒碼頭）、
+// 新格里昂（只有公會與碼頭）、鐵穹鎮（七項全無，只剩市集）。
+// **市集永遠有** —— 原版無條件顯示，不查旗標。
+func TestTownFacilities_MatchesDisassembly(t *testing.T) {
+	tb := loadTowns(t)
+	for _, c := range []struct {
+		num                             int
+		heal, inn, guild, docks, pub    bool
+		church                          int
+		colleges                        int
+	}{
+		{1, true, true, false, false, true, 10, 0},   // Seaside
+		{8, false, false, true, true, false, 0, 0},   // New Gleon
+		{15, false, false, false, false, false, 0, 0}, // Irondome
+		{18, true, true, true, false, false, 8, 3},   // Woodhaven
+	} {
+		town, err := tb.ByNumber(c.num)
+		if err != nil {
+			t.Fatal(err)
+		}
+		f := town.Facilities
+		if !f.Market {
+			t.Errorf("%s 的市集應該永遠有", town.Name)
+		}
+		if f.Healers != c.heal || f.Inn != c.inn || f.Guild != c.guild ||
+			f.Docks != c.docks || f.Pub != c.pub || f.Church != c.church ||
+			len(f.Colleges) != c.colleges {
+			t.Errorf("%s 設施 %+v，與 docs/re/02 的 dump 對不上", town.Name, f)
+		}
+	}
+}
+
+// 學院槽位的 0xff 是空槽，不能當成 255 號學院。
+func TestTownFacilities_CollegeSentinel(t *testing.T) {
+	tb := loadTowns(t)
+	for i := 1; i <= NumTowns; i++ {
+		town, _ := tb.ByNumber(i)
+		if len(town.Facilities.Colleges) > collegeSlots {
+			t.Errorf("%s 有 %d 個學院，超過 %d 個槽位",
+				town.Name, len(town.Facilities.Colleges), collegeSlots)
+		}
+		for _, c := range town.Facilities.Colleges {
+			if c == collegeEmpty {
+				t.Errorf("%s 把空槽 0xff 當成學院了", town.Name)
+			}
+		}
+	}
+}
+
+// Has 的編號順序要與 game.AllFacilities 一致。
+func TestTownFacilities_Has(t *testing.T) {
+	tb := loadTowns(t)
+	town, _ := tb.ByNumber(8) // 新格里昂：只有公會與碼頭
+	want := []bool{true, false, false, true, false, true, false}
+	for i, w := range want {
+		if got := town.Facilities.Has(i); got != w {
+			t.Errorf("新格里昂設施 %d：Has = %v，預期 %v", i, got, w)
+		}
+	}
+	if town.Facilities.Has(7) || town.Facilities.Has(-1) {
+		t.Error("超出範圍的設施編號應該回 false")
+	}
+}

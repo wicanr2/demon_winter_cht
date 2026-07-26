@@ -97,12 +97,93 @@ type Town struct {
 	// ShipBase 是買船價的基礎值，買船價 = ShipBase × 10。0 代表不賣船。
 	ShipBase int
 
+	// Facilities 是這座城鎮有哪些設施。
+	Facilities TownFacilities
+
 	// raw 是整份 512 bytes，其餘欄位語意未解，先留著供後續分析。
 	raw []byte
 }
 
 // SellsShips 回報這座城鎮有沒有碼頭在賣船。
 func (t Town) SellsShips() bool { return t.ShipBase > 0 }
+
+// 城鎮設施旗標在 `TOWN*.DAT` 的固定絕對位移上，全部落在最後一筆
+// 17-byte 記錄（record 29）的 payload 裡。原版的選單建構
+// （`FUN_278d_????`，`278d:02bc` 起）逐個 `CMP … ,0 / JZ 跳過`，
+// **市集永遠顯示、不查任何旗標**。詳見 `docs/re/02` §3.2。
+const (
+	offFacHealers = 0x1ee
+	offFacInn     = 0x1ef
+	offFacGuild   = 0x1f0
+	offFacChurch  = 0x1f1 // 不是布林，是神殿所屬神祇的編號
+	offFacCollege = 0x1f2 // 三個槽位，0xff 代表空
+	offFacPub     = 0x1f6
+
+	// 碼頭沒有自己的旗標 —— **`0x1f5` 一個位元組兼兩用**：
+	// 非 0 就顯示碼頭選項（`278d:04a2`），值本身又是船價基礎
+	// （`offTownShipBase`）。這與引擎其他地方「同一個值兩種用途」同源。
+
+	// collegeSlots 是學院槽位數（278d:0586 的迴圈跑三輪）。
+	collegeSlots = 3
+	// collegeEmpty 是空槽（278d:059c 拿 0xff 比對）。
+	collegeEmpty = 0xff
+)
+
+// TownFacilities 是一座城鎮有哪些設施。
+type TownFacilities struct {
+	// Market 恆為 true —— 原版無條件顯示，不查旗標。
+	Market bool
+	Healers, Inn, Guild, Docks, Pub bool
+
+	// Church 是神殿所屬神祇的編號，0 代表沒有神殿。
+	Church int
+	// Colleges 是三個學院槽位裡實際有的那些（已濾掉 0xff）。
+	Colleges []int
+}
+
+// Has 依設施編號回報有沒有那項設施。編號順序與 game.AllFacilities 一致
+// （市集／治療所／旅店／公會／神殿／碼頭／酒館），與原版選單的建構順序相同。
+func (f TownFacilities) Has(facility int) bool {
+	switch facility {
+	case 0:
+		return f.Market
+	case 1:
+		return f.Healers
+	case 2:
+		return f.Inn
+	case 3:
+		return f.Guild
+	case 4:
+		return f.HasChurch()
+	case 5:
+		return f.Docks
+	case 6:
+		return f.Pub
+	}
+	return false
+}
+
+// HasChurch 回報這座城鎮有沒有神殿。
+func (f TownFacilities) HasChurch() bool { return f.Church != 0 }
+
+// parseFacilities 解出設施旗標。
+func parseFacilities(raw []byte) TownFacilities {
+	f := TownFacilities{
+		Market:  true,
+		Healers: raw[offFacHealers] != 0,
+		Inn:     raw[offFacInn] != 0,
+		Guild:   raw[offFacGuild] != 0,
+		Church:  int(raw[offFacChurch]),
+		Docks:   raw[offTownShipBase] != 0,
+		Pub:     raw[offFacPub] != 0,
+	}
+	for i := 0; i < collegeSlots; i++ {
+		if v := raw[offFacCollege+i]; v != collegeEmpty {
+			f.Colleges = append(f.Colleges, int(v))
+		}
+	}
+	return f
+}
 
 // TownTable 是 25 座城鎮。
 type TownTable struct {
@@ -137,6 +218,7 @@ func LoadTownTable(dataDir string) (*TownTable, error) {
 		t.towns = append(t.towns, Town{
 			Number:   i,
 			Name:     name,
+			Facilities: parseFacilities(raw),
 			X:        townSites[i-1][0],
 			Y:        townSites[i-1][1],
 			Economy:  int(raw[offTownEconomy]),

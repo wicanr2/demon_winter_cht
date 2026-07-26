@@ -37,7 +37,6 @@ var facilityKeys = []ebiten.Key{
 	ebiten.KeyG, ebiten.KeyC, ebiten.KeyD, ebiten.KeyB,
 }
 
-// openTownPicker 打開城鎮選單（偵錯用的直接入口，見 townScreen.picking）。
 // townSourceFile 是城鎮名稱翻譯目錄的 key，與 dwstrings 產生時一致。
 const townSourceFile = "TOWN.TXT"
 
@@ -46,6 +45,7 @@ func (a *app) townName(t gamedata.Town) string {
 	return a.tr.Event(townSourceFile, t.Number-1, t.Name)
 }
 
+// openTownPicker 打開城鎮選單（偵錯用的直接入口，見 townScreen.picking）。
 func (a *app) openTownPicker() {
 	a.town = &townScreen{picking: true}
 }
@@ -85,6 +85,9 @@ func (a *app) updateTown() error {
 			continue
 		}
 		f := game.AllFacilities[i]
+		if !a.town.visit.Town.Facilities.Has(int(f)) {
+			continue // 沒列出來的設施，按熱鍵也不該進得去
+		}
 		t.facility = &f
 		t.message = ""
 		return nil
@@ -226,6 +229,9 @@ func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 	labels := []string{"M 市集", "H 治療所", "I 旅店", "G 城鎮公會",
 		"C 神殿", "D 碼頭", "B 酒館"}
 	for i, f := range game.AllFacilities {
+		if !v.Town.Facilities.Has(int(f)) {
+			continue // 這座城鎮沒有這項設施（TOWN*.DAT 0x1ee–0x1f6）
+		}
 		note := ""
 		if f == game.FacilityDocks && !v.HasDocks() {
 			note = "（這裡沒有船）"
@@ -234,9 +240,6 @@ func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 	}
 	line("")
 	line("Esc：離開城鎮")
-	line("")
-	// 哪座城鎮實際有哪些設施還沒解出來，先照實說，不要讓玩家以為是 bug。
-	line("※ 城鎮設施清單尚未從原版解出，目前七種都列出")
 }
 
 func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
