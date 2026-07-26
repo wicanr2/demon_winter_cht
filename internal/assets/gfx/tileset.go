@@ -16,6 +16,15 @@ const (
 	TileHeight = 16
 )
 
+// BlackTiles 是 DEMON.SHP 裡**整格純黑**的四個 tile。
+//
+// 它們不是解碼失敗，也不是缺圖 —— `Tile()` 回傳的是一張正常的 16×16、
+// 每個像素都不透明，只是顏色全黑。隊伍站在這種地形上開打時，
+// 整片戰場會是黑的，那是忠實呈現原始資料。
+//
+// 記在這裡是為了防止「修好」它：看到一片黑很容易以為是圖塊沒載到。
+var BlackTiles = [...]byte{0, 17, 86, 92}
+
 // TerrainTileCount 是地形圖塊集的圖塊數。
 //
 // DEMON.SHP／WINTER.SHP 各 6528 bytes ÷ 64 bytes/frame = 102。

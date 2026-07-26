@@ -97,3 +97,47 @@ func TestDumpTilesetAtlases(t *testing.T) {
 		t.Logf("%s: %d 個 16x16 圖塊 -> %s", set, ts.Len(), out)
 	}
 }
+
+// 四個純黑 tile 是原始資料就長那樣，不是缺圖。
+//
+// 這條測試存在的理由是防止誤修：戰場鋪滿其中一個時整片是黑的，
+// 很容易被當成「圖塊沒載到」而去「修」解碼器。
+func TestTileset_BlackTilesAreRealData(t *testing.T) {
+	for _, set := range []TerrainSet{NormalTiles, WinterTiles} {
+		ts, err := LoadTileset(filepath.Join(origDataDir(t), string(set)), set)
+		if err != nil {
+			t.Fatalf("LoadTileset(%s): %v", set, err)
+		}
+		black := map[byte]bool{}
+		for v := 0; v < ts.Len(); v++ {
+			img := ts.Tile(byte(v))
+			if img == nil {
+				t.Fatalf("%s：tile %d 取不到圖", set, v)
+			}
+			allBlack := true
+			for i := 0; i < len(img.Pix); i += 4 {
+				if img.Pix[i] != 0 || img.Pix[i+1] != 0 || img.Pix[i+2] != 0 {
+					allBlack = false
+					break
+				}
+				if img.Pix[i+3] == 0 {
+					t.Fatalf("%s：tile %d 有透明像素，地形圖塊應該全不透明", set, v)
+				}
+			}
+			if allBlack {
+				black[byte(v)] = true
+			}
+		}
+		if set != NormalTiles {
+			continue // 雪地那套只驗「沒有缺圖、沒有透明」
+		}
+		if len(black) != len(BlackTiles) {
+			t.Errorf("%s：純黑 tile 有 %d 個，預期 %d 個", set, len(black), len(BlackTiles))
+		}
+		for _, v := range BlackTiles {
+			if !black[v] {
+				t.Errorf("%s：tile %d 不是純黑，BlackTiles 該更新", set, v)
+			}
+		}
+	}
+}
