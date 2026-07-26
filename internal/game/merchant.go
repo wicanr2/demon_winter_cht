@@ -126,10 +126,15 @@ type MerchantWare struct {
 	// **商隊的議價一律從 0 開始** —— 原版開畫面時把 31 格計數器全部清 0
 	// （`0x1d52e`），不吃市集那個「隊伍裡有人會說服就給初值」的加成。
 	Haggle HaggleState
-	// Guaranteed 是原版逐件記下來的那個旗標（`ds:0x4e2e`）：這一件跳過了
-	// 第一道效果門檻。**商隊後續拿它做什麼還沒讀**（`docs/re/48` §5），
-	// 所以目前只保存不使用。
-	Guaranteed bool
+	// Lying 是原版逐件記下來的那個旗標（`ds:0x4e2e` 進出一次，`0x1d6c4`）。
+	//
+	// **它的用途是 View mind 揭穿的目標**（`0x1dfa8`，見 `docs/re/53`）——
+	// 生成器那邊的作用是「跳過第一道效果門檻」，商隊這邊的意思是
+	// **這一件商人在說謊**。兩件事是同一個旗標的兩端。
+	Lying bool
+	// Exposed 是 View mind 揭穿過的標記（原版把議價計數器寫成 1001，
+	// 貨單上那一格顯示 " LIE "）。
+	Exposed bool
 }
 
 // Merchant 是一支商隊。
@@ -154,19 +159,30 @@ func (m Merchant) Adjective() string { return MerchantAdjective(m.Size) }
 
 // RollMerchant 生出一支商隊的貨，連同各自的開價。
 //
-// 每件貨各自擲一次（`rnd(100) < EffectChance`），
-// 中的那件跳過第一道效果門檻。原版把結果逐件記在自己的陣列裡
-// （`ds:0x4e2e` 進出一次），這裡收在 `MerchantWare.Guaranteed`。
+// 每件貨各自擲一次（`rnd(100) < EffectChance`），中的那件跳過第一道
+// 效果門檻，而且**被記成「商人在這一件上說謊」**（`docs/re/53`）。
+// 原版把結果逐件記在自己的陣列裡（`ds:0x4e2e` 進出一次），
+// 這裡收在 `MerchantWare.Lying`。
 //
 // 開價的順序照原版（`0x1d6c8`–`0x1d737`）：**先標成已鑑定，再估價** ——
 // 已鑑定會讓估價多一項，所以順序不能對調。
 func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 	size int) Merchant {
 
+	return RollMerchantWithLies(r, t, items, size, MerchantEffectChance(r))
+}
+
+// RollMerchantWithLies 是 RollMerchant 指定說謊機率的版本。
+//
+// 只有偵錯用得到：那個機率三層疊起來（超過一半的商隊擲到 0、每件貨再各自
+// 中、View mind 又只有 2/3 揭得穿），不指定就幾乎驗不到「謊報」那一格。
+func RollMerchantWithLies(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
+	size, chance int) Merchant {
+
 	m := Merchant{
 		Size:         size,
 		Level:        size,
-		EffectChance: MerchantEffectChance(r),
+		EffectChance: chance,
 	}
 	n := MerchantWareCount(r)
 	for i := 0; i < n; i++ {
@@ -175,16 +191,41 @@ func RollMerchant(r *rng.RNG, t *gamedata.Tables, items *gamedata.ItemTable,
 		if err != nil {
 			continue
 		}
-		slot, guaranteed := GenerateWare(r, t, item, typ, m.Level, m.EffectChance)
+		slot, lying := GenerateWare(r, t, item, typ, m.Level, m.EffectChance)
 		slot.Identified = true
 
 		m.Wares = append(m.Wares, MerchantWare{
-			Item:       slot,
-			Price:      MerchantPrice(r, ItemValue(item.Price, slot)),
-			Guaranteed: guaranteed,
+			Item:  slot,
+			Price: MerchantPrice(r, ItemValue(item.Price, slot)),
+			Lying: lying,
 		})
 	}
 	return m
+}
+
+// View mind 的擲點（`0x1df90`）。
+const viewMindDie = 3
+
+// ViewMind 讀商人的心：逐件檢查，說謊的那幾件**各有 2/3 機率被揭穿**。
+//
+// 原版是一次性的（用過再按印 "Only usable once"），呼叫端要自己擋。
+// 回傳這一次揭穿了幾件。
+func ViewMind(r *rng.RNG, m *Merchant) int {
+	if m == nil {
+		return 0
+	}
+	exposed := 0
+	for i := range m.Wares {
+		if r.Roll(viewMindDie) >= viewMindDie {
+			continue // 1/3 的機率看不出來
+		}
+		if !m.Wares[i].Lying || m.Wares[i].Exposed {
+			continue
+		}
+		m.Wares[i].Exposed = true
+		exposed++
+	}
+	return exposed
 }
 
 // WarePrice 回傳這一件目前的要價（開價套上議價折扣）。
@@ -222,6 +263,11 @@ func BuyFromMerchant(m *Merchant, i int, members []Character, gold int) TradeRes
 	switch {
 	case w.Sold:
 		return TradeResult{Reason: "這件已經賣掉了", Gold: gold}
+	case w.Exposed:
+		// 原版把揭穿的貨標成計數器 1001，貨單上**不顯示價錢**（改印
+		// " LIE "）。它還賣不賣得成沒讀（`docs/re/53` §3），
+		// 沒讀就不猜 —— 標出來、不賣，是誠實的一邊。
+		return TradeResult{Reason: "他報的價是假的，你不買了", Gold: gold}
 	case w.Haggle.Refused():
 		return TradeResult{Reason: "商人不肯賣這件給你了", Gold: gold}
 	case w.WarePrice() > gold:

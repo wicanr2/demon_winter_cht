@@ -119,8 +119,10 @@ type app struct {
 	// aoe 非 nil 時正在選範圍法術的中心點，aoeX/aoeY 是游標位置。
 	aoe *aoeCursor
 	// breath 是噴吐動畫（純呈現層，不擋輸入）。
-	breath     *breathAnim
-	aoeX, aoeY int
+	breath *breathAnim
+	// debugMerchantLies 覆蓋商隊的說謊機率，負值代表照原版擲。
+	debugMerchantLies int
+	aoeX, aoeY        int
 	// strings 是 FILES.DTT 字串池，法術名稱從這裡來。
 	strings *gamedata.StringPool
 	rng     *rng.RNG
@@ -873,6 +875,11 @@ func main() {
 	// 貨單會是清一色的匕首（見 `docs/re/50` §4）。要驗大商隊得改基準。
 	merchantBase := flag.Int("merchant-base", -1,
 		"偵錯：商隊規模的基準值。負值代表用存檔裡的 `+0xaf`")
+	// 說謊機率 = rnd(120) − 80 鉗在 0，超過一半的商隊擲到 0；
+	// 擲到之後每件貨還要各自中，View mind 又只有 2/3 揭得穿 ——
+	// 三層機率疊起來，headless 截圖幾乎抓不到「謊報」那一格。
+	merchantLies := flag.Int("merchant-lies", -1,
+		"偵錯：商隊每件貨說謊的百分比機率。負值代表照原版擲")
 	startHourFlag := flag.Int("hour", 0,
 		"偵錯：起始時辰（1–38）。0 代表照原版的 5 時")
 	// 城鎮的貴服務（復活、修船、買船）在起始存檔的 65 金之下全都試不到。
@@ -1034,6 +1041,7 @@ func main() {
 	if *merchantBase >= 0 {
 		a.save.MerchantBase = byte(*merchantBase)
 	}
+	a.debugMerchantLies = *merchantLies
 	if *goldFlag >= 0 {
 		a.setGold(*goldFlag)
 		log.Printf("偵錯：金幣設為 %d", a.gold())

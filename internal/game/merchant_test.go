@@ -97,7 +97,7 @@ func TestRollMerchant_WaresAreUnidentified(t *testing.T) {
 			if w.Enchant < 0 {
 				t.Fatalf("商隊的貨不該有負附魔：%+v", w)
 			}
-			if ware.Guaranteed {
+			if ware.Lying {
 				guaranteed++
 			}
 			if w.Power != 0 {
@@ -260,5 +260,38 @@ func TestHaggleWithMerchant(t *testing.T) {
 	res := BuyFromMerchant(&m, 0, []Character{*campChar("買家")}, 999999)
 	if res.OK {
 		t.Error("翻臉之後那件不該買得到")
+	}
+}
+
+// View mind：只揭穿說謊的貨，各有 2/3 機率。
+func TestViewMind(t *testing.T) {
+	tb, items := loadTables(t), loadItems(t)
+	r := rng.NewWithSeed(91)
+
+	lying, exposed := 0, 0
+	for n := 0; n < 400; n++ {
+		m := RollMerchant(r, tb, items, 9)
+		for _, w := range m.Wares {
+			if w.Lying {
+				lying++
+			}
+		}
+		ViewMind(r, &m)
+		for _, w := range m.Wares {
+			if w.Exposed {
+				exposed++
+				if !w.Lying {
+					t.Fatal("揭穿了一件沒說謊的貨")
+				}
+			}
+		}
+	}
+	if lying == 0 {
+		t.Fatal("400 支商隊一件說謊的都沒有")
+	}
+	// 2/3 —— 抽樣夠多，落在 55%–78% 之間就算對得上。
+	ratio := float64(exposed) / float64(lying)
+	if ratio < 0.55 || ratio > 0.78 {
+		t.Errorf("揭穿率 %.2f，預期接近 2/3（%d/%d）", ratio, exposed, lying)
 	}
 }

@@ -38,6 +38,8 @@ type merchantScreen struct {
 	cursor int
 	// message 是最近一次操作的結果。
 	message string
+	// mindRead 記錄 View mind 用過了沒（原版一支商隊只能用一次）。
+	mindRead bool
 	// party 是 Inspect 打開的角色卡（`docs/re/52` §2 的 case 13）。
 	//
 	// 原版的 Inspect 選一名角色再呼叫 `278d:2f61(角色, 3)` ——
@@ -52,7 +54,11 @@ type merchantScreen struct {
 // 所以一開始遇到的都是小商隊 —— 那是遊戲設計，不是我們算錯。
 func (a *app) openMerchant() {
 	size := game.MerchantSize(a.rng, int(a.save.MerchantBase))
-	a.merchant = &merchantScreen{m: game.RollMerchant(a.rng, a.tables, a.items, size)}
+	m := game.RollMerchant(a.rng, a.tables, a.items, size)
+	if a.debugMerchantLies >= 0 {
+		m = game.RollMerchantWithLies(a.rng, a.tables, a.items, size, a.debugMerchantLies)
+	}
+	a.merchant = &merchantScreen{m: m}
 }
 
 func (a *app) updateMerchant() error {
@@ -88,12 +94,31 @@ func (a *app) updateMerchant() error {
 		a.buyFromMerchant(s)
 	case inpututil.IsKeyJustPressed(ebiten.KeyH):
 		a.haggleWithMerchant(s)
+	case inpututil.IsKeyJustPressed(ebiten.KeyV):
+		a.viewMerchantMind(s)
 	case inpututil.IsKeyJustPressed(ebiten.KeyI):
 		if len(a.members) > 0 {
 			s.party = &partyScreen{member: 0, showing: -1}
 		}
 	}
 	return nil
+}
+
+// viewMerchantMind 讀商人的心（原版的 View mind，`docs/re/53`）。
+//
+// **一支商隊只能用一次** —— 原版用過再按就印 "Only usable once"。
+func (a *app) viewMerchantMind(s *merchantScreen) {
+	if s.mindRead {
+		s.message = "只能用一次"
+		return
+	}
+	s.mindRead = true
+	switch n := game.ViewMind(a.rng, &s.m); n {
+	case 0:
+		s.message = "你讀不出什麼"
+	default:
+		s.message = fmt.Sprintf("你看穿了 %d 件貨的假話", n)
+	}
 }
 
 // haggleWithMerchant 對游標上那一件議價一次（原版的 Haggle，`docs/re/52` §3）。
@@ -162,6 +187,8 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 		switch {
 		case w.Sold:
 			price = "已售出"
+		case w.Exposed:
+			price = "謊報"
 		case w.Haggle.Refused():
 			price = "不賣"
 		}
@@ -178,7 +205,7 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 		line(s.message)
 		line("")
 	}
-	line("↑↓：選擇　Enter：買下　H：殺價　I：檢視隊員　Esc：走開")
+	line("↑↓：選擇　Enter：買下　H：殺價　V：讀心　I：檢視隊員　Esc：走開")
 }
 
 // merchantAdjective 回傳商隊規模的形容詞（已翻譯）。

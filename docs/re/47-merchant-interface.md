@@ -2,7 +2,7 @@
 
 > ⚠ **「介面做好了」要收窄。** 原版的商隊畫面有**七個選項**
 > （Purchase / View mind / Continue / Back / Haggle / Inspect / Quit），
-> 本文只做了 Purchase 與離開；Haggle 與 Inspect 後來補上了，還缺 View mind。
+> 本文只做了 Purchase 與離開；Haggle、Inspect、View mind 後來都補上了。
 > 詳見 `docs/re/52`。
 
 `docs/re/32` 讀完商隊怎麼生貨，結尾寫的是：
