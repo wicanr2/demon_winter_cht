@@ -612,6 +612,28 @@ Equip／Use／Hunt／Cast／Quit），睡覺只是其中一項。
 
 **沒實作**：跨子地圖上船、撞岸音效、船體損耗（什麼時候掉血還沒追）。
 
+### 這一輪（2026-07-26）：商隊遭遇的生成規則（`docs/re/32`）
+
+掉寶生成器的第二個呼叫端讀完了：路上遇到一群商人，打招呼就能看他們的貨。
+
+開場訊息是 `"You see a group of" + 形容詞 + " merchants"`，形容詞由**商隊規模**
+決定 —— `ds:0x3612` 的對照表 `[0,1,2,2,3,4,5,5,6,6]` 讓**七個形容詞蓋十種規模**
+（ragged looking / poor looking / travelling / adventuring / well dressed /
+upper class / wealthy）。
+
+貨是掉寶生成器生的：**7–10 件**（`rnd(4) + 6`），每件各自擲詛咒，
+機率 `rnd(120) − 80` 鉗在 0 以上 —— **值域 0–40，而且超過一半的商隊完全乾淨**。
+這是商隊與市集最大的差別：市集賣沒有效果的平凡裝備（安全但無趣），
+商隊賣掉寶生成器生出來的東西（可能有效果、可能被詛咒，而且**未鑑定**）。
+
+**踩到一個解遠指標的坑**：`ds:0x3632` 存的段值 `0x21f0` 直接套
+`seg*16 − 0xC400` 會落到程式碼區 —— 這份 dump 的段值有 **+0x1000 偏移**
+（與 `CALLF 0xN000:xxxx` 代表 `0xN0000 + xxxx` 是同一件事）。補上就對了。
+
+**這一輪只做規則層，沒有遭遇畫面。** 價格公式沒解出來（生成器開頭那段
+`310e` 軟浮點運算很可能是估價，但沒追它流去哪），沒有價格就沒辦法做購買介面。
+硬湊一個「底價 × 某個係數」等於自己發明規則，與「反編當 oracle」相衝突。
+
 ## 3. 文件索引
 
 ### 規格層 `docs/spec/` — 實作的唯一依據
@@ -659,6 +681,7 @@ Equip／Use／Hunt／Cast／Quit），睡覺只是其中一項。
 | [`21-skills-races-and-files-dat.md`](docs/re/21-skills-races-and-files-dat.md) | **遊戲內部技能 id 表**、種族系統與修正公式、`FILES.DAT` 完整布局 |
 | [`22-resource-arena-and-passability.md`](docs/re/22-resource-arena-and-passability.md) | **18 段資源記憶體區**、**可通行性表**、子地圖退出、**事件消費者** |
 | [`26-camp-and-rest.md`](docs/re/26-camp-and-rest.md) | **紮營選單（13 選項）**、睡覺的時間與回復公式、過夜充能；順帶抓到道具槽兩個欄位標反 |
+| [`32-merchant-encounter.md`](docs/re/32-merchant-encounter.md) | **商隊遭遇**：規模→形容詞對照、7–10 件貨、詛咒機率 `rnd(120)−80`；價格公式未解故無購買介面 |
 | [`31-sailing.md`](docs/re/31-sailing.md) | **搭船**：`+0xb0` 一個 byte 就是整個狀態、上船／航行／上岸的三段判定、「上船判定要排在可通行性之前」|
 | [`30-loot-generation.md`](docs/re/30-loot-generation.md) | **掉寶生成**：四個類別欄位的候選／排除兩種用法、附魔與兩道效果門檻、強度與最低法力的配對重擲、三種充能種類 |
 | [`29-temple-conversion.md`](docs/re/29-temple-conversion.md) | **改宗**：`0x10 − (神祇編號 mod 2)` 的推導、十位神的奇偶分派、Ancient One 的例外；順帶訂正祈禱前置檢查的跳轉方向 |
