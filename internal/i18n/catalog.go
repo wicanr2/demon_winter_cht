@@ -9,7 +9,6 @@ package i18n
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -20,7 +19,14 @@ import (
 // Entry 是一條可翻譯字串。
 type Entry struct {
 	// Index 是這條字串在來源事件表裡的記錄索引。
+	// 名稱型目錄（見 Name）不用它，一律 -1。
 	Index int
+	// Name 是**語意化的 key**，給沒有原版索引的字串用（介面文案）。
+	//
+	// 原版資料型的字串（事件敘述、法術名、道具名）都有天然的數字索引，
+	// 用數字最不會出錯。但介面文案是本專案自己寫的，數字索引一插入
+	// 就要重編號 —— 那種痛苦會讓人乾脆不維護翻譯檔。
+	Name string
 	// Source 是原版英文。載入時用來比對，防止譯文對錯記錄。
 	Source string
 	// Target 是譯文。空字串代表尚未翻譯。
@@ -113,11 +119,14 @@ func LoadCatalog(path string) (*Catalog, error) {
 			c.Source = strings.TrimSpace(strings.TrimPrefix(s, markSource))
 		case strings.HasPrefix(s, markIndex):
 			flush()
-			idx, err := strconv.Atoi(strings.TrimSpace(strings.TrimPrefix(s, markIndex)))
-			if err != nil {
-				return nil, fmt.Errorf("i18n: %s:%d 索引解析失敗：%w", path, line, err)
+			raw := strings.TrimSpace(strings.TrimPrefix(s, markIndex))
+			if idx, err := strconv.Atoi(raw); err == nil {
+				cur = &Entry{Index: idx}
+			} else {
+				// 不是數字就當語意化 key（介面文案目錄）。
+				// 不報錯是刻意的：兩種目錄共用同一個解析器。
+				cur = &Entry{Index: -1, Name: raw}
 			}
-			cur = &Entry{Index: idx}
 		case strings.HasPrefix(s, markReview):
 			if cur != nil {
 				cur.NeedsReview = true

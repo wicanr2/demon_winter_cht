@@ -374,13 +374,13 @@ func (a *app) plotCastEntries() []spellEntry {
 	var out []spellEntry
 	tile, err := a.tiles.TileAt(a.party.X(), a.party.Y())
 	if err == nil && tile == game.GlyphTile && game.GlyphIndexFor(a.mapID) >= 0 {
-		out = append(out, spellEntry{name: "解咒", plot: plotUncurse})
+		out = append(out, spellEntry{name: a.tr.UI("plot.uncurse", "解咒"), plot: plotUncurse})
 	}
 	// 禁錮的出現條件是「三個符印都解完」，**不是「這裡施放得會成功」** ——
 	// 後者會讓 "The spell fizzles..." 永遠走不到，等於幫玩家擋掉原版
 	// 「在錯地方施放白扣 100 點」的損失，那是改遊戲不是移植。
 	if game.CircleOfLightOpen(a.save.GlyphFlags) {
-		out = append(out, spellEntry{name: "禁錮", plot: plotImprison})
+		out = append(out, spellEntry{name: a.tr.UI("plot.imprison", "禁錮"), plot: plotImprison})
 	}
 	return out
 }
@@ -412,24 +412,24 @@ func (a *app) doPlotCast(c *castScreen) bool {
 		}
 		switch game.Uncurse(caster, tile, a.mapID, &a.save.GlyphFlags) {
 		case game.GlyphNoGlyph:
-			a.camp.message = "這裡沒有符印"
+			a.camp.message = a.tr.UI("plot.noglyph", "這裡沒有符印")
 		case game.GlyphAlreadyDone:
-			a.camp.message = "這個符印已經失效了"
+			a.camp.message = a.tr.UI("plot.inactive", "這個符印已經失效了")
 		case game.GlyphNotEnoughSP:
-			a.camp.message = fmt.Sprintf("那需要 %d 點法力", game.UncurseCost)
+			a.camp.message = fmt.Sprintf(a.tr.UI("plot.needsp", "那需要 %d 點法力"), game.UncurseCost)
 		case game.GlyphDestroyed:
-			a.camp.message = "力量閃現，符印的魔法被摧毀了"
+			a.camp.message = a.tr.UI("plot.destroyed", "力量閃現，符印的魔法被摧毀了")
 		}
 
 	case plotImprison:
 		switch game.Imprison(caster, a.mapID, a.party.Y()) {
 		case game.ImprisonNotEnoughSP:
-			a.camp.message = fmt.Sprintf("那需要 %d 點法力", game.ImprisonCost)
+			a.camp.message = fmt.Sprintf(a.tr.UI("plot.needsp", "那需要 %d 點法力"), game.ImprisonCost)
 		case game.ImprisonFizzles:
-			a.camp.message = "法術消散了……"
+			a.camp.message = a.tr.UI("plot.fizzles", "法術消散了……")
 		case game.ImprisonWon:
 			a.won = true
-			a.camp.message = "惡魔被禁錮了"
+			a.camp.message = a.tr.UI("plot.won", "惡魔被禁錮了")
 		}
 
 	default:

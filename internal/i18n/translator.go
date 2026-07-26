@@ -15,6 +15,9 @@ type Translator struct {
 	// byIndex 的 key 是「來源檔名 + 索引」。
 	byIndex map[string]string
 
+	// byName 是介面文案的查表（語意化 key，見 Entry.Name）。
+	byName map[string]string
+
 	// mismatched 記錄原文對不上的條目，代表翻譯檔與資料脫節。
 	mismatched []Mismatch
 }
@@ -34,7 +37,7 @@ func key(source string, index int) string {
 // 目錄不存在時回傳一個空的 Translator 而不是錯誤：沒有翻譯檔就是全英文，
 // 那是合法狀態（例如原文模式），不該讓遊戲起不來。
 func Load(dir string) (*Translator, error) {
-	t := &Translator{byIndex: map[string]string{}}
+	t := &Translator{byIndex: map[string]string{}, byName: map[string]string{}}
 
 	ents, err := os.ReadDir(dir)
 	if err != nil {
@@ -60,6 +63,10 @@ func Load(dir string) (*Translator, error) {
 			if !ent.Translated() {
 				continue
 			}
+			if ent.Name != "" {
+				t.byName[ent.Name] = ent.Target
+				continue
+			}
 			t.byIndex[key(c.Source, ent.Index)] = ent.Target
 		}
 	}
@@ -77,6 +84,21 @@ func (t *Translator) Event(source string, index int, original string) string {
 	}
 	return got
 }
+
+// UI 回傳一條介面文案的譯文；沒有譯文就回 fallback。
+//
+// fallback 一律傳**中文**而不是英文 —— 這個專案的介面本來就是中文寫的，
+// 翻譯檔的作用是「把它抽出來好維護、日後好換語言」，不是「英文轉中文」。
+// 所以缺一條的後果是「還是中文，只是沒走目錄」，不是畫面變英文。
+func (t *Translator) UI(name, fallback string) string {
+	if got, ok := t.byName[name]; ok && got != "" {
+		return got
+	}
+	return fallback
+}
+
+// UICount 回報載入了幾條介面文案。給啟動時的自檢用。
+func (t *Translator) UICount() int { return len(t.byName) }
 
 // Verify 逐條比對翻譯檔的原文與現在的資料，回報對不上的條目。
 //

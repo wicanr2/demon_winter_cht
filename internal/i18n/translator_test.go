@@ -1,6 +1,7 @@
 package i18n
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 )
@@ -135,5 +136,77 @@ func TestLoad_RejectsCatalogWithoutSourceHeader(t *testing.T) {
 	}})
 	if _, err := Load(dir); err == nil {
 		t.Error("缺來源檔頭時應回傳錯誤")
+	}
+}
+
+// TestUICatalog 釘住介面文案目錄（語意化 key，`docs/re/77`）。
+func TestUICatalog(t *testing.T) {
+	dir := t.TempDir()
+	body := `@@ UI
+
+## plot.uncurse
+:: en
+UNCURSE
+:: zh
+解咒
+
+## plot.needsp
+:: zh
+那需要 %d 點法力
+
+## plot.untranslated
+:: en
+Something
+`
+	if err := os.WriteFile(filepath.Join(dir, "ui.txt"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	tr, err := Load(dir)
+	if err != nil {
+		t.Fatalf("Load 失敗：%v", err)
+	}
+	if got := tr.UI("plot.uncurse", "FALLBACK"); got != "解咒" {
+		t.Errorf("UI(plot.uncurse) = %q", got)
+	}
+	if got := tr.UI("plot.needsp", "FALLBACK"); got != "那需要 %d 點法力" {
+		t.Errorf("UI(plot.needsp) = %q", got)
+	}
+	// 沒有譯文 → 回 fallback，**不是空字串**
+	if got := tr.UI("plot.untranslated", "FALLBACK"); got != "FALLBACK" {
+		t.Errorf("未翻譯的條目應回 fallback，得到 %q", got)
+	}
+	// 完全不存在的 key 同理
+	if got := tr.UI("nope", "FALLBACK"); got != "FALLBACK" {
+		t.Errorf("不存在的 key 應回 fallback，得到 %q", got)
+	}
+	if n := tr.UICount(); n != 2 {
+		t.Errorf("UICount = %d，預期 2（未翻譯的不算）", n)
+	}
+}
+
+// TestUIAndIndexCoexist 釘住「名稱型與數字型目錄互不干擾」。
+func TestUIAndIndexCoexist(t *testing.T) {
+	dir := t.TempDir()
+	must := func(name, body string) {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	must("ui.txt", "@@ UI\n\n## a.b\n:: zh\n介面\n")
+	must("data1.txt", "@@ DATA1.TXT\n\n## 0\n:: en\nOrig\n:: zh\n事件\n")
+
+	tr, err := Load(dir)
+	if err != nil {
+		t.Fatalf("Load 失敗：%v", err)
+	}
+	if got := tr.UI("a.b", "X"); got != "介面" {
+		t.Errorf("UI = %q", got)
+	}
+	if got := tr.Event("DATA1.TXT", 0, "Orig"); got != "事件" {
+		t.Errorf("Event = %q", got)
+	}
+	// 名稱型的條目不該污染數字型的表
+	if got := tr.Event("UI", -1, "Orig"); got != "Orig" {
+		t.Errorf("名稱型條目跑進 byIndex 了：%q", got)
 	}
 }

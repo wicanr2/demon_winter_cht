@@ -1,0 +1,75 @@
+# 介面文案。**不是 cmd/dwstrings 產生的** ——
+# 這些字串是本專案自己寫的，原版 DEMON.INT 的 840 條 UI 字串只是參考
+# （引擎不讀它，而且含大量把機器碼誤判成字串的雜訊，見 docs/i18n/）。
+#
+# key 是語意化名稱不是數字索引：介面文案會增刪，數字一插入就要重編號。
+# `:: en` 放的是**原版英文**（有對應的話），方便對照；沒有就留空。
+# 程式碼裡的 fallback 一律是中文 —— 缺一條的後果是「沒走目錄」，
+# 不是畫面變英文（見 i18n.Translator.UI 的註解）。
+#
+# 這是 CONTEXT.md §7 C1 的第一批：主線（docs/re/59–64）那幾段。
+@@ UI
+
+## plot.uncurse
+:: en
+UNCURSE
+:: zh
+解咒
+
+## plot.imprison
+:: en
+IMPRISON
+:: zh
+禁錮
+
+## plot.noglyph
+:: en
+I see no glyph!
+:: zh
+這裡沒有符印
+
+## plot.inactive
+:: en
+It is already inactive
+:: zh
+這個符印已經失效了
+
+## plot.needsp
+:: en
+That requires %d SP!
+:: zh
+那需要 %d 點法力
+
+## plot.destroyed
+:: en
+In a flash of power the magic of the glyph is destroyed.
+:: zh
+力量閃現，符印的魔法被摧毀了
+
+## plot.fizzles
+:: en
+The spell fizzles...
+:: zh
+法術消散了……
+
+## plot.won
+:: zh
+惡魔被禁錮了
+
+## plot.forcefield
+:: en
+A crimson forcefield bars your entry to the Circle of Light
+:: zh
+緋紅的力場擋住了通往光之環的路
+
+## plot.glyphdrain
+:: zh
+符印的力量侵蝕著隊伍
+
+## plot.fell
+:: zh
+%s 倒下了
+
+## plot.allfell
+:: zh
+全隊都倒下了

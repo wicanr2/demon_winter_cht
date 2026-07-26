@@ -245,7 +245,7 @@ func (a *app) Update() error {
 		// 原版是走進去之後才擋並把玩家推開；這裡在移動前擋，
 		// 效果一樣而且不必實作推開 —— 差異記在 docs/re/62。
 		if a.mapID == game.ImprisonSubMap && !game.CircleOfLightOpen(a.save.GlyphFlags) {
-			a.message = "緋紅的力場擋住了通往光之環的路"
+			a.message = a.tr.UI("plot.forcefield", "緋紅的力場擋住了通往光之環的路")
 			return nil
 		}
 		res, tile, advanced := a.world.Walk(a.party, a.clock)
@@ -1262,12 +1262,12 @@ func (a *app) stepHPTick() {
 		return
 	}
 	for _, i := range res.Died {
-		a.message = a.members[i].Name + " 倒下了"
+		a.message = fmt.Sprintf(a.tr.UI("plot.fell", "%s 倒下了"), a.members[i].Name)
 	}
 	if mode == game.StepHPDrain && len(res.Died) == 0 {
-		a.message = "符印的力量侵蝕著隊伍"
+		a.message = a.tr.UI("plot.glyphdrain", "符印的力量侵蝕著隊伍")
 	}
 	if res.AllDead {
-		a.message = "全隊都倒下了"
+		a.message = a.tr.UI("plot.allfell", "全隊都倒下了")
 	}
 }
