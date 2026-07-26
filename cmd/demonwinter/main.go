@@ -606,6 +606,38 @@ const monsterSourceFile = "MONSTER.DAT"
 func (a *app) startBattle(ids []int) {
 	var units []*game.Unit
 
+	// 擺位不看地形，只看有沒有人站著。
+	//
+	// 原版多一道條件：落點的地形值必須等於隊伍腳下那一格的值
+	// （`docs/re/35` §3）。本專案**沒有套** —— 我們的戰鬥根本沒有地形阻擋，
+	// `CanStep` 只查邊界與佔位，單位走得過任何一格。只在生成時擋、
+	// 移動時不擋，是自相矛盾的一半規則；等戰場地形阻擋做出來再一起上。
+	// （實測過套上去的後果：戰場地形是從大地圖切下來的，中心與鄰格的
+	// tile 幾乎都不同，怪物一隻也放不下，進戰鬥直接「怪物全滅」。）
+	terrain := a.terrainForBattle()
+	taken := map[[2]int]bool{}
+	occupied := func(x, y int) bool { return taken[[2]int{x, y}] }
+
+	// 隊伍先站，照紮營選單排的 3×3 陣型（docs/re/34、35）。
+	for i, c := range a.members {
+		slot := game.PlayerSlotStart + i
+		if slot >= game.PlayerSlotEnd {
+			break
+		}
+		x, y, ok := game.DeployPartyAt(a.save.Formation, i)
+		if !ok {
+			// 陣型裡沒有他 —— 原版佈陣是掃九格，沒被放進去的人不會上場。
+			// 本專案不讓人憑空消失：塞進中心附近還空著的位置。
+			x, y, ok = game.ScatterMonster(a.rng, nil, occupied)
+			if !ok {
+				continue
+			}
+		}
+		taken[[2]int{x, y}] = true
+		units = append(units, c.CombatUnit(slot, x, y, game.West))
+	}
+
+	// 怪物散在中心 ±2，開場就貼臉 —— 原版沒有「兩軍對峙」這回事。
 	for i, id := range ids {
 		if i >= game.MonsterSlotEnd {
 			break
@@ -614,10 +646,15 @@ func (a *app) startBattle(ids []int) {
 		if err != nil {
 			continue
 		}
+		x, y, ok := game.ScatterMonster(a.rng, nil, occupied)
+		if !ok {
+			continue // 中心附近站滿了，這一隻上不了場
+		}
+		taken[[2]int{x, y}] = true
 		speed, hp := game.RollMonsterStats(a.rng, m.Speed, m.HP)
 		units = append(units, &game.Unit{
 			Slot: i, Name: a.tr.Event(monsterSourceFile, id, m.Name),
-			X: 2, Y: i + 1, Facing: int(game.East),
+			X: x, Y: y, Facing: int(game.East),
 			Speed: speed, Strength: m.Strength, Skill: m.Skill,
 			Level: m.Level, Intellect: m.Level,
 			HP: hp, MaxHP: hp,
@@ -627,17 +664,9 @@ func (a *app) startBattle(ids []int) {
 		})
 	}
 
-	for i, c := range a.members {
-		slot := game.PlayerSlotStart + i
-		if slot >= game.PlayerSlotEnd {
-			break
-		}
-		units = append(units, c.CombatUnit(slot, 8, i+1, game.West))
-	}
-
 	a.battle = game.NewBattle(a.rng, units)
 	a.battle.BeginRound()
-	a.battleTerrain = a.terrainForBattle()
+	a.battleTerrain = terrain
 	// 祈禱成功率跨戰鬥保留、每次祈禱永久遞減；初值 20% 來自手冊
 	// （反組譯只確認了遞減量 −5，初始化位置未逐指令追出）。
 	if a.prayChance == 0 {
