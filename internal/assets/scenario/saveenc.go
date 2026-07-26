@@ -45,6 +45,8 @@ func (s *SaveGame) Encode() ([]byte, error) {
 	copy(trailer[glyphFlagsOffset:glyphFlagsOffset+glyphCount], s.GlyphFlags[:])
 	trailer[templeRuinsOffset] = s.TempleRuins
 	trailer[townRuinsOffset] = s.TownRuins
+	trailer[plotStageOffset] = s.PlotStage
+	trailer[firstDreamOffset] = s.FirstDream
 	putByte(trailer[:], encounterCountdownOffset, s.EncounterCountdown)
 	putByte(trailer[:], partySizeOffset, s.PartySize)
 	putByte(trailer[:], rationsOffset, s.Rations)

@@ -201,6 +201,37 @@ func (a *app) campSleep() {
 		msg += "　" + a.members[i].Name + " 沒有醒來"
 	}
 	c.message = msg
+
+	// 睡著之後才輪到劇情 —— 冬之魔是在玩家睡覺的時候降臨的（`docs/re/80`）。
+	a.advancePlot()
+}
+
+// advancePlot 推進一段劇情並把夢播出來（原版 `1000:0206`）。
+//
+// 原版每晚只走一段，所以這裡也只播一場夢。第三場夢連帶把神殿變成廢墟、
+// 把全隊的信仰清空 —— **那是永久剝奪，不能「順手修掉」**（`docs/re/79` §3）。
+func (a *app) advancePlot() {
+	st := game.PlotState{
+		Month:      byte(a.clock.Month()),
+		Stage:      a.save.PlotStage,
+		FirstDream: a.save.FirstDream,
+		TempleRuin: a.save.TempleRuins,
+	}
+	dream, wipeFaith := game.AdvancePlotOnSleep(&st)
+	a.save.PlotStage = st.Stage
+	a.save.FirstDream = st.FirstDream
+	a.save.TempleRuins = st.TempleRuin
+	if dream == game.NoDream {
+		return
+	}
+	if wipeFaith {
+		for i := range a.members {
+			game.WipeFaith(&a.members[i])
+		}
+		// 神殿變成廢墟是畫面上看得見的：地圖要重畫（`docs/re/79` §2）。
+		a.drawTiles = ditheredTiles(a.tiles, uint16(a.ditherSeed), a.save.TempleRuins)
+	}
+	a.openDream(int(dream))
 }
 
 func (a *app) updateHuntPicker() error {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -22,6 +23,9 @@ import (
 // 而裁掉的是句子中段，畫面上看起來像資料壞了，不像排版問題。
 // 從 layout 常數推出來就不會再算錯。
 const endingColumns = (layout.CanvasWidth - layout.BoxPadX*3) / textlayout.CellWidthCJK
+
+// storyContIndent 是續行的額外縮排。
+const storyContIndent = "  "
 
 // 結局序列（原版 `1000:3575` ＝ `0x07175`，見 `docs/re/04` §5.1）。
 //
@@ -186,9 +190,43 @@ func (a *app) drawEndingPage(line func(string), page int) {
 		a.drawEndingFallback(line)
 		return
 	}
-	for _, l := range lines {
+	for _, l := range storyLines(lines) {
 		line(l)
 	}
+}
+
+// storyLines 把劇情文字的一頁調整成這個畫面放得下的行。
+//
+// **原版已經斷過行了，但它的畫面是 40 欄、這裡是 37 欄** ——
+// 差那三欄，馬利馮預言裡就有四行被切掉字尾（`claw upon y`、`be hear`、
+// `rise up in glor`）。切在字中間，看起來像資料壞了。
+//
+// 續行沿用原行的縮排：那段預言靠縮排分句，續行頂格會把層次打散。
+func storyLines(src []string) []string {
+	var out []string
+	for _, l := range src {
+		indent := l[:len(l)-len(strings.TrimLeft(l, " 　"))]
+		body := l[len(indent):]
+		width := endingColumns - len([]rune(indent)) - len(storyContIndent)
+		if width < 8 {
+			width = 8
+		}
+		wrapped := textlayout.WrapText(body, width)
+		if len(wrapped) == 0 {
+			out = append(out, l)
+			continue
+		}
+		for i, w := range wrapped {
+			// 續行多縮兩格。那段預言靠縮排分句，續行頂格會被讀成
+			// 新的一句（「the」「crystal」「glory」單獨一行看起來就是）。
+			if i > 0 {
+				out = append(out, indent+storyContIndent+w)
+				continue
+			}
+			out = append(out, indent+w)
+		}
+	}
+	return out
 }
 
 // drawEndingFallback 是最後一段祝賀。
@@ -210,6 +248,15 @@ func (a *app) drawEndingFallback(line func(string)) {
 // loadWinText 讀結局文字。讀不到不算錯 —— 退回精簡祝賀就好。
 func loadWinText(dir string) *scenario.StoryText {
 	st, err := scenario.LoadStoryText(dir, scenario.StoryWin)
+	if err != nil {
+		return nil
+	}
+	return st
+}
+
+// loadStoryOrNil 讀一個分頁劇情文字檔，讀不到就回 nil。
+func loadStoryOrNil(dir string, m scenario.StoryMode) *scenario.StoryText {
+	st, err := scenario.LoadStoryText(dir, m)
 	if err != nil {
 		return nil
 	}

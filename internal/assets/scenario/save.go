@@ -269,6 +269,20 @@ const (
 	templeRuinsOffset = 0xba
 	townRuinsOffset   = 0xbe
 
+	// plotStageOffset／firstDreamOffset：**睡覺推進的劇情階段**（`docs/re/80`）。
+	//
+	// 冬之魔是在玩家睡覺的時候降臨的。`1000:0206` 每晚只走一段：
+	//
+	//	月份 > 3 且 +0xbd == 0   → +0xbd = 1，播夢境第 0 頁（馬利馮的警告）
+	//	+0xb9 == 1               → +0xb9 = 2，播第 1 頁（冬之魔降臨）
+	//	+0xb9 == 2 且 +0xba == 0 → 神殿全毀＋信仰歸零，播第 2 頁
+	//
+	// ⚠ **把 `+0xb9` 從 0 推到 1 的那道寫入還沒找到**（`docs/re/81`）——
+	// 常數位移與計算式寫入兩種掃法都掃過。攻略說觸發點是拿到恆世寶珠
+	// 之後，DOSBox 實跑也證實這條路徑活著，所以缺的是「誰把它設成 1」。
+	plotStageOffset  = 0xb9
+	firstDreamOffset = 0xbd
+
 	// TempleRuinsThreshold 是神殿旗標的判斷門檻（原版 `cmp 0x7f / jbe`）。
 	// 注意它與城鎮旗標的門檻**不同**（那邊是 `!= 0`）——
 	// 兩個旗標語意相近但比較方式不一樣，照原版分開寫，不要統一。
@@ -435,6 +449,10 @@ type SaveGame struct {
 	TempleRuins byte
 	TownRuins   byte
 
+	// PlotStage／FirstDream 是睡覺推進的劇情階段（見 plotStageOffset 註解）。
+	PlotStage  byte
+	FirstDream byte
+
 	// MerchantBase 是商隊規模的基準值（見 merchantBaseOffset 註解）。
 	MerchantBase byte
 
@@ -527,6 +545,8 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	copy(save.GlyphFlags[:], trailer[glyphFlagsOffset:glyphFlagsOffset+glyphCount])
 	save.TempleRuins = trailer[templeRuinsOffset]
 	save.TownRuins = trailer[townRuinsOffset]
+	save.PlotStage = trailer[plotStageOffset]
+	save.FirstDream = trailer[firstDreamOffset]
 	save.EncounterCountdown = trailer[encounterCountdownOffset]
 	save.PartySize = trailer[partySizeOffset]
 	save.Rations = trailer[rationsOffset]

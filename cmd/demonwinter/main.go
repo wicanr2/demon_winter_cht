@@ -166,6 +166,14 @@ type app struct {
 	// runeFont 是 CYPHER.SHP 的 27 個符文字形；讀不到時為 nil。
 	runeFont []*ebiten.Image
 
+	// ditherSeed 是海面浪花的種子。神殿變成廢墟時要用同一顆種子重建
+	// drawTiles，不然海面會整片重擲、看起來像畫面壞掉。
+	ditherSeed uint16
+	// dreamText 是 T.TXT 的三場夢（`docs/re/82`）；讀不到時為 nil。
+	dreamText *scenario.StoryText
+	// dreamPage 非負時螢幕上正在播夢。
+	dreamPage int
+
 	// winText 是 WIN.TXT 的結局文字（`docs/re/82`）；讀不到時為 nil。
 	winText *scenario.StoryText
 	// ending 是結局序列的播放狀態。
@@ -225,6 +233,9 @@ func (a *app) Update() error {
 	}
 	if a.title != nil {
 		return a.updateTitle()
+	}
+	if a.dreamPage >= 0 {
+		return a.updateDream()
 	}
 	if a.manualUI != nil {
 		return a.updateManual()
@@ -379,6 +390,14 @@ func (a *app) Draw(screen *ebiten.Image) {
 		if a.quitting {
 			a.drawQuitDialog(a.canvas)
 		}
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
+	if a.dreamPage >= 0 {
+		a.canvas.Fill(color.Black)
+		a.drawDream(a.canvas)
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 		op.GeoM.Scale(scale, scale)
 		screen.DrawImage(a.canvas, op)
@@ -1068,6 +1087,8 @@ func main() {
 	// -ruins 讓「冬之魔降臨之後」的世界看得見。原版把這兩個旗標接在劇情上
 	// （`+0xb9 == 2` 觸發神殿全毀），而劇情觸發本身還沒接 ——
 	// 沒有這個旗標就沒辦法驗收 tile 替換與廢墟訊息（`docs/re/79`）。
+	plotFlag := flag.Int("plot", -1,
+		"偵錯：劇情階段 +0xb9（1 = 下次睡覺冬之魔降臨）。負值代表用存檔裡的")
 	endingFlag := flag.Bool("ending", false,
 		"偵錯：啟動後直接播結局序列（不必真的破關）")
 	ruinsFlag := flag.Bool("ruins", false,
@@ -1125,6 +1146,9 @@ func main() {
 	}
 	if fresh {
 		log.Printf("沒有進度存檔，用原版 PARTY.DAT 當起始狀態。存檔會寫到 %s", *savePath)
+	}
+	if *plotFlag >= 0 {
+		save.PlotStage = byte(*plotFlag)
 	}
 	if *ruinsFlag {
 		save.TempleRuins = 0xff
@@ -1209,6 +1233,9 @@ func main() {
 		special:    special,
 		manual:     man,
 		winText:    loadWinText(*dataDir),
+		dreamText:  loadStoryOrNil(*dataDir, scenario.StoryDream),
+		dreamPage:  -1,
+		ditherSeed: uint16(*seed),
 		// -ending 直接跳結局序列。破關要走完整條主線，沒有這個旗標
 		// 就沒辦法驗收結局畫面（同 -glyphs／-ruins 的性質）。
 		won: *endingFlag,
