@@ -1022,10 +1022,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入 EXITS.DAT：%v", err)
 	}
-	special, err := loadSpecialTiles(*dataDir)
-	if err != nil {
-		log.Fatalf("載入特殊格清單：%v", err)
-	}
 	events, err := scenario.LoadEventTable(filepath.Join(*dataDir, *dataFile))
 	if err != nil {
 		log.Fatalf("載入事件表：%v", err)
@@ -1052,6 +1048,12 @@ func main() {
 	}
 	if fresh {
 		log.Printf("沒有進度存檔，用原版 PARTY.DAT 當起始狀態。存檔會寫到 %s", *savePath)
+	}
+	// 特殊格清單要在存檔載入之後才決定來源 —— 全新開始要從 ALL_SS.DAT
+	// 重建，否則會沿用原版出廠那份「玩到一半」的狀態（docs/re/78 §2）。
+	special, err := scenario.LoadSpecialTileSet(filepath.Dir(*savePath), *dataDir, fresh)
+	if err != nil {
+		log.Fatalf("載入特殊格清單：%v", err)
 	}
 	members := make([]game.Character, 0, len(save.Characters))
 	for _, sc := range save.Characters {
@@ -1365,29 +1367,4 @@ func (a *app) stepHPTick() {
 	if res.AllDead {
 		a.message = a.tr.UI("plot.allfell", "全隊都倒下了")
 	}
-}
-
-// loadSpecialTiles 載入五張子地圖的特殊格清單（`1SS.DAT`–`5SS.DAT`）。
-//
-// 缺檔不算錯 —— 大地圖與城鎮本來就沒有清單（原版只在子地圖 < 10 才載入，
-// 見 `docs/re/77` §2），而且原版資料目錄只有 1–5 這五個檔。
-// 查不到就是「這張圖沒有特殊格」，不是失敗。
-func loadSpecialTiles(dir string) (map[int]*scenario.SpecialTiles, error) {
-	out := make(map[int]*scenario.SpecialTiles)
-	for id := 1; id <= scenario.SpecialTileMapCount; id++ {
-		path := filepath.Join(dir, scenario.SpecialTileFileName(id))
-		raw, err := os.ReadFile(path)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			return nil, err
-		}
-		st, err := scenario.ParseSpecialTiles(raw)
-		if err != nil {
-			return nil, fmt.Errorf("%s：%w", path, err)
-		}
-		out[id] = st
-	}
-	return out, nil
 }

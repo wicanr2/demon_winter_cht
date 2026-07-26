@@ -69,7 +69,22 @@ func (a *app) writeSave() error {
 	if err := os.MkdirAll(filepath.Dir(a.savePath), 0o755); err != nil {
 		return fmt.Errorf("建立存檔目錄失敗: %w", err)
 	}
+	if err := a.writeSpecialTiles(); err != nil {
+		return err
+	}
 	return a.save.SaveTo(a.savePath)
+}
+
+// writeSpecialTiles 把五張子地圖的特殊格清單寫進存檔目錄。
+//
+// 這正是上面那段警語講的情況：清單會被事件就地改寫（`docs/re/78` §3），
+// 不寫出去的話「這個一次性事件已經觸發過」就在關掉遊戲時消失，
+// **而且畫面上完全看不出來** —— 下次進同一個地城，用掉的事件又活了。
+//
+// 寫到存檔目錄，不是原版資料目錄。`nSS.DAT` 跟 `PARTY.DAT` 同一個等級：
+// 玩家的原版檔是他自己的合法副本，遊玩進度不該寫回去。
+func (a *app) writeSpecialTiles() error {
+	return scenario.WriteSpecialTileSet(filepath.Dir(a.savePath), a.special)
 }
 
 // saveNow 存檔並把結果寫進狀態訊息。

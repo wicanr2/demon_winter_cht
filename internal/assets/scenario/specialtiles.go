@@ -3,6 +3,8 @@ package scenario
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 )
 
 // 子地圖的特殊格清單（`nSS.DAT`，每張地城一份）。
@@ -262,4 +264,93 @@ func SplitAllSS(data []byte) ([][]byte, error) {
 // SpecialTileFileName 是子地圖 n 的清單檔名（原版 `sprintf("%dSS.DAT", n)`）。
 func SpecialTileFileName(mapID int) string {
 	return fmt.Sprintf("%dSS.DAT", mapID)
+}
+
+// LoadSpecialTileSet 準備五張子地圖的特殊格清單。
+//
+// 三條來源，優先序照原版的語意：
+//
+//  1. **存檔目錄裡有** → 讀那一份。清單會被事件就地改寫，所以它是進度的一部分
+//     （`docs/re/78`），跟 `PARTY.DAT` 同一個等級。
+//  2. **全新開始**（fresh）→ 從 `ALL_SS.DAT`（母本）切五份。這就是原版建角時
+//     做的事（`0x14845` 的迴圈）。**不能省這一步** —— 原版出廠的 `1SS.DAT`／
+//     `2SS.DAT` 是壓片前玩到一半的狀態（29 處差異），直接沿用等於玩家一開局
+//     就繼承別人走過的痕跡。
+//  3. 母本缺檔 → 退回讀資料目錄的 `nSS.DAT`（就是那份髒的，但有總比沒有好）。
+//
+// 缺檔一律不算錯：大地圖與城鎮本來就沒有清單（原版只在子地圖 < 10 才載入），
+// 查不到就是「這張圖沒有特殊格」。
+func LoadSpecialTileSet(saveDir, dataDir string, fresh bool) (map[int]*SpecialTiles, error) {
+	if !fresh {
+		st, err := readSpecialDir(saveDir)
+		if err != nil {
+			return nil, err
+		}
+		if len(st) > 0 {
+			return st, nil
+		}
+	}
+
+	raw, err := os.ReadFile(filepath.Join(dataDir, "ALL_SS.DAT"))
+	switch {
+	case err == nil:
+		blocks, err := SplitAllSS(raw)
+		if err != nil {
+			return nil, err
+		}
+		out := make(map[int]*SpecialTiles, len(blocks))
+		for i, b := range blocks {
+			st, err := ParseSpecialTiles(b)
+			if err != nil {
+				return nil, fmt.Errorf("ALL_SS.DAT 區塊 %d：%w", i, err)
+			}
+			out[i+1] = st
+		}
+		return out, nil
+	case os.IsNotExist(err):
+		return readSpecialDir(dataDir)
+	default:
+		return nil, err
+	}
+}
+
+// readSpecialDir 從一個目錄讀 `1SS.DAT`–`5SS.DAT`，缺檔跳過。
+func readSpecialDir(dir string) (map[int]*SpecialTiles, error) {
+	out := make(map[int]*SpecialTiles)
+	for id := 1; id <= SpecialTileMapCount; id++ {
+		path := filepath.Join(dir, SpecialTileFileName(id))
+		raw, err := os.ReadFile(path)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			return nil, err
+		}
+		st, err := ParseSpecialTiles(raw)
+		if err != nil {
+			return nil, fmt.Errorf("%s：%w", path, err)
+		}
+		out[id] = st
+	}
+	return out, nil
+}
+
+// WriteSpecialTileSet 把清單寫進指定目錄（存檔目錄，**不是**原版資料目錄）。
+//
+// 清單是進度的一部分：不寫出去的話「這個一次性事件已經觸發過」會在
+// 關掉遊戲時消失，而且畫面上完全看不出來 —— 下次進同一個地城，用掉的事件又活了。
+func WriteSpecialTileSet(dir string, set map[int]*SpecialTiles) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("建立目錄 %s 失敗: %w", dir, err)
+	}
+	for id, st := range set {
+		if st == nil {
+			continue
+		}
+		path := filepath.Join(dir, SpecialTileFileName(id))
+		if err := os.WriteFile(path, st.Encode(), 0o644); err != nil {
+			return fmt.Errorf("寫入 %s 失敗: %w", path, err)
+		}
+	}
+	return nil
 }
