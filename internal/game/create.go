@@ -172,6 +172,18 @@ func (c *CharacterCreation) Finish(name string, class gamedata.Class) Character 
 	out.CurrentHP = out.MaxHP
 	out.MaxSP = initialSP(class, c.Traits[gamedata.Intellect])
 	out.CurrentSP = out.MaxSP
+
+	// **「含加成」那一組要跟天生值同步。** 新角色身上沒有裝備，
+	// 所以兩組本來就該相等 —— 原版建角也是做這件事
+	// （`0x14d95`：`天生力量 ← 力量(含加成)`，`docs/re/89`）。
+	//
+	// 不同步的話那幾個 byte 會留著載入時的舊值，而新角色「載入時的舊值」
+	// 是出貨存檔那五個人的數字：名冊上是自己擲的點，存檔裡是別人的 ——
+	// **重讀存檔就換人**，而且畫面上完全看不出來。
+	out.TraitsWithBonus.Strength = byte(out.Traits[gamedata.Strength])
+	out.TraitsWithBonus.Skill = byte(out.Traits[gamedata.Skill])
+	out.TraitsWithBonus.Speed = byte(out.Traits[gamedata.Speed])
+	out.TraitsWithBonus.MaxSP = byte(out.MaxSP)
 	return out
 }
 

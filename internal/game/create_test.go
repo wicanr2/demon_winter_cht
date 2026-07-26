@@ -310,3 +310,62 @@ func TestFinishClearsInventory(t *testing.T) {
 		t.Errorf("護甲值 = %d，預期 0", out.ArmorRating())
 	}
 }
+
+// 新角色的「含加成」屬性要等於天生值。
+//
+// 新角色身上沒有裝備，兩組本來就該相等 —— 原版建角也是做這件事
+// （`0x14d95`，`docs/re/89`）。
+//
+// **不同步的後果只在存檔裡看得見**：名冊顯示的是規則層的 `Traits`
+// （自己擲的點），而存檔的「含加成」欄位會留著載入時的舊值 ——
+// 對新角色來說那是出貨存檔那五個人的數字。重讀存檔就換人。
+func TestFinishSyncsTraitsWithBonus(t *testing.T) {
+	out := newCreation(t, gamedata.Dwarf).Finish("Test", gamedata.Wizard)
+
+	if got, want := int(out.TraitsWithBonus.Strength), out.Traits[gamedata.Strength]; got != want {
+		t.Errorf("力量：含加成 %d、天生 %d", got, want)
+	}
+	if got, want := int(out.TraitsWithBonus.Skill), out.Traits[gamedata.Skill]; got != want {
+		t.Errorf("技巧：含加成 %d、天生 %d", got, want)
+	}
+	if got, want := int(out.TraitsWithBonus.Speed), out.Traits[gamedata.Speed]; got != want {
+		t.Errorf("速度：含加成 %d、天生 %d", got, want)
+	}
+	if got, want := int(out.TraitsWithBonus.MaxSP), out.MaxSP; got != want {
+		t.Errorf("法力上限：天生 %d、實際 %d", got, want)
+	}
+}
+
+// 存檔往返不能掉「含加成」那一組。
+//
+// `ApplyTo` 的註解自己寫著「FromSave 多讀一個欄位，這裡就要多寫一個，
+// 否則那個欄位會在存檔時悄悄退回舊值」—— 這四個欄位原本兩邊都沒接，
+// 所以連「退回舊值」都沒察覺。
+func TestTraitsWithBonusRoundTrip(t *testing.T) {
+	out := newCreation(t, gamedata.Elf).Finish("RT", gamedata.Ranger)
+
+	var rec scenario.Character
+	// 先塞進別人的值，模擬「新角色寫進舊記錄」。
+	rec.StrengthBonus, rec.SkillBonus, rec.SpeedBonus, rec.MaxSPNatural = 99, 98, 97, 96
+	out.ApplyTo(&rec)
+
+	if rec.StrengthBonus != out.TraitsWithBonus.Strength {
+		t.Errorf("力量(含加成) = %d，預期 %d（舊值 99 應該被蓋掉）",
+			rec.StrengthBonus, out.TraitsWithBonus.Strength)
+	}
+	if rec.SkillBonus != out.TraitsWithBonus.Skill {
+		t.Errorf("技巧(含加成) = %d，預期 %d", rec.SkillBonus, out.TraitsWithBonus.Skill)
+	}
+	if rec.SpeedBonus != out.TraitsWithBonus.Speed {
+		t.Errorf("速度(含加成) = %d，預期 %d", rec.SpeedBonus, out.TraitsWithBonus.Speed)
+	}
+	if rec.MaxSPNatural != out.TraitsWithBonus.MaxSP {
+		t.Errorf("天生法力上限 = %d，預期 %d", rec.MaxSPNatural, out.TraitsWithBonus.MaxSP)
+	}
+
+	// 反向：讀回來要一致。
+	back := FromSave(rec)
+	if back.TraitsWithBonus != out.TraitsWithBonus {
+		t.Errorf("讀回來 = %+v，預期 %+v", back.TraitsWithBonus, out.TraitsWithBonus)
+	}
+}

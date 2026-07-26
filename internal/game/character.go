@@ -70,6 +70,23 @@ type Character struct {
 	// Status 是戰鬥狀態（存檔 +0x102）。中毒的人睡覺會掉血，見 Rest。
 	Status scenario.CombatStatus
 
+	// TraitsWithBonus 是「含裝備加成」的那一組屬性欄位
+	// （存檔 `+0x33`／`+0x34`／`+0x37`、`+0x26`）。
+	//
+	// **本引擎不用它們算任何東西** —— 規則層一律用 `Traits`（天生值），
+	// 裝備效果在使用時現算（`ArmorRating`、武器骰）。留著是為了
+	// **存檔往返不掉欄位**：`ApplyTo` 不寫它們的話，那幾個 byte 會留著
+	// 載入時的舊值，而新建的角色「載入時的舊值」是別人的角色。
+	//
+	// 這正是 `-newgame` 抓到的第二個 bug（`docs/re/89`）：
+	// 名冊上顯示的是自己擲的點（規則層用 `Traits`），
+	// 存檔裡的「含加成」欄位卻是出貨那五個人的數字 —— **重讀存檔就換人**。
+	TraitsWithBonus struct {
+		Strength, Skill, Speed byte
+		// MaxSP 是「天生法力上限」（`+0x26`），與上面三個同一類。
+		MaxSP byte
+	}
+
 	// EquippedWeapon／EquippedArmor 是目前裝備的那一格的索引。
 	//
 	// **待複核**：兩個欄位是反組譯推得（存檔 +0x100／+0x101），
@@ -141,6 +158,11 @@ func FromSave(c scenario.Character) Character {
 	out.Traits[gamedata.Intellect] = int(c.Intellect)
 	out.Traits[gamedata.Endurance] = int(c.Endurance)
 	out.Traits[gamedata.Skill] = int(c.SkillNatural)
+
+	out.TraitsWithBonus.Strength = c.StrengthBonus
+	out.TraitsWithBonus.Skill = c.SkillBonus
+	out.TraitsWithBonus.Speed = c.SpeedBonus
+	out.TraitsWithBonus.MaxSP = c.MaxSPNatural
 
 	for i, on := range c.SkillFlags {
 		if i >= gamedata.NumSkills {
@@ -367,6 +389,11 @@ func (c Character) ApplyTo(rec *scenario.Character) {
 	rec.Intellect = byte(c.Traits[gamedata.Intellect])
 	rec.Endurance = byte(c.Traits[gamedata.Endurance])
 	rec.SkillNatural = byte(c.Traits[gamedata.Skill])
+
+	rec.StrengthBonus = c.TraitsWithBonus.Strength
+	rec.SkillBonus = c.TraitsWithBonus.Skill
+	rec.SpeedBonus = c.TraitsWithBonus.Speed
+	rec.MaxSPNatural = c.TraitsWithBonus.MaxSP
 
 	for i := range rec.SkillFlags {
 		if i >= gamedata.NumSkills {
