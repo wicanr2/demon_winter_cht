@@ -765,11 +765,10 @@ func (a *app) checkEvent(tile byte) {
 			a.enterTownAt(a.party.X(), a.party.Y())
 		case game.SiteRuins:
 			a.message = a.tr.UI("site.ruins", "隊伍走過一片廢墟")
-		case game.SiteTemple, game.SiteCollege:
-			// 世界地圖上的神殿與學院還沒接（`docs/re/74` 的 35 所學院、
-			// `docs/re/19` 的神殿三項服務目前只從城鎮進得去）。
-			// **明確標記未接**，不要靜默落到別的分支假裝有反應。
-			a.message = "（世界地圖上的設施還沒接）"
+		case game.SiteTemple:
+			a.openWorldTemple(a.party.X(), a.party.Y())
+		case game.SiteCollege:
+			a.openWorldCollege(a.party.X(), a.party.Y())
 		}
 		return
 

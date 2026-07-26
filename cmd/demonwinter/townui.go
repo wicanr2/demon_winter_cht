@@ -41,6 +41,11 @@ type townScreen struct {
 
 	// message 是最近一次操作的結果。
 	message string
+
+	// worldSite 為 true 時這不是城鎮，是世界地圖上的獨立神殿／學院
+	// （`worldsiteui.go`）。它只有一項設施，所以 Esc 要直接回地圖 ——
+	// 退回「設施選單」會停在一個只有一項的清單上，看起來像卡住了。
+	worldSite bool
 }
 
 // facilityKeys 是設施的熱鍵，順序同 game.AllFacilities。
@@ -55,7 +60,14 @@ var facilityKeys = []ebiten.Key{
 const townSourceFile = "TOWN.TXT"
 
 // townName 回傳城鎮的顯示名稱（已翻譯）。索引是城鎮編號減 1。
+//
+// `Number == 0` 是**世界地圖上的獨立設施**（`worldsiteui.go` 造的臨時記錄），
+// 不是城鎮 —— 它沒有編號，直接用 Name。不擋掉的話索引會變 −1，
+// 而翻譯目錄拿 −1 查不到就退回空字串，抬頭會變成一片空白。
 func (a *app) townName(t gamedata.Town) string {
+	if t.Number == 0 {
+		return t.Name
+	}
 	return a.tr.Event(townSourceFile, t.Number-1, t.Name)
 }
 
@@ -145,6 +157,12 @@ func (a *app) updateFacility(t *townScreen) error {
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+		if t.worldSite {
+			// 地圖上的設施只有一項，直接離開。
+			a.town = nil
+			a.message = fmt.Sprintf("離開%s", t.visit.Town.Name)
+			return nil
+		}
 		t.facility = nil
 		t.message = ""
 		return nil
@@ -495,7 +513,11 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		}
 		line("")
 	}
-	line("Esc：回到設施選單")
+	if t.worldSite {
+		line("Esc：離開")
+	} else {
+		line("Esc：回到設施選單")
+	}
 }
 
 func (a *app) drawMarket(t *townScreen, line func(string)) {
