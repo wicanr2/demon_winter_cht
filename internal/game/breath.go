@@ -234,3 +234,41 @@ func inBreathCone(ox, oy, dx, dy, tx, ty int) bool {
 	}
 	return across <= along
 }
+
+// BreathCell 是噴吐掃過的一格。
+type BreathCell struct{ X, Y int }
+
+// BreathCone 回傳噴吐會掃過的每一格，順序照原版的第二趟掃描
+// （`138d:1a59`，見 `docs/re/23` §8）。
+//
+// **每一格都會畫**，地形只影響「要不要在這一格找單位」（`0x8f43` 的
+// 地形檢查在畫完之後才做）—— 所以動畫要蓋滿整個錐形，不是只蓋打得到的地方。
+//
+// 掃描順序是「先沿噴吐方向一層一層推進，每一層再從側偏 −along 掃到 +along」。
+// 這個順序決定動畫看起來是**從嘴邊往外擴**，不是整片同時亮。
+func (b *Battle) BreathCone(caster *Unit) []BreathCell {
+	if caster == nil {
+		return nil
+	}
+	dx, dy := Facing(caster.Facing).Delta()
+	if dx == 0 && dy == 0 {
+		return nil
+	}
+	var out []BreathCell
+	for along := 0; along < BreathDepth; along++ {
+		for across := -along; across <= along; across++ {
+			x := caster.X + dx*along
+			y := caster.Y + dy*along
+			if dx != 0 {
+				y += across
+			} else {
+				x += across
+			}
+			if !InField(x, y) {
+				continue
+			}
+			out = append(out, BreathCell{X: x, Y: y})
+		}
+	}
+	return out
+}

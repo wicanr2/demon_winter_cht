@@ -278,3 +278,43 @@ func TestBreathe_ExactDamageKills(t *testing.T) {
 		t.Errorf("HP 1 吃 1 點傷害應該倒下，得到 %+v", hits[0])
 	}
 }
+
+// 噴吐錐形：形狀與 inBreathCone 一致、順序是由近而遠。
+func TestBreathCone(t *testing.T) {
+	b := breathBattle(t)
+	caster := b.Units()[0]
+	caster.X, caster.Y = BattleCentreX, BattleCentreY
+	caster.Facing = int(East)
+
+	cone := b.BreathCone(caster)
+	if len(cone) == 0 {
+		t.Fatal("錐形是空的")
+	}
+
+	// 每一格都要真的在錐形裡（跟命中判定同一個定義）。
+	dx, dy := East.Delta()
+	for _, c := range cone {
+		if !inBreathCone(caster.X, caster.Y, dx, dy, c.X, c.Y) {
+			t.Errorf("(%d,%d) 不在錐形內", c.X, c.Y)
+		}
+	}
+	// 起點那一格排第一 —— 動畫要從嘴邊開始擴。
+	if cone[0].X != caster.X || cone[0].Y != caster.Y {
+		t.Errorf("第一格是 (%d,%d)，預期起點 (%d,%d)",
+			cone[0].X, cone[0].Y, caster.X, caster.Y)
+	}
+	// 沿噴吐方向的距離不遞減。
+	prev := -1
+	for _, c := range cone {
+		if along := (c.X - caster.X) * dx; along < prev {
+			t.Fatalf("順序不是由近而遠：(%d,%d) 的距離 %d < %d", c.X, c.Y, along, prev)
+		} else {
+			prev = along
+		}
+	}
+	// 沒有面向就沒有錐形。
+	caster.Facing = -1
+	if got := b.BreathCone(caster); got != nil {
+		t.Errorf("沒有方向卻回了 %d 格", len(got))
+	}
+}

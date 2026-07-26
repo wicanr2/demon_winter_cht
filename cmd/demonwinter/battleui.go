@@ -42,6 +42,14 @@ var playerCommands = []struct {
 // 玩家單位輪到時等玩家下指令；怪物與召喚物由簡單 AI 代打，按空白鍵逐步執行，
 // 方便肉眼核對每一步。
 func (a *app) updateBattle() error {
+	// 噴吐動畫只是往前推格數，**不擋輸入** —— 玩家不必等它跑完。
+	if a.breath != nil {
+		a.breath.frame++
+		if a.breath.done() {
+			a.breath = nil
+		}
+	}
+
 	// 選點要排在回合派發之前。**施法會立刻結束回合**（Spend 的 endsTurn），
 	// 所以游標打開時「目前單位」已經換成下一個了 ——
 	// 把它放進 updatePlayerTurn 裡永遠等不到按鍵。
@@ -815,10 +823,12 @@ func (a *app) monsterBreathe(u *game.Unit) bool {
 	if _, ok := a.battle.Spend(game.ActionAttack); !ok {
 		return false
 	}
+	cone := a.battle.BreathCone(u)
 	hits := a.battle.Breathe(u)
 	if len(hits) == 0 {
 		return false
 	}
+	a.breath = &breathAnim{cells: cone}
 	a.speaker.Play(pcspeaker.EffectDeath)
 	a.logf("%s 噴出吐息（波及 %d 人）", u.Name, len(hits))
 	for _, h := range hits {
@@ -976,6 +986,32 @@ var gridColor = color.RGBA{0x40, 0x40, 0x40, 0xff}
 // aoeColor 是範圍法術的選取框顏色。
 var aoeColor = color.RGBA{0xff, 0x55, 0x55, 0xff}
 
+// breathColor 是噴吐動畫的填色。
+//
+// 原版是拿法術記錄的 school（`ds:0x4e2c`）去查一個圖塊逐格畫
+// （`138d:1a59`），那個圖塊的來源還沒解；本專案先用單色方塊，
+// 形狀與順序照原版（`game.BreathCone`）。
+var breathColor = color.RGBA{0xff, 0xaa, 0x22, 0xff}
+
+// breathAnim 是噴吐動畫的狀態：整個錐形逐格點亮，亮完就消失。
+type breathAnim struct {
+	cells []game.BreathCell
+	frame int
+}
+
+// breathFramesPerCell 是每一格停留幾個 frame。
+//
+// **原版的每格延遲沒解出來**（`138d:1a59` 那個逐格畫的迴圈裡看不到延遲，
+// 速度取決於當年的機器）。3 frame 是本專案挑的：60fps 之下 16 格的錐形
+// 約 0.8 秒，看得清楚是從嘴邊往外擴，又不至於讓人等。
+const breathFramesPerCell = 3
+
+// shown 回傳目前該點亮到第幾格（含）。
+func (b *breathAnim) shown() int { return b.frame / breathFramesPerCell }
+
+// done 回報整個錐形都亮完了沒有。
+func (b *breathAnim) done() bool { return b.shown() >= len(b.cells)+2 }
+
 // drawBattlefield 畫戰鬥網格：雙方單位的位置與面向。
 //
 // **底圖是空的。** 手冊說戰場是「該區域的放大地圖」，但那張放大圖怎麼生成
@@ -1033,6 +1069,16 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 				}
 			}
 			ui.StrokeRect(dst, vx*cell, vy*cell, cell, cell, gridColor)
+		}
+	}
+
+	if a.breath != nil {
+		// 逐格點亮，順序照原版的掃描 —— 看起來是從嘴邊往外擴。
+		for i, c := range a.breath.cells {
+			if i > a.breath.shown() {
+				break
+			}
+			ui.FillRect(dst, (c.X-camX)*cell, (c.Y-camY)*cell, cell, cell, breathColor)
 		}
 	}
 

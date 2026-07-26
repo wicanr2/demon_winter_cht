@@ -117,7 +117,9 @@ type app struct {
 	// useMenu 非 nil 時戰鬥中的使用道具選單開著。
 	useMenu *itemMenu
 	// aoe 非 nil 時正在選範圍法術的中心點，aoeX/aoeY 是游標位置。
-	aoe        *aoeCursor
+	aoe *aoeCursor
+	// breath 是噴吐動畫（純呈現層，不擋輸入）。
+	breath     *breathAnim
 	aoeX, aoeY int
 	// strings 是 FILES.DTT 字串池，法術名稱從這裡來。
 	strings *gamedata.StringPool

@@ -157,6 +157,17 @@ func rect(x, y, w, h int) image.Rectangle {
 	return image.Rect(x, y, x+w, y+h)
 }
 
+// FillRect 填一個實心矩形。
+//
+// 走 SubImage + Fill 與 StrokeRect 同一條路 —— 這個專案沒有引進
+// vector 套件，畫面上的方塊全部靠子影像填色。
+func FillRect(dst *ebiten.Image, x, y, w, h int, c color.Color) {
+	sub := dst.SubImage(rect(x, y, w, h))
+	if si, ok := sub.(*ebiten.Image); ok {
+		si.Fill(c)
+	}
+}
+
 // StrokeRect 畫一個一像素寬的空心矩形。
 func StrokeRect(dst *ebiten.Image, x, y, w, h int, c color.Color) {
 	line := func(x0, y0, x1, y1 int) {
