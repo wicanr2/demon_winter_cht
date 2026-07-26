@@ -155,11 +155,12 @@ Trade  Drop  Equip  Use  Hunt  Cast  Quit
 `internal/game/rest.go` 實作了 §3 的睡覺與 §4b 的打獵。接上兩個入口：
 
 - **旅店**：城鎮設施 `I` → 按 `R` 睡一晚
-- **紮營**：世界地圖按 `R` 開紮營畫面，`S` 睡覺、`H` 打獵、`E` 換裝、
-  `D` 丟棄、`T` 交給隊友（後三項見 `docs/re/33`）
+- **紮營**：世界地圖按 `R` 開紮營畫面。目前接上的有 `S` 睡覺、`H` 打獵、
+  `E` 換裝、`D` 丟棄、`T` 交給隊友、`R` 陣型、`I` 鑑定、`V` 觀地、`U` 使用
+  （見 `docs/re/33`／`34`／`37`／`38`／`39`）
 
 紮營的進入鍵 `R` 是本作自己選的 —— 原版用哪個鍵沒查。
 
 **沒實作**：睡到一半被打斷、劇情夢境、`party+0xaa = 7` 的語意。
-紮營選單其餘選項的進度見 `docs/re/33` §5（Drop／Trade／Equip 已補上，
-還缺 Party／Reorder／Identify／Worship／Xorcise／View land／Use／Cast）。
+紮營選單其餘選項的進度見 `docs/re/33` §5 —— 十四項做完九項，
+還缺 Party／Worship／Xorcise／Cast。
