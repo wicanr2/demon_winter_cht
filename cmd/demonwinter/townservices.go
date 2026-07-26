@@ -521,3 +521,25 @@ func (a *app) drawCollege(t *townScreen, line func(string)) {
 	line("")
 	line("↑↓：選學院　Tab：換學生　L：學下去")
 }
+
+// convertCurrent 讓游標指的隊員改信這座神殿的神。
+//
+// 改宗不收金幣，收的是智力點數 —— 訊息要講清楚，不然玩家會以為免費。
+func (a *app) convertCurrent(t *townScreen) {
+	c := a.currentMember(t)
+	if c == nil {
+		return
+	}
+	deity := t.visit.Town.Facilities.Church
+	res, err := game.ConvertAtTemple(a.tables, c, a.gold(), deity)
+	if err != nil {
+		t.message = fmt.Sprintf("改宗出錯：%v", err)
+		return
+	}
+	if !res.OK {
+		t.message = res.Reason
+		return
+	}
+	t.message = fmt.Sprintf("%s 改信 %s，學會了%s（花 %d 點智力）",
+		c.Name, a.deityName(deity), a.skillName(game.DeityOrder(deity)), res.Cost)
+}

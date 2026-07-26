@@ -151,10 +151,17 @@ func TestDonate_CapsExperience(t *testing.T) {
 	}
 }
 
+// devotee 造一名已改宗的信徒：有那個教派的技能，信的也是同一位神。
+func devotee(deity int) *Character {
+	c := hurtCharacter()
+	c.Deity = deity
+	c.Skills[DeityOrder(deity)] = true
+	return c
+}
+
 // 祈禱：把成功率補回 20，費用是等級 × 50。
 func TestPrayAtTemple(t *testing.T) {
-	c := hurtCharacter()
-	c.Deity = 3
+	c := devotee(3)
 	c.PrayChance = 5
 
 	res := PrayAtTemple(c, 1000, 3)
@@ -167,8 +174,7 @@ func TestPrayAtTemple(t *testing.T) {
 }
 
 func TestPrayAtTemple_WrongDeity(t *testing.T) {
-	c := hurtCharacter()
-	c.Deity = 3
+	c := devotee(3)
 	c.PrayChance = 5
 
 	if res := PrayAtTemple(c, 1000, 7); res.OK {
@@ -179,31 +185,33 @@ func TestPrayAtTemple_WrongDeity(t *testing.T) {
 	}
 }
 
-// 沒有信仰的人不擋 —— 原版是「已建立信仰關係」旗標為零時整段比對跳過。
-func TestPrayAtTemple_NoDeityIsAllowed(t *testing.T) {
+// **沒有信仰的人祈禱不了。** 這一條一度寫反（以為原版不擋）——
+// `278d:0d9a` 的 `cmpb $0, [+0xc8+教派] / je` 是「沒有那個教派的技能就跳去拒絕」。
+func TestPrayAtTemple_NeedsConversionFirst(t *testing.T) {
 	c := hurtCharacter()
 	c.Deity = 0
 
-	res := PrayAtTemple(c, 1000, 7)
-	if !res.OK {
-		t.Fatalf("沒有信仰的人不該被擋：%+v", res)
+	if res := PrayAtTemple(c, 1000, 7); res.OK {
+		t.Errorf("還沒改宗的人不該祈禱得了：%+v", res)
 	}
-	if c.Deity != 7 {
-		t.Errorf("祈禱完應該成為這座神殿的信徒，得到 %d", c.Deity)
+	// 有神祇編號但沒有教派技能 —— 一樣不行。
+	c.Deity = 7
+	if res := PrayAtTemple(c, 1000, 7); res.OK {
+		t.Error("沒有教派技能不該祈禱得了")
 	}
 }
 
 func TestPrayAtTemple_AlreadyFull(t *testing.T) {
-	c := hurtCharacter()
-	c.Deity, c.PrayChance = 3, FavorMax
+	c := devotee(3)
+	c.PrayChance = FavorMax
 	if res := PrayAtTemple(c, 1000, 3); res.OK || res.Gold != 1000 {
 		t.Errorf("成功率已滿卻收了錢：%+v", res)
 	}
 }
 
 func TestPrayAtTemple_NotEnoughGold(t *testing.T) {
-	c := hurtCharacter()
-	c.Deity, c.PrayChance = 3, 0
+	c := devotee(3)
+	c.PrayChance = 0
 	if res := PrayAtTemple(c, 10, 3); res.OK || res.Cost != 200 {
 		t.Errorf("錢不夠卻祈禱成功：%+v", res)
 	}
@@ -235,5 +243,104 @@ func TestCanLevelUp(t *testing.T) {
 	c.Level = MaxLevel
 	if ok, short := c.CanLevelUp(); ok || short != 0 {
 		t.Errorf("最高等級應該回 (false, 0)，得到 (%v, %d)", ok, short)
+	}
+}
+
+// 改宗：奇數神歸薩滿、偶數神歸司祭。
+//
+// 這是 `0x10 − (神祇編號 mod 2)` 的直接後果 —— 索引永遠是 15 或 16，
+// 不會像 `docs/re/19` 擔心的那樣掉到「召喚」以下的格子。
+func TestDeityOrder(t *testing.T) {
+	for deity := DeityMin; deity <= DeityMax; deity++ {
+		got := DeityOrder(deity)
+		want := SkillPriesthood
+		if deity%2 == 1 {
+			want = SkillShaman
+		}
+		if got != want {
+			t.Errorf("神祇 %d 的教派 = %d，預期 %d", deity, got, want)
+		}
+		if got != SkillShaman && got != SkillPriesthood {
+			t.Errorf("神祇 %d 算出教派技能 %d，只能是 15 或 16", deity, got)
+		}
+	}
+}
+
+func TestConvertAtTemple(t *testing.T) {
+	tb := loadTables(t)
+	c := hurtCharacter()
+	c.Class = 4 // 牧師
+	c.Traits[2] = 30
+
+	res, err := ConvertAtTemple(tb, c, 500, 4) // 偶數 → 司祭
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !res.OK {
+		t.Fatalf("改宗失敗：%+v", res)
+	}
+	// **改宗不收金幣** —— Cost 填的是智力點數。
+	if res.Gold != 500 {
+		t.Errorf("改宗扣了錢，剩 %d，預期 500", res.Gold)
+	}
+	if !c.HasSkill(SkillPriesthood) {
+		t.Error("改宗到偶數神應該學會司祭")
+	}
+	if c.Deity != 4 {
+		t.Errorf("信奉的神 %d，預期 4", c.Deity)
+	}
+	if c.PrayChance != FavorMax {
+		t.Errorf("改宗後祈禱成功率 %d，預期 %d", c.PrayChance, FavorMax)
+	}
+}
+
+// 已經有薩滿或司祭任一項技能就不能再改宗 —— 一輩子只能一次。
+func TestConvertAtTemple_OnlyOnce(t *testing.T) {
+	tb := loadTables(t)
+	c := hurtCharacter()
+	c.Traits[2] = 30
+	c.Skills[SkillShaman] = true
+
+	res, err := ConvertAtTemple(tb, c, 500, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.OK {
+		t.Error("已經是薩滿卻還改宗成司祭")
+	}
+	if c.HasSkill(SkillPriesthood) {
+		t.Error("被拒絕卻學會了司祭")
+	}
+}
+
+func TestConvertAtTemple_NotEnoughPoints(t *testing.T) {
+	tb := loadTables(t)
+	c := hurtCharacter()
+	c.Traits[2] = 1 // 智力 1，任何教派都學不起
+
+	res, err := ConvertAtTemple(tb, c, 500, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.OK {
+		t.Error("點數不夠卻改宗成功")
+	}
+	if c.Deity != 0 {
+		t.Error("被拒絕卻改了信仰")
+	}
+}
+
+// 改宗完就祈禱得了 —— 兩支合起來才是完整的流程。
+func TestConvertThenPray(t *testing.T) {
+	tb := loadTables(t)
+	c := hurtCharacter()
+	c.Traits[2] = 30
+
+	if res, err := ConvertAtTemple(tb, c, 500, 3); err != nil || !res.OK {
+		t.Fatalf("改宗失敗：%+v %v", res, err)
+	}
+	c.PrayChance = 0
+	if res := PrayAtTemple(c, 1000, 3); !res.OK {
+		t.Errorf("改宗完卻祈禱不了：%+v", res)
 	}
 }

@@ -173,6 +173,9 @@ func (a *app) updateFacility(t *townScreen) error {
 		if inpututil.IsKeyJustPressed(ebiten.KeyD) {
 			a.openDonateInput(t)
 		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyV) {
+			a.convertCurrent(t)
+		}
 	case game.FacilityGuild:
 		a.moveMemberCursor(t)
 		if inpututil.IsKeyJustPressed(ebiten.KeyL) {
@@ -444,7 +447,9 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 				c.PrayChance, game.PrayCost(c.Level)))
 		}
 		line("")
-		line("↑↓：選擇隊員　P：祈禱　D：捐獻")
+		line(fmt.Sprintf("改宗要 %s 的智力點數，不收金幣",
+			a.skillName(game.DeityOrder(v.Town.Facilities.Church))))
+		line("↑↓：選擇隊員　P：祈禱　D：捐獻　V：改宗")
 
 	case game.FacilityGuild:
 		line("升級　免費")

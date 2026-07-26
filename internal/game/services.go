@@ -104,15 +104,19 @@ func Donate(c *Character, gold, amount int) ServiceResult {
 
 // PrayAtTemple 付費祈禱，把呼喚神祇的成功率補回 20。
 //
-// 三道前置檢查照原版（`docs/re/19` §3.3）：
+// 三道前置檢查照原版（`278d:0d8a`–`0db4`）：
 //
-//   - 信的不是這座神殿的神 → 拒絕。**沒有信仰（Deity == 0）的不擋** ——
-//     原版是先看「已建立信仰關係」旗標，旗標為零時整段比對跳過。
+//   - **必須已經改宗到這座神殿**：既要有這個教派的技能（薩滿或司祭），
+//     信奉的神也要正好是這一位。少一個都印 "You don't worship %s"。
 //   - 成功率已經是滿值 20 → 「你與神的關係已經很好」
 //   - 費用 = 角色等級 × 50
+//
+// `docs/re/19` §3.3 把第一道寫成「旗標為零時整段比對跳過（新關係不擋）」，
+// **跳轉方向讀反了** —— `cmpb $0, [+0xc8+...] / je` 是「旗標為零就跳到拒絕」。
+// 本專案照著寫成「沒有信仰的人不擋」，也一併訂正。
 func PrayAtTemple(c *Character, gold, townDeity int) ServiceResult {
-	if c.Deity != 0 && c.Deity != townDeity {
-		return ServiceResult{Gold: gold, Reason: c.Name + " 信的不是這位神"}
+	if !c.HasSkill(DeityOrder(townDeity)) || c.Deity != townDeity {
+		return ServiceResult{Gold: gold, Reason: c.Name + " 不信奉這位神"}
 	}
 	if c.PrayChance >= FavorMax {
 		return ServiceResult{Gold: gold,
@@ -123,12 +127,6 @@ func PrayAtTemple(c *Character, gold, townDeity int) ServiceResult {
 		return notEnoughGold(gold, cost)
 	}
 	c.PrayChance = FavorMax
-	// 沒有信仰的人祈禱完就算是這座神殿的信徒了 —— 原版在改宗時才寫 +0xf0，
-	// 這裡補上是為了讓「下次還能不能在別座神殿祈禱」有一致的答案。
-	// **這一步原版沒有**，是本作的補完；改宗（Convert）還沒實作。
-	if c.Deity == 0 {
-		c.Deity = townDeity
-	}
 	return ServiceResult{OK: true, Gold: gold - cost, Cost: cost}
 }
 
@@ -208,4 +206,88 @@ func LearnSkill(t *gamedata.Tables, c *Character, gold int, skill gamedata.Skill
 	}
 	c.Skills[skill] = true
 	return ServiceResult{OK: true, Gold: gold - cost, Cost: cost}, nil
+}
+
+// --- 神殿改宗 ---
+
+// 神祇編號的兩個界線。
+//
+//	1–10  五位薩滿神（奇數）＋五位司祭神（偶數），交錯排列
+//	11    Ancient One，神殿的描述文字是獨立的一段
+const (
+	DeityMin = 1
+	DeityMax = 11
+	// DeityAncient 是第 11 位「遠古者」。
+	DeityAncient = 11
+)
+
+// 改宗會學會的兩項技能。索引來自 docs/re/21 的技能 id 表。
+const (
+	SkillShaman     = gamedata.SkillID(15)
+	SkillPriesthood = gamedata.SkillID(16)
+)
+
+// DeityOrder 回傳神祇所屬的教派技能：**奇數是薩滿、偶數是司祭**。
+//
+// 原版的算式是 `0x10 − (神祇編號 mod 2)`：
+//
+//	奇數神 → 16 − 1 = 15 = 薩滿
+//	偶數神 → 16 − 0 = 16 = 司祭
+//
+// `docs/re/19` §3.5 把這個算式寫成 `0x10 − god_id` 並標為未解
+// （「god_id ≥ 2 會寫到召喚以下的格子，語意可疑」）。**那是誤讀**：
+// 減掉的不是神祇編號，是**神祇編號除以 2 的餘數**。神殿入口
+// （`278d:094b` 的 `idiv 2` 取 `dx`）與座標表那條路徑（表裡直接存餘數）
+// 兩邊算出來的都是 0 或 1，所以索引永遠只會落在 15 或 16。
+// 完整推導見 `docs/re/29`。
+func DeityOrder(deity int) gamedata.SkillID {
+	if deity%2 == 1 {
+		return SkillShaman
+	}
+	return SkillPriesthood
+}
+
+// ConvertAtTemple 讓一名角色改信這座神殿的神。
+//
+// **改宗不收錢**，收的是智力點數：成本就是「司祭／薩滿」那一列對該職業的
+// 技能學費，與學院教技能查的是同一張表。成功時一次做三件事 ——
+// 學會該教派的技能、寫下信奉的神祇、把祈禱成功率設成 20。
+//
+// 三道前置檢查照原版（`278d:0f70`–`0fc2`）：
+//
+//   - 已經信這位神 → 「你已經信奉我們的神了」
+//   - **已經有薩滿或司祭任一項技能 → 拒絕**。所以一輩子只能改宗一次
+//   - 智力點數不夠 → 拒絕
+func ConvertAtTemple(t *gamedata.Tables, c *Character, gold, deity int) (ServiceResult, error) {
+	if deity < DeityMin || deity > DeityMax {
+		return ServiceResult{Gold: gold, Reason: "這裡沒有神殿"}, nil
+	}
+	if c.Deity == deity {
+		return ServiceResult{Gold: gold, Reason: c.Name + " 已經信奉這位神了"}, nil
+	}
+	if c.HasSkill(SkillShaman) || c.HasSkill(SkillPriesthood) {
+		return ServiceResult{Gold: gold,
+			Reason: c.Name + " 已經獻身給另一位神了"}, nil
+	}
+
+	skill := DeityOrder(deity)
+	points, err := t.SkillCost(skill, c.Class)
+	if err != nil {
+		return ServiceResult{Gold: gold}, err
+	}
+	remaining, err := c.RemainingSkillPoints(t)
+	if err != nil {
+		return ServiceResult{Gold: gold}, err
+	}
+	if remaining < points {
+		return ServiceResult{Gold: gold,
+			Reason: fmt.Sprintf("%s 的智力點數不夠（要 %d，剩 %d）",
+				c.Name, points, remaining)}, nil
+	}
+
+	c.Skills[skill] = true
+	c.Deity = deity
+	c.PrayChance = FavorMax
+	// Cost 填的是智力點數不是金幣 —— 改宗免費，呼叫端要照這個意思顯示。
+	return ServiceResult{OK: true, Gold: gold, Cost: points}, nil
 }
