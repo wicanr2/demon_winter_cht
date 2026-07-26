@@ -260,6 +260,7 @@ func (a *app) Update() error {
 		}
 		if res == game.MoveOK {
 			a.stepBoat(tile)
+			a.stepHPTick()
 			a.checkEvent(tile)
 			a.checkMerchantEncounter()
 			a.checkRandomEncounter(tile)
@@ -1226,5 +1227,27 @@ func (a *app) stepBoat(tile byte) {
 		a.message = "登船"
 	case game.BoardOff:
 		a.message = "上岸"
+	}
+}
+
+// stepHPTick 走一次每步 HP 變動（`FUN_222f_0619`，`docs/re/63`）。
+//
+// 同一支常式兩種模式：一般行走時**巨魔再生**，符印還在的子地圖裡
+// **全隊流血**（連巨魔都不免疫）。所以走到火山那三塊狹長陸地上
+// 會有「趕快解掉符印」的壓力 —— 那是原版設計的一部分。
+func (a *app) stepHPTick() {
+	mode := game.GlyphDrainMode(a.save.GlyphFlags, a.mapID)
+	res := game.StepHPTick(a.members, mode)
+	if !res.Changed && len(res.Died) == 0 {
+		return
+	}
+	for _, i := range res.Died {
+		a.message = a.members[i].Name + " 倒下了"
+	}
+	if mode == game.StepHPDrain && len(res.Died) == 0 {
+		a.message = "符印的力量侵蝕著隊伍"
+	}
+	if res.AllDead {
+		a.message = "全隊都倒下了"
 	}
 }

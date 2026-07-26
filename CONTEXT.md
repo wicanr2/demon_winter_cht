@@ -1488,6 +1488,7 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`35-battle-deployment.md`](docs/re/35-battle-deployment.md) | **開戰擺位**：隊伍照陣型站中央、怪物散在 ±2、地圖兼作佔位表；單位結構間距 38、玩家從槽位 7 起；9×9 是捲動視窗不是邊界 |
 | [`34-formation-grid.md`](docs/re/34-formation-grid.md) | **3×3 陣型格**（trailer `+0x00`–`+0x08`）：四個呼叫端、Reorder 是整張重填、佈陣的座標換算（讀出來但未接）|
 | [`33-camp-menu-items.md`](docs/re/33-camp-menu-items.md) | **紮營選單 14 項**的完整對照（名稱／快捷鍵／處理常式）＋ Drop 與 Trade 的規則；訂正 `docs/re/26` 的 13 項與「順序對不上」|
+| [`63-step-hp-tick.md`](docs/re/63-step-hp-tick.md) | **每步 HP 變動**：`FUN_222f_0619` 一個迴圈兩條路 —— 模式 0 是巨魔再生（解開天生能力 31 的實作位置）、模式 0x80 是符印流血且巨魔不免疫；實機對照組 |
 | [`62-mainline-implemented.md`](docs/re/62-mainline-implemented.md) | **主線實裝紀錄**：四方驗證（地圖只有三格 `0x63`，正好在 55/56/66）、四處刻意的差異（切換條件是設計決定、門擋在移動前、兩門檻不統一、先扣費照抄）、實機驗到哪 |
 | [`61-endgame-confirmed.md`](docs/re/61-endgame-confirmed.md) | **結局函式確認**：`0000:xxxx` 的 offset 是真的，用它反查就找得到（推翻「重定位＝靜態看不到」）；`0x07175` 是破關畫面；UNCURSE/IMPRISON 是通用施法選單的另一組選項 |
 | [`60-imprison-and-endgame.md`](docs/re/60-imprison-and-endgame.md) | **禁錮與終局**：UNCURSE／IMPRISON 是主線專屬選單（不在 43 筆法術表）、禁錮條件（子地圖 5 或 Y≤6，地點不對照扣 100 SP）、結局文字檔的遠指標表、**完整破關路徑**與六項保留 |
@@ -1812,7 +1813,7 @@ SDD 的規格階段早就結束（九份 spec 全 READY），引擎 M1–M5 也�
 | A1 | ~~事件動作分派表~~ → **移動回傳碼分派表 21 格** | **定性已修正**（`docs/re/58`）：選擇子來自 `222f:0b0e`（每走一步），不是 `DATA*.TXT` 的欄位。**語意已認出 12 格**（原約 5 格），另發現 3 格其實是被其他格呼叫的子常式。剩 `0x08`／`0x0f`／`0x10` 與 `0x0c`／`0x12` 的參數語意未解 |
 | A2 | **引擎沒有「走一步之後」的世界事件** | `scenario.Event` 只有 `Text`／`MonsterIDs`／`CombatSetting`／`Continuation`。要補的動作已具體化（`docs/re/58` §4）：取得（`Take:`）、推移（`Move:`）、陷阱偵測與觸發、水池、換地圖（重載 `EXITS.DAT`）、全隊死亡 |
 | A3 | **主線骨幹已解**（`docs/re/59`）| **三個緋紅符印 → 解咒 → 光之環**：站在 tile `0x63` 上施解咒，扣 50 點法力，把 `+0x96 + (子地圖−55)` 設成 `0x80`；三個都非 0 才進得了 Circle of Light。反組譯／攻略／譯名表**三方閉合**。**破關路徑完全閉合**（`docs/re/59`–`61`）：① 三符印 UNCURSE（50 SP）② 光之環的門 ③ 子地圖 5 或 Y≤6 施 IMPRISON（100 SP）④ **結局函式 `0x07175`** —— `CONGRATULATIONS! You have won Demon's Winter.`。⚠ 仍未解：施法選單**切換成 U/I/E 的條件**、`FUN_222f_0619` 的符印傷害、光之環裡面（16 格跳表）、其餘劇情文字時機 |
-| A5 | **主線已接進引擎**（`docs/re/62`）| 存檔 `GlyphFlags`、`internal/game/glyph.go`（解咒／禁錮／光之環的門）、施法選單的主線選項、`tools/glyphscan`。**實機驗到解咒成功**（`74-glyph-uncurse.png`）。⚠ 切換條件是本專案的設計決定（原版未解）；光之環的門與 IMPRISON 三種結果**還沒實機驗**；符印傷害未實作 |
+| A5 | **主線已接進引擎**（`docs/re/62`）| 存檔 `GlyphFlags`、`internal/game/glyph.go`（解咒／禁錮／光之環的門）、施法選單的主線選項、`tools/glyphscan`。**實機驗到解咒成功**（`74-glyph-uncurse.png`）。**符印傷害也接上了**（`docs/re/63`：`FUN_222f_0619` 同時是巨魔「再生」的實作，同一個 if-else 鏈兩條路；巨魔在符印區**不免疫**）。⚠ 切換條件是本專案的設計決定（原版未解）；光之環的門與 IMPRISON 三種結果**還沒實機驗**；結局畫面只設 `a.won` |
 | A4 | **全程試玩** | 從沒做過。新開檔 → 建角 → 走主線 → 破關，**不得用任何 debug 捷徑**（`-battle-win`／`-give-item`／自動進城都不算） |
 
 A1 → A2 → A3 是一條鏈：讀完那 21 格才知道事件能做什麼，
