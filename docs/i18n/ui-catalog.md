@@ -98,3 +98,39 @@ C1 的工作內容是**把 Go 裡的中文字面抽進目錄**，兩者常被混
 機制有了之後可以分批遷移，**優先度仍然最低** ——
 畫面已經是中文，這一項改善的是可維護性與日後換語言，
 依 `rules/10` 的優先序（正確性 > 可落地 > 時程 > 可維護性）排在後面。
+
+---
+
+## 6. 原版選單的逐字原文（對照用）
+
+`docs/re/81` 用 DOSBox 實跑把兩張主要選單截了下來。
+**這是 C1 的原文對照表** —— 在這之前只能從反組譯猜項目名稱。
+
+### 主指令選單（`94-orig-main-menu.png`）
+
+```
+Walk          Party info    Save Game     Camp          Look
+Take          Drop          Move          Examine       Use
+Inspect       View room     X)View item   Read descr…   Quit
+```
+
+`X)View item` 帶明示的鍵，因為 `V` 已經被 `View room` 佔走。
+
+### 紮營選單（`95-orig-camp-menu.png`）
+
+```
+Party    Reorder   Sleep    Identify   Worship   Xorcise   View land
+Trade    Drop      Equip    Use        Hunt      Cast      Quit
+```
+
+**原版把 Exorcise 拼成 `Xorcise`** —— `E` 被 `Equip` 佔了，所以連拼字都改。
+手冊（`docs/manual-cht` p.28–31）列的是 `X` Exorcise，**與畫面不一致，畫面為準**。
+
+### 兩點提醒
+
+1. **首字母撞了就改字**是這款遊戲的慣例（`Xorcise`、`X)View item`）。
+   中文化時這個約束消失了 —— 中文選項用不著首字母當熱鍵，
+   熱鍵可以直接沿用原版字母，標在中文前面（本專案就是這樣做的）。
+2. 本專案紮營選單的 14 項與原版一致，**熱鍵也全部對得上**，
+   只有畫面上的排列順序不同（本專案按行分組，原版是一直排）。
+   要不要對齊順序是呈現層的決定，還沒做。

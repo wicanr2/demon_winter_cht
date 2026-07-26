@@ -314,12 +314,17 @@ func (a *app) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyB) {
 		a.startBattle(debugBattleMonsters)
 	}
+	// C：紮營 —— **與原版一致**（手冊 §407：「隨時都可按 `C` 紮營休息」，
+	// DOSBox 實跑也驗過，見 `docs/re/81` §4）。這裡原本是 `R`，
+	// 因為舊註解寫「原版用哪個鍵沒查」。
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
-		a.openCreate()
-	}
-	// R：紮營。原版用哪個鍵沒查，這是本作自己選的（見 campui.go）。
-	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		a.openCamp()
+	}
+	// F1 是建立角色。原版把它放在遊戲外的 Character Utilities 選單，
+	// 大地圖上根本沒有這個鍵 —— 所以挪到 F1 這種一看就是「不在原版裡」
+	// 的位置，把 `C` 讓回給紮營。
+	if inpututil.IsKeyJustPressed(ebiten.KeyF1) {
+		a.openCreate()
 	}
 	// M 是偵錯用的「就地遇到商隊」—— 遭遇觸發還沒解（見 merchantui.go）。
 	if inpututil.IsKeyJustPressed(ebiten.KeyM) {
@@ -887,8 +892,8 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"P：隊伍名冊",
 		"T：進入城鎮",
 		"B：測試戰鬥（偵錯）",
-		"C：建立角色",
-		"R：紮營",
+		"C：紮營",
+		"F1：建立角色（偵錯）",
 		"M：遇到商隊（偵錯）",
 		"S：存檔",
 		"空白鍵：翻頁",
