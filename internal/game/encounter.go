@@ -1,6 +1,9 @@
 package game
 
-import "github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
+import (
+	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
+	"github.com/wicanr2/demon_winter_cht/internal/rng"
+)
 
 // 野外隨機遭遇。
 //
@@ -147,4 +150,46 @@ func rollEncounterEntry(r RollSource, g gamedata.EncounterGroup, level, placed i
 		return e, idx, true
 	}
 	return gamedata.EncounterEntry{}, 0, false
+}
+
+// --- 隨機戰鬥的倒數計時器（存檔 `+0x9c`，見 `docs/re/51` §3）---
+
+// 四個重設點。全部是 `rnd(n) + k` 的形狀。
+const (
+	// 新遊戲：15–19 步（`0x14933`，同一段還寫起始金幣 75）。
+	countdownNewGameDie  = 5
+	countdownNewGameBase = 14
+	// 打完一場之後：28–77 步（`0xe1b3`，在戰鬥結算那一段）。
+	// 兩份原版存檔的值（56 與 34）都落在這個範圍裡。
+	countdownAfterBattleDie  = 50
+	countdownAfterBattleBase = 27
+	// 觸發警報（"You set off an alarm!"）：1–5 步（`0x19eb6`）。
+	countdownAlarmDie = 5
+)
+
+// EncounterCountdownNewGame 回傳新遊戲的初值（15–19 步）。
+func EncounterCountdownNewGame(r *rng.RNG) int {
+	return r.Roll(countdownNewGameDie) + countdownNewGameBase
+}
+
+// EncounterCountdownAfterBattle 回傳打完一場之後的重設值（28–77 步）。
+func EncounterCountdownAfterBattle(r *rng.RNG) int {
+	return r.Roll(countdownAfterBattleDie) + countdownAfterBattleBase
+}
+
+// EncounterCountdownAlarm 回傳觸發警報之後的重設值（1–5 步）。
+//
+// 原版還有兩個寫入點沒讀完（`0x106ff` 的 151–200、`0x189ad` 的 1），
+// 脈絡不明就不實作 —— 那兩個值套錯地方會直接改掉遭遇節奏。
+func EncounterCountdownAlarm(r *rng.RNG) int { return r.Roll(countdownAlarmDie) }
+
+// StepEncounterCountdown 走一步：把計時器減一，回報這一步要不要開打。
+//
+// **歸零才觸發**（`0x16aee` 的 `cmp 0 / jne 不觸發`）。減到 0 之後不再往下減 ——
+// 原版是 byte 遞減，減過頭會繞回 255；本專案在觸發時就重設，不留那個窗口。
+func StepEncounterCountdown(countdown int) (left int, fight bool) {
+	if countdown > 0 {
+		countdown--
+	}
+	return countdown, countdown == 0
 }

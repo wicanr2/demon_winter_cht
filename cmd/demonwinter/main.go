@@ -453,19 +453,23 @@ func (a *app) checkMerchantEncounter() {
 	a.openMerchant()
 }
 
-// checkRandomEncounter 擲隨機戰鬥。
+// checkRandomEncounter 走隨機戰鬥的倒數計時器（存檔 `+0x9c`）。
 //
-// ⚠ **原版的觸發是倒數計時器 `隊伍[+0x9c]` 歸零**（`0x16aee` → 動作碼
-// `0x16` → `222f:2a5b`），不是機率。計時器的重設規則還沒解
-// （`docs/re/51` §4），所以這裡先用同樣的 1/64 當**替身** ——
-// 不接的話野外就完全不會打架，那比接一個標明是替身的機率更失真。
+// **不是機率是倒數**（`docs/re/51` §3）：走一步減一，歸零時主迴圈
+// 回傳動作碼 `0x16` 去挑怪，然後重設成 28–77 步。
+// 每走一步就要減，所以這一支在地城裡也照跑，只有「要不要開打」看地形。
 func (a *app) checkRandomEncounter(tile byte) {
-	if a.mapID < worldMapMinID || a.battle != nil || a.box.Active() ||
-		a.merchant != nil {
-		return // 地城不擲；已經在戰鬥、讀敘述或看貨時也不擲
-	}
-	if !game.EncounterTriggered(int(a.rng.Next())) {
+	if a.battle != nil || a.box.Active() || a.merchant != nil {
 		return
+	}
+	left, fight := game.StepEncounterCountdown(int(a.save.EncounterCountdown))
+	a.save.EncounterCountdown = byte(left)
+	if !fight {
+		return
+	}
+	a.save.EncounterCountdown = byte(game.EncounterCountdownAfterBattle(a.rng))
+	if a.mapID < worldMapMinID {
+		return // 地城不開野外遭遇（挑怪表是照地形查的）
 	}
 	terrain, ok := a.tables.Terrain(tile)
 	if !ok {

@@ -223,6 +223,13 @@ const (
 	// 而且是整隊共用一次。
 	viewedLandTodayOffset = 0xac
 
+	// encounterCountdownOffset：**離下一場隨機戰鬥還有幾步**（`docs/re/51`）。
+	//
+	// 走一步減一，歸零時主迴圈回傳動作碼 `0x16`（`0x16aee`）去挑怪。
+	// **不是機率是倒數** —— 這個 byte 一度被當成語意未解。
+	// 兩份原版存檔是 56 與 34，正好落在「戰鬥後重設 28–77」的範圍內。
+	encounterCountdownOffset = 0x9c
+
 	// merchantBaseOffset：**商隊規模的基準值**（`docs/re/50`）。
 	// 進地圖時 `0x15f5d` 把它讀進 `ds:0x5c60`；在戶外（子地圖編號 > 9）
 	// 會被地圖記錄自帶的參數覆蓋。商隊遭遇拿它算
@@ -387,6 +394,9 @@ type SaveGame struct {
 	// MerchantBase 是商隊規模的基準值（見 merchantBaseOffset 註解）。
 	MerchantBase byte
 
+	// EncounterCountdown 是離下一場隨機戰鬥還有幾步。
+	EncounterCountdown byte
+
 	// PartySize 是隊伍人數（已驗證，見 partySizeOffset 註解）。
 	PartySize byte
 	// Rations 是糧食份數（已驗證，見 rationsOffset 註解）。
@@ -470,6 +480,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.MapID = trailer[mapIDOffset]
 	save.LightSource = trailer[lightSourceOffset]
 	save.MerchantBase = trailer[merchantBaseOffset]
+	save.EncounterCountdown = trailer[encounterCountdownOffset]
 	save.PartySize = trailer[partySizeOffset]
 	save.Rations = trailer[rationsOffset]
 	save.Hour = trailer[hourOffset]

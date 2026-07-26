@@ -187,3 +187,52 @@ func TestRollEncounter_NilArgs(t *testing.T) {
 		t.Error("地形超出範圍卻擲得出遭遇")
 	}
 }
+
+// 倒數計時器：歸零才開打，四個重設值的範圍。
+func TestEncounterCountdown(t *testing.T) {
+	// 走一步減一，歸零那一步才回 true。
+	left, fight := StepEncounterCountdown(3)
+	if left != 2 || fight {
+		t.Fatalf("3 → (%d, %v)，預期 (2, false)", left, fight)
+	}
+	if left, fight = StepEncounterCountdown(1); left != 0 || !fight {
+		t.Fatalf("1 → (%d, %v)，預期 (0, true)", left, fight)
+	}
+	// 已經是 0 就不再往下減（原版是 byte 遞減會繞回 255）。
+	if left, _ = StepEncounterCountdown(0); left != 0 {
+		t.Fatalf("0 減出 %d，不該變成負數或繞回", left)
+	}
+
+	r := rng.NewWithSeed(71)
+	check := func(name string, f func() int, lo, hi int) {
+		seenLo, seenHi := false, false
+		for n := 0; n < 5000; n++ {
+			v := f()
+			if v < lo || v > hi {
+				t.Fatalf("%s 擲出 %d，超出 %d–%d", name, v, lo, hi)
+			}
+			seenLo = seenLo || v == lo
+			seenHi = seenHi || v == hi
+		}
+		if !seenLo || !seenHi {
+			t.Errorf("%s 沒有掃到兩端（%v／%v）", name, seenLo, seenHi)
+		}
+	}
+	check("新遊戲", func() int { return EncounterCountdownNewGame(r) }, 15, 19)
+	check("戰鬥後", func() int { return EncounterCountdownAfterBattle(r) }, 28, 77)
+	check("警報", func() int { return EncounterCountdownAlarm(r) }, 1, 5)
+}
+
+// 原版存檔的 `+0x9c` 落在「戰鬥後重設」的範圍裡 —— 這是判讀正確的旁證：
+// 如果那個 byte 其實是別的東西，它沒有理由剛好掉在 28–77 這一段。
+//
+// **讀真的存檔，不寫死觀察值** —— 拿常數跟常數比證明不了任何事。
+func TestEncounterCountdown_RealSaveInRange(t *testing.T) {
+	got := int(loadParty(t).EncounterCountdown)
+	if got < countdownAfterBattleBase+1 ||
+		got > countdownAfterBattleBase+countdownAfterBattleDie {
+		t.Errorf("原版存檔的倒數是 %d，不在 %d–%d 裡，判讀可能有問題",
+			got, countdownAfterBattleBase+1,
+			countdownAfterBattleBase+countdownAfterBattleDie)
+	}
+}
