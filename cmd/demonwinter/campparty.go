@@ -34,9 +34,11 @@ func (a *app) openPartySheet() {
 	a.camp.party = &partyScreen{member: 0, showing: -1}
 }
 
-func (a *app) updatePartySheet() error {
-	p := a.camp.party
-
+// updatePartySheet 推進角色卡的輸入，回報這一畫面該不該關掉。
+//
+// **不直接動 `a.camp`** —— 紮營的 Party 與商隊的 Inspect 是同一張卡
+// （原版 `278d:2f61`，兩邊都呼叫它），呼叫端各自持有自己的 `partyScreen`。
+func (a *app) updatePartySheet(p *partyScreen) (closed bool) {
 	if p.showing >= 0 {
 		switch {
 		case inpututil.IsKeyJustPressed(ebiten.KeyEscape),
@@ -49,12 +51,12 @@ func (a *app) updatePartySheet() error {
 			p.showing = (p.showing - 1 + len(a.members)) % len(a.members)
 			p.member = p.showing
 		}
-		return nil
+		return false
 	}
 
 	switch {
 	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
-		a.camp.party = nil
+		return true
 	case inpututil.IsKeyJustPressed(ebiten.KeyDown):
 		p.member = (p.member + 1) % len(a.members)
 	case inpututil.IsKeyJustPressed(ebiten.KeyUp):
@@ -62,12 +64,10 @@ func (a *app) updatePartySheet() error {
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 		p.showing = p.member
 	}
-	return nil
+	return false
 }
 
-func (a *app) drawPartySheet(line func(string)) {
-	p := a.camp.party
-
+func (a *app) drawPartySheet(p *partyScreen, line func(string)) {
 	if p.showing < 0 {
 		line("要看誰？")
 		line("")

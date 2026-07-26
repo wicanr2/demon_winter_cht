@@ -38,6 +38,11 @@ type merchantScreen struct {
 	cursor int
 	// message 是最近一次操作的結果。
 	message string
+	// party 是 Inspect 打開的角色卡（`docs/re/52` §2 的 case 13）。
+	//
+	// 原版的 Inspect 選一名角色再呼叫 `278d:2f61(角色, 3)` ——
+	// **與紮營選單的 Party 是同一張卡**，所以這裡直接共用 partyScreen。
+	party *partyScreen
 }
 
 // openMerchant 開一支商隊。
@@ -52,6 +57,13 @@ func (a *app) openMerchant() {
 
 func (a *app) updateMerchant() error {
 	s := a.merchant
+
+	if s.party != nil {
+		if a.updatePartySheet(s.party) {
+			s.party = nil
+		}
+		return nil
+	}
 
 	if !s.greeted {
 		switch {
@@ -76,6 +88,10 @@ func (a *app) updateMerchant() error {
 		a.buyFromMerchant(s)
 	case inpututil.IsKeyJustPressed(ebiten.KeyH):
 		a.haggleWithMerchant(s)
+	case inpututil.IsKeyJustPressed(ebiten.KeyI):
+		if len(a.members) > 0 {
+			s.party = &partyScreen{member: 0, showing: -1}
+		}
 	}
 	return nil
 }
@@ -119,6 +135,11 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
+	if s.party != nil {
+		a.drawPartySheet(s.party, line)
+		return
+	}
+
 	line(fmt.Sprintf("你看到一群%s的商人", a.merchantAdjective(s.m.Size)))
 	line("")
 
@@ -157,7 +178,7 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 		line(s.message)
 		line("")
 	}
-	line("↑↓：選擇　Enter：買下　H：殺價　Esc：走開")
+	line("↑↓：選擇　Enter：買下　H：殺價　I：檢視隊員　Esc：走開")
 }
 
 // merchantAdjective 回傳商隊規模的形容詞（已翻譯）。

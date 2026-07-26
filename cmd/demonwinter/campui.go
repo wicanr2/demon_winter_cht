@@ -76,7 +76,10 @@ func (a *app) updateCamp() error {
 		return a.updateViewLand()
 	}
 	if c.party != nil {
-		return a.updatePartySheet()
+		if a.updatePartySheet(c.party) {
+			c.party = nil
+		}
+		return nil
 	}
 	if c.cast != nil {
 		return a.updateCampCast()
@@ -280,7 +283,7 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 	}
 
 	if c.party != nil {
-		a.drawPartySheet(line)
+		a.drawPartySheet(c.party, line)
 		return
 	}
 
