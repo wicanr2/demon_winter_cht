@@ -138,6 +138,34 @@ func check(args []string) {
 		}
 	}
 
+	// 其餘的名稱目錄（道具／怪物／城鎮／月份／技能）走同一套機制。
+	//
+	// 這幾個原本不在檢查範圍內 —— 於是 `check` 一直回報「148/148 100%」，
+	// 而實際上多了兩百多條名稱沒被算進去。**進度數字漏算比沒有數字更糟**，
+	// 它會讓人以為翻完了。這些目錄沒有對應的原始資料可以逐條比對原文
+	// （名稱來源各自不同），所以只驗 Big5 與完成度。
+	for _, src := range nameCatalogs {
+		path := filepath.Join(*langDir, i18n.CatalogFileName(src))
+		cat, err := i18n.LoadCatalog(path)
+		if err != nil {
+			continue
+		}
+		done, review, todo := cat.Stats()
+		totalDone += done
+		totalAll += len(cat.Entries)
+		fmt.Printf("%-11s：%d 已翻 / %d 待複查 / %d 未翻（共 %d）\n",
+			src, done, review, todo, len(cat.Entries))
+		for _, e := range cat.Entries {
+			if e.Target == "" {
+				continue
+			}
+			if bad := nonBig5(e.Target); len(bad) > 0 {
+				report("%s #%d：以下字元不在 Big5，畫面上會缺字：%s",
+					src, e.Index, string(bad))
+			}
+		}
+	}
+
 	if totalAll > 0 {
 		fmt.Printf("\n進度：%d/%d（%.0f%%）\n",
 			totalDone, totalAll, 100*float64(totalDone)/float64(totalAll))
@@ -148,6 +176,10 @@ func check(args []string) {
 	}
 	fmt.Println("\n檢查通過。")
 }
+
+// nameCatalogs 是「純名稱」的翻譯目錄，沒有控制序列也沒有長度限制，
+// 只需要驗 Big5 與完成度。
+var nameCatalogs = []string{itemSource, monsterSource, townSource, monthSource, skillSource}
 
 // verbSeq 抓 printf 風格的控制序列。
 var verbSeq = regexp.MustCompile(`%[-+ #0]*\d*(?:\.\d+)?[a-zA-Z%]`)

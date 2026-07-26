@@ -142,7 +142,8 @@ type TownFacilities struct {
 }
 
 // Has 依設施編號回報有沒有那項設施。編號順序與 game.AllFacilities 一致
-// （市集／治療所／旅店／公會／神殿／碼頭／酒館），與原版選單的建構順序相同。
+// （市集／治療所／旅店／公會／神殿／碼頭／酒館／學院），前七項與原版選單的
+// 建構順序相同，學院是本作補的第八項。
 func (f TownFacilities) Has(facility int) bool {
 	switch facility {
 	case 0:
@@ -159,6 +160,8 @@ func (f TownFacilities) Has(facility int) bool {
 		return f.Docks
 	case 6:
 		return f.Pub
+	case 7:
+		return len(f.Colleges) > 0
 	}
 	return false
 }

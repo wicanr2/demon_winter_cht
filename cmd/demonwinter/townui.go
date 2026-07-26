@@ -29,8 +29,10 @@ type townScreen struct {
 	picking bool
 	cursor  int
 
-	// member 是設施內的隊員游標（治療所／神殿／公會共用）。
+	// member 是設施內的隊員游標（治療所／神殿／公會／學院共用）。
 	member int
+	// college 是學院清單的游標（一座城鎮最多三間）。
+	college int
 
 	// amount 非 nil 時「輸入數量」的小框開著（捐獻、買糧）。
 	amount *amountInput
@@ -45,6 +47,8 @@ type townScreen struct {
 var facilityKeys = []ebiten.Key{
 	ebiten.KeyM, ebiten.KeyH, ebiten.KeyI,
 	ebiten.KeyG, ebiten.KeyC, ebiten.KeyD, ebiten.KeyB,
+	// 學院是本作補的第八項，熱鍵自己選 L（Learn）。
+	ebiten.KeyL,
 }
 
 // townSourceFile 是城鎮名稱翻譯目錄的 key，與 dwstrings 產生時一致。
@@ -174,13 +178,14 @@ func (a *app) updateFacility(t *townScreen) error {
 		if inpututil.IsKeyJustPressed(ebiten.KeyL) {
 			a.levelUpCurrent(t)
 		}
+	case game.FacilityCollege:
+		a.updateCollege(t)
 	case game.FacilityDocks:
 		if inpututil.IsKeyJustPressed(ebiten.KeyB) {
-			if !t.visit.HasDocks() {
-				t.message = "這裡沒有船可賣"
-				return nil
-			}
-			t.message = fmt.Sprintf("一艘船要 %d 金幣", t.visit.Economy.ShipPrice())
+			a.buyShip(t)
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+			a.repairShip(t)
 		}
 	case game.FacilityMarket:
 		// 議價：對游標指的商品談一次價。
@@ -317,9 +322,14 @@ func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 	line(fmt.Sprintf("%s　物價指數 %d", a.townName(v.Town), v.Economy.E))
 	line("")
 
+	// 這張表要與 game.AllFacilities 等長 —— 加了設施卻忘了加標籤，
+	// 下面那行 labels[i] 會直接 panic（加學院時踩過一次）。
 	labels := []string{"M 市集", "H 治療所", "I 旅店", "G 城鎮公會",
-		"C 神殿", "D 碼頭", "B 酒館"}
+		"C 神殿", "D 碼頭", "B 酒館", "L 學院"}
 	for i, f := range game.AllFacilities {
+		if i >= len(labels) {
+			break
+		}
 		if !v.Town.Facilities.Has(int(f)) {
 			continue // 這座城鎮沒有這項設施（TOWN*.DAT 0x1ee–0x1f6）
 		}
@@ -414,7 +424,14 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		line(fmt.Sprintf("修船　每點船體 %d 金（滿值 %d）",
 			e.RepairPrice(game.ShipMaxHull-1), game.ShipMaxHull))
 		line("")
-		line("B：詢問船價")
+		if i := game.FindShipNear(&a.save.Ships, a.party.X(), a.party.Y()); i >= 0 {
+			line(fmt.Sprintf("腳邊有一艘船，船體 %d／%d",
+				a.save.Ships[i].Hull, game.ShipMaxHull))
+		} else {
+			line("腳邊沒有船")
+		}
+		line("")
+		line("B：買船　R：修船")
 
 	case game.FacilityChurch:
 		line(fmt.Sprintf("供奉 %s　捐獻 1 金換 1 點經驗",
@@ -447,6 +464,9 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		}
 		line("")
 		line("↑↓：選擇隊員　L：升級")
+
+	case game.FacilityCollege:
+		a.drawCollege(t, line)
 
 	case game.FacilityInn:
 		line(fmt.Sprintf("目前 %d 時（睡覺要在 15–24 時之間）", a.clock.Hour()))

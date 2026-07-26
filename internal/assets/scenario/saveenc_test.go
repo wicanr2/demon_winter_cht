@@ -81,7 +81,7 @@ func TestSaveGame_EditedFieldsPersist(t *testing.T) {
 	save.PositionX = 40
 	save.PositionY = 41
 	save.Facing = 3
-	save.GoldRaw3 = 65432
+	save.Gold = 65432
 	save.Hour = 22
 	save.Day = 19
 	save.Month = 6
@@ -114,7 +114,7 @@ func TestSaveGame_EditedFieldsPersist(t *testing.T) {
 		{"隊伍 X", back.PositionX, byte(40)},
 		{"隊伍 Y", back.PositionY, byte(41)},
 		{"面向", back.Facing, byte(3)},
-		{"金幣", back.GoldRaw3, 65432},
+		{"金幣", back.Gold, 65432},
 		{"時辰", back.Hour, byte(22)},
 		{"日", back.Day, byte(19)},
 		{"月", back.Month, byte(6)},
@@ -303,8 +303,9 @@ func TestEncode_FieldsWriteExactBytes(t *testing.T) {
 			trailerStart + positionYOffset, 1},
 		{"面向", func(s *SaveGame) { s.Facing ^= 0xff },
 			trailerStart + facingOffset, 1},
-		{"金幣", func(s *SaveGame) { s.GoldRaw3 = 0xABCDEF },
-			trailerStart + goldOffset, 3},
+		// 用超過 24 bit 的值才測得出欄位是 3 還是 4 bytes 寬。
+		{"金幣（釘住 4 bytes 寬）", func(s *SaveGame) { s.Gold = 0x7FABCDEF },
+			trailerStart + goldOffset, goldLen},
 	}
 
 	for _, c := range cases {

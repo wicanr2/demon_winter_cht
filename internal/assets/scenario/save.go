@@ -111,12 +111,19 @@ const (
 	formationOrderOffset = 0x00
 	formationOrderLen    = 10
 
-	// goldOffset：隊伍金幣。**長度未知**——攻略只說「和經驗值一樣反序儲存」，
-	// 沒講長度；PARTY.DAT 與 PARTY.BAK 在這個欄位後兩個 byte 剛好都是 0x00，
-	// 無法從現有兩份存檔判斷究竟是 3 byte（類比經驗值）還是標準 4 byte long。
-	// 這裡固定讀 3 bytes（與經驗值欄位一致的假設），第 4 byte 保留在
-	// TrailerRaw 供之後比對，不在此處採信任一種猜測。
+	// goldOffset：隊伍金幣，**4 bytes（0x0a–0x0d）**。
+	//
+	// 這裡一度標成「長度未知」，理由是兩份存檔的第 4 個 byte 都是 0、
+	// 分不出 3 還是 4。**分不出來就去找讀寫端** —— 買船的扣款
+	// （`DEMON.INT 0x1FF5A`，`2aed:148a`）是一組 32-bit 減法：
+	//
+	//	sub word es:[bx+0x0a], ax
+	//	sbb word es:[bx+0x0c], dx
+	//
+	// 跨 `+0x0a` 與 `+0x0c` 兩個 word，也就是 4 bytes。`docs/re/19` §2 早就
+	// 把它列成 32-bit 了，是本檔沒跟上。數值上限比照經驗值封在 0x00FFFFFF。
 	goldOffset = 0x0a
+	goldLen    = 4
 
 	// ldFlagsOffset/Len：**未知**。兩份存檔在這 7 個 byte 只出現 0x4c('L')
 	// 或 0x44('D') 兩種值（DAT: L L L L D L D，BAK: L D D D D L D），是否真的是
@@ -289,10 +296,8 @@ type SaveGame struct {
 	// FormationOrder 是隊形/順序表（**假設**，見 formationOrderOffset 註解）。
 	FormationOrder [formationOrderLen]byte
 
-	// GoldRaw3 是隊伍金幣的 3-byte little-endian 讀值（**長度未知**，見
-	// goldOffset 註解）。呼叫端若要嘗試 4-byte 讀法，可自行從 TrailerRaw
-	// 在 goldOffset 位置多讀 1 byte。
-	GoldRaw3 int
+	// Gold 是隊伍金幣（4 bytes little-endian，見 goldOffset 註解）。
+	Gold int
 
 	// LDFlags 是 7 bytes 的未知旗標陣列（見 ldFlagsOffset 註解，觀察值只有
 	// 'L'(0x4c) 或 'D'(0x44)，是否真的是這兩個 ASCII 字母未能判斷）。
@@ -338,6 +343,10 @@ type SaveGame struct {
 	// 體力。**待複核**，低信心（見 unknown9COffset 註解）。
 	Unknown9C byte
 
+	// Ships 是世界上的 10 艘船（trailer +0x22，見 ship.go）。
+	// **不是「我的船」** —— 原版沒有記載歸屬，修船只看船在不在腳邊。
+	Ships [shipCount]Ship
+
 	// TrailerRaw 是完整的 194 bytes trailer 原始內容，供未來 encode 使用，
 	// 也涵蓋前述具名欄位之外、完全未解的 trailer 區域。
 	TrailerRaw [trailerLen]byte
@@ -379,7 +388,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	trailer := data[trailerStart : trailerStart+trailerLen]
 	copy(save.TrailerRaw[:], trailer)
 	copy(save.FormationOrder[:], trailer[formationOrderOffset:formationOrderOffset+formationOrderLen])
-	save.GoldRaw3 = le3(trailer[goldOffset : goldOffset+3])
+	save.Gold = le4(trailer[goldOffset : goldOffset+goldLen])
 	copy(save.LDFlags[:], trailer[ldFlagsOffset:ldFlagsOffset+ldFlagsLen])
 	save.MapID = trailer[mapIDOffset]
 	save.LightSource = trailer[lightSourceOffset]
@@ -393,6 +402,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.Facing = trailer[facingOffset]
 	save.TimeCounter = trailer[timeCounterOffset]
 	save.Unknown9C = trailer[unknown9COffset]
+	save.Ships = parseShips(trailer)
 
 	return &save, nil
 }
@@ -456,13 +466,7 @@ func parseCharacter(rec []byte) (Character, error) {
 	}, nil
 }
 
-// le3 把 3 bytes 讀成 little-endian 無號整數（trailer 的金幣欄位；
-// 該欄位實際寬度未定，見 goldOffset 註解）。
-func le3(b []byte) int {
-	return int(b[0]) | int(b[1])<<8 | int(b[2])<<16
-}
-
-// le4 把 4 bytes 讀成 little-endian 無號整數（角色經驗值欄位）。
+// le4 把 4 bytes 讀成 little-endian 無號整數（經驗值與金幣）。
 func le4(b []byte) int {
 	return int(b[0]) | int(b[1])<<8 | int(b[2])<<16 | int(b[3])<<24
 }

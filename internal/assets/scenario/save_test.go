@@ -130,8 +130,8 @@ func TestLoadSaveGame_TrailerFields(t *testing.T) {
 	if len(save.TrailerRaw) != trailerLen {
 		t.Errorf("TrailerRaw 長度 = %d，預期 %d", len(save.TrailerRaw), trailerLen)
 	}
-	if save.GoldRaw3 < 0 {
-		t.Errorf("GoldRaw3 = %d，不應為負", save.GoldRaw3)
+	if save.Gold < 0 {
+		t.Errorf("Gold = %d，不應為負", save.Gold)
 	}
 	// Facing 假設是 0-3（四方位），這裡只檢查沒有明顯超出合理範圍太多。
 	if save.Facing > 3 {

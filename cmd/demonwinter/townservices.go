@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
+	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/textlayout"
 )
@@ -374,4 +375,149 @@ func traitName(i int) string {
 		return "?"
 	}
 	return traitNames[i]
+}
+
+// --- 碼頭 ---
+
+// buyShip 買一艘船，停到隊伍旁邊的海面上。
+//
+// 原版是先問「Buy ?」再放船，放不下就退回；這裡把兩步合成一次按鍵，
+// 因為放不下的時候本來就不扣錢。
+func (a *app) buyShip(t *townScreen) {
+	if !t.visit.HasDocks() {
+		t.message = "這座城鎮沒有船可買"
+		return
+	}
+	price := t.visit.Economy.ShipPrice()
+	res := game.BuyShip(&a.save.Ships, a.tileAt,
+		a.party.X(), a.party.Y(), a.mapID, a.gold(), price)
+	if !res.OK {
+		t.message = fmt.Sprintf("%s（船價 %d 金）", res.Reason, price)
+		return
+	}
+	a.setGold(res.Gold)
+	t.message = fmt.Sprintf("船與船員都備妥了，付 %d 金（剩 %d）", res.Cost, res.Gold)
+}
+
+// repairShip 修好腳邊的船。
+func (a *app) repairShip(t *townScreen) {
+	res := game.RepairShip(t.visit.Economy, &a.save.Ships,
+		a.party.X(), a.party.Y(), a.gold())
+	if !res.OK {
+		if res.Cost > 0 {
+			t.message = fmt.Sprintf("%s（修好要 %d 金）", res.Reason, res.Cost)
+			return
+		}
+		t.message = res.Reason
+		return
+	}
+	a.setGold(res.Gold)
+	t.message = fmt.Sprintf("修好了，付 %d 金（剩 %d）", res.Cost, res.Gold)
+}
+
+// tileAt 回傳地圖座標的地形值，超出範圍回 0。
+//
+// 供買船的水位判定用 —— 走的是 a.tiles（檔案解出來的原樣），不是
+// a.drawTiles（摻過浪花的顯示用副本）。兩個海面 tile 放船都認，
+// 所以其實摻不摻都一樣，但規則判定一律走 tiles 是本專案的既有分工。
+func (a *app) tileAt(x, y int) byte {
+	t, err := a.tiles.TileAt(x, y)
+	if err != nil {
+		return 0
+	}
+	return t
+}
+
+// --- 學院 ---
+//
+// 一座城鎮最多有三間學院（`TOWN*.DAT` 的三個槽），每間只教一種技能。
+// 兩層游標：上下選學院、Tab 換要學的人、L 學下去。
+
+func (a *app) updateCollege(t *townScreen) {
+	colleges := t.visit.Town.Facilities.Colleges
+	if len(colleges) == 0 {
+		return
+	}
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeyDown):
+		t.college = (t.college + 1) % len(colleges)
+	case inpututil.IsKeyJustPressed(ebiten.KeyUp):
+		t.college = (t.college - 1 + len(colleges)) % len(colleges)
+	case inpututil.IsKeyJustPressed(ebiten.KeyTab):
+		if n := len(a.members); n > 0 {
+			t.member = (t.member + 1) % n
+		}
+	case inpututil.IsKeyJustPressed(ebiten.KeyL):
+		a.learnCurrent(t)
+	}
+}
+
+func (a *app) learnCurrent(t *townScreen) {
+	colleges := t.visit.Town.Facilities.Colleges
+	c := a.currentMember(t)
+	if c == nil || t.college < 0 || t.college >= len(colleges) {
+		return
+	}
+	skill := gamedata.SkillID(colleges[t.college])
+	res, err := game.LearnSkill(a.tables, c, a.gold(), skill)
+	if err != nil {
+		t.message = fmt.Sprintf("學院出錯：%v", err)
+		return
+	}
+	if !res.OK {
+		t.message = res.Reason
+		if res.Cost > 0 {
+			t.message += fmt.Sprintf("（學費 %d 金）", res.Cost)
+		}
+		return
+	}
+	a.setGold(res.Gold)
+	t.message = fmt.Sprintf("%s 學會了%s，付 %d 金（剩 %d）",
+		c.Name, a.skillName(skill), res.Cost, res.Gold)
+}
+
+// skillSourceFile 是技能名稱翻譯目錄的 key，與 dwstrings 產生時一致。
+const skillSourceFile = "SKILLS"
+
+// skillName 回傳技能的顯示名稱（已翻譯）。原文來自 FILES.DTT 的技能名段。
+func (a *app) skillName(s gamedata.SkillID) string {
+	names := a.strings.SkillNames()
+	if int(s) < 0 || int(s) >= len(names) {
+		return fmt.Sprintf("技能 %d", s)
+	}
+	return a.tr.Event(skillSourceFile, int(s), names[s])
+}
+
+func (a *app) drawCollege(t *townScreen, line func(string)) {
+	colleges := t.visit.Town.Facilities.Colleges
+	c := a.currentMember(t)
+	if len(colleges) == 0 || c == nil {
+		line("這座城鎮沒有學院")
+		return
+	}
+
+	remaining, err := c.RemainingSkillPoints(a.tables)
+	if err != nil {
+		line(fmt.Sprintf("算不出剩餘點數：%v", err))
+		return
+	}
+	line(fmt.Sprintf("學生：%s（%s）　剩餘智力點數 %d",
+		c.Name, nameOf(className, int(c.Class)), remaining))
+	line("")
+
+	for i, id := range colleges {
+		skill := gamedata.SkillID(id)
+		points, err := a.tables.SkillCost(skill, c.Class)
+		if err != nil {
+			continue
+		}
+		note := fmt.Sprintf("%d 點　%d 金", points, game.CollegeGoldCost(points))
+		if c.HasSkill(skill) {
+			note = "已學會"
+		}
+		line(fmt.Sprintf("%s%s%s", memberMark(t.college, i),
+			textlayout.PadCells(a.skillName(skill), 14), note))
+	}
+	line("")
+	line("↑↓：選學院　Tab：換學生　L：學下去")
 }

@@ -51,6 +51,8 @@ func main() {
 		dumpTowns(os.Args[2:])
 	case "months":
 		dumpMonths(os.Args[2:])
+	case "skills":
+		dumpSkills(os.Args[2:])
 	case "check":
 		check(os.Args[2:])
 	default:
@@ -59,7 +61,7 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|monsters|towns|months|ui|check [選項]")
+	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|monsters|towns|months|skills|ui|check [選項]")
 	os.Exit(2)
 }
 
@@ -272,6 +274,42 @@ func dumpTowns(args []string) {
 	}
 	fmt.Printf("%-10s %3d 個城鎮名（新增 %d、原文變動 %d）→ %s\n",
 		townSource, len(merged.Entries), added, drifted, out)
+}
+
+// skillSource 是技能名稱翻譯目錄的 key。與 monthSource 同理，不是檔名 ——
+// 技能名躺在 FILES.DTT 第 91–122 條，但那個 key 已經被法術名用掉。
+const skillSource = "SKILLS"
+
+// dumpSkills 把 32 個技能名稱抽成翻譯目錄。
+//
+// 索引就是遊戲內部的技能 id（0 劍擊 … 30 硬化皮膚，見 docs/re/21），
+// 也是技能旗標陣列（角色記錄 +0xc8）的格號與學費表的列索引。
+// 第 32 條是表尾多出來的一格，一併收著。
+func dumpSkills(args []string) {
+	fs := flag.NewFlagSet("skills", flag.ExitOnError)
+	dataDir := fs.String("data", "workplace/orig/demwin/DEM_DATA", "原版資料目錄")
+	outDir := fs.String("out", "assets/lang/zh-Hant", "翻譯目錄輸出位置")
+	_ = fs.Parse(args)
+
+	pool, err := gamedata.LoadStringPool(filepath.Join(*dataDir, spellSource))
+	if err != nil {
+		fatal(err)
+	}
+	cat := &i18n.Catalog{Source: skillSource}
+	for i, name := range pool.SkillNames() {
+		cat.Entries = append(cat.Entries, i18n.Entry{Index: i, Source: name})
+	}
+
+	if err := os.MkdirAll(*outDir, 0o755); err != nil {
+		fatal(err)
+	}
+	out := filepath.Join(*outDir, i18n.CatalogFileName(skillSource))
+	merged, added, drifted := mergeInto(out, cat)
+	if err := i18n.WriteCatalog(out, merged); err != nil {
+		fatal(err)
+	}
+	fmt.Printf("%-10s %3d 個技能名（新增 %d、原文變動 %d）→ %s\n",
+		skillSource, len(merged.Entries), added, drifted, out)
 }
 
 // monthSource 是月份名稱翻譯目錄的 key。

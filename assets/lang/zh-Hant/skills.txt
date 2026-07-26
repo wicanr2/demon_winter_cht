@@ -1,0 +1,195 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ SKILLS
+
+## 0
+:: en
+Fencing
+:: zh
+劍擊
+
+## 1
+:: en
+Sword
+:: zh
+劍術
+
+## 2
+:: en
+Axe
+:: zh
+斧術
+
+## 3
+:: en
+Mace
+:: zh
+鎚術
+
+## 4
+:: en
+Karate
+:: zh
+空手道
+
+## 5
+:: en
+Kung fu
+:: zh
+功夫
+
+## 6
+:: en
+Berserking
+:: zh
+狂暴
+
+## 7
+:: en
+Tactics
+:: zh
+戰術
+
+## 8
+:: en
+Hunting
+:: zh
+狩獵
+
+## 9
+:: en
+Persuasiveness
+:: zh
+說服
+
+## 10
+:: en
+Detect traps
+:: zh
+察覺陷阱
+
+## 11
+:: en
+Disarm traps
+:: zh
+解除陷阱
+
+## 12
+:: en
+Illusion
+:: zh
+幻術
+
+## 13
+:: en
+Possession
+:: zh
+附身
+
+## 14
+:: en
+Summoning
+:: zh
+召喚
+
+## 15
+:: en
+Shamen
+:: zh
+薩滿
+
+## 16
+:: en
+Priesthood
+:: zh
+司祭
+
+## 17
+:: en
+Fire runes
+:: zh
+火焰符文
+
+## 18
+:: en
+Metal runes
+:: zh
+金屬符文
+
+## 19
+:: en
+Wind runes
+:: zh
+風之符文
+
+## 20
+:: en
+Ice runes
+:: zh
+寒冰符文
+
+## 21
+:: en
+Spirit runes
+:: zh
+靈魂符文
+
+## 22
+:: en
+Weapon lore
+:: zh
+武器學識
+
+## 23
+:: en
+Potion lore
+:: zh
+藥劑學識
+
+## 24
+:: en
+Item lore
+:: zh
+物品學識
+
+## 25
+:: en
+Monster lore
+:: zh
+怪物學識
+
+## 26
+:: en
+View land
+:: zh
+觀地
+
+## 27
+:: en
+View room
+:: zh
+觀室
+
+## 28
+:: en
+View items
+:: zh
+鑑物
+
+## 29
+:: en
+View mind
+:: zh
+讀心
+
+## 30
+:: en
+Armored skin
+:: zh
+硬化皮膚
+
+## 31
+:: en
+God runes
+:: zh
+神明符文

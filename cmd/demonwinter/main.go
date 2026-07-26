@@ -486,13 +486,13 @@ func (a *app) debugGiveItem(spec string) error {
 //
 // 存檔那一格的長度未定案（3 或 4 bytes，見 scenario 的 goldOffset 註解），
 // 這裡沿用解析端的 3-byte 讀法，第 4 個 byte 原封不動留在 TrailerRaw。
-func (a *app) gold() int { return a.save.GoldRaw3 }
+func (a *app) gold() int { return a.save.Gold }
 
 func (a *app) setGold(v int) {
 	if v < 0 {
 		v = 0
 	}
-	a.save.GoldRaw3 = v
+	a.save.Gold = v
 }
 
 // encounterLevel 回傳目前的遭遇難度（1–10）。
@@ -801,6 +801,11 @@ func main() {
 		"偵錯：塞一件有效果的道具給第一名隊員，格式 `type,effect,power,次數`")
 	startHourFlag := flag.Int("hour", 0,
 		"偵錯：起始時辰（1–38）。0 代表照原版的 5 時")
+	// 城鎮的貴服務（復活、修船、買船）在起始存檔的 65 金之下全都試不到。
+	goldFlag := flag.Int("gold", -1, "偵錯：起始金幣。負值代表用存檔裡的")
+	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
+	// xdotool 偶爾會漏掉一兩下，跑出來的畫面就不是預期的那座城。直接指定。
+	townFlag := flag.Int("town", 0, "偵錯：啟動後直接進入指定編號的城鎮（1–25）")
 	flag.Parse()
 
 	if _, err := os.Stat(*dataDir); err != nil {
@@ -941,6 +946,19 @@ func main() {
 			a.clock.AdvanceHour()
 		}
 		log.Printf("偵錯：時辰設為 %d", a.clock.Hour())
+	}
+	if *goldFlag >= 0 {
+		a.setGold(*goldFlag)
+		log.Printf("偵錯：金幣設為 %d", a.gold())
+	}
+	if *townFlag > 0 {
+		town, err := towns.ByNumber(*townFlag)
+		if err != nil {
+			log.Fatalf("-town：%v", err)
+		}
+		a.town = &townScreen{visit: game.EnterTown(town, a.members)}
+		a.title = nil // 直接跳過標題畫面，不然還要多送一次按鍵
+		log.Printf("偵錯：直接進入 %s", town.Name)
 	}
 	if *giveItem != "" {
 		if err := a.debugGiveItem(*giveItem); err != nil {

@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # 在 headless X（Xvfb）底下跑 cmd/demonwinter 並截一張圖。
 #
-#   tools/screenshot.sh out.png [-- 額外的程式參數…]
+#   tools/screenshot.sh out.png [KEYS=按鍵序列] [額外的程式參數…]
+#
+# **不要在額外參數前面加 `--`。** Go 的 flag 套件遇到 `--` 就停止解析，
+# 後面的 `-map` `-x` 之類會被當成位置參數整批忽略 —— 程式照樣跑、照樣截圖，
+# 只是全部用預設值，看起來像「旗標沒有效果」。踩過一次，這裡保險起見會剝掉。
 #
 # 用途是驗收：本專案的硬規則是視覺產物一律 dump PNG 肉眼比對，
 # 不接受「編譯過了 / 測試綠」當作畫面正確的證據。
@@ -20,6 +24,11 @@ shift || true
 KEYS=""
 if [[ "${1:-}" == KEYS=* ]]; then
     KEYS="${1#KEYS=}"
+    shift
+fi
+
+# 保險：剝掉誤加的 `--`（見上面的說明）。
+if [[ "${1:-}" == "--" ]]; then
     shift
 fi
 

@@ -2,6 +2,7 @@ package game
 
 import (
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
+	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 )
 
@@ -60,8 +61,9 @@ const (
 // ShipPrice 回傳買船價格：城鎮表 +0x1f5 × 10。**不看 E。**
 func (e Economy) ShipPrice() int { return e.ShipBase * 10 }
 
-// ShipMaxHull 是船體滿值，固定 75。
-const ShipMaxHull = 75
+// ShipMaxHull 是船體滿值，固定 75。定義在 scenario（存檔那一層也要用），
+// 這裡取別名讓規則層的呼叫端不必多 import 一個套件。
+const ShipMaxHull = scenario.ShipMaxHull
 
 // RepairPrice 回傳修船費用：(75 − 目前船體值) × E / 2。
 // 滿血時為 0，呼叫端應顯示「你的船看起來很好」而不是收 0 元。

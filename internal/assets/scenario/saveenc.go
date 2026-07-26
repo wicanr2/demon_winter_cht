@@ -43,11 +43,10 @@ func (s *SaveGame) Encode() ([]byte, error) {
 	putByte(trailer[:], lightSourceOffset, s.LightSource)
 	putByte(trailer[:], partySizeOffset, s.PartySize)
 	putByte(trailer[:], rationsOffset, s.Rations)
+	encodeShips(trailer[:], s.Ships)
 	copy(trailer[formationOrderOffset:], s.FormationOrder[:])
 	copy(trailer[ldFlagsOffset:], s.LDFlags[:])
-	// 金幣的欄位寬度未知（見 goldOffset 註解）。decode 讀 3 bytes，
-	// encode 就只寫 3 bytes —— 多寫第 4 個 byte 會蓋掉一個沒人知道用途的值。
-	putLE3(trailer[:], goldOffset, s.GoldRaw3)
+	putLE4(trailer[:], goldOffset, s.Gold)
 
 	out = append(out, trailer[:]...)
 
@@ -141,15 +140,6 @@ func putByte(buf []byte, off int, v byte) {
 	if off >= 0 && off < len(buf) {
 		buf[off] = v
 	}
-}
-
-func putLE3(buf []byte, off, v int) {
-	if off < 0 || off+3 > len(buf) {
-		return
-	}
-	buf[off] = byte(v)
-	buf[off+1] = byte(v >> 8)
-	buf[off+2] = byte(v >> 16)
 }
 
 func putLE4(buf []byte, off, v int) {

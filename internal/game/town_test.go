@@ -93,8 +93,13 @@ func TestTownVisit_HaggleOutOfRange(t *testing.T) {
 }
 
 func TestFacilityName(t *testing.T) {
-	if n := len(AllFacilities); n != 7 {
-		t.Errorf("設施有 %d 種，原版 DEMON.INT 是 7 個字串", n)
+	// 原版 DEMON.INT 只有 7 個設施字串，第 8 項學院是本作補的
+	// （原版的學院是地圖上的獨立地點，見 town.go 的 FacilityCollege 註解）。
+	if n := len(AllFacilities); n != 8 {
+		t.Errorf("設施有 %d 種，預期 7 種原版設施 + 學院", n)
+	}
+	if AllFacilities[len(AllFacilities)-1] != FacilityCollege {
+		t.Error("學院必須排在最後 —— 前七項的順序要與原版的字串順序一致")
 	}
 	seen := map[string]bool{}
 	for _, f := range AllFacilities {
@@ -106,5 +111,18 @@ func TestFacilityName(t *testing.T) {
 			t.Errorf("設施名 %q 重複", name)
 		}
 		seen[name] = true
+	}
+}
+
+// 設施名稱表要與 AllFacilities 等長。
+//
+// cmd 那邊用 `labels[i]` 對應 AllFacilities 的第 i 項，加了設施卻忘了加標籤
+// 就會 panic —— 而且是在「走進城鎮」這條每個玩家都會走的路徑上。
+// 那個 slice 在 cmd 裡測不到，這裡至少釘住 FacilityName 對每一項都有答案。
+func TestFacilityName_CoversEveryFacility(t *testing.T) {
+	for f := Facility(0); f <= FacilityCollege; f++ {
+		if FacilityName(f) == "?" {
+			t.Errorf("設施 %d 沒有中文名", f)
+		}
 	}
 }

@@ -1,5 +1,11 @@
 package game
 
+import (
+	"fmt"
+
+	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
+)
+
 // 城鎮設施的「做下去會怎樣」那一半。
 //
 // 定價公式在 economy.go（`docs/re/19` 全部解完了），但那些只回傳數字 ——
@@ -165,4 +171,41 @@ func (c *Character) CanLevelUp() (bool, int) {
 		return true, 0
 	}
 	return false, need - c.Experience
+}
+
+// --- 學院 ---
+
+// LearnSkill 在學院學一項技能。
+//
+// 兩種成本要同時付得起（`docs/spec/08` §學院）：
+//
+//	points   = 技能學費表[技能][職業]           （1–10）
+//	金幣費用 = points × (5 × points + 25)
+//	還要 角色剩餘可用智力點數 >= points
+//
+// 智力點數不是另一個欄位，是「智力 − 已學技能各自的成本」算出來的
+// （見 Character.RemainingSkillPoints）—— 所以學了就永久佔著。
+func LearnSkill(t *gamedata.Tables, c *Character, gold int, skill gamedata.SkillID) (ServiceResult, error) {
+	if c.HasSkill(skill) {
+		return ServiceResult{Gold: gold, Reason: c.Name + " 已經會這項技能了"}, nil
+	}
+	points, err := t.SkillCost(skill, c.Class)
+	if err != nil {
+		return ServiceResult{Gold: gold}, err
+	}
+	remaining, err := c.RemainingSkillPoints(t)
+	if err != nil {
+		return ServiceResult{Gold: gold}, err
+	}
+	cost := CollegeGoldCost(points)
+	if remaining < points {
+		return ServiceResult{Gold: gold, Cost: cost,
+			Reason: fmt.Sprintf("%s 的智力點數不夠（要 %d，剩 %d）",
+				c.Name, points, remaining)}, nil
+	}
+	if cost > gold {
+		return notEnoughGold(gold, cost), nil
+	}
+	c.Skills[skill] = true
+	return ServiceResult{OK: true, Gold: gold - cost, Cost: cost}, nil
 }
