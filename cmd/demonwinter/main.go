@@ -174,6 +174,11 @@ type app struct {
 	// dreamPage 非負時螢幕上正在播夢。
 	dreamPage int
 
+	// eregoreText 是 EREGORE.TXT（`docs/re/82`）；讀不到時為 nil。
+	eregoreText *scenario.StoryText
+	// eregore 非 nil 時螢幕上正在播艾瑞戈爾那一場（`docs/re/83`）。
+	eregore *eregoreScreen
+
 	// winText 是 WIN.TXT 的結局文字（`docs/re/82`）；讀不到時為 nil。
 	winText *scenario.StoryText
 	// ending 是結局序列的播放狀態。
@@ -236,6 +241,9 @@ func (a *app) Update() error {
 	}
 	if a.dreamPage >= 0 {
 		return a.updateDream()
+	}
+	if a.eregore != nil {
+		return a.updateEregore()
 	}
 	if a.manualUI != nil {
 		return a.updateManual()
@@ -398,6 +406,14 @@ func (a *app) Draw(screen *ebiten.Image) {
 	if a.dreamPage >= 0 {
 		a.canvas.Fill(color.Black)
 		a.drawDream(a.canvas)
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
+	if a.eregore != nil {
+		a.canvas.Fill(color.Black)
+		a.drawEregore(a.canvas)
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 		op.GeoM.Scale(scale, scale)
 		screen.DrawImage(a.canvas, op)
@@ -709,7 +725,7 @@ func (a *app) checkEvent(tile byte) {
 	case game.TriggerSite:
 		// 地點 tile：城鎮／神殿／學院／廢墟。**不是文字索引**
 		// —— 舊版把 tile 值當 DATA*.TXT 的記錄索引，見 `docs/re/79`。
-		switch game.SiteFor(tile, a.save.TempleRuins, a.save.TownRuins) {
+		switch game.SiteFor(tile, a.save.TempleRuins, a.save.ShardShattered) {
 		case game.SiteTown:
 			a.enterTownAt(a.party.X(), a.party.Y())
 		case game.SiteRuins:
@@ -739,6 +755,20 @@ func (a *app) checkEvent(tile byte) {
 			a.party.TeleportTo(int(hit.Dest.X), int(hit.Dest.Y))
 			a.message = fmt.Sprintf("被傳送到 (%d,%d)", hit.Dest.X, hit.Dest.Y)
 			return
+		}
+		// 類別 5 走完全不同的一條：那張 16 格地點劇情表
+		// （原版 `cmp ds:0x5c62,5`，`docs/re/83` §1）。
+		// **不能落到下面的 DATA*.TXT 路徑** —— 它的「值」是 case 編號，
+		// 不是文字索引，餵下去會顯示完全無關的房間敘述。
+		if c := hit.Tile.PlotCase(); c >= 0 {
+			a.locationPlot(c)
+			return
+		}
+		// 類別 3／6 是陷阱（`0x19a4b`）。原版印完 "A trap!" 之後
+		// 還是會走文字路徑，所以這裡只多一則訊息、不 return。
+		if cls := hit.Tile.Class(); cls == scenario.SpecialClassTrap ||
+			cls == scenario.SpecialClassTrapAlt {
+			a.message = a.tr.UI("site.trap", "有陷阱！")
 		}
 		idx = hit.EventIndex
 		// 記錄「看過了」：類別留著，記錄之後照樣命中（`docs/re/78` §3）。
@@ -1091,6 +1121,10 @@ func main() {
 		"偵錯：劇情階段 +0xb9（1 = 下次睡覺冬之魔降臨）。負值代表用存檔裡的")
 	endingFlag := flag.Bool("ending", false,
 		"偵錯：啟動後直接播結局序列（不必真的破關）")
+	// 艾瑞戈爾那一格在地圖 1 的 (60,1)，要先走完大半張地城才到得了，
+	// 而它有七條分支、十頁文字 —— 全部都是視覺產物，得逐頁 dump 比對。
+	eregoreFlag := flag.Int("eregore", -1,
+		"偵錯：直接播艾瑞戈爾那一場。0 = 第一次見面，1 = 談崩過一次（直接播結尾）")
 	ruinsFlag := flag.Bool("ruins", false,
 		"偵錯：世界已成廢墟（神殿 tile 畫成廢墟、城鎮不再進得去）")
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
@@ -1152,7 +1186,7 @@ func main() {
 	}
 	if *ruinsFlag {
 		save.TempleRuins = 0xff
-		save.TownRuins = 1
+		save.ShardShattered = 1
 	}
 	// 特殊格清單要在存檔載入之後才決定來源 —— 全新開始要從 ALL_SS.DAT
 	// 重建，否則會沿用原版出廠那份「玩到一半」的狀態（docs/re/78 §2）。
@@ -1234,6 +1268,7 @@ func main() {
 		manual:     man,
 		winText:    loadWinText(*dataDir),
 		dreamText:  loadStoryOrNil(*dataDir, scenario.StoryDream),
+		eregoreText: loadEregoreText(*dataDir),
 		dreamPage:  -1,
 		ditherSeed: uint16(*seed),
 		// -ending 直接跳結局序列。破關要走完整條主線，沒有這個旗標
@@ -1281,6 +1316,10 @@ func main() {
 	if *goldFlag >= 0 {
 		a.setGold(*goldFlag)
 		log.Printf("偵錯：金幣設為 %d", a.gold())
+	}
+	if *eregoreFlag >= 0 {
+		a.openEregore(*eregoreFlag == 1)
+		log.Printf("偵錯：艾瑞戈爾（met=%v）", *eregoreFlag == 1)
 	}
 	if *eventFlag >= 0 {
 		a.showEvent(*eventFlag)

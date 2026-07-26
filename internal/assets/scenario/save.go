@@ -253,8 +253,8 @@ const (
 
 	boatOffset = 0xb0
 
-	// templeRuinsOffset／townRuinsOffset：**世界變成廢墟的兩個旗標**
-	// （`docs/re/79`）。冬之魔降臨的機制實作 —— 地圖上的設施會消失。
+	// templeRuinsOffset／shardShatteredOffset：**世界變成廢墟的兩個旗標**
+	// （`docs/re/79`、`docs/re/83`）。冬之魔降臨的機制實作 —— 地圖上的設施會消失。
 	//
 	//   - `+0xba > 0x7f` → 繪製時把神殿 tile `0x25` **換成廢墟 tile `0x5b`**
 	//     （`0x1739a`），而且踩上去印 `You are walking through ruins`。
@@ -262,12 +262,26 @@ const (
 	//     還把全隊的薩滿與司祭技能清成 0**（`0x03eea`／`0x03efc`）——
 	//     那是整支執行檔裡對這兩個技能旗標的**唯一寫入**。
 	//     所以神殿被毀＝驅邪與祈禱永久失效。
-	//   - `+0xbe != 0` → 城鎮 tile `0x2e` 走同一條廢墟路徑（`0x19135`），
-	//     不再進城。它是單向閂鎖（11 處存取沒有一處寫 0，`docs/re/78` §6）。
+	//   - `+0xbe` 原本被命名為「城鎮廢墟旗標」，那是**看效果不看成因**。
+	//     11 處存取裡只有兩處寫入，而且都在艾瑞戈爾那一場
+	//     （`0x1b2ef`／`0x1b459`，`docs/re/83` §3）—— 也就是馬利馮在黑鏡裡
+	//     捏碎春之石的那一刻。所以這個欄位的身分是**「碎片已碎，冬天開始」**，
+	//     城鎮變廢墟只是它的下游效果之一：
+	//       * `0x19135`：城鎮 tile `0x2e` 走廢墟路徑，不再進城
+	//       * `0x15f7b`／`0x15fb6`：繪製時把 tile > 9 換成 2
+	//       * `0x1a550`：艾瑞戈爾那一格的入口閘門，談過就不再談
+	//     它是單向閂鎖，沒有任何一處寫 0。
 	//
 	// 兩者都是**只增不減**：世界一旦壞掉就回不去了。
-	templeRuinsOffset = 0xba
-	townRuinsOffset   = 0xbe
+	templeRuinsOffset    = 0xba
+	shardShatteredOffset = 0xbe
+
+	// eregoreMetOffset：**艾瑞戈爾專用的一格狀態**（`docs/re/83` §3）。
+	// 全檔只有三處存取，而且都在那一場裡（`0x1b2dd` 比較、`0x1b2e5` 清 0、
+	// `0x1b4ca` 設 1）—— 不是通用旗標。
+	// 語意是「上次談崩，打過一架」：立起來之後再去找他就跳過全部問答，
+	// 直接播馬利馮那段結尾。
+	eregoreMetOffset = 0x99
 
 	// plotStageOffset／firstDreamOffset：**睡覺推進的劇情階段**（`docs/re/80`）。
 	//
@@ -278,8 +292,10 @@ const (
 	//	+0xb9 == 2 且 +0xba == 0 → 神殿全毀＋信仰歸零，播第 2 頁
 	//
 	// ⚠ **把 `+0xb9` 從 0 推到 1 的那道寫入還沒找到**（`docs/re/81`）——
-	// 常數位移與計算式寫入兩種掃法都掃過。攻略說觸發點是拿到恆世寶珠
+	// 常數位移與計算式寫入兩種掃法都掃過。`+0xb9` 共 19 處存取，
+	// 五處寫入寫的是 2 或 3，沒有一處寫 1。攻略說觸發點是拿到恆世寶珠
 	// 之後，DOSBox 實跑也證實這條路徑活著，所以缺的是「誰把它設成 1」。
+	// **艾瑞戈爾那一場也不是**（`docs/re/83` §3 逐指令看過，它只寫 `+0xbe`）。
 	plotStageOffset  = 0xb9
 	firstDreamOffset = 0xbd
 
@@ -443,11 +459,14 @@ type SaveGame struct {
 	// GlyphFlags 是三個緋紅符印的劇情旗標（見 glyphFlagsOffset 註解）。
 	GlyphFlags [glyphCount]byte
 
-	// TempleRuins／TownRuins 是世界變成廢墟的兩個旗標
-	// （見 templeRuinsOffset 註解）。保留原始 byte 而不是 bool ——
+	// TempleRuins 是神殿全毀旗標；ShardShattered 是「春之石已碎、
+	// 冬天開始」（見 templeRuinsOffset 註解）。保留原始 byte 而不是 bool ——
 	// 兩者的判斷門檻不同（`> 0x7f` vs `!= 0`），轉成 bool 會把差別磨掉。
-	TempleRuins byte
-	TownRuins   byte
+	TempleRuins    byte
+	ShardShattered byte
+
+	// EregoreMet 是艾瑞戈爾的兩階段狀態（見 eregoreMetOffset 註解）。
+	EregoreMet byte
 
 	// PlotStage／FirstDream 是睡覺推進的劇情階段（見 plotStageOffset 註解）。
 	PlotStage  byte
@@ -544,7 +563,8 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.MerchantBase = trailer[merchantBaseOffset]
 	copy(save.GlyphFlags[:], trailer[glyphFlagsOffset:glyphFlagsOffset+glyphCount])
 	save.TempleRuins = trailer[templeRuinsOffset]
-	save.TownRuins = trailer[townRuinsOffset]
+	save.ShardShattered = trailer[shardShatteredOffset]
+	save.EregoreMet = trailer[eregoreMetOffset]
 	save.PlotStage = trailer[plotStageOffset]
 	save.FirstDream = trailer[firstDreamOffset]
 	save.EncounterCountdown = trailer[encounterCountdownOffset]

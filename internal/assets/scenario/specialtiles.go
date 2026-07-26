@@ -45,16 +45,24 @@ const (
 	specialTailStep = 2
 )
 
-// 類別。語意只有兩類定案（`docs/re/77` §4）：
+// 類別（`docs/re/83` §1 把最後一塊補上，分派在 `FUN_25be_0263` ＝ `0x19a43`）：
 //
+//	0    → 走預設路徑讀 DATA*.TXT（出貨資料裡沒有這一類）
 //	1、2 → 回一個 1-based 序號，那是事件敘述的索引
+//	3、6 → 陷阱（"A trap!"）；出貨資料裡沒有 6
 //	4    → 傳送，目的地取自檔尾反向表
-//
-// 0／3／5／6 尚未解，所以**不給它們取名字** —— 命名會讓後續的人以為已經定案。
+//	5    → 地點劇情事件，值 = docs/re/65 那張 16 格表的 case 編號
 const (
 	SpecialClassEventA   = 1
 	SpecialClassEventB   = 2
+	SpecialClassTrap     = 3
 	SpecialClassTeleport = 4
+	// SpecialClassLocationPlot 是主線的地點劇情格。判定條件在原版是
+	// `cmp ds:0x5c62, 5`（`0x19f15`），不通過就走預設的房間文字路徑。
+	SpecialClassLocationPlot = 5
+	// SpecialClassTrapAlt 跟類別 3 走同一條陷阱路徑（`0x19a52`）。
+	// **出貨資料裡一筆都沒有** —— 程式路徑留著、資料沒用到，是原版自己的狀態。
+	SpecialClassTrapAlt = 6
 
 	// specialClassAdvance 是「狀態推進」的加量：類別 +3（`0x1788e` 的 `+0x60`）。
 	specialClassAdvance = 3
@@ -77,8 +85,29 @@ type SpecialTile struct {
 // Class 是 attr 的高 3 bit。
 func (s SpecialTile) Class() byte { return s.Attr >> specialClassShift }
 
-// Value 是 attr 的低 5 bit。類別 1／2 時它是「已造訪」標記，其餘語意未解。
+// Value 是 attr 的低 5 bit。
+//
+// 語意隨類別而變：類別 1／2 是「已造訪」標記（序號另外從計數器來）；
+// **類別 5 是地點劇情事件的 case 編號**（`docs/re/83`）；
+// 類別 4 恆為 0（目的地在檔尾反向表）。
 func (s SpecialTile) Value() byte { return s.Attr & specialValueMask }
+
+// PlotCase 是類別 5 的地點劇情 case 編號，其他類別回 −1。
+//
+// 這個編號是**全域唯一**的：五張子地圖用掉 1–15，一次碰撞都沒有
+//（`docs/re/83` §2）。所以它可以直接當事件的身分，不必再配地圖編號。
+func (s SpecialTile) PlotCase() int {
+	if s.Class() != SpecialClassLocationPlot {
+		return -1
+	}
+	return int(s.Value())
+}
+
+// 地點劇情的 case 編號。只列已經接上引擎的；其餘見 `docs/re/65` §3。
+const (
+	// PlotCaseEregore 是艾瑞戈爾（地圖 1 的 (60,1)，全遊戲唯一一格）。
+	PlotCaseEregore = 14
+)
 
 // SpecialTiles 是一張子地圖的完整清單，含檔尾的傳送目的表。
 type SpecialTiles struct {

@@ -55,10 +55,10 @@ const (
 // `cmp 0x7f / jbe`），城鎮是 `!= 0`（`0x19135` 的 `cmp 0 / jne`）。
 // 統一成同一種比較會在旗標取中間值時行為分歧 ——
 // 這與符印旗標「進門看 `!= 0`、傷害看 `< 0x80`」是同一類陷阱（`docs/re/63`）。
-func SiteFor(tile, templeRuins, townRuins byte) SiteKind {
+func SiteFor(tile, templeRuins, shardShattered byte) SiteKind {
 	switch tile {
 	case 0x2e:
-		if townRuins != 0 {
+		if shardShattered != 0 {
 			return SiteRuins
 		}
 		return SiteTown
