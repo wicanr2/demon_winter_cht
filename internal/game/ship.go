@@ -153,3 +153,81 @@ func freeShipSlot(ships *[ShipSlots]scenario.Ship) int {
 	}
 	return -1
 }
+
+// --- 搭船 ---
+//
+// 隊伍欄位 `+0xb0` 存「目前搭的是第幾艘船」，**格號 +1**，0 代表沒搭
+// （`docs/re/31`）。這個 +1 不是設計潔癖，是因為 0 要留給「沒搭船」。
+
+// BoardResult 是一次上／下船的判定結果。
+type BoardResult int
+
+const (
+	// BoardNone 這一步與船無關。
+	BoardNone BoardResult = iota
+	// BoardOn 走上了一艘船。
+	BoardOn
+	// BoardOff 從船上走回岸上。
+	BoardOff
+)
+
+// IsOcean 回報這個地形是不是海面。兩個 tile 是同一種地形的兩種浪花。
+func IsOcean(tile byte) bool { return tile == tileOceanA || tile == tileOceanB }
+
+// BoatAt 找出停在指定座標與子地圖的船，沒有回 −1。
+//
+// 上船的判定就是這個：走到船所在的那一格就上船（`0x16e4b`–`0x16e7c`
+// 比對 X、Y、子地圖三者）。
+func BoatAt(ships *[ShipSlots]scenario.Ship, x, y, mapID int) int {
+	return shipAt(ships, x, y, mapID)
+}
+
+// Sailing 回報這個存檔值代表有沒有在船上。
+func Sailing(boat byte) bool { return boat != 0 }
+
+// BoatIndex 把存檔值換成船隻陣列的格號，沒搭船回 −1。
+func BoatIndex(boat byte) int {
+	if boat == 0 {
+		return -1
+	}
+	return int(boat) - 1
+}
+
+// BoatValue 把格號換成存檔值（格號 +1）。
+func BoatValue(slot int) byte {
+	if slot < 0 {
+		return 0
+	}
+	return byte(slot + 1)
+}
+
+// StepBoat 處理走一步之後的上／下船，並把船的位置跟著隊伍更新。
+//
+// 三種情形（`0x16dcc`／`0x16ed7`）：
+//
+//   - 沒搭船、目標格有船 → **上船**，那一格的圖塊改回海面
+//   - 搭著船、目標格是海面 → 繼續航行，船跟著走
+//   - 搭著船、目標格是陸地 → **上岸**，船留在原地（寫回目前座標）
+//
+// 回傳新的存檔值與這一步發生了什麼。
+func StepBoat(ships *[ShipSlots]scenario.Ship, boat byte, tile byte,
+	x, y, mapID int) (byte, BoardResult) {
+
+	if !Sailing(boat) {
+		if i := BoatAt(ships, x, y, mapID); i >= 0 {
+			return BoatValue(i), BoardOn
+		}
+		return boat, BoardNone
+	}
+
+	i := BoatIndex(boat)
+	if i < 0 || i >= ShipSlots {
+		return 0, BoardOff
+	}
+	// 船跟著隊伍走 —— 上岸時寫回的就是這個座標，所以船會停在岸邊那一格的海上。
+	ships[i].X, ships[i].Y, ships[i].MapID = byte(x), byte(y), byte(mapID)
+	if IsOcean(tile) {
+		return boat, BoardNone
+	}
+	return 0, BoardOff
+}

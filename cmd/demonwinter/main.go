@@ -237,6 +237,7 @@ func (a *app) Update() error {
 			a.message = fmt.Sprintf("時間來到 %d 時", a.clock.Hour())
 		}
 		if res == game.MoveOK {
+			a.stepBoat(tile)
 			a.checkEvent(tile)
 			a.checkRandomEncounter(tile)
 		}
@@ -924,7 +925,7 @@ func main() {
 
 	a := &app{
 		world:      game.NewWorld(m, tables),
-		party:      game.NewParty(px, py, game.Facing(save.Facing), 0),
+		party:      newPartyAt(px, py, save),
 		clock:      game.ClockAt(int(save.Hour), int(save.Day), int(save.Month), int(save.TimeCounter)),
 		tiles:      m,
 		mapID:      mapID,
@@ -948,6 +949,12 @@ func main() {
 		save:       save,
 		torch:      save.LightSource,
 		savePath:   *savePath,
+	}
+
+	// 船停在海上，而海面在可通行性表裡是不可通行的 —— 沒有這一條，
+	// 船看得到卻走不上去。
+	a.world.Boardable = func(x, y int) bool {
+		return game.BoatAt(&a.save.Ships, x, y, a.mapID) >= 0
 	}
 
 	a.canvas = ebiten.NewImage(layout.CanvasWidth, layout.CanvasHeight)
@@ -1075,4 +1082,32 @@ func (a *app) debugLoot(spec string) error {
 		return fmt.Errorf("全隊的道具欄都滿了")
 	}
 	return nil
+}
+
+// newPartyAt 建立隊伍並還原搭船狀態。
+//
+// 搭船狀態不還原的話，存檔存在海上的隊伍一載入就被困在水裡 ——
+// 四周都是海，一步都走不了。
+func newPartyAt(x, y int, save *scenario.SaveGame) *game.Party {
+	p := game.NewParty(x, y, game.Facing(save.Facing), 0)
+	p.SetSailing(game.Sailing(save.Boat))
+	return p
+}
+
+// stepBoat 處理走完一步之後的上／下船。
+//
+// 上船的判定是「走到船所在的那一格」，下船是「從船上走回陸地」。
+// 兩者都不用按鍵 —— 原版就是走過去就上、走上岸就下。
+func (a *app) stepBoat(tile byte) {
+	next, res := game.StepBoat(&a.save.Ships, a.save.Boat, tile,
+		a.party.X(), a.party.Y(), a.mapID)
+	a.save.Boat = next
+	a.party.SetSailing(game.Sailing(next))
+
+	switch res {
+	case game.BoardOn:
+		a.message = "登船"
+	case game.BoardOff:
+		a.message = "上岸"
+	}
 }

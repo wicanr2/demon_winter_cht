@@ -188,6 +188,11 @@ const (
 	// 換算成 3×3 的視野 —— 火把照得到的範圍，數值合理。
 	lightSourceOffset = 0xa7
 
+	// boatOffset：**目前搭乘的船**（已驗證，反組譯）。存的是船隻陣列的
+	// 格號 **+1**，`0` 代表沒有搭船。走上有船的格子時 `0x16ede` 寫入
+	// `格號+1`，上岸時 `0x16dd6` 清成 0。見 `docs/re/31`。
+	boatOffset = 0xb0
+
 	// facingOffset：**待複核**，中高信心（單一角色樣本，反向確認未做）。
 	// DOSBox 動態 diff 顯示對應順時針四方位，推測 0=北 1=東 2=南 3=西。
 	facingOffset = 0xa4
@@ -327,6 +332,10 @@ type SaveGame struct {
 	// Rations 是糧食份數（已驗證，見 rationsOffset 註解）。
 	Rations byte
 
+	// Boat 是目前搭乘的船（船隻陣列格號 +1，0 代表沒搭船）。
+	// 見 boatOffset 註解與 ship.go。
+	Boat byte
+
 	// Hour 是遊戲內時辰（已驗證，見 hourOffset 註解）。
 	Hour byte
 
@@ -403,6 +412,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.TimeCounter = trailer[timeCounterOffset]
 	save.Unknown9C = trailer[unknown9COffset]
 	save.Ships = parseShips(trailer)
+	save.Boat = trailer[boatOffset]
 
 	return &save, nil
 }

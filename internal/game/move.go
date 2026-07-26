@@ -97,6 +97,10 @@ type Party struct {
 	facing  Facing
 	dataset int
 	stack   []submapFrame
+
+	// sailing 代表隊伍正搭在船上。**只影響一條規則**：海面變成可通行。
+	// 對應存檔 `+0xb0`（格號 +1），船是哪一艘由呼叫端管（見 ship.go）。
+	sailing bool
 }
 
 // NewParty 建立位於指定座標的隊伍。
@@ -111,6 +115,12 @@ func (p *Party) Dataset() int   { return p.dataset }
 
 // Depth 回傳目前的子地圖深度。0 代表在大地圖上。
 func (p *Party) Depth() int { return len(p.stack) }
+
+// Sailing 回報隊伍是不是搭在船上。
+func (p *Party) Sailing() bool { return p.sailing }
+
+// SetSailing 設定搭船狀態。
+func (p *Party) SetSailing(v bool) { p.sailing = v }
 
 // Turn 改變面向而不移動。
 // TeleportTo 把隊伍直接搬到指定座標。
@@ -131,6 +141,11 @@ func (p *Party) EnterSubmap(x, y int, facing Facing, dataset int) {
 type World struct {
 	tiles  TileSource
 	tables *gamedata.Tables
+
+	// Boardable 回報那一格有沒有停著船。有的話**即使地形不可通行也走得過去**
+	// —— 上船就是「走到船那一格」，而船停在海上，海面本來就走不上去。
+	// 這一條漏掉的話船看得到、上不去。nil 代表這個世界沒有船。
+	Boardable func(x, y int) bool
 }
 
 // NewWorld 建立移動判定所需的世界檢視。
@@ -167,6 +182,16 @@ func (w *World) Walk(p *Party, c *Clock) (result MoveResult, tile byte, hourAdva
 	}
 
 	blocked := w.tables.Passability(t).Blocked()
+
+	// **搭船時海面變成路。** 這是搭船唯一改變的移動規則 ——
+	// 陸地照樣照可通行性表判定，走得上去就是上岸（見 game.StepBoat）。
+	if p.Sailing() && IsOcean(t) {
+		blocked = false
+	}
+	// 停著船的那一格也走得過去 —— 那就是上船的動作。
+	if blocked && w.Boardable != nil && w.Boardable(tx, ty) {
+		blocked = false
+	}
 
 	if p.Depth() > 0 {
 		// 子地圖內的判定是反過來的：0xff 才是路，非 0xff 代表踏出去了。

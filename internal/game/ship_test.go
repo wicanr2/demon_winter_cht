@@ -213,3 +213,84 @@ func TestRealSave_HasTwoShips(t *testing.T) {
 		}
 	}
 }
+
+// 搭船的存檔值是**格號 +1**，0 留給「沒搭船」。
+func TestBoatValueAndIndex(t *testing.T) {
+	if BoatValue(-1) != 0 {
+		t.Error("沒搭船應該存 0")
+	}
+	for slot := 0; slot < ShipSlots; slot++ {
+		v := BoatValue(slot)
+		if v != byte(slot+1) {
+			t.Errorf("格號 %d 的存檔值 %d，預期 %d", slot, v, slot+1)
+		}
+		if got := BoatIndex(v); got != slot {
+			t.Errorf("存檔值 %d 換回格號 %d，預期 %d", v, got, slot)
+		}
+		if !Sailing(v) {
+			t.Errorf("存檔值 %d 應該代表在船上", v)
+		}
+	}
+	if Sailing(0) || BoatIndex(0) != -1 {
+		t.Error("0 應該代表沒搭船")
+	}
+}
+
+// 走到船那一格就上船，走回陸地就下船，中間船跟著隊伍走。
+func TestStepBoat_BoardSailDisembark(t *testing.T) {
+	ships := emptyShips()
+	ships[4] = scenario.Ship{X: 10, Y: 10, MapID: 44, Hull: 50}
+
+	// 走到 (10,10) → 上船。
+	boat, res := StepBoat(ships, 0, tileOceanA, 10, 10, 44)
+	if res != BoardOn || BoatIndex(boat) != 4 {
+		t.Fatalf("上船失敗：res=%d boat=%d", res, boat)
+	}
+
+	// 在海上走一步 → 船跟著。
+	boat, res = StepBoat(ships, boat, tileOceanB, 11, 10, 44)
+	if res != BoardNone || !Sailing(boat) {
+		t.Fatalf("海上航行不該下船：res=%d boat=%d", res, boat)
+	}
+	if ships[4].X != 11 || ships[4].Y != 10 {
+		t.Errorf("船沒跟著走，停在 (%d,%d)", ships[4].X, ships[4].Y)
+	}
+
+	// 走上陸地 → 下船，船留在剛才那一格。
+	boat, res = StepBoat(ships, boat, 0x01, 12, 10, 44)
+	if res != BoardOff || Sailing(boat) {
+		t.Fatalf("上岸失敗：res=%d boat=%d", res, boat)
+	}
+	if ships[4].X != 12 || ships[4].Y != 10 {
+		t.Errorf("下船後船的座標 (%d,%d)，預期跟著寫回 (12,10)",
+			ships[4].X, ships[4].Y)
+	}
+}
+
+// 不在船上、腳下也沒船 —— 什麼都不該發生。
+func TestStepBoat_NothingHappens(t *testing.T) {
+	ships := emptyShips()
+	boat, res := StepBoat(ships, 0, 0x01, 5, 5, 44)
+	if res != BoardNone || boat != 0 {
+		t.Errorf("不該有動作：res=%d boat=%d", res, boat)
+	}
+}
+
+// 別張子地圖的船不能上。
+func TestStepBoat_MapIDMatters(t *testing.T) {
+	ships := emptyShips()
+	ships[0] = scenario.Ship{X: 10, Y: 10, MapID: 45, Hull: 50}
+	if _, res := StepBoat(ships, 0, tileOceanA, 10, 10, 44); res != BoardNone {
+		t.Error("別張地圖的船不該上得了")
+	}
+}
+
+// 兩個海面 tile 都算海 —— 只認一個的話，摻浪花那一格會被當成陸地下船。
+func TestIsOcean_BothTiles(t *testing.T) {
+	if !IsOcean(tileOceanA) || !IsOcean(tileOceanB) {
+		t.Error("0x14 與 0x62 都是海面")
+	}
+	if IsOcean(0x01) {
+		t.Error("陸地被當成海了")
+	}
+}
