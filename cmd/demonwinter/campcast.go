@@ -376,7 +376,10 @@ func (a *app) plotCastEntries() []spellEntry {
 	if err == nil && tile == game.GlyphTile && game.GlyphIndexFor(a.mapID) >= 0 {
 		out = append(out, spellEntry{name: "解咒", plot: plotUncurse})
 	}
-	if a.mapID == game.ImprisonSubMap || a.party.Y() <= game.ImprisonMaxY {
+	// 禁錮的出現條件是「三個符印都解完」，**不是「這裡施放得會成功」** ——
+	// 後者會讓 "The spell fizzles..." 永遠走不到，等於幫玩家擋掉原版
+	// 「在錯地方施放白扣 100 點」的損失，那是改遊戲不是移植。
+	if game.CircleOfLightOpen(a.save.GlyphFlags) {
 		out = append(out, spellEntry{name: "禁錮", plot: plotImprison})
 	}
 	return out

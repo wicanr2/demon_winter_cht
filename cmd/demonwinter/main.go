@@ -191,6 +191,10 @@ func (a *app) Update() error {
 	if handled, err := a.updateQuitDialog(); handled || err != nil {
 		return err
 	}
+	// 結局要排在所有畫面之前 —— 破關之後不該還能回去紮營。
+	if a.won {
+		return a.updateEnding()
+	}
 	if a.title != nil {
 		return a.updateTitle()
 	}
@@ -304,6 +308,13 @@ func (a *app) Update() error {
 
 func (a *app) Draw(screen *ebiten.Image) {
 	a.canvas.Clear()
+	if a.won {
+		a.drawEnding(a.canvas)
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
 	if a.title != nil {
 		a.drawTitle(a.canvas)
 		if a.quitting {
@@ -900,6 +911,9 @@ func main() {
 	// 主線的 UNCURSE／IMPRISON 要 50／100 點法力，起始隊伍最高只有 29 ——
 	// 沒有這個旗標就驗不到成功路徑（`docs/re/62`）。
 	spFlag := flag.Int("sp", -1, "偵錯：全隊目前法力。負值代表用存檔裡的")
+	// 光之環的門與 IMPRISON 要三個符印都解完才驗得到，而符印散在
+	// 世界東南角三張子地圖上 —— 沒有這個旗標就得先跑完整段主線。
+	glyphsFlag := flag.Bool("glyphs", false, "偵錯：三個緋紅符印都當成已解除")
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
 	// xdotool 偶爾會漏掉一兩下，跑出來的畫面就不是預期的那座城。直接指定。
 	townFlag := flag.Int("town", 0, "偵錯：啟動後直接進入指定編號的城鎮（1–25）")
@@ -1061,6 +1075,12 @@ func main() {
 	if *goldFlag >= 0 {
 		a.setGold(*goldFlag)
 		log.Printf("偵錯：金幣設為 %d", a.gold())
+	}
+	if *glyphsFlag {
+		for i := range a.save.GlyphFlags {
+			a.save.GlyphFlags[i] = game.GlyphDone
+		}
+		log.Printf("偵錯：三個符印都設為已解除")
 	}
 	if *spFlag >= 0 {
 		for i := range a.members {

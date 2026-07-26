@@ -120,9 +120,11 @@ tools/screenshot.sh 76-glyph-cleared.png \
 |---|---|---|---|
 | 符印傷害 | ✅ | ✅ | ✅ 對照組 |
 | UNCURSE 解符印 | ✅ | ✅ | ✅ |
-| 光之環的門 | ✅ | ✅ | ❌ 還沒驗 |
-| IMPRISON | ✅ | ✅ | ❌ 還沒驗 |
-| 結局畫面 | ✅ 字串已知 | ❌ 只設 `a.won` | — |
+| 光之環的門 | ✅ | ✅ | ✅ `77-circle-barred.png` |
+| IMPRISON | ✅ | ✅ | ✅ 三種結果都驗到 |
+| 結局畫面 | ✅ 字串已知 | ✅ | ✅ `80-ending.png` |
+
+**主線全線跑通**（`docs/re/64`）。
 
 仍未解：施法選單切換成 U/I 的條件、光之環裡面的 16 格跳表、
 `EREGORE.TXT`／`T2C.TXT`／`T.TXT` 的時機。
