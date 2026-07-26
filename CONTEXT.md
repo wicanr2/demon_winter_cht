@@ -1273,6 +1273,30 @@ View mind 本身：**一支商隊只能用一次**，逐件檢查，說謊的貨
 
 **商隊畫面到此七個選項全部有著落**，從 `docs/re/32` 走了七篇。
 
+### 這一輪（2026-07-26 續二十三）：第一次真的拿原版對答案（`docs/re/54`）
+
+`docs/re/01` 建了 DOSBox 參考環境、寫明它是「裁判」，
+**但在這一輪之前沒有一次真的拿它對過**。三件事對上了：
+
+- **狀態列的數字**：金幣 65、糧食 8、五名隊員的 HP／SP 與存檔解碼逐項相同。
+  存檔往返早就 byte-for-byte 驗過，但那證明的是「讀進去再寫出來沒變」；
+  這一張證明的是「**讀出來的意思跟原版顯示的一樣**」——兩件不同的事。
+- **紮營選單 14 項**、順序完全一致（`docs/re/33` 的表、本專案的熱鍵）。
+  整個紮營子系統第一次有原版畫面背書。
+- **`Inspect character:`**：紮營的 Party 印的提示，與商隊 Inspect
+  （`ds:0x3901`）是同一句。`docs/re/52` §3.1 從組合語言推出「同一張卡」，
+  現在原版自己在畫面上印了同一句話。
+
+順帶發現原版 Party 頁有 `Print`（送印表機），本專案不做 ——
+記下來是為了讓「14 項對上、這一項沒做」是有意識的決定而不是漏掉。
+
+**價格量級還是沒對到**，原因很具體：起始存檔在地城，市集／商隊／掉寶
+四項全部需要導航，而 DOSBox 這端只能送鍵、不能查詢現在在哪。
+下一輪的做法寫在 `docs/re/54` §4：**不要用鍵盤走路，改存檔** ——
+`workplace/dosbox/game/` 是可寫副本，直接把座標寫成城鎮門口、
+遭遇倒數設成 1，**兩邊吃同一份存檔**再比。隨機的部分只能對分布，
+不能拿一次抽樣當反證。
+
 ## 3. 文件索引
 
 ### 規格層 `docs/spec/` — 實作的唯一依據
@@ -1320,6 +1344,7 @@ View mind 本身：**一支商隊只能用一次**，逐件檢查，說謊的貨
 | [`21-skills-races-and-files-dat.md`](docs/re/21-skills-races-and-files-dat.md) | **遊戲內部技能 id 表**、種族系統與修正公式、`FILES.DAT` 完整布局 |
 | [`22-resource-arena-and-passability.md`](docs/re/22-resource-arena-and-passability.md) | **18 段資源記憶體區**、**可通行性表**、子地圖退出、**事件消費者** |
 | [`26-camp-and-rest.md`](docs/re/26-camp-and-rest.md) | **紮營選單（13 選項）**、睡覺的時間與回復公式、過夜充能；順帶抓到道具槽兩個欄位標反 |
+| [`54-reference-comparison.md`](docs/re/54-reference-comparison.md) | **第一次拿 DOSBox 原版對答案**：狀態列數字、紮營 14 項、`Inspect character:` 三項對上；價格量級仍未對到（要改存檔跳過導航，做法見 §4）|
 | [`53-view-mind.md`](docs/re/53-view-mind.md) | **View mind**：一次性、逐件 2/3 機率揭穿說謊的貨（計數器 1001 → ` LIE `）；順帶解掉那個被誤讀成「詛咒機率」、又標了兩輪「用途未解」的旗標 |
 | [`52-marketplace-and-merchants.md`](docs/re/52-marketplace-and-merchants.md) | **市集與商隊共用一支常式**；商隊有七個選項（本專案只做兩個）；議價的三條分支與「翻臉就報廢那件貨」；選項數的三重交叉驗證 |
 | [`51-encounter-dispatch-corrected.md`](docs/re/51-encounter-dispatch-corrected.md) | **那道 1/64 是商隊不是戰鬥**（訂正 `docs/re/04` §2.2 與本專案的實作）；隨機戰鬥掛在動作碼 `0x16`，由 `隊伍[+0x9c]` 倒數歸零觸發 |
