@@ -63,6 +63,21 @@ func (m *Map) TileAt(x, y int) (byte, error) {
 	return m.tiles[y*MapWidth+x], nil
 }
 
+// SetTileAt 就地改寫座標 (x, y) 的 tile。
+//
+// 原版有事件會直接改寫記憶體裡的地圖緩衝區 —— 例如密語謎題答對時
+// 把牆打開（`docs/re/84`：`map[0x48b] = 0`，`0x48b` ＝ (11,18)）。
+//
+// ⚠ **改的是記憶體，不是檔案。** 原版也是如此，所以離開地城再進來，
+// 牆會回到原狀。這看起來像 bug，但那是 1988 年的行為，照抄。
+func (m *Map) SetTileAt(x, y int, t byte) error {
+	if x < 0 || x >= MapWidth || y < 0 || y >= MapHeight {
+		return fmt.Errorf("world: 座標 (%d,%d) 超出地圖範圍 [0,%d)x[0,%d)", x, y, MapWidth, MapHeight)
+	}
+	m.tiles[y*MapWidth+x] = t
+	return nil
+}
+
 // Tiles 回傳整份 tile 陣列的複本（row-major，索引 = y*MapWidth+x），
 // 長度固定 4096。回傳複本是為了避免呼叫端改到 Map 的內部狀態。
 func (m *Map) Tiles() [mapTileCount]byte { return m.tiles }

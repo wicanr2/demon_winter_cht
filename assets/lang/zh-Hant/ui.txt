@@ -99,3 +99,81 @@ A crimson forcefield bars your entry to the Circle of Light
 You are walking through ruins
 :: zh
 隊伍走過一片廢墟
+
+## site.trap
+:: en
+A trap!
+:: zh
+有陷阱！
+
+## eregore.shattered
+:: zh
+春之石碎了。冬天開始了。
+
+## riddle.priest.0
+:: en
+A spectral priest utters a chant:
+:: zh
+一位幽靈司祭低聲吟誦：
+
+## riddle.priest.1
+:: en
+'Power, Divinity, Spirit...' and
+:: zh
+「力量、神性、靈魂……」
+
+## riddle.priest.2
+:: en
+awaits the final word of the spell
+:: zh
+然後等著你說出咒文的最後一個詞。
+
+## riddle.priest.wrong
+:: en
+The priest fades away into mist
+:: zh
+司祭化成霧氣散去了。
+
+## riddle.temple.0
+:: en
+A voice from nowhere speaks: 'Only
+:: zh
+不知何處傳來一個聲音：
+
+## riddle.temple.1
+:: en
+those who worship Malifon may enter
+:: zh
+「唯有信奉馬利馮的人能進這座神殿。
+
+## riddle.temple.2
+:: en
+this temple. What is thy name?'
+:: zh
+　報上你的名字。」
+
+## riddle.temple.right
+:: en
+You may enter.
+:: zh
+你可以進去。
+
+## riddle.temple.wrong0
+:: en
+You are not known to this temple.
+:: zh
+這座神殿不認得你。
+
+## riddle.temple.wrong1
+:: en
+ Leave at once.
+:: zh
+立刻離開。
+
+## riddle.answer
+:: zh
+答案（英文，按 Enter 送出）：
+
+## riddle.cancel
+:: zh
+Esc：離開

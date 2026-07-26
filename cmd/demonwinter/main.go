@@ -178,6 +178,8 @@ type app struct {
 	eregoreText *scenario.StoryText
 	// eregore 非 nil 時螢幕上正在播艾瑞戈爾那一場（`docs/re/83`）。
 	eregore *eregoreScreen
+	// riddle 非 nil 時螢幕上正在作答密語謎題（`docs/re/84`）。
+	riddle *riddleScreen
 
 	// winText 是 WIN.TXT 的結局文字（`docs/re/82`）；讀不到時為 nil。
 	winText *scenario.StoryText
@@ -244,6 +246,9 @@ func (a *app) Update() error {
 	}
 	if a.eregore != nil {
 		return a.updateEregore()
+	}
+	if a.riddle != nil {
+		return a.updateRiddle()
 	}
 	if a.manualUI != nil {
 		return a.updateManual()
@@ -414,6 +419,14 @@ func (a *app) Draw(screen *ebiten.Image) {
 	if a.eregore != nil {
 		a.canvas.Fill(color.Black)
 		a.drawEregore(a.canvas)
+		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
+		op.GeoM.Scale(scale, scale)
+		screen.DrawImage(a.canvas, op)
+		return
+	}
+	if a.riddle != nil {
+		a.canvas.Fill(color.Black)
+		a.drawRiddle(a.canvas)
 		op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 		op.GeoM.Scale(scale, scale)
 		screen.DrawImage(a.canvas, op)
@@ -1125,6 +1138,9 @@ func main() {
 	// 而它有七條分支、十頁文字 —— 全部都是視覺產物，得逐頁 dump 比對。
 	eregoreFlag := flag.Int("eregore", -1,
 		"偵錯：直接播艾瑞戈爾那一場。0 = 第一次見面，1 = 談崩過一次（直接播結尾）")
+	// 兩道密語謎題各在一張地城深處，而且是全遊戲僅有的自由文字輸入。
+	riddleFlag := flag.Int("riddle", -1,
+		"偵錯：直接出一道密語謎題（10 = 幽靈司祭／VOID，11 = 神殿門房／JESRIC）")
 	ruinsFlag := flag.Bool("ruins", false,
 		"偵錯：世界已成廢墟（神殿 tile 畫成廢墟、城鎮不再進得去）")
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
@@ -1316,6 +1332,10 @@ func main() {
 	if *goldFlag >= 0 {
 		a.setGold(*goldFlag)
 		log.Printf("偵錯：金幣設為 %d", a.gold())
+	}
+	if *riddleFlag >= 0 {
+		a.openRiddle(*riddleFlag)
+		log.Printf("偵錯：密語謎題 %d", *riddleFlag)
 	}
 	if *eregoreFlag >= 0 {
 		a.openEregore(*eregoreFlag == 1)

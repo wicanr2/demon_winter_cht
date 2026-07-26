@@ -34,11 +34,14 @@ type eregoreScreen struct {
 // case 編號是**全域唯一**的（1–15 分佈在五張子地圖，零碰撞，
 // `docs/re/83` §2），所以不必再配地圖編號。
 //
-// **只有 14（艾瑞戈爾）接上了。** 其餘 14 個 case 的內容在
-// `docs/re/65` §3 都讀出來了，但引擎還沒實作 —— 這裡明確報未接，
+// **接上的是 10／11（兩道密語）與 14（艾瑞戈爾）。** 其餘 12 個 case
+// 的內容在 `docs/re/65` §3 都讀出來了，但引擎還沒實作 —— 這裡明確報未接，
 // 不要靜默什麼都不做，那會讓人以為那一格本來就沒事。
 func (a *app) locationPlot(c int) {
 	switch c {
+	case game.RiddleCaseSpectralPriest, game.RiddleCaseTempleName:
+		a.openRiddle(c)
+
 	case scenario.PlotCaseEregore:
 		if a.save.ShardShattered != 0 {
 			// 談過了。原版此時回 3，等於這一格沒反應（`0x1a55f`）。
