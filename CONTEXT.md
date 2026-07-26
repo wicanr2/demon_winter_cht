@@ -1488,6 +1488,7 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`35-battle-deployment.md`](docs/re/35-battle-deployment.md) | **開戰擺位**：隊伍照陣型站中央、怪物散在 ±2、地圖兼作佔位表；單位結構間距 38、玩家從槽位 7 起；9×9 是捲動視窗不是邊界 |
 | [`34-formation-grid.md`](docs/re/34-formation-grid.md) | **3×3 陣型格**（trailer `+0x00`–`+0x08`）：四個呼叫端、Reorder 是整張重填、佈陣的座標換算（讀出來但未接）|
 | [`33-camp-menu-items.md`](docs/re/33-camp-menu-items.md) | **紮營選單 14 項**的完整對照（名稱／快捷鍵／處理常式）＋ Drop 與 Trade 的規則；訂正 `docs/re/26` 的 13 項與「順序對不上」|
+| [`67-temple-stairway.md`](docs/re/67-temple-stairway.md) | **神殿後面的樓梯**：直接寫座標傳送到子地圖 1 的 `(22,21)`；與起始存檔同一張地圖，疑似捷徑而非隱藏關卡 |
 | [`66-remaining-jumptables.md`](docs/re/66-remaining-jumptables.md) | **剩下五張跳表一次清完**（B7 清空）：地城陷阱 9 格、神殿 9 格（含沒被記載過的「後面的樓梯」）、角色檢視 12 格；定位方法可批次腳本化 |
 | [`65-location-event-dispatch.md`](docs/re/65-location-event-dispatch.md) | **地點劇情事件 16 格**（動作 `0x12` 的內層分派）：壓牆陷阱、殺 Xeres 的武器、**兩道密碼 `VOID`／`JESRIC`**、鐘、墓碑、光之環的門；附「用已知的表反推 `cs base`」的方法 |
 | [`64-mainline-playable.md`](docs/re/64-mainline-playable.md) | **主線全線實機驗收**（七段截圖），與一個「把成功條件當顯示條件會抹掉失敗分支」的實作缺陷 |
@@ -1833,7 +1834,7 @@ A1 → A2 → A3 是一條鏈：讀完那 21 格才知道事件能做什麼，
 | B5 | `ITEMS.DAT` `f1`–`f6` | 30 件商品的值已 dump，逐欄語意未定 |
 | B6 | 時間 wrap 值 `38/35/23` | 對不上手冊的「一天 26 小時」。`0x26` 字面就是 38 —— 疑似當年把十六進位當十進位讀 |
 | ~~B7~~ | ~~六張未讀的 switch 跳表~~ | **清空**（`docs/re/65`、`66`）：地城陷阱 9 格、神殿 9 格、角色檢視 12 格、地點劇情 16 格、主指令迴圈 19 格（那張本來就記在 `docs/re/12`）、子常式群 7 格 |
-| B9 | **神殿後面的樓梯** | `0x1c0d8` case 8：`The priest shows you to a stairway in the back.` —— `docs/re/29`／`43` 都沒提過的入口，條件與去向未讀 |
+| B9 | 神殿後面的樓梯 | **去向已解**（`docs/re/67`）：傳送到子地圖 1 的 `(22,21)`，而起始存檔就在子地圖 1 的 `(9,32)` —— 同一張地圖，疑似回起始地城的捷徑。**觸發條件未讀**（選單選項 10，清單不在那一段），`docs/re/19` §3 的神殿服務清單要補上這第四項 |
 | B10 | 地城陷阱的**數值** | 分派表已解（`docs/re/66` §3），傷害量與解除判定的數字還沒讀 |
 | B8 | 零星 trailer 欄位 | `+0x9c` 兩處不明重置（151–200、1）、`+0xbe` 閘門（**已知擋的是 `docs/re/65` case 14**，語意仍未定）、`+0xc1` 門檻、`+0x09`、戶外商隊 size base `[0x4c90]` |
 
