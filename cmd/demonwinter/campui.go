@@ -33,6 +33,9 @@ type campScreen struct {
 
 	// items 是 Drop／Trade 共用的游標；nil 代表沒在進行（見 campitems.go）。
 	items *itemPicker
+
+	// reorder 是排陣型的進行狀態；nil 代表沒在進行（見 campreorder.go）。
+	reorder *reorderScreen
 }
 
 // openCamp 進入紮營畫面。
@@ -52,6 +55,9 @@ func (a *app) updateCamp() error {
 	}
 	if c.items != nil {
 		return a.updateItemPicker()
+	}
+	if c.reorder != nil {
+		return a.updateReorder()
 	}
 
 	switch {
@@ -75,6 +81,8 @@ func (a *app) updateCamp() error {
 		a.openItemAction(itemActionDrop)
 	case inpututil.IsKeyJustPressed(ebiten.KeyT):
 		a.openItemAction(itemActionTrade)
+	case inpututil.IsKeyJustPressed(ebiten.KeyR):
+		a.openReorder()
 	}
 	return nil
 }
@@ -214,6 +222,11 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		return
 	}
 
+	if c.reorder != nil {
+		a.drawReorder(line)
+		return
+	}
+
 	if a.clock.CanSleep() {
 		line("  S 睡覺")
 	} else {
@@ -222,6 +235,7 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 	line("  H 打獵")
 	line("  E 換裝")
 	line("  D 丟棄　T 交給隊友")
+	line("  R 排列陣型")
 	line("")
 	line("Esc：收帳篷")
 	line("")
@@ -230,7 +244,7 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		line("")
 	}
 	line("※ 原版的紮營選單有 14 項，這裡只做了規則已解出的")
-	line("　 睡覺、打獵、換裝、丟棄、轉手，其餘見 docs/re/33")
+	line("　 睡覺、打獵、換裝、丟棄、轉手、陣型，其餘見 docs/re/33")
 }
 
 func (a *app) drawEquipPicker(line func(string)) {

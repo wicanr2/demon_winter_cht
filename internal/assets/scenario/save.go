@@ -104,12 +104,27 @@ const trailerLen = 194
 
 // 以下常數是 trailer 內部的已知／待複核欄位位移，全部相對 trailerStart（0x514）。
 const (
-	// formationOrderOffset/Len：**假設**「隊形/順序表」。PARTY.DAT 內容
-	// 00 ff 01 ff 02 ff 03 ff 04 00、PARTY.BAK 是 00 01 02 03 04 ff ff ff ff 00，
-	// 兩者都出現角色索引 0-4 並伴隨大量 0xFF，支持「這是隊形/順序表、
-	// 0xFF=空位」的假設，但排列方式的實際意義未解。
-	formationOrderOffset = 0x00
-	formationOrderLen    = 10
+	// formationOffset/Len：**3×3 陣型格**（已驗證，見 `docs/re/34`）。
+	// 九個 byte 各存一名成員的編號，0xFF 是空格。排法就是紮營選單
+	// Reorder 畫面上的那張圖：
+	//
+	//	   A B C      cell 0 1 2
+	//	   D E F      cell 3 4 5
+	//	   G H I      cell 6 7 8
+	//
+	// 原本標「假設」，長度也猜成 10。四個呼叫端把它釘死了：Reorder
+	// （`1000:0379` 先把 9 格清成 0xFF 再逐一填）、離隊（`0x14af2`
+	// 清掉該員並把大於他的編號往前挪）、入隊（`0x15089` 找第一個空格）、
+	// 佈陣（`0xc615` 把格號換算成相對座標）。四處的迴圈上界都是 9。
+	//
+	// PARTY.DAT 是 `00 ff 01 ff 02 ff 03 ff 04`（五人散在 A C E G I），
+	// PARTY.BAK 是 `00 01 02 03 04 ff ff ff ff`（擠在前五格）—— 都合理。
+	formationOffset = 0x00
+	formationLen    = 9
+
+	// unknown09Offset 是陣型格與金幣之間那一個 byte。兩份存檔都是 0，
+	// 語意未解。**它原本被 formationOrderLen = 10 吃掉了。**
+	unknown09Offset = 0x09
 
 	// goldOffset：隊伍金幣，**4 bytes（0x0a–0x0d）**。
 	//
@@ -304,8 +319,11 @@ type SaveGame struct {
 	// Characters 是隊伍的 5 名角色，順序與檔案內原始順序一致。
 	Characters [numCharacters]Character
 
-	// FormationOrder 是隊形/順序表（**假設**，見 formationOrderOffset 註解）。
-	FormationOrder [formationOrderLen]byte
+	// Formation 是 3×3 陣型格（見 formationOffset 註解）。
+	Formation [formationLen]byte
+
+	// Unknown09 是陣型格與金幣之間那一個 byte，語意未解。
+	Unknown09 byte
 
 	// Gold 是隊伍金幣（4 bytes little-endian，見 goldOffset 註解）。
 	Gold int
@@ -406,7 +424,8 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 
 	trailer := data[trailerStart : trailerStart+trailerLen]
 	copy(save.TrailerRaw[:], trailer)
-	copy(save.FormationOrder[:], trailer[formationOrderOffset:formationOrderOffset+formationOrderLen])
+	copy(save.Formation[:], trailer[formationOffset:formationOffset+formationLen])
+	save.Unknown09 = trailer[unknown09Offset]
 	save.Gold = le4(trailer[goldOffset : goldOffset+goldLen])
 	copy(save.LDFlags[:], trailer[ldFlagsOffset:ldFlagsOffset+ldFlagsLen])
 	save.MapID = trailer[mapIDOffset]

@@ -46,7 +46,8 @@ func (s *SaveGame) Encode() ([]byte, error) {
 	encodeShips(trailer[:], s.Ships)
 	putByte(trailer[:], boatOffset, s.Boat)
 	putByte(trailer[:], unknownC1Offset, s.UnknownC1)
-	copy(trailer[formationOrderOffset:], s.FormationOrder[:])
+	copy(trailer[formationOffset:], s.Formation[:])
+	putByte(trailer[:], unknown09Offset, s.Unknown09)
 	copy(trailer[ldFlagsOffset:], s.LDFlags[:])
 	putLE4(trailer[:], goldOffset, s.Gold)
 
