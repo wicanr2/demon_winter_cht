@@ -181,6 +181,10 @@ type app struct {
 	// riddle 非 nil 時螢幕上正在作答密語謎題（`docs/re/84`）。
 	riddle *riddleScreen
 
+	// trace 非 nil 時把每一次狀態變化寫進軌跡檔（`-trace`）。
+	// 這是 A4 全程試玩的驗收工具，見 trace.go。
+	trace *tracer
+
 	// winText 是 WIN.TXT 的結局文字（`docs/re/82`）；讀不到時為 nil。
 	winText *scenario.StoryText
 	// ending 是結局序列的播放狀態。
@@ -231,6 +235,13 @@ var keyFacing = []struct {
 }
 
 func (a *app) Update() error {
+	// 軌跡在每一幀結束時取樣。放在最外層而不是各畫面裡，
+	// 是為了不必在二十個 update 函式各插一行 —— 漏掉一個就會有一段黑洞。
+	defer func() { a.trace.state(a.traceState()) }()
+	return a.update()
+}
+
+func (a *app) update() error {
 	if handled, err := a.updateQuitDialog(); handled || err != nil {
 		return err
 	}
@@ -1139,6 +1150,10 @@ func main() {
 	eregoreFlag := flag.Int("eregore", -1,
 		"偵錯：直接播艾瑞戈爾那一場。0 = 第一次見面，1 = 談崩過一次（直接播結尾）")
 	// 兩道密語謎題各在一張地城深處，而且是全遊戲僅有的自由文字輸入。
+	// A4 全程試玩要能事後逐行核對「走了幾步、到了哪、觸發了什麼」。
+	// 只有截圖的話，漏掉一次按鍵在畫面上完全看不出來。
+	traceFlag := flag.String("trace", "",
+		"驗收：把每一次狀態變化寫進這個檔（全程試玩用，見 trace.go）")
 	riddleFlag := flag.Int("riddle", -1,
 		"偵錯：直接出一道密語謎題（10 = 幽靈司祭／VOID，11 = 神殿門房／JESRIC）")
 	ruinsFlag := flag.Bool("ruins", false,
@@ -1273,6 +1288,7 @@ func main() {
 	}
 
 	a := &app{
+		trace:      newTracer(*traceFlag),
 		world:      game.NewWorld(m, tables),
 		party:      newPartyAt(px, py, save),
 		clock:      game.ClockAt(int(save.Hour), int(save.Day), int(save.Month), int(save.TimeCounter)),
@@ -1425,6 +1441,9 @@ func main() {
 	ebiten.SetWindowSize(layout.CanvasWidth*scale, layout.CanvasHeight*scale)
 	ebiten.SetWindowTitle("冬之魔 Demon's Winter")
 
+	defer a.trace.close()
+	a.trace.note("啟動：地圖 %d，隊伍在 (%d,%d)，%d 人",
+		mapID, a.party.X(), a.party.Y(), len(a.members))
 	if err := ebiten.RunGame(a); err != nil && err != ebiten.Termination {
 		log.Fatal(err)
 	}
