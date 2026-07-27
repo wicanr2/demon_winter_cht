@@ -555,11 +555,20 @@ func (a *app) refusalText(index int, r game.DungeonRefusal, msg string) string {
 	return ""
 }
 
-// dungeonSourceFile 是地城道具名在翻譯檔裡的來源標籤。
+// dungeonSourceFile 是地城道具字串在翻譯目錄裡的 key。
 //
-// 索引用的是 `FILES.DTT` 的**絕對條目編號**（第 i 件的 `+0` 欄
-// ＝ `164 + i×6`），與 `cmd/dwstrings` 抽出來的編號同一套。
-const dungeonSourceFile = "FILES.DTT"
+// **它不是檔名。** 那 300 條躺在 `FILES.DTT` 裡（索引 164–463），
+// 但 `FILES.DTT` 這個 key 已經被**法術名**用掉了（`cmd/dwstrings` 的
+// `spellSource`）—— 與 `SKILLS`／`MONTHS` 同一個情況：字串同源、
+// 索引語意不同，擠在同一個目錄裡只會讓人對錯條目，
+// 而且 `dwstrings spells` 重生那個目錄時會把這些條目沖掉。
+//
+// 索引沿用 `FILES.DTT` 的**絕對條目編號**（第 i 件的 `+0` 欄 ＝ `164 + i×6`），
+// 這樣抽字工具日後補上 `dungeonitems` 子指令時對得起來。
+//
+// ⚠ **那 300 條目前還沒抽、也還沒翻**，所以畫面上是英文
+// （`/Iron key`、`One of the rats runs out…`）。見 `CONTEXT.md` §7 A10。
+const dungeonSourceFile = "DUNGEONITEM"
 
 // dungeonStringIndex 把名字換回 `FILES.DTT` 的條目編號，給翻譯查表用。
 // 找不到就回 −1（`tr.Event` 會退回原文）。
