@@ -34,10 +34,10 @@ type eregoreScreen struct {
 // case 編號是**全域唯一**的（1–15 分佈在五張子地圖，零碰撞，
 // `docs/re/83` §2），所以不必再配地圖編號。
 //
-// **接上的是 1／2（壓牆走廊）、4（鐵匠鋪）、10／11（兩道密語）、
-// 14（艾瑞戈爾）與 15（光之環的門）。**
-// 其餘 8 個 case 的字串在 `docs/re/65` §3 抄出來了，但**函式內容還沒讀**
-// （3／5／12／13 只有字串；6／7／8／9 連字串都沒有）——
+// **只剩 6／7／8／9 沒接** —— 那四個連字串都還沒讀出來
+// （6 與 9 各 8 bytes 是轉呼叫），而它們正是「劇情送道具」跳表
+// 最後兩個 param 的呼叫端（`docs/re/99` §2）。
+//
 // 這裡明確報未接，不要靜默什麼都不做，那會讓人以為那一格本來就沒事。
 func (a *app) locationPlot(c int) {
 	switch c {
@@ -50,6 +50,12 @@ func (a *app) locationPlot(c int) {
 	case plotCaseArmory:
 		// 四座台座共用一個 case，靠座標算出是哪一件。
 		a.openArmory(a.party.X(), a.party.Y())
+	case plotCaseTombstones:
+		a.shiftTombstones()
+	case plotCaseBell:
+		a.ringBell()
+	case plotCaseNpcBed:
+		a.sleepAtNpc()
 
 	case game.RiddleCaseSpectralPriest, game.RiddleCaseTempleName:
 		a.openRiddle(c)

@@ -72,6 +72,8 @@ type app struct {
 	dungeon *dungeonScreen
 	// plotGift 是劇情送道具的畫面（地點劇情 case 3 兵器庫、case 4 鐵匠鋪）。
 	plotGift *plotGiftScreen
+	// confirm 是通用的是非題（地點劇情 case 12 鐘、case 13 旅人的床）。
+	confirm *confirmScreen
 	// itemloc 是地城道具的位置表（`ITEMLOCB.DAT`）。**它是存檔的一部分** ——
 	// 拿走一件就地改寫，不寫回去的話關掉遊戲東西就都回來了。
 	itemloc *scenario.ItemLocTable
@@ -384,6 +386,11 @@ func (a *app) update() error {
 	if a.plotGift != nil {
 		return a.updatePlotGift()
 	}
+	// 是非題同理：Y／N 不撞方向鍵，但它一樣得排在移動之前 ——
+	// 不然按 N 之後那一步會照樣走出去。
+	if a.confirm != nil {
+		return a.updateConfirm()
+	}
 
 	for _, kf := range keyFacing {
 		if !inpututil.IsKeyJustPressed(kf.key) {
@@ -644,6 +651,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawDungeon(a.canvas)
 	case a.plotGift != nil && !a.box.Active():
 		a.drawPlotGift(a.canvas)
+	case a.confirm != nil:
+		a.drawConfirm(a.canvas)
 	case a.showRoster:
 		a.drawRoster(a.canvas)
 	default:

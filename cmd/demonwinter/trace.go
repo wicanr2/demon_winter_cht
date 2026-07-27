@@ -147,6 +147,8 @@ func (a *app) screenName() string {
 		return "地城道具"
 	case a.plotGift != nil:
 		return "劇情道具"
+	case a.confirm != nil:
+		return "是非題"
 	}
 	return "野外"
 }

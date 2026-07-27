@@ -25,6 +25,12 @@ const (
 	plotCaseArmory = 3
 	// plotCaseBlacksmith 是鐵匠鋪（見 plotgiftui.go）。
 	plotCaseBlacksmith = 4
+	// plotCaseTombstones 是墓園重排（地圖 3，見 tombstoneui.go）。
+	plotCaseTombstones = 5
+	// plotCaseBell 是那口鐘（地圖 1 的 (26,8)，見 bellui.go）。
+	plotCaseBell = 12
+	// plotCaseNpcBed 是旅人的床（地圖 4 的 (21,57)，見 bellui.go）。
+	plotCaseNpcBed = 13
 )
 
 // resetCrushingWalls 是 case 1：從檔案重讀地圖。
