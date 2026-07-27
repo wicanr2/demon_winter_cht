@@ -34,8 +34,7 @@ type eregoreScreen struct {
 // case 編號是**全域唯一**的（1–15 分佈在五張子地圖，零碰撞，
 // `docs/re/83` §2），所以不必再配地圖編號。
 //
-// **只剩 6 沒接** ＝ 矮人大師的附魔工坊（也就是 worklist C2 的入口），
-// 那是一整套服務，不是一格小工作。
+// **16 格全部接上了**（`docs/re/65`／`83`／`98`–`102`）。
 //
 // 這裡明確報未接，不要靜默什麼都不做，那會讓人以為那一格本來就沒事。
 func (a *app) locationPlot(c int) {
@@ -61,6 +60,8 @@ func (a *app) locationPlot(c int) {
 		a.enterProvingRoom()
 	case plotCaseOrb:
 		a.openOrb()
+	case plotCaseWorkshop:
+		a.openWorkshop()
 
 	case game.RiddleCaseSpectralPriest, game.RiddleCaseTempleName:
 		a.openRiddle(c)

@@ -1,6 +1,8 @@
 package game
 
 import (
+	"math"
+
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 )
@@ -82,24 +84,36 @@ func chargeBonus(slot scenario.InventorySlot) int {
 // `+0x0c` 那一組一模一樣。這兩個 byte 是掉寶生成器寫的特效級數
 // （`docs/re/48` §6.1），**詛咒品是負的，所以會扣分**。
 //
-// **這裡不能用「1.4 × 250 = 350」的整數捷徑。** 原版先算 `1.4 × |n|`
-// 再乘 250，浮點誤差在第一步就進去了：`n = 3` 時算出來是 1049 不是 1050。
-// 第二、三項可以用整數（270／214）是因為它們**先乘整數再乘小數**，
-// 順序不同結果就不同 —— 同一個「小數乘出整數」的樣子，安全性不一樣。
+// ⚠ **1.4 是指數不是係數**（2026-07-27 訂正，`docs/re/102`）。
+//
+// 原版是 `2000:78dc(|n|, 1.4)` 再乘 250，而 `2000:78dc` 是**手寫的 pow**：
+// `0x1b4dc` 那一支先 `log`（`3000:094c`）→ 乘上那個 double → `exp`
+// （`3000:0cba`），開頭還有一道 `n == 0 → 回 0.0` 的守衛 ——
+// 那正是 `exp(y·ln x)` 需要的（`ln 0` 沒有定義）。
+//
+// 本檔原本把它讀成「`1.4 × |n|` 再乘 250」，並且花了一整節論證
+// 「不能用 1.4 × 250 = 350 的整數捷徑」。**那一節的推理沒錯，前提錯了** ——
+// 它假設那是乘法。裁決證據是附魔費用：附魔費用 ＝ 估價差 × (20−材質) ÷ 10，
+// 而攻略的 80 個點只有指數版對得上（見 EnchantCost）。
 const (
-	effectValueBase = 1.4
-	effectValueMul  = 250.0
+	// effectValueExp 是指數，effectValueMul 是係數。
+	effectValueExp = 1.4
+	effectValueMul = 250.0
 )
 
-// 估價的第六項：附魔（`278d:1eeb`）。
+// 估價的第六項：附魔（`278d:1eeb` ＝ `0x1d3eb`）。
 //
-//	加價 = trunc(1.7 × |附魔| × (武器 350／護甲 700))
+//	加價 = trunc(|附魔|^1.7 × (武器 350／護甲 700))
+//
+// **1.7 是指數不是係數** —— 同 effectValueExp 的訂正（`docs/re/102`）。
+// 這一項是整條附魔費用鏈的源頭：附魔費用就是它的差值乘上材質折扣，
+// 所以攻略那 80 個點同時驗證了這裡的指數。
 //
 // **取的是絕對值而且沒有補回符號** —— 負附魔（詛咒品）在這一項照樣加分。
 // 型別 13 以上（王冠、飾品、藥水）完全沒有這一項，與掉寶生成器
 // 「飾品以上不長附魔」剛好對得起來（`docs/re/48` §4）。
 const (
-	enchantValueBase   = 1.7
+	enchantValueExp    = 1.7
 	enchantValueWeapon = 350.0
 	enchantValueArmour = 700.0
 	// 型別分界（這支常式直接讀槽 `+0x00`，是 0-based）。
@@ -117,7 +131,7 @@ func effectValueTerm(raw int) int {
 	if magnitude < 0 {
 		magnitude = -magnitude
 	}
-	v := int(effectValueBase * magnitude * effectValueMul)
+	v := int(math.Pow(magnitude, effectValueExp) * effectValueMul)
 	if n < 0 {
 		return -v
 	}
@@ -137,7 +151,7 @@ func enchantValueTerm(slot scenario.InventorySlot) int {
 	if magnitude < 0 {
 		magnitude = -magnitude
 	}
-	return int(enchantValueBase * magnitude * coefficient)
+	return int(math.Pow(magnitude, enchantValueExp) * coefficient)
 }
 
 // ItemValue 回傳道具的估價。

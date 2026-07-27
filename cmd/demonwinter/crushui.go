@@ -33,6 +33,8 @@ const (
 	plotCaseNpcBed = 13
 	// plotCaseDemonCrystal 是惡魔水晶（地圖 4 的 (7,4)，見 plotgiftui.go）。
 	plotCaseDemonCrystal = 7
+	// plotCaseWorkshop 是矮人大師的附魔工坊（地圖 2 的 (28,5)，見 workshopui.go）。
+	plotCaseWorkshop = 6
 	// plotCaseOrb 是恆世寶珠（地圖 2 的 (42,28)，見 plotgiftui.go）。
 	plotCaseOrb = 8
 	// plotCaseProving 是十間試煉室（地圖 2，見 provingui.go）。

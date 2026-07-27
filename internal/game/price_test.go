@@ -119,15 +119,19 @@ func TestItemValue_ManyChargesBoundary(t *testing.T) {
 	}
 }
 
-// 第四、五項：兩組特效值。**不能用 350×n 的整數捷徑** ——
-// 原版先算 1.4×|n| 再乘 250，n=3 時算出來是 1049 不是 1050。
+// 第四、五項：兩組特效值。**1.4 是指數不是係數**（`docs/re/102`）——
+// 原版是 `pow(|n|, 1.4) × 250`，那支 pow 是手寫的 log→乘→exp。
+//
+// 這幾個預期值原本寫成 `1.4 × |n| × 250`（n=1 → 350、n=3 → 1049），
+// 那是把 pow 讀成乘法的結果。裁決證據在附魔費用那一側：
+// 附魔費用 ＝ 估價差 × (20−材質) ÷ 10，而攻略 80 個點只有指數版對得上。
 func TestItemValue_EffectTerms(t *testing.T) {
 	cases := []struct{ raw, want int }{
 		{0, 0},     // 沒有這一項
-		{11, 350},  // n = 1
-		{13, 1049}, // n = 3 —— 捷徑會算成 1050
-		{9, -350},  // n = −1，詛咒品扣分
-		{7, -1049}, // n = −3
+		{11, 250},  // n = 1 → 1^1.4 × 250
+		{13, 1163}, // n = 3 → 3^1.4 × 250 = 1163
+		{9, -250},  // n = −1，詛咒品扣分
+		{7, -1163}, // n = −3
 	}
 	for _, tc := range cases {
 		slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectAByte: tc.raw}
@@ -137,8 +141,8 @@ func TestItemValue_EffectTerms(t *testing.T) {
 	}
 	// 兩組是獨立相加的。
 	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectAByte: 11, EffectBByte: 11}
-	if got := ItemValue(0, slot); got != 700 {
-		t.Errorf("兩組各 +1 的估價 %d，預期 700", got)
+	if got := ItemValue(0, slot); got != 500 {
+		t.Errorf("兩組各 +1 的估價 %d，預期 500", got)
 	}
 }
 
@@ -150,15 +154,20 @@ func max0(v int) int {
 	return v
 }
 
-// 第六項：附魔。武器 ×350、護甲 ×700，型別 13 以上完全沒有這一項。
+// 第六項：附魔。**1.7 是指數**（`docs/re/102`）：武器 `350 × n^1.7`、
+// 護甲加倍，型別 13 以上完全沒有這一項。
+//
+// 這一項是附魔費用的源頭，所以攻略那 80 個點同時把它驗了
+// （見 TestEnchantCostMatchesWalkthrough）。
 func TestItemValue_EnchantTerm(t *testing.T) {
 	cases := []struct {
 		typ, enchant, want int
 	}{
-		{3, 2, 1190},  // 武器 +2：trunc(1.7×2×350)
-		{3, 3, 1784},  // 武器 +3：捷徑 595×3 = 1785，實際少 1
-		{10, 2, 2380}, // 護甲 +2：係數加倍
-		{3, -2, 1190}, // **負附魔照樣加分** —— 原版取絕對值沒補回符號
+		{3, 1, 350},   // 武器 +1：1^1.7 × 350
+		{3, 2, 1137},  // 武器 +2：2^1.7 = 3.2490 → ×350
+		{3, 3, 2265},  // 武器 +3：3^1.7 = 6.4730 → ×350
+		{10, 2, 2274}, // 護甲 +2：係數加倍
+		{3, -2, 1137}, // **負附魔照樣加分** —— 原版取絕對值沒補回符號
 		{19, 4, 0},    // 寶石：型別 13 以上沒有這一項
 	}
 	for _, tc := range cases {

@@ -149,6 +149,8 @@ func (a *app) screenName() string {
 		return "劇情道具"
 	case a.confirm != nil:
 		return "是非題"
+	case a.workshop != nil:
+		return "附魔工坊"
 	}
 	return "野外"
 }

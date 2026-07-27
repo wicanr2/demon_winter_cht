@@ -74,6 +74,8 @@ type app struct {
 	plotGift *plotGiftScreen
 	// confirm 是通用的是非題（地點劇情 case 12 鐘、case 13 旅人的床）。
 	confirm *confirmScreen
+	// workshop 是矮人大師的附魔工坊（地點劇情 case 6 ＝ worklist C2）。
+	workshop *workshopScreen
 	// itemloc 是地城道具的位置表（`ITEMLOCB.DAT`）。**它是存檔的一部分** ——
 	// 拿走一件就地改寫，不寫回去的話關掉遊戲東西就都回來了。
 	itemloc *scenario.ItemLocTable
@@ -399,6 +401,9 @@ func (a *app) update() error {
 	if a.confirm != nil {
 		return a.updateConfirm()
 	}
+	if a.workshop != nil {
+		return a.updateWorkshop()
+	}
 
 	for _, kf := range keyFacing {
 		if !inpututil.IsKeyJustPressed(kf.key) {
@@ -661,6 +666,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawPlotGift(a.canvas)
 	case a.confirm != nil:
 		a.drawConfirm(a.canvas)
+	case a.workshop != nil && !a.box.Active():
+		a.drawWorkshop(a.canvas)
 	case a.showRoster:
 		a.drawRoster(a.canvas)
 	default:
