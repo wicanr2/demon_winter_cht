@@ -60,8 +60,8 @@
 | case | 位址 | 字串 | 判讀 |
 |---|---|---|---|
 | 0 | `0x1a5f8` | — | 預設（回 2）|
-| 1 | `0x19f5b` | `You hear the whirring of massive machinery` | 機關啟動 |
-| 2 | `0x19f84` | `Your party has been` / `crushed by the walls.` | **壓牆陷阱：全隊死亡** |
+| 1 | `0x19f5b` | `You hear the whirring of massive machinery` | **壓牆走廊復位**（見 §3.1）|
+| 2 | `0x19f84` | `Your party has been` / `crushed by the walls.` | **壓牆走廊推進 ＋ 全隊死亡**（見 §3.1）|
 | 3 | `0x1a03c` | `%s%s%s` / `Do you approach?` | 接近詢問 |
 | 4 | `0x1a0f9` | `I have been working on a new weapon.` / `It is designed for the ones` / `who wish to kill Xeres!` | **NPC：打造對付 Xeres 的武器** |
 | 5 | `0x1a169` | `The tombstones` / `shift before you` | 墓碑移動 |
@@ -75,6 +75,56 @@
 | 13 | `0x1a4b8` | `Do you wish to sleep here?` / `She bids you farewell and adds 'May the Ancients protect you...'` | NPC 過夜 |
 | 14 | `0x1a54b` | — | 26 bytes，檢查 `party+0xbe` |
 | 15 | `0x1a565` | `A crimson forcefield bars your entry to the Circle of Light` | **光之環的門**（`docs/re/59`）|
+
+### 3.1 case 1／2 是一組：壓牆走廊（地圖 1，2026-07-27 讀完）
+
+兩格分別在走廊的兩端與中段（`docs/re/83` §2），合起來是一個完整的機關。
+
+**case 1（`0x19f5b`）—— 復位：**
+
+```
+19f5b  do { ax = 122f:28d0(1, 0) } while (ax != 0)   ; ← 模式 0 ＝ **重新載入** MAP1.MAP
+19f74  印 ds:0x2b2f "You hear the whirring of massive machinery"
+```
+
+`122f:28d0` 就是 `docs/re/95` §3.9 那支存／載地圖的常式，這裡第二個參數
+是 **0（載入）**。所以「沉重機械的聲音」＝ 牆整組退回原位。
+
+**case 2（`0x19f84`）—— 推進 ＋ 判死：**
+
+```
+; 找第一列還不是牆的（只看 x = 0x10 那一欄）
+19f89  for y = 0x23(35) .. 0x26(38):
+19f9e    if map[y×64 + 0x10] != 0x0d { found = y; break }
+       ; 全是牆就維持 found = 0
+
+; 把上下兩側各填一列，六格寬
+19fb6  for x = 0x10(16) .. 0x15(21):
+19fcc    map[found×64 + x]           = 0x0d
+19fe1    map[(0x4c − found)×64 + x]  = 0x0d      ; 0x4c = 76，鏡射軸 ＝ 38
+
+; 隊伍腳下現在是牆嗎
+19ff0  si = 隊伍Y×64 + 隊伍X
+1a002  if map[si] == 0x0d:
+1a00e    印 "Your party has been" / "crushed by the walls."  → 全隊死亡
+```
+
+鏡射：35→41、36→40、37→39、38→38，**兩側同時往第 38 列夾**。
+
+> **case 2 不存檔。** 它只寫 `ds:0x4c94`，沒有呼叫 `122f:28d0` ——
+> 與 `M` 推家具、密語門開牆**不一樣**（那兩個會寫回 `MAPn.MAP`）。
+> 「不存」是這個機關的一部分：復位靠的正是 case 1 從**檔案**重讀一次。
+>
+> 所以引擎的地圖寫回政策要分清楚：`M`／`P`／密語門 → 寫存檔目錄；
+> 壓牆 → 只動記憶體。搞混的話牆會被存進去，走廊變成永久封死。
+
+**實跑驗過**（2026-07-27）：從 (16,38) 往東走，牆一步一列夾進來，
+走廊縮成一格高；多走一步就是 `隊伍被牆壓碎了` ＋ 全隊死亡畫面；
+退回 (15,38) 印「機械運轉」而且走廊回到全開。
+
+順帶一個資料上的觀察：**(16,38) 不觸發 case 2**，最西邊會觸發的是 (17,38)。
+`docs/re/83` §2 寫「(16..20, 36..40) 共 12 格」是就 `ALL_SS.DAT` 的座標集
+說的，實際那一列的起點在 17。
 
 ### 兩個密碼
 

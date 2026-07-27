@@ -52,7 +52,7 @@ func (a *app) persistMap() error {
 	if !mapIsStandalone(a.mapID) {
 		return nil
 	}
-	path := filepath.Join(filepath.Dir(a.savePath), world.MapFileName(a.mapID))
+	path := filepath.Join(a.saveDir(), world.MapFileName(a.mapID))
 	if err := world.SaveMap(path, a.tiles); err != nil {
 		return fmt.Errorf("寫回地圖 %d：%w", a.mapID, err)
 	}

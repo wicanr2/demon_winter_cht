@@ -30,6 +30,14 @@ import (
 // 存檔路徑預設**不是**原版資料目錄。玩家的原版 `PARTY.DAT` 是他自己的
 // 合法副本，把遊玩進度寫回去等於改壞人家的東西。
 
+// saveDir 是進度目錄 —— **所有會被寫回的東西都放這裡**：
+// `PARTY.DAT`、`nSS.DAT`、`ITEMLOCB.DAT`、改過的 `MAPn.MAP`。
+//
+// 收成一支是因為 `filepath.Dir(a.savePath)` 已經散在五個地方
+// （存檔、特殊格、位置表、地圖寫回、地圖載入）。**這五處必須是同一個目錄**
+// —— 有一處漂掉的症狀是「存了但讀不回來」，而且完全沒有錯誤訊息。
+func (a *app) saveDir() string { return filepath.Dir(a.savePath) }
+
 // loadSave 讀取存檔：優先讀玩家的進度檔，沒有就拿原版存檔當起始狀態。
 //
 // 回傳的第二個值是「這是不是全新開始」，用來決定要不要在畫面上提示。
@@ -66,7 +74,7 @@ func (a *app) writeSave() error {
 	a.save.Month = byte(a.clock.Month())
 	a.save.TimeCounter = byte(a.clock.Steps())
 
-	if err := os.MkdirAll(filepath.Dir(a.savePath), 0o755); err != nil {
+	if err := os.MkdirAll(a.saveDir(), 0o755); err != nil {
 		return fmt.Errorf("建立存檔目錄失敗: %w", err)
 	}
 	if err := a.writeSpecialTiles(); err != nil {
@@ -75,7 +83,7 @@ func (a *app) writeSave() error {
 	// 地城道具的位置表同理：拿走／丟下都是就地改寫，不寫回去的話
 	// 關掉遊戲東西全部回到原位，而且**已經在身上的那件還留著** ——
 	// 重開一次就能再拿一件，複製到飽。
-	if err := scenario.WriteItemLocTable(filepath.Dir(a.savePath), a.itemloc); err != nil {
+	if err := scenario.WriteItemLocTable(a.saveDir(), a.itemloc); err != nil {
 		return err
 	}
 	return a.save.SaveTo(a.savePath)
@@ -90,7 +98,7 @@ func (a *app) writeSave() error {
 // 寫到存檔目錄，不是原版資料目錄。`nSS.DAT` 跟 `PARTY.DAT` 同一個等級：
 // 玩家的原版檔是他自己的合法副本，遊玩進度不該寫回去。
 func (a *app) writeSpecialTiles() error {
-	return scenario.WriteSpecialTileSet(filepath.Dir(a.savePath), a.special)
+	return scenario.WriteSpecialTileSet(a.saveDir(), a.special)
 }
 
 // saveNow 存檔並把結果寫進狀態訊息。

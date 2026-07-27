@@ -665,3 +665,19 @@ You can discern nothing
 An image of %s comes to you
 :: zh
 %s 的影像浮現在腦海裡
+
+## crush.machinery
+:: en
+You hear the whirring of massive machinery
+:: zh
+聽見沉重機械運轉的聲音
+
+## crush.closing
+:: zh
+兩側的牆又逼近了一些
+
+## crush.crushed
+:: en
+Your party has been crushed by the walls.
+:: zh
+隊伍被牆壓碎了
