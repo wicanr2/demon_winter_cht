@@ -154,6 +154,8 @@ type app struct {
 
 	// battle 非 nil 時遊戲進入戰鬥模式，地圖輸入停止。
 	battle *game.Battle
+	// examine 是戰鬥中的 `?` 檢視面板（原版動作 case 10）。
+	examine *examineView
 	// settled 代表這場戰鬥的結算（訊息、戰利品）已經做過了。
 	// 結算要在「等玩家按空白鍵」之前完成，不然訊息只存在一幀。
 	settled bool

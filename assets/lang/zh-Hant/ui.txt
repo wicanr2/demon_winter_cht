@@ -347,3 +347,91 @@ Disarmed.
 ## trap.alarm.steps
 :: zh
 %d 步之內必定遇敵
+
+## examine.strength
+:: en
+Str
+:: zh
+力量
+
+## examine.skill
+:: en
+Skl
+:: zh
+技巧
+
+## examine.speed
+:: en
+Spd
+:: zh
+速度
+
+## examine.armor
+:: en
+Armor
+:: zh
+護甲
+
+## examine.armor.unit
+:: en
+pts.
+:: zh
+點
+
+## examine.weapon
+:: zh
+武器
+
+## examine.weapon.none
+:: zh
+徒手
+
+## examine.weapon.poison
+:: zh
+（附毒）
+
+## examine.hp
+:: en
+HP
+:: zh
+生命
+
+## examine.sp
+:: en
+SP
+:: zh
+法力
+
+## examine.nolore
+:: zh
+（沒有人具備怪物學識，看不出牠的能耐）
+
+## examine.target
+:: zh
+牠打算攻擊 %s
+
+## examine.keys
+:: en
+Continue  Back  Quit
+:: zh
+C：下一個　B：上一個　Q／Esc：離開
+
+## examine.status1
+:: zh
+中毒
+
+## examine.status2
+:: zh
+被束縛
+
+## examine.status3
+:: zh
+被束縛
+
+## examine.status4
+:: zh
+被束縛
+
+## examine.status5
+:: zh
+已死亡

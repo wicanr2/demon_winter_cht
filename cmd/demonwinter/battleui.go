@@ -62,6 +62,12 @@ func (a *app) updateBattle() error {
 		return a.updateAOECursor()
 	}
 
+	// 檢視面板不花移動點也不結束回合（原版成本 0），所以它擋在
+	// 回合派發之前，關掉之後輪到誰完全沒變。
+	if a.examine != nil {
+		return a.updateExamine()
+	}
+
 	if out := a.battle.Outcome(); out != game.Ongoing {
 		// **結算要在等按鍵之前做完。** 原本擺在按下空白鍵之後，
 		// 而那一幀馬上就 `a.battle = nil` 回到世界地圖 ——
@@ -656,6 +662,11 @@ func (a *app) updatePlayerTurn(u *game.Unit) error {
 		}
 		return nil
 	}
+	// `?` 檢視（原版 case 10，成本 0）。實體鍵是 `/`，加不加 Shift 都收。
+	if inpututil.IsKeyJustPressed(ebiten.KeySlash) {
+		a.openExamine()
+		return nil
+	}
 
 	for _, c := range playerCommands {
 		if !inpututil.IsKeyJustPressed(c.key) {
@@ -1131,6 +1142,12 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 		if u == cur {
 			ui.StrokeRect(dst, x, y, cell, cell, markerColor)
 		}
+		// 檢視游標。原版是**反白**（`ds:0x5192 = 0xff` 之後重畫那一格，
+		// 與 `L` 查看陷阱的白框同一個機制）；這裡先用白框，
+		// 因為文字反白要動到字型繪製那一層。
+		if a.examine != nil && u.Slot == a.examine.slot() {
+			ui.StrokeRect(dst, x, y, cell, cell, trapMarkerColor)
+		}
 	}
 }
 
@@ -1140,6 +1157,12 @@ func (a *app) drawBattle(dst *ebiten.Image) {
 	line := func(s string) {
 		a.font.Draw(dst, s, layout.StatusX, y)
 		y += ui.LineHeight
+	}
+
+	// 檢視面板佔滿整個側欄 —— 原版也是把戰場資訊換掉，不是疊一個小框。
+	if a.examine != nil {
+		a.drawExamine(line)
+		return
 	}
 
 	cur := a.battle.Current()
@@ -1225,7 +1248,7 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 		}
 		x = a.font.Draw(dst, label+"  ", x, y)
 	}
-	a.font.Draw(dst, "方向鍵：轉向／前進　Enter：前進",
+	a.font.Draw(dst, "方向鍵：轉向／前進　Enter：前進　? 檢視",
 		layout.BoxPadX, y+ui.LineHeight)
 }
 
