@@ -80,6 +80,14 @@ type app struct {
 	// trapSpots 是上一次 `L` 掃到的陷阱格，畫成白框（原版 ds:0x5192）。
 	// 走一步就清掉 —— 框是「這一次掃描的結果」，不是地圖的長期狀態。
 	trapSpots []game.TrapSpot
+	// inspectSpots 是上一次 `I` 探查標出的地城道具格（原版 ds:0x5c66 那個旗標）。
+	// 與 trapSpots 同一種生命週期：走一步就清掉。
+	//
+	// 原版是「設旗標 → 重畫一次 → 立刻清掉」，因為它只在有輸入時才重畫，
+	// 標記實際上會留在畫面上直到玩家下一個動作。Ebiten 每幀都重畫，
+	// 照抄「畫完就清」會讓標記閃 1/60 秒等於看不見 —— 所以改成
+	// 跟著「下一步」清，玩家看到的行為與原版相同。
+	inspectSpots []game.InspectSpot
 	party     *game.Party
 	clock     *game.Clock
 	tiles     *world.Map
@@ -384,7 +392,8 @@ func (a *app) update() error {
 
 		res, tile, advanced := a.world.Walk(a.party, a.clock)
 		a.lastTile = tile
-		a.trapSpots = nil // 白框只屬於上一次掃描
+		a.trapSpots = nil    // 白框只屬於上一次掃描
+		a.inspectSpots = nil // 探查標記同理（原版走一步就重畫並清旗標）
 
 		switch res {
 		case game.MoveBlocked:
@@ -501,6 +510,12 @@ func (a *app) update() error {
 	// L：查看陷阱（手冊「地底 → 偵測與解除陷阱」，原版動作 0x07）。
 	if inpututil.IsKeyJustPressed(ebiten.KeyL) {
 		a.lookForTraps()
+	}
+	// I：探查周圍（手冊「物品 → 探查周圍」）。**它不回傳動作碼** ——
+	// 原版走主選單 switch 的 case 5，就地設 `ds:0x5c66 = 0x80`，
+	// 由繪圖常式把有道具的格子改畫成道具圖示（`internal/game/inspect.go`）。
+	if inpututil.IsKeyJustPressed(ebiten.KeyI) {
+		a.inspectSurroundings()
 	}
 	// V：觀室（手冊「地底 → 觀室」，原版動作 0x0f）。
 	if a.checkViewRoomKey() {
@@ -720,11 +735,21 @@ func applyTempleRuins(tiles []byte, templeRuins byte) {
 const (
 	templeTile = 0x25
 	ruinsTile  = 0x5b
+	// dungeonItemTile 是 `I` 探查標記用的「地城道具圖示」
+	// （原版 `222f:150b` 直接把繪製緩衝區那一格寫成 0x38）。
+	dungeonItemTile = 0x38
 )
 
 func (a *app) drawWorld(dst *ebiten.Image) {
 	ts := a.tileset()
 	halfX, halfY := layout.ViewTilesX/2, layout.ViewTilesY/2
+
+	// `I` 探查標出的格子。原版是**改寫繪製緩衝區**（`222f:150b`
+	// 把該格寫成 tile 0x38），不是在上面加框 —— 所以這裡也是換 tile。
+	inspected := make(map[[2]byte]bool, len(a.inspectSpots))
+	for _, s := range a.inspectSpots {
+		inspected[[2]byte{s.X, s.Y}] = true
+	}
 
 	for dy := 0; dy < layout.ViewTilesY; dy++ {
 		for dx := 0; dx < layout.ViewTilesX; dx++ {
@@ -732,7 +757,11 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 			if mx < 0 || mx >= game.MapWidth || my < 0 || my >= game.MapHeight {
 				continue
 			}
-			img := ts.Tile(a.drawTiles[my*game.MapWidth+mx] & 0x7f)
+			tile := a.drawTiles[my*game.MapWidth+mx] & 0x7f
+			if inspected[[2]byte{byte(mx), byte(my)}] {
+				tile = dungeonItemTile
+			}
+			img := ts.Tile(tile)
 			if img == nil {
 				continue
 			}
@@ -1161,6 +1190,9 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"方向鍵移動　Tab 季節",
 		"T 拿取 D 丟棄 E 檢視",
 		"M 推開家具 U 使用解謎",
+		// `M 推開家具 U 使用解謎` 那行剛好用滿 21 格，`I` 插不進去，
+		// 所以另起一行。加行之前數過縱向：目前 13 行，離畫布底還有餘裕。
+		"I 探查周圍",
 		"L 陷阱 V 觀室 X 鑑物",
 		"P 名冊 C 紮營 S 存檔",
 		"空白鍵翻頁　F2 手札",
