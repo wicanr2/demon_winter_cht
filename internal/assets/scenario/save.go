@@ -223,6 +223,34 @@ const (
 	// 而且是整隊共用一次。
 	viewedLandTodayOffset = 0xac
 
+	// formationBackupOffset：**試煉室用的 3×3 陣型備份**（`docs/re/101` §2）。
+	//
+	// 試煉室只讓符合職業的人上場，做法是把陣型整張搬到這裡（`0x0f34b`）、
+	// 清空、只填回那幾個人；戰鬥收尾常式一開頭就搬回去（`0x0e01d`，
+	// **勝敗都搬**）。不打的那幾條路當場就還原（`0x0f42c`／`0x0f6b9`）。
+	//
+	// 它必須進存檔而不是只放在記憶體：原版就放在 trailer 裡，
+	// 而「陣型被清空」這個狀態如果漏掉還原，隊伍會變成只剩一個人上場。
+	formationBackupOffset = 0x80
+
+	// provingPassedOffset：**十間試煉室各一格「過了沒」**（`docs/re/101` §2.2）。
+	//
+	// 一個職業一間（Ranger…Scholar，索引與 `ds:0x17e1` 那張職業名表同序）。
+	// 全檔只有三處碰它，全部是 `[bx+si+0x8a]`：進試煉室過關寫 1（`0x0f677`）、
+	// 戰勝之後寫 1（`0x0e1d2`）、**地點劇情 case 8 數還有幾間沒過**（`0x1a29c`）。
+	// 十間全過才拿得到恆世寶珠。
+	provingPassedOffset = 0x8a
+	// ProvingRoomCount 是試煉室的間數（也就是職業數）。
+	ProvingRoomCount = 10
+
+	// provingRoomOffset：**現在人在第幾間試煉室**，格號 **+1**，0 代表不在
+	// （`docs/re/101` §2）。
+	//
+	// 它的存在只為了跨過一場戰鬥：進去時寫 `索引+1`，戰勝的收尾常式
+	// （`0x0e1bc`）讀它決定要把 `+0x8a` 的哪一格標成過關，然後清 0。
+	// **不打的那幾間（盜賊／靈視者／學者）當場就清掉。**
+	provingRoomOffset = 0xab
+
 	// poolDrinksOffset：**還能喝幾口治療水池**（`docs/re/90`）。
 	//
 	// 全檔只有三處碰它：水池比較是不是 0（`0x196ca`，空了就印
@@ -280,7 +308,7 @@ const (
 	// 而 `+0xb9` 是**劇情階段**（`plotStageOffset`，`docs/re/81` 驗過）。
 	//
 	// **2026-07-27 查清楚了（`docs/re/101` §3）：不是衝突，是原版刻意共用。**
-	// param 6 的呼叫端是地點劇情 case 8（十間試煉室全過才給的永恆之寶珠），
+	// param 6 的呼叫端是地點劇情 case 8（十間試煉室全過才給的恆世寶珠），
 	// 而「拿到寶珠」正是劇情推進到階段 1 的那個事件 —— `docs/re/81` 從
 	// 馬利馮預言的第一行 `The Orb of Evertime now is yours` 推測過寫入端在
 	// 寶珠事件裡，就是這裡。**這也是 `docs/re/80` §3 那個「找不到 `+0xb9 = 1`
@@ -538,6 +566,15 @@ type SaveGame struct {
 	// ViewedLandToday 是「本日已用過觀地」（trailer +0xac，整隊共用）。
 	ViewedLandToday bool
 
+	// FormationBackup 是試煉室借走陣型時的備份（見 formationBackupOffset 註解）。
+	FormationBackup [formationLen]byte
+
+	// ProvingPassed 是十間試煉室各自過了沒（見 provingPassedOffset 註解）。
+	ProvingPassed [ProvingRoomCount]byte
+	// ProvingRoom 是現在人在第幾間試煉室，**格號 +1**，0 代表不在
+	// （見 provingRoomOffset 註解）。
+	ProvingRoom byte
+
 	// PoolDrinks 是今天還能喝幾口治療水池（trailer +0xaa，整隊共用）。
 	PoolDrinks byte
 
@@ -640,6 +677,9 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.Unknown9C = trailer[unknown9COffset]
 	save.Ships = parseShips(trailer)
 	save.ViewedLandToday = trailer[viewedLandTodayOffset] != 0
+	copy(save.FormationBackup[:], trailer[formationBackupOffset:formationBackupOffset+formationLen])
+	copy(save.ProvingPassed[:], trailer[provingPassedOffset:provingPassedOffset+ProvingRoomCount])
+	save.ProvingRoom = trailer[provingRoomOffset]
 	save.PoolDrinks = trailer[poolDrinksOffset]
 	save.ViewRoomUses = trailer[viewRoomUsesOffset]
 	save.ViewItemUses = trailer[viewItemUsesOffset]

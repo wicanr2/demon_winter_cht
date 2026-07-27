@@ -53,6 +53,9 @@ func (s *SaveGame) Encode() ([]byte, error) {
 	putByte(trailer[:], rationsOffset, s.Rations)
 	encodeShips(trailer[:], s.Ships)
 	putBool(trailer[:], viewedLandTodayOffset, s.ViewedLandToday)
+	copy(trailer[formationBackupOffset:formationBackupOffset+formationLen], s.FormationBackup[:])
+	copy(trailer[provingPassedOffset:provingPassedOffset+ProvingRoomCount], s.ProvingPassed[:])
+	trailer[provingRoomOffset] = s.ProvingRoom
 	trailer[poolDrinksOffset] = s.PoolDrinks
 	trailer[viewRoomUsesOffset] = s.ViewRoomUses
 	trailer[viewItemUsesOffset] = s.ViewItemUses

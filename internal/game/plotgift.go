@@ -168,7 +168,7 @@ var armoryGifts = map[PlotGiftID]scenario.InventorySlot{
 // 而 `ITEMS.DAT` 第 28 件就是 `Demon Crystal`。其餘欄位是共用前置段的值
 // （附魔 0、已鑑定），**沒有附帶法術也沒有效果** —— 它是劇情道具不是裝備。
 //
-// param 6（永恆之寶珠，型別 29）走同一段程式，但**不放進這張表** ——
+// param 6（恆世寶珠，型別 29）走同一段程式，但**不放進這張表** ——
 // 它的「拿過了」旗標落在 `+0xb9`，那個 byte 已經是劇情階段
 // （`docs/re/101` §3.2），要由 case 8 直接推進階段，不要多一格旗標。
 var demonCrystal = scenario.InventorySlot{

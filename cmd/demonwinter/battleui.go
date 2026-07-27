@@ -76,11 +76,16 @@ func (a *app) updateBattle() error {
 			// **戰鬥的持久後果要在這裡寫回隊伍。** 不寫的話打完就滿血
 			// 復活，而且「全隊死亡」永遠不成立（`campcast.WriteBackParty`）。
 			game.WriteBackParty(a.members, a.battle.Units())
+			// **陣型的還原排在判勝負之前**，勝敗都要做 ——
+			// 試煉室把陣型借走了（原版 `0x0e004` 也在收尾常式第一行還原）。
+			a.restoreProvingFormation()
 			if out == game.Victory {
 				a.logf("怪物全滅")
 				a.awardExperience()
 				a.awardGold()
 				a.awardDrops()
+				// 試煉室的那一場：戰勝才算過關（原版 `0x0e1bc`）。
+				a.finishProvingRoom()
 			} else {
 				a.logf("隊伍全滅")
 			}

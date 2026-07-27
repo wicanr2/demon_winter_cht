@@ -33,6 +33,10 @@ const (
 	plotCaseNpcBed = 13
 	// plotCaseDemonCrystal 是惡魔水晶（地圖 4 的 (7,4)，見 plotgiftui.go）。
 	plotCaseDemonCrystal = 7
+	// plotCaseOrb 是恆世寶珠（地圖 2 的 (42,28)，見 plotgiftui.go）。
+	plotCaseOrb = 8
+	// plotCaseProving 是十間試煉室（地圖 2，見 provingui.go）。
+	plotCaseProving = 9
 )
 
 // resetCrushingWalls 是 case 1：從檔案重讀地圖。

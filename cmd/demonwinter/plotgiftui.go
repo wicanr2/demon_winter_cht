@@ -24,6 +24,10 @@ type plotGiftScreen struct {
 	id game.PlotGiftID
 	// ask 為真時停在是非題那一頁（兵器庫），還沒進到選人。
 	ask bool
+	// orb 為真代表這是**恆世寶珠**（case 8）。它不走劇情道具旗標，
+	// 而是直接推進劇情階段（`docs/re/101` §3.2），所以收下的那一步
+	// 要換一支 —— 選人那一頁完全一樣，只留一份。
+	orb bool
 	// cursor 是選人游標。
 	cursor int
 }
@@ -135,6 +139,10 @@ func (a *app) takePlotGift(member int) {
 	if member < 0 || member >= len(a.members) {
 		return
 	}
+	if g.orb {
+		a.takeOrb(member)
+		return
+	}
 	res := game.TakePlotGift(a.save, &a.members[member], g.id)
 	if res.Full {
 		// 欄位滿了 → 旗標沒動，等一下還能再拿。畫面留著。
@@ -187,4 +195,40 @@ func (a *app) drawPlotGift(dst *ebiten.Image) {
 	}
 	line("")
 	line(a.tr.UI("dungeon.keys", "↑↓：選擇　Enter：確定　Esc：返回"))
+}
+
+// openOrb 是地點劇情 case 8（地圖 2 的 (42,28)，`docs/re/101` §3）。
+//
+// 兩道閘門不成立時原版**只放一個音效，什麼字都不印** ——
+// 玩家站上去只會覺得那一格沒事，這是原版的行為，照抄。
+func (a *app) openOrb() {
+	switch game.OrbAvailable(a.save) {
+	case game.OrbAlreadyTaken:
+		a.trace.note("恆世寶珠：拿過了")
+		return
+	case game.OrbNotYet:
+		a.trace.note("恆世寶珠：十間試煉室還沒全過")
+		return
+	}
+	a.plotGift = &plotGiftScreen{orb: true}
+	a.trace.note("恆世寶珠：開場")
+}
+
+// takeOrb 把寶珠交出去並推進劇情階段。
+func (a *app) takeOrb(member int) {
+	res, slot := game.TakeOrbOfEvertime(a.save, &a.members[member])
+	if res == game.OrbNoRoom {
+		// **階段沒動**，等一下還能再拿。畫面留著。
+		a.message = a.tr.UI("dungeon.noroom", "放不下了")
+		a.trace.note("恆世寶珠：%s 道具欄滿了", a.members[member].Name)
+		return
+	}
+	a.plotGift = nil
+	if res != game.OrbTaken {
+		return
+	}
+	a.message = fmt.Sprintf(a.tr.UI("orb.taken", "%s 收下了恆世寶珠"),
+		a.members[member].Name)
+	a.trace.note("恆世寶珠：%s 第 %d 格拿到，劇情階段 → %d",
+		a.members[member].Name, slot, a.save.PlotStage)
 }

@@ -184,6 +184,10 @@ type app struct {
 	// pendingChain 是續接碼 3 的第二段文字（`docs/re/02` §2.4 [F]）。
 	// 第一段讀完才顯示，顯示完才開打。
 	pendingChain string
+	// pendingRunes 是文字框關掉之後要顯示的符文密語（試煉室的學者那間）。
+	// **與 pendingChain 分開** —— 一個是續接的中文敘述，一個是不翻的符文，
+	// 呈現方式不同（`runebox.go`）。
+	pendingRunes string
 
 	// manual／manualUI 是遊戲內手札（`F2`）—— 原版把這些資料印在紙本手冊上，
 	// 這裡搬進遊戲。manualUI 非 nil 時手札畫面開著。
@@ -356,6 +360,10 @@ func (a *app) update() error {
 				if a.pendingChain != "" {
 					a.box = ui.NewMixedTextBox(a.pendingChain)
 					a.pendingChain = ""
+				} else if a.pendingRunes != "" {
+					// 符文接在敘述後面（試煉室的學者那間）。
+					a.openRuneBox(a.pendingRunes)
+					a.pendingRunes = ""
 				} else if a.pendingIDs != nil {
 					// 敘述讀完才開打。
 					a.startBattle(a.pendingIDs)
@@ -1012,6 +1020,13 @@ func (a *app) checkEvent(tile byte) {
 		if hit == nil {
 			return
 		}
+		// **死記錄就什麼都不做**（屬性整個為 0，見 `SpecialTile.Dead`）。
+		// 一次性事件用掉自己之後長這樣，出貨資料裡也本來就有四筆。
+		// 少了這一道，過關的試煉室與解除的陷阱會掉到下面的 `DATA*.TXT`
+		// 路徑去，顯示第 0 筆房間敘述 —— 一段與那一格完全無關的文字。
+		if hit.Tile.Dead() {
+			return
+		}
 		if hit.Teleport {
 			a.party.TeleportTo(int(hit.Dest.X), int(hit.Dest.Y))
 			a.message = fmt.Sprintf("被傳送到 (%d,%d)", hit.Dest.X, hit.Dest.Y)
@@ -1131,12 +1146,18 @@ func (a *app) startBattle(ids []int) {
 		}
 		x, y, ok := game.DeployPartyAt(a.save.Formation, i)
 		if !ok {
-			// 陣型裡沒有他 —— 原版佈陣是掃九格，沒被放進去的人不會上場。
-			// 本專案不讓人憑空消失：塞進中心附近還空著的位置。
-			x, y, ok = game.ScatterMonster(a.rng, terrain, occupied)
-			if !ok {
-				continue
-			}
+			// **陣型裡沒有他就不上場**，照原版（佈陣是掃九格，
+			// 沒被放進去的人根本不會出現在戰場上）。
+			//
+			// 這裡原本有一層「不讓人憑空消失」的保險：找不到格子就散在
+			// 中心附近。那層保險是在不知道有機制依賴它的時候加的 ——
+			// **十間試煉室（`docs/re/101` §2）就是靠「把陣型清空、只填回
+			// 符合職業的人」做出單挑的**，保險一開就五個人全上場，
+			// 整個機制失效。實跑抓到的：遊俠的試煉室出現五個「我」。
+			//
+			// 而那個風險本來就不存在：入隊會找第一個空格、建角與新遊戲
+			// 都會把人放進陣型，所以「不在陣型裡」只會是刻意的。
+			continue
 		}
 		taken[[2]int{x, y}] = true
 		units = append(units, c.CombatUnit(slot, x, y, game.West))
@@ -1398,6 +1419,7 @@ func main() {
 	// 光之環的門與 IMPRISON 要三個符印都解完才驗得到，而符印散在
 	// 世界東南角三張子地圖上 —— 沒有這個旗標就得先跑完整段主線。
 	glyphsFlag := flag.Bool("glyphs", false, "偵錯：三個緋紅符印都當成已解除")
+	provingFlag := flag.Bool("proving", false, "偵錯：十間試煉室都當成已通過（用來驗恆世寶珠那一格）")
 	// 符文密語要走到特定事件格才看得到（原版共四筆），
 	// 而字型與排版是視覺產物、必須 dump 出來肉眼比對。
 	runeFlag := flag.String("rune", "",
@@ -1691,6 +1713,12 @@ func main() {
 			a.save.GlyphFlags[i] = game.GlyphDone
 		}
 		log.Printf("偵錯：三個符印都設為已解除")
+	}
+	if *provingFlag {
+		for i := range a.save.ProvingPassed {
+			a.save.ProvingPassed[i] = 1
+		}
+		log.Printf("偵錯：十間試煉室都設為已通過")
 	}
 	if *spFlag >= 0 {
 		for i := range a.members {

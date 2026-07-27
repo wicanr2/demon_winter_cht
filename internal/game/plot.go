@@ -24,9 +24,16 @@ const (
 
 // 劇情階段（隊伍欄位 `+0xb9`）。
 const (
-	// PlotBeforeArrival 是冬之魔還沒降臨。**兩份原版存檔的起始值都是 0**，
-	// 而 1 是觸發第二場夢的值 —— 把 0 推到 1 的那道寫入還沒找到
-	// （`docs/re/81`），所以引擎目前也沒有地方會設它。
+	// PlotBeforeArrival 是冬之魔還沒降臨。**兩份原版存檔的起始值都是 0。**
+	//
+	// 把 0 推到 1 的那道寫入**找到了**（2026-07-27，`docs/re/101` §3）：
+	// 地點劇情 case 8 ——**拿到恆世寶珠**。原版是靠「送道具」常式的
+	// 旗標寫入 `party[0xb3 + param] = 1`，param 6 剛好落在 `+0xb9`，
+	// 也就是這個欄位。`docs/re/81` 從馬利馮預言的第一行
+	// `The Orb of Evertime now is yours` 推測寫入端在寶珠事件裡，推測正確。
+	//
+	// 所以引擎不把寶珠當第 7 格旗標，而是**直接推進這個階段**
+	// （`TakeOrbOfEvertime`）—— 同一個 byte 不要有兩個名字。
 	PlotBeforeArrival byte = 0
 	// PlotArrivalDue 是「下次睡覺就降臨」。
 	PlotArrivalDue byte = 1
