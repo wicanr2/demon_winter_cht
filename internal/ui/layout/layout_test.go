@@ -74,3 +74,13 @@ func TestBattleViewport_IsAScrollingWindow(t *testing.T) {
 			cols, rows, ViewTilesX, ViewTilesY)
 	}
 }
+
+// 視窗邊長只能有一份真相：規則層的 game.ViewSpan（原版繪圖常式的 9）
+// 與版面的 ViewTilesX/Y 必須一致。兩邊各自寫死 9 遲早會漂，
+// 而症狀是「視野裁切少一圈」這種看得出怪但說不出哪裡怪的畫面。
+func TestViewTilesMatchesRuleLayer(t *testing.T) {
+	if ViewTilesX != game.ViewSpan || ViewTilesY != game.ViewSpan {
+		t.Errorf("版面視窗 %d×%d 與 game.ViewSpan %d 不一致",
+			ViewTilesX, ViewTilesY, game.ViewSpan)
+	}
+}

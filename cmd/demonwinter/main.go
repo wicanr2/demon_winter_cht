@@ -766,8 +766,16 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 	partyGlyph := game.PartyGlyph(a.party.Facing(),
 		a.party.X(), a.party.Y(), a.party.Sailing())
 
+	// 照明：視窗固定 9×9，但畫出來的範圍會往內縮（原版 `ds:0x4c86`）。
+	// 戶外看時辰、地城看光源＋矮人的黑暗視覺，見 game.ViewInset。
+	// 縮進去的格子**不畫**，留黑 —— 原版是先把繪製緩衝區整片清 0 再只填可見範圍。
+	inset := game.ViewInset(a.mapID, a.clock.Hour(), a.torch, a.members)
+
 	for dy := 0; dy < layout.ViewTilesY; dy++ {
 		for dx := 0; dx < layout.ViewTilesX; dx++ {
+			if !game.ViewVisible(dx, dy, inset) {
+				continue
+			}
 			mx, my := a.party.X()-halfX+dx, a.party.Y()-halfY+dy
 			if mx < 0 || mx >= game.MapWidth || my < 0 || my >= game.MapHeight {
 				continue
@@ -790,7 +798,8 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 	// `L` 掃到的陷阱畫白框（原版 `ds:0x5192 = 0xff` 之後畫、畫完設回 0）。
 	for _, sp := range a.trapSpots {
 		dx, dy := sp.X-a.party.X()+halfX, sp.Y-a.party.Y()+halfY
-		if dx < 0 || dx >= layout.ViewTilesX || dy < 0 || dy >= layout.ViewTilesY {
+		// 看不見的格子不該冒出白框 —— 那會變成「透視牆外」的偵錯視角。
+		if !game.ViewVisible(dx, dy, inset) {
 			continue
 		}
 		ui.StrokeRect(dst, dx*cellW, dy*cellH, cellW, cellH, trapMarkerColor)
