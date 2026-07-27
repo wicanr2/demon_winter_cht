@@ -476,8 +476,12 @@ Circle light+ Facet mirror    → S2
   （`SlotDungeon`、`DungeonName`、`NewDungeonSlot`）。
 - `internal/game/dungeonitem.go`：`ItemsUnderfoot`／`TakeDungeonItem`／
   `DropDungeonItem`／`CarriedDungeonItems`。
-- `cmd/demonwinter/dungeonui.go`：`T` 拾取、`D` 丟棄、`E` 檢視。
-- **`M`／`U`／`I` 還沒接。**
+- `cmd/demonwinter/dungeonui.go`：`T` 拾取、`D` 丟棄、`E` 檢視、`M` 移動。
+- `cmd/demonwinter/mapwrite.go`：改地圖 tile ＋ 寫回存檔目錄
+  （`world.SaveMap`／`world.LoadByID` 的三段優先序）。
+  **順帶修好密語門** —— `docs/re/84` 原本斷言「牆只開在記憶體裡」，
+  照著做的結果是解完謎題換張圖再回來牆又長回去。
+- **`U`／`I` 還沒接。**
 
 實跑驗過（地圖 1）：(14,22) 拿 `Iron key` → 丟 → 撿回來；
 (13,22) 的 `Bed` 印 `It is too heavy` 而且留在原地；
@@ -498,7 +502,8 @@ Circle light+ Facet mirror    → S2
    `ITEMLOCB.DAT` 走 `nSS.DAT` 那條存回路。
 3. ~~`E` 檢視（印 `+2`）~~ —— **done**（§3.8）。順帶修正一個推測：
    `E` 看的是**身上**那件，不是腳下那件。
-   `M` 移動要先解決 `MAPn.MAP` 的寫回路徑（§3.9），不只是改一個 tile。
+   ~~`M` 移動~~ —— **done**（§3.9）。連帶鋪好 `MAPn.MAP` 的寫回路徑，
+   密語門（`docs/re/84`）也跟著修好。
 4. `U` 使用：`D`／`T`／`P`／`S` 四個動作碼沒有阻礙，
    **只有 `N`** 卡在「新道具怎麼出現」（§3.1 末段）。
 5. `I` 探查周圍：掃描範圍還沒讀。

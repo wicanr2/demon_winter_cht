@@ -250,3 +250,96 @@ func CarriedDungeonItems(party []Character, items gamedata.DungeonItems) []Carri
 	}
 	return out
 }
+
+// --- `M` 移動（原版 `222f:3621` ＝ `0x19511`）---
+
+// DungeonMove 是推開一件家具的結果。
+type DungeonMove int
+
+const (
+	// MoveNothingHappens 是 `+3` 欄空著，或那一格已經是目標 tile。
+	// 原版兩種情況印的是**同一句** `Nothing happens.`（ds:0x26d1／0x26e2）。
+	MoveNothingHappens DungeonMove = iota
+	// MoveCant 是 `+3` 欄只有一個 `*`。原版 ds:0x26c7 `You can't`。
+	MoveCant
+	// MoveChanged 是真的改了一格。原版 ds:0x26f3 `Something happened...`。
+	MoveChanged
+)
+
+// DungeonMoveResult 帶著要改哪一格。
+type DungeonMoveResult struct {
+	Kind DungeonMove
+	// X／Y／Tile 只有 MoveChanged 時有意義。
+	X, Y int
+	Tile byte
+}
+
+// MoveDungeonItem 算出推開第 index 件會怎樣（原版 `0x19546`–`0x19648`）。
+//
+// **這一支不改地圖**，只回報要改哪一格 —— 因為「改完要把整張圖寫回
+// `MAPn.MAP`」是呼叫端的事（`docs/re/95` §3.9），而存到哪裡是專案政策。
+//
+// `+3` 的格式與動作碼 `P` 完全一樣（§3.4 已互相印證）：
+// 前兩組各兩位數是 X／Y，**第三組是剩下的全部**（不一定兩位）——
+// `Wooden altar` 的 `09360` 是 5 個字元，`Old bookcase` 的 `461100` 是 6 個。
+// 原版對第三組是 `atoi(s+4)` 讀到結尾，不是固定切兩位。
+//
+// tileAt 傳目前那一格的值。與它相同就是 `Nothing happens.` ——
+// 原版明文比對過（`0x1961b`），**不是「反正寫上去也一樣」的優化**：
+// 少了這一條，推第二次也會印 `Something happened...`。
+func MoveDungeonItem(items gamedata.DungeonItems, index int,
+	tileAt func(x, y int) (byte, bool)) DungeonMoveResult {
+
+	nothing := DungeonMoveResult{Kind: MoveNothingHappens}
+	if index < 0 || index >= len(items) {
+		return nothing
+	}
+	spec := items[index].MoveResult
+	switch {
+	case spec == dungeonItemSilentImmovable:
+		return DungeonMoveResult{Kind: MoveCant}
+	case spec == "":
+		return nothing
+	}
+	x, y, tile, ok := parseTileSpec(spec)
+	if !ok {
+		return nothing
+	}
+	if cur, ok := tileAt(x, y); !ok || cur == tile {
+		return nothing
+	}
+	return DungeonMoveResult{Kind: MoveChanged, X: x, Y: y, Tile: tile}
+}
+
+// parseTileSpec 解 `XXYYTT…` —— 前兩組固定兩位，第三組是剩下的全部。
+//
+// 動作碼 `P` 用的是同一套（原版 `0x1849d` 與 `0x195bb` 兩段程式碼一樣），
+// 所以這支之後給 `P` 共用，**不要再抄一份**。
+func parseTileSpec(s string) (x, y int, tile byte, ok bool) {
+	if len(s) < 5 {
+		return 0, 0, 0, false
+	}
+	n := func(v string) (int, bool) {
+		out := 0
+		for i := 0; i < len(v); i++ {
+			if v[i] < '0' || v[i] > '9' {
+				return 0, false
+			}
+			out = out*10 + int(v[i]-'0')
+		}
+		return out, true
+	}
+	x, ok = n(s[0:2])
+	if !ok {
+		return 0, 0, 0, false
+	}
+	y, ok = n(s[2:4])
+	if !ok {
+		return 0, 0, 0, false
+	}
+	t, ok := n(s[4:])
+	if !ok || t > 0xff {
+		return 0, 0, 0, false
+	}
+	return x, y, byte(t), true
+}

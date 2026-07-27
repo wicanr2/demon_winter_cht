@@ -565,3 +565,21 @@ Examine
 You see nothing special about the %s
 :: zh
 %s 看不出有什麼特別
+
+## dungeon.move.title
+:: en
+Move:
+:: zh
+推哪一件？
+
+## dungeon.nothing.happens
+:: en
+Nothing happens.
+:: zh
+什麼也沒發生
+
+## dungeon.something
+:: en
+Something happened...
+:: zh
+發生了什麼事……

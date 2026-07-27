@@ -29,6 +29,7 @@ const (
 	dungeonTake dungeonMode = iota
 	dungeonDrop
 	dungeonExamine
+	dungeonMove
 )
 
 // fromInventory 回報這個模式選的是「身上的道具」而不是「腳下的東西」。
@@ -55,8 +56,12 @@ type dungeonScreen struct {
 	pick int
 }
 
-// openDungeonTake 是 `T` 拾取。
-func (a *app) openDungeonTake() {
+// openDungeonTake 是 `T` 拾取，openDungeonMove 是 `M` 移動。
+// 兩者選的都是**腳下這一格**（原版共用 `222f:2da5`）。
+func (a *app) openDungeonTake() { a.openUnderfootPicker(dungeonTake, "拾取") }
+func (a *app) openDungeonMove() { a.openUnderfootPicker(dungeonMove, "移動") }
+
+func (a *app) openUnderfootPicker(mode dungeonMode, what string) {
 	if a.itemloc == nil {
 		return
 	}
@@ -66,8 +71,8 @@ func (a *app) openDungeonTake() {
 		a.message = a.tr.UI("dungeon.nothing", "這裡沒有東西")
 		return
 	}
-	a.dungeon = &dungeonScreen{mode: dungeonTake, spots: spots}
-	a.trace.note("拾取：腳下 %d 件", len(spots))
+	a.dungeon = &dungeonScreen{mode: mode, spots: spots}
+	a.trace.note("%s：腳下 %d 件", what, len(spots))
 }
 
 // openDungeonDrop 是 `D` 丟棄，openDungeonExamine 是 `E` 檢視。
@@ -137,6 +142,9 @@ func (a *app) confirmDungeon() {
 	case dungeonExamine:
 		a.examineDungeonItem(d.carried[d.cursor])
 		return
+	case dungeonMove:
+		a.moveDungeonItem(d.spots[d.cursor])
+		return
 	}
 	if d.stage == 0 {
 		spot := d.spots[d.cursor]
@@ -185,6 +193,47 @@ func (a *app) dropDungeonItem(c game.CarriedDungeonItem) {
 		a.dungeonName(c.Name))
 	a.trace.note("丟棄 %s 於 (%d,%d) 地圖%d",
 		c.Name, a.party.X(), a.party.Y(), a.mapID)
+}
+
+// moveDungeonItem 是 `M`：推開一件家具（原版 `222f:3621`）。
+//
+// 改的那一格**不一定是腳下那一格** —— 三件推得動的家具開的都是自己
+// 旁邊那一格（`Old bookcase` 在 (46,12)，開的是 (46,11)）。
+func (a *app) moveDungeonItem(spot game.DungeonSpot) {
+	a.dungeon = nil
+	res := game.MoveDungeonItem(a.dungeonItems, spot.Index,
+		func(x, y int) (byte, bool) { return a.tileValue(x, y) })
+
+	switch res.Kind {
+	case game.MoveCant:
+		a.message = a.tr.UI("dungeon.cant", "你辦不到")
+		a.trace.note("移動 %s：推不動", spot.Item.Name)
+	case game.MoveNothingHappens:
+		a.message = a.tr.UI("dungeon.nothing.happens", "什麼也沒發生")
+		a.trace.note("移動 %s：什麼也沒發生", spot.Item.Name)
+	case game.MoveChanged:
+		if err := a.writeTile(res.X, res.Y, res.Tile); err != nil {
+			a.message = fmt.Sprintf("改寫地圖失敗：%v", err)
+			a.trace.note("移動 %s 失敗：%v", spot.Item.Name, err)
+			return
+		}
+		a.message = a.tr.UI("dungeon.something", "發生了什麼事……")
+		a.trace.note("移動 %s：(%d,%d) → tile %d",
+			spot.Item.Name, res.X, res.Y, res.Tile)
+	}
+}
+
+// tileValue 讀目前這張地圖的一格**原始值**（不遮罩）。
+//
+// 原版比對「那一格是不是已經改過了」用的是原始 byte（`0x19611` 直接
+// `mov al, es:[bx+si]`），所以這裡也不能套 `& 0x7f` —— 遮罩過的話，
+// 最高位被設起來的格子會被誤判成「已經是目標 tile」而不動。
+func (a *app) tileValue(x, y int) (byte, bool) {
+	t, err := a.tiles.TileAt(x, y)
+	if err != nil {
+		return 0, false
+	}
+	return t, true
 }
 
 // examineDungeonItem 是 `E`：印出 `+2` 欄那段敘述。
@@ -289,7 +338,11 @@ func (a *app) drawDungeon(dst *ebiten.Image) {
 				memberMark(d.cursor, i), c.Name, freeSlots(c)))
 		}
 	default:
-		line(a.tr.UI("dungeon.take.title", "拿哪一件？"))
+		title := a.tr.UI("dungeon.take.title", "拿哪一件？")
+		if d.mode == dungeonMove {
+			title = a.tr.UI("dungeon.move.title", "推哪一件？")
+		}
+		line(title)
 		line("")
 		// **只列名字。** 原版的清單也只有名字，拿不走的理由等你選了才說。
 		// 這裡一度把理由接在名字後面，結果 `/Bed （It is too hea` 被欄寬

@@ -104,7 +104,8 @@ func loadMap(dataDir, arg string) (*world.Map, error) {
 	if err != nil {
 		return world.LoadMap(filepath.Join(dataDir, arg))
 	}
-	return world.LoadByID(dataDir, id)
+	// 存檔目錄傳空字串：路線工具要看的是原始地圖，不是某個人的進度。
+	return world.LoadByID("", dataDir, id)
 }
 
 type point struct{ x, y int }

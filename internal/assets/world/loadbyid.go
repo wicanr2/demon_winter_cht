@@ -1,9 +1,15 @@
 package world
 
 import (
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 )
+
+// MapFileName 是獨立地城地圖的檔名。**只對 1／3／5 有意義** ——
+// 其餘編號在 `SUM.MAP` 裡（`LoadByID` 的 switch 就是這條規則的唯一實作）。
+func MapFileName(id int) string { return fmt.Sprintf("MAP%d.MAP", id) }
 
 // LoadByID 依子地圖編號載入地圖。
 //
@@ -21,10 +27,28 @@ import (
 // （MapID 34，`SUM.MAP` 有 34）驗過，沒回頭測從出貨存檔啟動那條路。
 //
 // 所以合成一份放在這裡 —— 有測試護著，而且兩個呼叫端不可能再漂。
-func LoadByID(dataDir string, id int) (*Map, error) {
+//
+// # saveDir
+//
+// **地圖是會被改寫的**（推開家具、密語門開牆、`U` 的 `P` 動作），
+// 原版改完就把整張圖寫回 `MAP%d.MAP`（`docs/re/95` §3.9）。
+// 本專案不蓋原版資料目錄，改動寫在存檔目錄，所以這裡先看那邊 ——
+// 與 `nSS.DAT`／`ITEMLOCB.DAT` 同一套三段優先序。
+//
+// `saveDir` 傳空字串代表「不要找存檔」（工具程式用，例如 `cmd/dwroute`
+// 要看的是原始地圖不是某個人的進度）。
+func LoadByID(saveDir, dataDir string, id int) (*Map, error) {
 	switch id {
 	case 1, 3, 5:
-		return LoadMap(filepath.Join(dataDir, fmt.Sprintf("MAP%d.MAP", id)))
+		name := MapFileName(id)
+		if saveDir != "" {
+			if m, err := LoadMap(filepath.Join(saveDir, name)); err == nil {
+				return m, nil
+			} else if !os.IsNotExist(errors.Unwrap(err)) {
+				return nil, err
+			}
+		}
+		return LoadMap(filepath.Join(dataDir, name))
 	}
 	sm, err := LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
 	if err != nil {

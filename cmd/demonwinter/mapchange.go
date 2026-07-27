@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
@@ -62,7 +63,7 @@ func (a *app) checkExit(tile byte) bool {
 // 換回來時狀態還在（原版是用 `ds:0x5c52` 那組旗標做同一件事，
 // 見 `0x191c4`：換圖前把緩衝區刷進該圖的快取）。
 func (a *app) changeMap(id, x, y int) {
-	m, err := world.LoadByID(a.dataDir, id)
+	m, err := world.LoadByID(filepath.Dir(a.savePath), a.dataDir, id)
 	if err != nil {
 		// 換不過去就留在原地並說清楚 —— 靜默失敗會讓玩家
 		// 以為那一格本來就沒事，然後在樓梯上反覆踩。

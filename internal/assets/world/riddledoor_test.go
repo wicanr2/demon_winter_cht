@@ -51,7 +51,10 @@ func TestSpectralPriestDoorIsAWall(t *testing.T) {
 	}
 }
 
-// SetTileAt 只改記憶體，而且範圍檢查要擋住越界。
+// SetTileAt 只動這個 Map 物件，而且範圍檢查要擋住越界。
+//
+// （寫回檔案是 `SaveMap` 的事 —— 原版改完 tile 確實會存檔，
+// 見 `docs/re/95` §3.9，但那一步在呼叫端不在這裡。）
 func TestSetTileAt(t *testing.T) {
 	dir := origDataDir(t)
 	m, err := LoadMap(filepath.Join(dir, "MAP5.MAP"))

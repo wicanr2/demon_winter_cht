@@ -11,6 +11,7 @@ package world
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // MapWidth、MapHeight 是每張地圖固定的格數。原版 MAP1/3/5.MAP 與
@@ -65,11 +66,18 @@ func (m *Map) TileAt(x, y int) (byte, error) {
 
 // SetTileAt 就地改寫座標 (x, y) 的 tile。
 //
-// 原版有事件會直接改寫記憶體裡的地圖緩衝區 —— 例如密語謎題答對時
-// 把牆打開（`docs/re/84`：`map[0x48b] = 0`，`0x48b` ＝ (11,18)）。
+// 原版有幾處事件會直接改寫地圖緩衝區：密語謎題答對時把牆打開
+// （`docs/re/84`：`map[0x48b] = 0`，`0x48b` ＝ (11,18)）、
+// 推開家具（`Move:`）、`U` 的 `P` 動作。
 //
-// ⚠ **改的是記憶體，不是檔案。** 原版也是如此，所以離開地城再進來，
-// 牆會回到原狀。這看起來像 bug，但那是 1988 年的行為，照抄。
+// > ⚠ 這裡原本寫「**改的是記憶體，不是檔案**，所以離開地城再進來牆會回到
+// > 原狀，那是 1988 年的行為，照抄」。**那句話是錯的。** 三處改完 tile
+// > 之後都緊接著 `122f:28d0(子地圖, 1)`，那一支會把整張地圖
+// > （`0x1001` bytes）寫回 `MAP%d.MAP`（`docs/re/95` §3.9）。
+// > 密語門那一處在 `0x1a383`，參數是 `(5, 1)` —— **牆是真的開著的**。
+//
+// **這一支仍然只動記憶體。** 寫回檔案是呼叫端的事（`SaveMap`），
+// 因為存到哪裡是專案政策：原版蓋回自己的資料目錄，本專案寫存檔目錄。
 func (m *Map) SetTileAt(x, y int, t byte) error {
 	if x < 0 || x >= MapWidth || y < 0 || y >= MapHeight {
 		return fmt.Errorf("world: 座標 (%d,%d) 超出地圖範圍 [0,%d)x[0,%d)", x, y, MapWidth, MapHeight)
@@ -81,6 +89,43 @@ func (m *Map) SetTileAt(x, y int, t byte) error {
 // Tiles 回傳整份 tile 陣列的複本（row-major，索引 = y*MapWidth+x），
 // 長度固定 4096。回傳複本是為了避免呼叫端改到 Map 的內部狀態。
 func (m *Map) Tiles() [mapTileCount]byte { return m.tiles }
+
+// Encode 把地圖寫回 `MAPn.MAP` 的 4097-byte 形式。
+//
+// **header 原樣寫回。** 它的語意還沒解（MAP1=0x00、MAP3=0x97、MAP5=0x09），
+// 所以不能用 0 補 —— 那會讓寫過的存檔與原版檔案在第一個 byte 就不同。
+// `SUM.MAP` 解出來的子地圖沒有這個欄位（固定 0），而那些地圖也不會走到
+// 這條路（見 SaveMap）。
+func (m *Map) Encode() []byte {
+	out := make([]byte, mapFileSize)
+	out[0] = m.header
+	copy(out[1:], m.tiles[:])
+	return out
+}
+
+// SaveMap 把地圖寫成 `MAPn.MAP`。
+//
+// **只給 1／3／5 用。** 原版的存檔那一支（`122f:28d0` 參數非 0）不分編號
+// 一律寫 `MAP%d.MAP`，但**載入那一支只有 1／3／5 讀這個檔名**
+// （`0x187e4` 的 `cmp ax,1/3/5`），其餘走 `SUM.MAP`。
+// 所以在地圖 2／4 推開家具，原版會留下一個永遠不會被讀的 `MAP2.MAP` ——
+// 改動就這樣消失了。**那是原版的洞，不是格式**，這裡不複製它：
+// 呼叫端只對 1／3／5 存。
+//
+// 實務上碰不到：三件推得動的家具在地圖 1／3，兩個 `P` 動作也在 1／3，
+// 密語門在 5。
+func SaveMap(path string, m *Map) error {
+	if m == nil {
+		return nil
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("world: 建立目錄失敗: %w", err)
+	}
+	if err := os.WriteFile(path, m.Encode(), 0o644); err != nil {
+		return fmt.Errorf("world: 寫入 %s 失敗: %w", path, err)
+	}
+	return nil
+}
 
 // LoadMap 解析指定路徑的獨立地城地圖檔（MAP1.MAP／MAP3.MAP／MAP5.MAP）。
 //

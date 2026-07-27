@@ -462,8 +462,13 @@ func (a *app) update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyF1) {
 		a.openCreate()
 	}
-	// M 是偵錯用的「就地遇到商隊」—— 遭遇觸發還沒解（見 merchantui.go）。
+	// M：推開腳下的家具（手冊「物品 → 移動」，原版動作 0x0b）。
+	// **偵錯用的「就地遇到商隊」讓位到 F4** —— M 是原版的鍵。
 	if inpututil.IsKeyJustPressed(ebiten.KeyM) {
+		a.openDungeonMove()
+	}
+	// F4 是偵錯用的「就地遇到商隊」—— 遭遇觸發還沒解（見 merchantui.go）。
+	if inpututil.IsKeyJustPressed(ebiten.KeyF4) {
 		a.openMerchant()
 	}
 	// ESC 只收起名冊。離開遊戲一律走 F10（見 save.go）。
@@ -619,7 +624,7 @@ func (a *app) Draw(screen *ebiten.Image) {
 //
 // 世界地圖（含 25 座城鎮裡的 24 座）全部打包在 SUM.MAP 裡，只認檔名的話
 // 玩家根本走不到大陸上，自動進城也就沒地方驗。
-func loadMapArg(dataDir, arg string) (*world.Map, int, error) {
+func loadMapArg(saveDir, dataDir, arg string) (*world.Map, int, error) {
 	id, err := strconv.Atoi(arg)
 	if err != nil {
 		// 檔名形式：MAP1.MAP → 編號 1（都是地城）。
@@ -644,7 +649,7 @@ func loadMapArg(dataDir, arg string) (*world.Map, int, error) {
 	//
 	// 教訓與 `dwroute` 那次同一條：**同一件事只留一份實作。**
 	// 兩份「編號 → 地圖」的邏輯放在兩個檔案裡，改了一邊就會漂。
-	m, err := world.LoadByID(dataDir, id)
+	m, err := world.LoadByID(saveDir, dataDir, id)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -1132,14 +1137,14 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"Tab：切換季節",
 		"P：隊伍名冊",
 		"T：拿取　D：丟棄",
-		"E：檢視身上的地城道具",
+		"E：檢視　M：推開家具",
 		"C：紮營",
 		"L：查看陷阱　V：觀室",
 		"B：測試戰鬥（偵錯）",
 		"F1：建立角色（偵錯）",
 		"F2：手札",
 		"F3：進入城鎮（偵錯）",
-		"M：遇到商隊（偵錯）",
+		"F4：遇到商隊（偵錯）",
 		"S：存檔",
 		"空白鍵：翻頁",
 		"F10：離開遊戲",
@@ -1382,7 +1387,7 @@ func main() {
 	if mapArg == "" {
 		mapArg = strconv.Itoa(int(save.MapID))
 	}
-	m, mapID, err := loadMapArg(*dataDir, mapArg)
+	m, mapID, err := loadMapArg(filepath.Dir(*savePath), *dataDir, mapArg)
 	if err != nil {
 		log.Fatalf("載入地圖：%v", err)
 	}

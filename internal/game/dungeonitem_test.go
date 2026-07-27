@@ -305,3 +305,68 @@ func TestExamineReturnsTheLookText(t *testing.T) {
 		t.Error("認不出的名字卻回了敘述")
 	}
 }
+
+// --- MoveDungeonItem ---
+
+func movableItems() gamedata.DungeonItems {
+	return gamedata.DungeonItems{
+		{Name: "Old bookcase", MoveResult: "461100"}, // (46,11) → tile 0
+		{Name: "Wooden altar", MoveResult: "09360"},  // (9,36) → tile 0，**參數只有 5 個字元**
+		{Name: "Bookcase", MoveResult: "*"},
+		{Name: "Mallet"}, // `+3` 空著
+	}
+}
+
+// 目標那一格目前是牆（非 0）。
+func wallEverywhere(int, int) (byte, bool) { return 0x14, true }
+
+func TestMoveParsesBothParamLengths(t *testing.T) {
+	items := movableItems()
+	for _, tc := range []struct {
+		idx        int
+		wantX      int
+		wantY      int
+		wantTile   byte
+		whatItIsFor string
+	}{
+		{0, 46, 11, 0, "六個字元的 461100"},
+		{1, 9, 36, 0, "**五個**字元的 09360 —— 第三組不是固定兩位"},
+	} {
+		res := MoveDungeonItem(items, tc.idx, wallEverywhere)
+		if res.Kind != MoveChanged {
+			t.Fatalf("%s：結果 %v，預期 MoveChanged", tc.whatItIsFor, res.Kind)
+		}
+		if res.X != tc.wantX || res.Y != tc.wantY || res.Tile != tc.wantTile {
+			t.Errorf("%s：解出 (%d,%d)→%d，預期 (%d,%d)→%d", tc.whatItIsFor,
+				res.X, res.Y, res.Tile, tc.wantX, tc.wantY, tc.wantTile)
+		}
+	}
+}
+
+// `*` 與空字串是**兩種不同的訊息**（原版 `You can't` vs `Nothing happens.`）。
+func TestMoveDistinguishesStarFromEmpty(t *testing.T) {
+	items := movableItems()
+	if got := MoveDungeonItem(items, 2, wallEverywhere).Kind; got != MoveCant {
+		t.Errorf("`*` 得到 %v，預期 MoveCant", got)
+	}
+	if got := MoveDungeonItem(items, 3, wallEverywhere).Kind; got != MoveNothingHappens {
+		t.Errorf("空的 +3 得到 %v，預期 MoveNothingHappens", got)
+	}
+}
+
+// **推第二次什麼也不會發生。** 原版明文比對過那一格現在的值
+// （`0x1961b`），少了這一條會一直印「發生了什麼事」。
+func TestMoveIsIdempotent(t *testing.T) {
+	already := func(int, int) (byte, bool) { return 0, true }
+	if got := MoveDungeonItem(movableItems(), 0, already).Kind; got != MoveNothingHappens {
+		t.Errorf("那一格已經是目標 tile 卻回 %v", got)
+	}
+}
+
+// 目標座標超出地圖 → 什麼也不做，不要 panic 也不要亂寫。
+func TestMoveHandlesOutOfRange(t *testing.T) {
+	oob := func(int, int) (byte, bool) { return 0, false }
+	if got := MoveDungeonItem(movableItems(), 0, oob).Kind; got != MoveNothingHappens {
+		t.Errorf("越界座標回 %v", got)
+	}
+}

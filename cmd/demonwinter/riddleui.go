@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
@@ -102,11 +103,14 @@ func (a *app) answerRiddle(s *riddleScreen) {
 
 	switch s.plotCase {
 	case game.RiddleCaseSpectralPriest:
-		// 答對沒有台詞，只有把牆打開。**改的是記憶體裡的地圖** ——
-		// 原版就是如此，離開地城再進來牆會回到原狀。
+		// 答對沒有台詞，只有把牆打開。**而且牆是真的開著的** ——
+		// 原版在 `0x1a383` 緊接著 `122f:28d0(5, 1)` 把整張圖寫回
+		// `MAP5.MAP`（`docs/re/95` §3.9）。這裡原本寫「離開地城再進來
+		// 牆會回到原狀」，那是錯的：症狀是解完謎題換張圖再回來白解，
+		// 而畫面上看不出原因。
 		d := game.SpectralPriestDoor
-		if err := a.tiles.SetTileAt(d.X, d.Y, game.SpectralPriestDoorOpen); err == nil {
-			a.drawTiles = ditheredTiles(a.tiles, uint16(a.ditherSeed), a.save.TempleRuins)
+		if err := a.writeTile(d.X, d.Y, game.SpectralPriestDoorOpen); err != nil {
+			a.message = fmt.Sprintf("開牆失敗：%v", err)
 		}
 	case game.RiddleCaseTempleName:
 		s.result = []string{a.tr.UI(k+".right", s.riddle.Right[0])}
