@@ -70,8 +70,8 @@ type app struct {
 	pool *poolScreen
 	// dungeon 是地城道具的拾取／丟棄選單（`T`／`D`，`docs/spec/10`）。
 	dungeon *dungeonScreen
-	// blacksmith 是鐵匠鋪的選人畫面（地點劇情 case 4）。
-	blacksmith *blacksmithScreen
+	// plotGift 是劇情送道具的畫面（地點劇情 case 3 兵器庫、case 4 鐵匠鋪）。
+	plotGift *plotGiftScreen
 	// itemloc 是地城道具的位置表（`ITEMLOCB.DAT`）。**它是存檔的一部分** ——
 	// 拿走一件就地改寫，不寫回去的話關掉遊戲東西就都回來了。
 	itemloc *scenario.ItemLocTable
@@ -371,6 +371,20 @@ func (a *app) update() error {
 		return nil
 	}
 
+	// **夾在文字框與移動之間，兩邊都不能換。**
+	//
+	// 排在文字框**之後**：鐵匠鋪先播一段台詞再選人（兵器庫先播敘述再問
+	// 是非題），而翻頁鍵由上面那個 block 處理 —— 排在它前面的話
+	// 台詞永遠翻不完，畫面卡在第一頁（實跑抓到的，`trace` 停在「文字框」不動）。
+	//
+	// 排在移動**之前**：選人游標用的是 ↑↓，而下面那個迴圈也吃方向鍵。
+	// 原本擺在移動之後，於是按一次 Down **游標動了、隊伍也走了一步** ——
+	// 選完人隊伍已經離開台座。鐵匠鋪同一條路也有這個病，
+	// 只是當初實跑只按了 Enter（選第一個人），從來沒送過方向鍵。
+	if a.plotGift != nil {
+		return a.updatePlotGift()
+	}
+
 	for _, kf := range keyFacing {
 		if !inpututil.IsKeyJustPressed(kf.key) {
 			continue
@@ -423,13 +437,6 @@ func (a *app) update() error {
 			a.checkMerchantEncounter()
 			a.checkRandomEncounter(tile)
 		}
-	}
-
-	// **排在文字框之後。** 鐵匠鋪先播一段台詞再選人，而文字框的翻頁鍵
-	// 由上面那個 block 處理 —— 排在它前面的話台詞永遠翻不完，
-	// 畫面就卡在第一頁（實跑抓到的，`trace` 停在「文字框」不動）。
-	if a.blacksmith != nil {
-		return a.updateBlacksmith()
 	}
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
@@ -635,8 +642,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawPool(a.canvas)
 	case a.dungeon != nil:
 		a.drawDungeon(a.canvas)
-	case a.blacksmith != nil && !a.box.Active():
-		a.drawBlacksmith(a.canvas)
+	case a.plotGift != nil && !a.box.Active():
+		a.drawPlotGift(a.canvas)
 	case a.showRoster:
 		a.drawRoster(a.canvas)
 	default:

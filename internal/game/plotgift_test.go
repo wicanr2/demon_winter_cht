@@ -65,11 +65,80 @@ func TestBlacksmithGiftDoesNotBurnTheFlagWhenFull(t *testing.T) {
 }
 
 // 沒讀出來的 id 一律不給（寧可少給，不要憑空生道具）。
+//
+// 0–3 在 `docs/re/99` 解出來之後移出這張清單 —— 剩 param 5／6 沒有呼叫端。
 func TestUnknownPlotGiftGivesNothing(t *testing.T) {
 	s, c := giftSave(), taker()
-	for _, id := range []PlotGiftID{0, 1, 2, 3, 5, -1, 99} {
+	for _, id := range []PlotGiftID{5, -1, 99} {
 		if res := TakePlotGift(s, c, id); res.OK {
 			t.Errorf("未讀出的 id %d 卻發了道具", id)
+		}
+	}
+}
+
+// 兵器庫四座台座：座標 → 編號 → 道具規格，逐格釘死。
+//
+// 這張表的每一列都有**兩個獨立來源**互相印證（`docs/re/99` §3）：
+// 原版寫死的位元組，與 `docs/walkthrough/part-4.md` §3.2 列的四樣道具。
+func TestArmoryGifts(t *testing.T) {
+	for _, c := range []struct {
+		x, y     int
+		want     PlotGiftID
+		typ      byte
+		material int
+		enchant  int
+		label    string
+	}{
+		{23, 31, PlotGiftArmoryChain, 0x0a, 3, 0, "銀鏈甲（型別 10 ＝ chain、材質 3 ＝ Silver）"},
+		{23, 27, PlotGiftArmoryMace, 0x03, 0, 0, "釘頭鎚（型別 3 ＝ mace、無材質前綴）"},
+		{33, 27, PlotGiftArmoryDagger, 0x00, 5, 1, "水晶匕首 +1（型別 0 ＝ dagger、材質 5 ＝ Crystal）"},
+		{33, 31, PlotGiftArmorySword, 0x02, 0, 0, "冰藍短劍（型別 2 ＝ short sword）"},
+	} {
+		id := ArmoryGiftFor(c.x, c.y)
+		if id != c.want {
+			t.Errorf("(%d,%d) → 編號 %d，預期 %d", c.x, c.y, id, c.want)
+			continue
+		}
+		spec, ok := plotGiftSpec(id)
+		if !ok {
+			t.Errorf("%s：編號 %d 沒有規格", c.label, id)
+			continue
+		}
+		if spec.Type != c.typ || spec.MaterialClass != c.material || spec.Enchant != c.enchant {
+			t.Errorf("%s：型別 %#02x 材質 %d 附魔 %d，預期 %#02x/%d/%d",
+				c.label, spec.Type, spec.MaterialClass, spec.Enchant,
+				c.typ, c.material, c.enchant)
+		}
+		if !spec.Identified {
+			t.Errorf("%s：共用前置段寫 +0x10 = 1，應該是已鑑定", c.label)
+		}
+	}
+
+	// 冰藍短劍的「冰藍」是附帶法術 15（寒顫，Ice 系）不是材質前綴。
+	sword, _ := plotGiftSpec(PlotGiftArmorySword)
+	if sword.SpellA != 0x0f || sword.SpellAPower != 4 {
+		t.Errorf("冰藍短劍的附帶法術 %d 強度 %d，預期 15／4",
+			sword.SpellA, sword.SpellAPower)
+	}
+	// 釘頭鎚那組特效位元組照抄。**條件旗標 0x12 不是 WeaponEffect 認的 0x15**，
+	// 所以推導值是 0；攻略說它的效果是「恆常：速度 +2」（＝ 0x0c − 10），
+	// 語意還沒定案，不要在這裡硬湊（見 CONTEXT.md §7 的 C13）。
+	mace, _ := plotGiftSpec(PlotGiftArmoryMace)
+	if mace.CondA != 0x12 || mace.EffectAByte != 0x0c {
+		t.Errorf("釘頭鎚的特效位元組 %#02x/%#02x，預期 0x12／0x0c",
+			mace.CondA, mace.EffectAByte)
+	}
+
+	// 四座各自獨立：拿了一座不影響其他三座。
+	s, c := giftSave(), taker()
+	if res := TakePlotGift(s, c, PlotGiftArmoryDagger); !res.OK {
+		t.Fatalf("拿匕首失敗：%+v", res)
+	}
+	for _, other := range []PlotGiftID{
+		PlotGiftArmoryChain, PlotGiftArmoryMace, PlotGiftArmorySword,
+	} {
+		if PlotGiftTaken(s, other) {
+			t.Errorf("拿了匕首卻把編號 %d 也標成拿過了", other)
 		}
 	}
 }

@@ -17,12 +17,24 @@ import (
 // PlotGiftID 是送道具常式的參數，同時也是旗標陣列的索引。
 type PlotGiftID int
 
-// PlotGiftBlacksmith 是地點劇情 case 4（鐵匠鋪）送的那把武器。
+// 跳表七個 param 的分派（`cs:0x139a`，`docs/re/99` §2）。
 //
-// **只認出這一格。** 那支常式的跳表有 7 個 param，其餘六個掛在還沒接的
-// 劇情 case 上（`docs/re/65` §3 的 case 6／7／8／9／12／13），
-// 沒有呼叫端就沒辦法確認誰是誰 —— 所以不先把表填滿。
-const PlotGiftBlacksmith PlotGiftID = 4
+// **0–4 已經有呼叫端、規格也對上了；5／6 還沒有。** 前四個是兵器庫的
+// 四座台座（case 3 用座標算出 0–3），第 5 個是鐵匠鋪（case 4）。
+// param 5／6 共用同一段程式（型別 ＝ `param + 0x17` ＝ 28／29），
+// 掛在還沒讀的 case 6／7／8／9 上，**沒有呼叫端就先不填**。
+const (
+	// PlotGiftArmoryChain 是兵器庫的鏈甲（Silver Suit of Chain Mail）。
+	PlotGiftArmoryChain PlotGiftID = 0
+	// PlotGiftArmoryMace 是兵器庫的釘頭錘（a Mace）。
+	PlotGiftArmoryMace PlotGiftID = 1
+	// PlotGiftArmoryDagger 是兵器庫的水晶匕首（a Crystal Dagger）。
+	PlotGiftArmoryDagger PlotGiftID = 2
+	// PlotGiftArmorySword 是兵器庫的冰藍短劍（an Icy Blue Short Sword）。
+	PlotGiftArmorySword PlotGiftID = 3
+	// PlotGiftBlacksmith 是地點劇情 case 4（鐵匠鋪）送的那把闊劍。
+	PlotGiftBlacksmith PlotGiftID = 4
+)
 
 // blacksmithSword 是鐵匠那把武器的完整規格（`0x1ab33`–`0x1ab61`）。
 //
@@ -88,10 +100,65 @@ func TakePlotGift(s *scenario.SaveGame, c *Character, id PlotGiftID) PlotGiftRes
 	return PlotGiftResult{OK: true, Slot: slot}
 }
 
-// plotGiftSpec 是 id → 道具規格。**只有一格** —— 見 PlotGiftBlacksmith。
+// armoryGifts 是兵器庫四座台座的道具（`0x1aadc`／`0x1aaee`／`0x1ab08`／`0x1ab1a`）。
+//
+// 共用的前置段（`0x1aaa2`–`0x1aacb`）先把 17 bytes 清 0，
+// 再寫 `+0x0e = 0x0a`（附魔 ＝ 0）與 `+0x10 = 1`（已鑑定），
+// 各 param 的分支只覆寫自己那幾格。所以**沒被覆寫的欄位就是 0**，
+// 包含型別 —— param 2 的匕首正是靠這個拿到 `ITEMS.DAT` 第 0 件。
+//
+// # 名字自己招供
+//
+// 這四件的顯示字串就在跳表附近（`ds:0x27cc` 的四個遠指標）。
+// 把型別、材質類別、附帶法術三樣分別對回去，**六處零誤差**：
+//
+//	param 0  型別 10 ＝ chain        材質 3 ＝ Silver    → "Silver Suit of Chain Mail"
+//	param 1  型別  3 ＝ mace         材質 0 ＝（無前綴）  → "a Mace"
+//	param 2  型別  0 ＝ dagger       材質 5 ＝ Crystal   → "a Crystal Dagger"
+//	param 3  型別  2 ＝ short sword  附帶法術 15 ＝ 寒顫（Ice）→ "an Icy Blue Short Sword"
+//
+// 材質前綴表見 `docs/re/48` §3、法術表見 `docs/re/15`。
+// `docs/re/65` §3.2 當時只讀出這些原始位元組，並寫著「沒有呼叫端就確認不了
+// 誰是誰」—— 呼叫端是 case 3，四座台座各對一格。
+var armoryGifts = map[PlotGiftID]scenario.InventorySlot{
+	// 銀鏈甲。除了材質拉到 Silver 之外沒有任何附加效果。
+	PlotGiftArmoryChain: {
+		Type:          0x0a,
+		MaterialClass: 3,
+		Identified:    true,
+	},
+	// 釘頭錘。材質是普通的，特別之處在那組**特效條件旗標**。
+	// `CondA`／`EffectAByte` 照抄原始位元組 —— 條件 0x12 不是
+	// 估價那條路認得的 0x15，語意還沒定案（`docs/re/46` §4），
+	// 所以不推導成 `WeaponEffect`。
+	PlotGiftArmoryMace: {
+		Type:        0x03,
+		CondA:       0x12,
+		EffectAByte: 0x0c,
+		Identified:  true,
+	},
+	// 水晶匕首。**型別 0 是「沒被覆寫」的結果，不是漏寫。**
+	PlotGiftArmoryDagger: {
+		Type:          0x00,
+		MaterialClass: 5,
+		Enchant:       1, // 分支覆寫 +0x0e = 0x0b → 11 − 10
+		Identified:    true,
+	},
+	// 冰藍短劍。附帶法術 15（寒顫，Ice 系）強度 4 —— 名字裡的
+	// 「Icy Blue」就是這個，不是材質前綴。
+	PlotGiftArmorySword: {
+		Type:        0x02,
+		SpellA:      0x0f,
+		SpellAPower: 0x04,
+		Identified:  true,
+	},
+}
+
+// plotGiftSpec 是 id → 道具規格。param 5／6 還沒有呼叫端，故不在表內。
 func plotGiftSpec(id PlotGiftID) (scenario.InventorySlot, bool) {
 	if id == PlotGiftBlacksmith {
 		return blacksmithSword, true
 	}
-	return scenario.InventorySlot{}, false
+	s, ok := armoryGifts[id]
+	return s, ok
 }

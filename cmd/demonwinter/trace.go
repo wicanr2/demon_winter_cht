@@ -145,8 +145,8 @@ func (a *app) screenName() string {
 		return "水池"
 	case a.dungeon != nil:
 		return "地城道具"
-	case a.blacksmith != nil:
-		return "鐵匠鋪"
+	case a.plotGift != nil:
+		return "劇情道具"
 	}
 	return "野外"
 }

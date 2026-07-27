@@ -21,7 +21,9 @@ const (
 	plotCaseMachinery = 1
 	// plotCaseCrush 是走廊中段：牆各推進一列，夾到就死。
 	plotCaseCrush = 2
-	// plotCaseBlacksmith 是鐵匠鋪（見 blacksmithui.go）。
+	// plotCaseArmory 是兵器庫的四座台座（地圖 1，見 plotgiftui.go）。
+	plotCaseArmory = 3
+	// plotCaseBlacksmith 是鐵匠鋪（見 plotgiftui.go）。
 	plotCaseBlacksmith = 4
 )
 

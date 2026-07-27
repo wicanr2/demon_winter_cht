@@ -47,6 +47,9 @@ func (a *app) locationPlot(c int) {
 		a.advanceCrushingWalls()
 	case plotCaseBlacksmith:
 		a.openBlacksmith()
+	case plotCaseArmory:
+		// 四座台座共用一個 case，靠座標算出是哪一件。
+		a.openArmory(a.party.X(), a.party.Y())
 
 	case game.RiddleCaseSpectralPriest, game.RiddleCaseTempleName:
 		a.openRiddle(c)
