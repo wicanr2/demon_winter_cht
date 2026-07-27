@@ -43,8 +43,6 @@ func TestViewInsetDungeonIgnoresTheClock(t *testing.T) {
 
 // 矮人的黑暗視覺 ＝ 地城光源 +1。
 //
-// 這一條同時釘住出貨存檔那個實機對照：光照 0、隊伍裡有矮人 → 內縮 3 → 3×3，
-// 與 DOSBox 原版在地圖 1 的 (9,32) 抓到的畫面逐格相符。
 func TestDwarfDarkVisionAddsOneToDungeonLight(t *testing.T) {
 	noDwarf := []Character{human(), human()}
 	withDwarf := []Character{human(), dwarf(scenario.StatusNormal)}
@@ -58,6 +56,13 @@ func TestDwarfDarkVisionAddsOneToDungeonLight(t *testing.T) {
 	// 光源已經到 4 就不再加（原版的 `CMP AX,4 / JGE` 閘門）。
 	if got := ViewInset(1, 13, 4, withDwarf); got != 0 {
 		t.Errorf("光源 4、有矮人：內縮 %d，預期 0", got)
+	}
+	// 出貨存檔的實機對照：光源 1、**沒有矮人** → 內縮 3 → 3×3，
+	// 與 DOSBox 原版在地圖 1 的 (9,32) 抓到的畫面逐格相符。
+	// （這一條原本寫成「光照 0 ＋ 三個矮人」—— 那是手寫 PARTY.DAT parse
+	// 漂掉的結果，用驗過的 scenario.LoadSaveGame 讀出來才是這組值。）
+	if got := ViewInset(1, 13, 1, noDwarf); got != 3 {
+		t.Errorf("出貨存檔（光源 1、無矮人）：內縮 %d，預期 3", got)
 	}
 }
 

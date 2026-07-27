@@ -763,6 +763,16 @@ func (a *app) tileMetrics() (cellW, cellH, scale int) {
 	return fw * scale, fh * scale, scale
 }
 
+// viewInset 是這一刻地圖視窗四邊各縮掉幾格（＝原版的光照等級 `ds:0x4c86`）。
+//
+// **繪製與狀態列共用這一支。** 狀態列原本印的是 `a.clock.Light()`，
+// 那只是**戶外**的時辰值 —— 在地城裡它與實際生效的內縮量無關，
+// 於是畫面顯示「光照 0」而視野其實縮到 3×3。那個落差害我把一次驗證
+// 的理由判斷錯（誤以為隊伍有矮人在加成），所以現在兩邊只讀同一個值。
+func (a *app) viewInset() int {
+	return game.ViewInset(a.mapID, a.clock.Hour(), a.torch, a.members)
+}
+
 func (a *app) drawWorld(dst *ebiten.Image) {
 	ts := a.tileset()
 	halfX, halfY := layout.ViewTilesX/2, layout.ViewTilesY/2
@@ -781,9 +791,8 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 		a.party.X(), a.party.Y(), a.party.Sailing())
 
 	// 照明：視窗固定 9×9，但畫出來的範圍會往內縮（原版 `ds:0x4c86`）。
-	// 戶外看時辰、地城看光源＋矮人的黑暗視覺，見 game.ViewInset。
 	// 縮進去的格子**不畫**，留黑 —— 原版是先把繪製緩衝區整片清 0 再只填可見範圍。
-	inset := game.ViewInset(a.mapID, a.clock.Hour(), a.torch, a.members)
+	inset := a.viewInset()
 
 	for dy := 0; dy < layout.ViewTilesY; dy++ {
 		for dx := 0; dx < layout.ViewTilesX; dx++ {
@@ -1197,7 +1206,7 @@ func (a *app) monthName() string {
 func (a *app) drawStatus(dst *ebiten.Image) {
 	lines := []string{
 		fmt.Sprintf("%2d時 %2d日 %s月", a.clock.Hour(), a.clock.Day(), a.monthName()),
-		fmt.Sprintf("步數 %2d  光照 %d", a.clock.Steps(), a.clock.Light()),
+		fmt.Sprintf("步數 %2d  光照 %d", a.clock.Steps(), a.viewInset()),
 		fmt.Sprintf("座標 %2d,%-2d 面向%s", a.party.X(), a.party.Y(), facingName[a.party.Facing()]),
 		fmt.Sprintf("地形 %3d  深度 %d", a.lastTile, a.party.Depth()),
 		fmt.Sprintf("圖塊 %s", a.tileset().Name()),

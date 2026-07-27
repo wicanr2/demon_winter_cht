@@ -70,11 +70,19 @@ const maxTorch = int(MaxLightLevel)
 // 光源強度超出 0–4 一律夾住 —— 原版沒有檢查，但它的來源（隊伍欄位 +0xa7）
 // 若被寫入奇怪的值，算出來的 k 會讓戰場視窗變成負寬。
 //
-// **原版還有一個 +1 的加成沒有實作**：0x161b5 在 `ds:0x4e32 != 0` 且
-// 光源 < 4 時把光源加一。那個旗標是什麼還沒追出來，這裡不猜。
-func DungeonLight(torch int) LightLevel {
+// darkVision 是那個 **+1 加成**（`0x161b5`：`ds:0x4e32 != 0` 且光源 < 4 時
+// 光源加一）。本節原本寫「那個旗標是什麼還沒追出來，這裡不猜」——
+// **追出來了**（`docs/re/97` §5.2）：它是「隊伍裡有活著的矮人」，
+// 也就是矮人天生能力**黑暗視覺**。用 PartyHasDarkVision 算。
+//
+// ⚠ 別拿 `docs/re/08` 的「`ds:0x4e32` ＝ 隊伍面向」套過來 —— 那是它在移動
+// 程式碼裡的用途。這個位址全檔有 40 個寫入點、跨四個段，是共用暫存字。
+func DungeonLight(torch int, darkVision bool) LightLevel {
 	if torch < 0 {
 		torch = 0
+	}
+	if darkVision && torch < maxTorch {
+		torch++
 	}
 	if torch > maxTorch {
 		torch = maxTorch
@@ -161,11 +169,15 @@ func (c *Clock) Month() int { return c.month }
 func (c *Clock) Steps() int { return c.steps }
 
 // Light 回傳目前小時的光照等級。
-func (c *Clock) Light() LightLevel {
-	if c.hour < 0 || c.hour >= hourWrap {
+func (c *Clock) Light() LightLevel { return LightAtHour(c.hour) }
+
+// LightAtHour 是**戶外**該時辰的光照等級。與 Clock.Light 共用同一張表 ——
+// 視野裁切要按小時算（ViewInset），拿不到 Clock 的地方走這一支。
+func LightAtHour(hour int) LightLevel {
+	if hour < 0 || hour >= hourWrap {
 		return LightDark
 	}
-	return lightByHour[c.hour]
+	return lightByHour[hour]
 }
 
 // ForcedCamp 回報是否已到天黑強制紮營的時刻。
