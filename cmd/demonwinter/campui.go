@@ -190,6 +190,8 @@ func (a *app) campSleep() {
 	a.save.ViewedLandToday = false
 	// 治療水池的額度也在同一段補回 7（原版 `0x1eee6`，`docs/re/90` §2）。
 	game.ResetPoolDrinks(a.save)
+	// 兩個靈視技能的每日次數也在同一段清 0（`0x1ef68`–`0x1ef7c`）。
+	game.ResetPsychicUses(a.save)
 
 	msg := fmt.Sprintf("睡了 %d 個時辰，%d 日 %d 時醒來",
 		res.Hours, a.clock.Day(), a.clock.Hour())

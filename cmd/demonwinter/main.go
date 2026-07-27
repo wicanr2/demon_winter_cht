@@ -71,9 +71,9 @@ type app struct {
 	// trapSpots 是上一次 `L` 掃到的陷阱格，畫成白框（原版 ds:0x5192）。
 	// 走一步就清掉 —— 框是「這一次掃描的結果」，不是地圖的長期狀態。
 	trapSpots []game.TrapSpot
-	party *game.Party
-	clock *game.Clock
-	tiles *world.Map
+	party     *game.Party
+	clock     *game.Clock
+	tiles     *world.Map
 
 	// drawTiles 是「拿來畫」的那份 tile 陣列：與 tiles 相同，但海面已經
 	// 隨機摻過另一種浪花（見 world.OceanDither）。原版是在載入時就地改寫
@@ -449,6 +449,10 @@ func (a *app) update() error {
 	// L：查看陷阱（手冊「地底 → 偵測與解除陷阱」，原版動作 0x07）。
 	if inpututil.IsKeyJustPressed(ebiten.KeyL) {
 		a.lookForTraps()
+	}
+	// V：觀室（手冊「地底 → 觀室」，原版動作 0x0f）。
+	if a.checkViewRoomKey() {
+		return nil
 	}
 	return nil
 }
@@ -1101,7 +1105,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"T：進入城鎮",
 		"B：測試戰鬥（偵錯）",
 		"C：紮營",
-		"L：查看陷阱",
+		"L：查看陷阱　V：觀室",
 		"F1：建立角色（偵錯）",
 		"F2：手札",
 		"M：遇到商隊（偵錯）",
@@ -1326,7 +1330,7 @@ func main() {
 	}
 	if fresh {
 		log.Printf("沒有進度存檔，用原版 PARTY.DAT 當起始狀態。存檔會寫到 %s", *savePath)
-		log.Printf("⚠ 那份 PARTY.DAT 是玩過的存檔（地城中段），不是新遊戲。"+
+		log.Printf("⚠ 那份 PARTY.DAT 是玩過的存檔（地城中段），不是新遊戲。" +
 			"要從頭開始請加 -newgame（見 docs/re/87）")
 	}
 	if *newGameFlag {
@@ -1428,25 +1432,25 @@ func main() {
 	}
 
 	a := &app{
-		trace:      newTracer(*traceFlag),
-		auto:       newAutoFighter(*autoFightFlag),
-		world:      game.NewWorld(m, tables),
-		party:      newPartyAt(px, py, save),
-		clock:      game.ClockAt(int(save.Hour), int(save.Day), int(save.Month), int(save.TimeCounter)),
-		tiles:      m,
-		mapID:      mapID,
-		drawTiles:  ditheredTiles(m, uint16(*seed), save.TempleRuins),
-		exits:      exits,
-		special:    special,
-		manual:     man,
-		winText:    loadWinText(*dataDir),
-		dreamText:  loadStoryOrNil(*dataDir, scenario.StoryDream),
+		trace:       newTracer(*traceFlag),
+		auto:        newAutoFighter(*autoFightFlag),
+		world:       game.NewWorld(m, tables),
+		party:       newPartyAt(px, py, save),
+		clock:       game.ClockAt(int(save.Hour), int(save.Day), int(save.Month), int(save.TimeCounter)),
+		tiles:       m,
+		mapID:       mapID,
+		drawTiles:   ditheredTiles(m, uint16(*seed), save.TempleRuins),
+		exits:       exits,
+		special:     special,
+		manual:      man,
+		winText:     loadWinText(*dataDir),
+		dreamText:   loadStoryOrNil(*dataDir, scenario.StoryDream),
 		eregoreText: loadEregoreText(*dataDir),
-		dreamPage:  -1,
-		ditherSeed: uint16(*seed),
+		dreamPage:   -1,
+		ditherSeed:  uint16(*seed),
 		// -ending 直接跳結局序列。破關要走完整條主線，沒有這個旗標
 		// 就沒辦法驗收結局畫面（同 -glyphs／-ruins 的性質）。
-		won: *endingFlag,
+		won:        *endingFlag,
 		events:     events,
 		tr:         tr,
 		eventsFile: *dataFile,

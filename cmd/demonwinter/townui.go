@@ -377,6 +377,8 @@ func (a *app) restAtInn() {
 	// 睡一晚就清掉隊伍層級的每日旗標（與紮營同一條規則）。
 	// 治療水池的額度也在同一段補回 7（原版 `0x1eee6`，`docs/re/90` §2）。
 	game.ResetPoolDrinks(a.save)
+	// 兩個靈視技能的每日次數也在同一段清 0（`0x1ef68`–`0x1ef7c`）。
+	game.ResetPsychicUses(a.save)
 	a.save.ViewedLandToday = false
 
 	msg := fmt.Sprintf("睡了 %d 個時辰，%d 日 %d 時醒來",

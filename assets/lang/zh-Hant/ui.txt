@@ -463,3 +463,25 @@ The pool is empty
 ## pool.keys
 :: zh
 ↑↓：選人　Enter：喝　Esc：離開
+
+## viewroom.noskill
+:: zh
+隊伍裡沒有人會觀室
+
+## viewroom.weak
+:: en
+Your psychic powers are weak
+:: zh
+你們的靈視之力已經耗盡
+
+## viewroom.nothing
+:: en
+You see nothing
+:: zh
+什麼也沒看到
+
+## viewroom.trap
+:: en
+A trap!
+:: zh
+前方有陷阱

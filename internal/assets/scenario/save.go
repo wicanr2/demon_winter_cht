@@ -232,6 +232,16 @@ const (
 	// **換一口池子不會回滿**。
 	poolDrinksOffset = 0xaa
 
+	// viewRoomUsesOffset／viewItemUsesOffset：兩個靈視技能的**每日次數**
+	// （`docs/re/93`）。上限都是 **3**（`0x19027`／`0x19422` 的 `cmp …,3`），
+	// 到了就印 `Your psychic powers are weak`。睡覺與 `+0xac`（觀地）
+	// 在同一段清 0（`0x1ef68`–`0x1ef7c`）。
+	//
+	// ⚠ 手冊說這兩個技能「每天只能使用一次」—— 那是 Apple II 版的說法，
+	// DOS 版的執行檔寫的是 3。
+	viewRoomUsesOffset = 0xad
+	viewItemUsesOffset = 0xae
+
 	// encounterCountdownOffset：**離下一場隨機戰鬥還有幾步**（`docs/re/51`）。
 	//
 	// 走一步減一，歸零時主迴圈回傳動作碼 `0x16`（`0x16aee`）去挑怪。
@@ -498,6 +508,11 @@ type SaveGame struct {
 	// PoolDrinks 是今天還能喝幾口治療水池（trailer +0xaa，整隊共用）。
 	PoolDrinks byte
 
+	// ViewRoomUses／ViewItemUses 是兩個靈視技能今天用過幾次
+	// （trailer +0xad／+0xae，上限 3）。
+	ViewRoomUses byte
+	ViewItemUses byte
+
 	// Boat 是目前搭乘的船（船隻陣列格號 +1，0 代表沒搭船）。
 	// 見 boatOffset 註解與 ship.go。
 	Boat byte
@@ -593,6 +608,8 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.Ships = parseShips(trailer)
 	save.ViewedLandToday = trailer[viewedLandTodayOffset] != 0
 	save.PoolDrinks = trailer[poolDrinksOffset]
+	save.ViewRoomUses = trailer[viewRoomUsesOffset]
+	save.ViewItemUses = trailer[viewItemUsesOffset]
 	save.Boat = trailer[boatOffset]
 	save.UnknownC1 = trailer[unknownC1Offset]
 
