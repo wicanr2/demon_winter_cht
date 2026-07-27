@@ -283,3 +283,25 @@ func TestCarriedDungeonItemsMarksUnknownName(t *testing.T) {
 		t.Errorf("認不出的名字 index = %v，預期 −1", got)
 	}
 }
+
+// --- ExamineDungeonItem ---
+
+// `+2` 欄有話就回那句。
+func TestExamineReturnsTheLookText(t *testing.T) {
+	items := gamedata.DungeonItems{
+		{Name: "Old bookcase", Look: "It has been moved to reveal a passage"},
+		{Name: "Mallet"}, // `+2` 空著
+	}
+	if got, ok := ExamineDungeonItem(items, "Old bookcase"); !ok ||
+		got != "It has been moved to reveal a passage" {
+		t.Errorf("檢視得到 %q／%v", got, ok)
+	}
+	// `+2` 空著 → 沒話可說，訊息由介面組（要塞譯名進去）。
+	if got, ok := ExamineDungeonItem(items, "Mallet"); ok || got != "" {
+		t.Errorf("空的 +2 欄回了 %q／%v", got, ok)
+	}
+	// 名字認不出來也是「沒話可說」，不要 panic 也不要回第 0 件的敘述。
+	if _, ok := ExamineDungeonItem(items, "殘值"); ok {
+		t.Error("認不出的名字卻回了敘述")
+	}
+}

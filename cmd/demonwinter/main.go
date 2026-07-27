@@ -432,6 +432,11 @@ func (a *app) update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
 		a.openDungeonDrop()
 	}
+	// E：檢視地城道具（手冊「物品 → 檢視」，原版動作 0x0a → 222f:2088(3)）。
+	// **看的是身上那件**，不是腳下那件 —— 與 T 剛好相反。
+	if inpututil.IsKeyJustPressed(ebiten.KeyE) {
+		a.openDungeonExamine()
+	}
 	// F3 是偵錯用的「就地進城」。
 	if inpututil.IsKeyJustPressed(ebiten.KeyF3) {
 		a.openTownPicker()
@@ -1127,6 +1132,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"Tab：切換季節",
 		"P：隊伍名冊",
 		"T：拿取　D：丟棄",
+		"E：檢視身上的地城道具",
 		"C：紮營",
 		"L：查看陷阱　V：觀室",
 		"B：測試戰鬥（偵錯）",

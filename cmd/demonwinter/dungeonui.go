@@ -28,7 +28,16 @@ type dungeonMode int
 const (
 	dungeonTake dungeonMode = iota
 	dungeonDrop
+	dungeonExamine
 )
+
+// fromInventory 回報這個模式選的是「身上的道具」而不是「腳下的東西」。
+//
+// **原版就是這樣分的**：`Use`／`Drop`／`Examine` 共用 `122f:1d23`
+// 選「哪個角色的第幾格」，`Take:`／`Move:` 才掃腳下（`docs/re/95` §3.8）。
+func (m dungeonMode) fromInventory() bool {
+	return m == dungeonDrop || m == dungeonExamine
+}
 
 // dungeonScreen 是拾取／丟棄的選單。
 //
@@ -61,11 +70,14 @@ func (a *app) openDungeonTake() {
 	a.trace.note("拾取：腳下 %d 件", len(spots))
 }
 
-// openDungeonDrop 是 `D` 丟棄。
+// openDungeonDrop 是 `D` 丟棄，openDungeonExamine 是 `E` 檢視。
 //
-// 選單列的是**全隊**身上的地城道具 —— 原版的選取常式
+// 兩者的選單都列**全隊**身上的地城道具 —— 原版的選取常式
 // （`122f:1d23`）回傳的就是「哪個角色的第幾格」。
-func (a *app) openDungeonDrop() {
+func (a *app) openDungeonDrop()    { a.openCarriedPicker(dungeonDrop, "丟棄") }
+func (a *app) openDungeonExamine() { a.openCarriedPicker(dungeonExamine, "檢視") }
+
+func (a *app) openCarriedPicker(mode dungeonMode, what string) {
 	if a.itemloc == nil {
 		return
 	}
@@ -74,8 +86,8 @@ func (a *app) openDungeonDrop() {
 		a.message = a.tr.UI("dungeon.carry.none", "身上沒有地城道具")
 		return
 	}
-	a.dungeon = &dungeonScreen{mode: dungeonDrop, carried: carried}
-	a.trace.note("丟棄：身上 %d 件", len(carried))
+	a.dungeon = &dungeonScreen{mode: mode, carried: carried}
+	a.trace.note("%s：身上 %d 件", what, len(carried))
 }
 
 func (a *app) updateDungeon() error {
@@ -107,7 +119,7 @@ func (a *app) updateDungeon() error {
 func (a *app) dungeonChoices() int {
 	d := a.dungeon
 	switch {
-	case d.mode == dungeonDrop:
+	case d.mode.fromInventory():
 		return len(d.carried)
 	case d.stage == 1:
 		return len(a.members)
@@ -118,8 +130,12 @@ func (a *app) dungeonChoices() int {
 
 func (a *app) confirmDungeon() {
 	d := a.dungeon
-	if d.mode == dungeonDrop {
+	switch d.mode {
+	case dungeonDrop:
 		a.dropDungeonItem(d.carried[d.cursor])
+		return
+	case dungeonExamine:
+		a.examineDungeonItem(d.carried[d.cursor])
 		return
 	}
 	if d.stage == 0 {
@@ -169,6 +185,31 @@ func (a *app) dropDungeonItem(c game.CarriedDungeonItem) {
 		a.dungeonName(c.Name))
 	a.trace.note("丟棄 %s 於 (%d,%d) 地圖%d",
 		c.Name, a.party.X(), a.party.Y(), a.mapID)
+}
+
+// examineDungeonItem 是 `E`：印出 `+2` 欄那段敘述。
+//
+// 敘述可能很長（`Old bookcase` 那句 40 幾個字），所以走文字框不走狀態列 ——
+// 原版也是 `15be:158e`（與事件敘述同一支）。
+func (a *app) examineDungeonItem(c game.CarriedDungeonItem) {
+	a.dungeon = nil
+	look, ok := game.ExamineDungeonItem(a.dungeonItems, c.Name)
+	if !ok {
+		// 原版 ds:0x241a `You see nothing special about the %s`。
+		a.message = fmt.Sprintf(
+			a.tr.UI("dungeon.nothing.special", "%s 看不出有什麼特別"),
+			a.dungeonName(c.Name))
+		a.trace.note("檢視 %s：沒什麼特別", c.Name)
+		return
+	}
+	// 敘述在 `FILES.DTT` 的第 `164 + i×6 + 2` 條。
+	text := look
+	if c.Index >= 0 {
+		text = a.tr.Event(dungeonSourceFile,
+			gamedata.DungeonItemFirstString+c.Index*gamedata.DungeonItemFields+2, look)
+	}
+	a.box = ui.NewMixedTextBox(text)
+	a.trace.note("檢視 %s", c.Name)
 }
 
 // dungeonName 是畫面上的地城道具名。
@@ -226,8 +267,12 @@ func (a *app) drawDungeon(dst *ebiten.Image) {
 	}
 
 	switch {
-	case d.mode == dungeonDrop:
-		line(a.tr.UI("dungeon.drop.title", "放下哪一件？"))
+	case d.mode.fromInventory():
+		title := a.tr.UI("dungeon.drop.title", "放下哪一件？")
+		if d.mode == dungeonExamine {
+			title = a.tr.UI("dungeon.examine.title", "看哪一件？")
+		}
+		line(title)
 		line("")
 		for i, c := range d.carried {
 			line(fmt.Sprintf("%s%s　%s",

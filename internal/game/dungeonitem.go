@@ -200,6 +200,23 @@ func DropDungeonItem(c *Character, t *scenario.ItemLocTable,
 	return DungeonDropResult{OK: true, Index: index}
 }
 
+// ExamineDungeonItem 是 `E` 檢視：回傳 `+2` 欄那段敘述（原版 `222f:2088(3)`）。
+//
+// **檢視的是身上那件，不是腳下那件。** `Use`／`Drop`／`Examine` 三個
+// 共用 `122f:1d23` 選「哪個角色的第幾格」，`Take:`／`Move:` 才是掃腳下
+// （`docs/re/95` §3.8）。規格原本把 `E` 寫成「選一件腳下的」，那是推的。
+//
+// 第二個回傳值是「有沒有話可說」。`+2` 欄空著的 48／50 件之外那兩件，
+// 原版印的是 `You see nothing special about the %s` —— 那句話由介面組，
+// 因為它要塞譯名進去。
+func ExamineDungeonItem(items gamedata.DungeonItems, name string) (string, bool) {
+	i, ok := items.ByName(name)
+	if !ok || items[i].Look == "" {
+		return "", false
+	}
+	return items[i].Look, true
+}
+
 // CarriedDungeonItem 是某人身上的一件地城道具。
 type CarriedDungeonItem struct {
 	// Member 是隊伍索引，Slot 是道具欄索引。

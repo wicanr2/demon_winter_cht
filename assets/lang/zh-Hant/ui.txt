@@ -553,3 +553,15 @@ Up/Down: select  Enter: confirm  Esc: back
 ## dungeon.drop.failed
 :: zh
 放不下去
+
+## dungeon.examine.title
+:: en
+Examine 
+:: zh
+看哪一件？
+
+## dungeon.nothing.special
+:: en
+You see nothing special about the %s
+:: zh
+%s 看不出有什麼特別
