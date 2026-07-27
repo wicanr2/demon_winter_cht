@@ -159,6 +159,68 @@ func check(args []string) {
 		}
 	}
 
+	// 地城道具（`DUNGEONITEM`）：名稱與散文混在同一個目錄裡，
+	// 而且整條主線解謎提示鏈都在這 100 多條裡（Qoorik、Asaht、光之環），
+	// 所以**要跑完整的五道檢查**，不能只驗 Big5。
+	//
+	// 原文比對走 `dungeonItemEntries` —— 抽字與檢查共用同一支，
+	// 兩邊各寫一份「哪些欄位要翻」遲早會漂掉。
+	if fresh, err := dungeonItemEntries(*dataDir); err == nil {
+		path := filepath.Join(*langDir, i18n.CatalogFileName(dungeonItemSource))
+		if cat, err := i18n.LoadCatalog(path); err == nil {
+			want := map[int]string{}
+			for _, e := range fresh {
+				want[e.Index] = e.Source
+			}
+			done, review, todo := cat.Stats()
+			totalDone += done
+			totalAll += len(cat.Entries)
+			fmt.Printf("%-11s：%d 已翻 / %d 待複查 / %d 未翻（共 %d）\n",
+				dungeonItemSource, done, review, todo, len(cat.Entries))
+
+			for _, e := range cat.Entries {
+				src, ok := want[e.Index]
+				switch {
+				case !ok:
+					report("%s #%d：這一條不在可翻譯的欄位裡（`+3` 座標與 `+4` 查表鍵不能翻）",
+						dungeonItemSource, e.Index)
+					continue
+				case normalise(e.Source) != normalise(src):
+					report("%s #%d：原文與 FILES.DTT 對不上，譯文會退回英文",
+						dungeonItemSource, e.Index)
+					continue
+				}
+				if e.Target == "" {
+					continue
+				}
+				if a, b := verbs(e.Source), verbs(e.Target); !equalSlices(a, b) {
+					report("%s #%d：控制序列不符，原文 %v、譯文 %v",
+						dungeonItemSource, e.Index, a, b)
+				}
+				if bad := nonBig5(e.Target); len(bad) > 0 {
+					report("%s #%d：以下字元不在 Big5，畫面上會缺字：%s",
+						dungeonItemSource, e.Index, string(bad))
+				}
+				// 道具名會進 21 格寬的清單，敘述走文字框。
+				if w, ok := tooLong(e.Source, e.Target); !ok {
+					report("%s #%d：譯文 %d 格、原文 %d 格，超過 +40%%",
+						dungeonItemSource, e.Index, w, len(e.Source))
+				}
+				for _, term := range terms {
+					if !wordBoundary(term.en).MatchString(e.Source) {
+						continue
+					}
+					if strings.Contains(e.Target, term.zh) ||
+						coveredByCompound(term, terms, e.Source, e.Target) {
+						continue
+					}
+					report("%s #%d：原文有 %q，譯文卻找不到指定譯名 %q",
+						dungeonItemSource, e.Index, term.en, term.zh)
+				}
+			}
+		}
+	}
+
 	// 其餘的名稱目錄（道具／怪物／城鎮／月份／技能）走同一套機制。
 	//
 	// 這幾個原本不在檢查範圍內 —— 於是 `check` 一直回報「148/148 100%」，

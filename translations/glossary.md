@@ -767,3 +767,86 @@
 | time frame | 時代 | `DATA5` #1／#2。專指隊伍所處的時間點，相對於一萬年前 |
 | the dawn of Man | 人類初生年代 | `DATA5` #7。刻意避開「遠古」，免與第 1 節「遠古種族／遠古者」混淆 |
 | 'Ymros is mine' | 「依姆羅斯是我的」 | `DATA3` #8 臨終字句，同攻略對符文密語 `YMROS IS MINE` 的譯法 |
+
+---
+
+## 23. 地城道具（`FILES.DTT` 164–463 中文化）
+
+> 2026-07-27 翻 `assets/lang/zh-Hant/dungeonitem.txt` 時定案的 50 件地城道具名。
+> **這一整組是解謎用的獨一無二物件**，畫面上引擎會自動在前面加 `/` 記號
+> （手冊：「地城物品在清單中前面會加上 `/`」），記號不屬於譯名。
+>
+> 譯名優先沿用 `docs/walkthrough/` 已發布的用字 —— 玩家會拿攻略對照遊戲畫面，
+> 兩邊不同字就等於沒有攻略。表裡標「攻略」的那幾條就是這樣定的。
+>
+> ⚠ 這 50 件的 `+4`「要配哪一件」欄存的是**另一件道具的英文名**，那是引擎的查表鍵
+> （`DungeonItems.ByName`），**原始資料一個字都不能翻**；畫面上顯示時才用本表換成中文。
+>
+> 這一節的標題**刻意不含「專有名詞」** —— `dwstrings check` 的漂移掃描只掃專有名詞章節，
+> 而這 50 條大多是普通名詞（床、祭壇、卷軸），拿去逐條比對只會製造大量假警報
+> （見 `cmd/dwstrings/glossary.go` 開頭的說明）。**這一節靠人維護，不是機器擋的。**
+> 真正該被機器擋住的專有名詞放在下面那一小節。
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Iron key | 鐵鑰匙 | 攻略 part-4。開籠子放出老鼠，露出暗門 |
+| Bed | 床 | 兩件同名（庫瑞克與冰之神殿各一），同譯 |
+| Bookcase | 書櫃 | 攻略 part-4。與下方 `Old bookcase 舊書櫃` 是兩件 |
+| Scroll | 卷軸 | 記載庫瑞克的傳說 |
+| Cage | 籠子 | 攻略 part-4 |
+| Blue serum | 藍色血清 | 攻略 part-4 |
+| Red serum | 紅色血清 | 攻略 part-4 |
+| Mallet | 木槌 | 攻略 part-4。打破玻璃箱 |
+| Anvil | 鐵砧 | |
+| Fireplace | 壁爐 | 與下方 `Charcoal fire 炭火` 是同一房間的兩件，刻意不同字 |
+| Charcoal fire | 炭火 | |
+| Red candle | 紅色蠟燭 | |
+| Wooden altar | 木製祭壇 | 與下方 `Altar 祭壇` 是兩件 |
+| Man in glass | 玻璃裡的男子 | 攻略 part-4 |
+| Man in trance | 恍惚的男子 | 打破玻璃後變成的那一件（動作碼 `N`），與上一列是同一人的兩個狀態 |
+| Bag | 布袋 | 攻略 part-4 |
+| Red dust | 紅色粉末 | 攻略 part-4 |
+| Bag/red dust | 布袋（紅粉） | 攻略 part-4。`Bag` ＋ `Red dust` 的合成物 |
+| Censer | 香爐 | 攻略 part-4 |
+| Magic circle | 魔法陣 | 攻略 part-4 |
+| Ancient tome | 古老典籍 | 攻略 part-4 |
+| Spectacles | 眼鏡 | 攻略 part-4。配典籍讀出遠古種族的來歷 |
+| Silver pen | 銀製鋼筆 | 攻略 part-4 |
+| Papyrus | 莎草紙 | 攻略 part-4 |
+| Glowing pen | 發光的筆 | 攻略 part-4。`Silver pen` ＋ `Unicorn blood` 的合成物 |
+| Unicorn blood | 獨角獸之血 | 攻略 part-4 |
+| Goblin blood | 哥布林之血 | 攻略 part-4 |
+| Serpent pillar | 蛇形石柱 | 攻略 part-4 |
+| Jade torch | 玉製火炬 | 攻略 part-4 |
+| Ouiji board | 通靈板 | 攻略 part-4。原版拼字 `Ouiji`（正確拼法是 Ouija），照留 |
+| Microscope | 顯微鏡 | 攻略 part-4 |
+| Scryer | 占卜器 | 第 1 節已收，此處重列以利對照 |
+| Black wand | 黑色魔杖 | 攻略 part-4 |
+| Black archway | 黑色拱門 | 攻略 part-4 |
+| Heavy amulet | 沉重護符 | 第 1 節已收 |
+| Old bookcase | 舊書櫃 | 攻略 part-4。推得動，開出通道 |
+| Altar | 祭壇 | 攻略 part-4 |
+| Black coins | 黑色錢幣 | 付給擺渡人 |
+| Ferryman | 擺渡人 | 第 21 節已收 |
+| Tomb door | 墓門 | 第 22 節已收 |
+| Skeleton key | 骷髏鑰匙 | 攻略 part-4。**是實體道具名，不是「萬能鑰匙」** |
+| Tiny scroll | 小卷軸 | 攻略 part-4 |
+| Prayer scroll | 祈禱卷軸 | 攻略 part-4 |
+| Ice altar | 寒冰祭壇 | 冰系一律「寒冰」，同第 11 節 `The Ice Cathedral 寒冰大教堂`、第 22 節 `The Ice Cave 寒冰洞窟` |
+| Ice door | 寒冰門 | 同上 |
+| Icicle | 冰柱 | 攻略 part-4 |
+| Crystal eye | 水晶眼 | 攻略 part-4 |
+| Facet mirror | 多面鏡 | 攻略 part-4 |
+| Circle light | 光之環 | 主線終局。與程式碼 `game.CircleOfLightOpen` 同指 |
+
+### 專有名詞（本輪新增，機器會擋）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| Ice Temple of the Ancients | 遠古種族的寒冰神殿 | 索引 349 的主線提示。**攻略 part-4 已用「寒冰神殿」**，不另造「冰之神殿」；冰系一律「寒冰」 |
+
+### 一般名詞（本輪新增）
+
+| 原文 | 繁中 | 備註 |
+|---|---|---|
+| psychics | 通靈者 | 索引 352。刻意避開「靈視者」—— 那是職業 `Visionary` 的專屬譯名（第 4 節）|

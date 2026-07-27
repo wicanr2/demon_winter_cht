@@ -55,6 +55,8 @@ func main() {
 		dumpSkills(os.Args[2:])
 	case "story":
 		dumpStory(os.Args[2:])
+	case "dungeonitems":
+		dumpDungeonItems(os.Args[2:])
 	case "check":
 		check(os.Args[2:])
 	default:
@@ -63,7 +65,8 @@ func main() {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "用法：dwstrings events|spells|items|monsters|towns|months|skills|ui|story|check [選項]")
+	fmt.Fprintln(os.Stderr,
+		"用法：dwstrings events|spells|items|monsters|towns|months|skills|dungeonitems|ui|story|check [選項]")
 	os.Exit(2)
 }
 

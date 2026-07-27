@@ -1,0 +1,675 @@
+# 由 cmd/dwstrings 產生。en 區塊不要手改，zh 區塊填譯文。
+# 原文變動時會標上 !! ，代表譯文需要複查。
+@@ DUNGEONITEM
+
+## 164
+:: en
+Iron key
+:: zh
+鐵鑰匙
+
+## 170
+:: en
+Bed
+:: zh
+床
+
+## 171
+:: en
+It is too heavy
+:: zh
+它太重了。
+
+## 172
+:: en
+Just wood with a straw mattress
+:: zh
+只是木頭，鋪著稻草床墊。
+
+## 176
+:: en
+Bookcase
+:: zh
+書櫃
+
+## 178
+:: en
+It has been moved to reveal a passage
+:: zh
+它被移開了，露出一條通道。
+
+## 182
+:: en
+Scroll
+:: zh
+卷軸
+
+## 184
+:: en
+It is about the mythical demon city of Qoorik that lies beneath the earth
+:: zh
+內容描述深埋地底、傳說中的惡魔之城庫瑞克。
+
+## 188
+:: en
+Cage
+:: zh
+籠子
+
+## 190
+:: en
+There are rats locked in it
+:: zh
+裡面關著幾隻老鼠。
+
+## 193
+:: en
+One of the rats runs out and through a secret door in the middle of the west wall
+:: zh
+有一隻老鼠跑了出來，穿過西牆正中央的一道暗門。
+
+## 194
+:: en
+Blue serum
+:: zh
+藍色血清
+
+## 196
+:: en
+A glass vial filled with clear blue liquid
+:: zh
+一個玻璃瓶，裝著透明的藍色液體。
+
+## 200
+:: en
+Red serum
+:: zh
+紅色血清
+
+## 202
+:: en
+A glass vial filled with a clear reddish liquid
+:: zh
+一個玻璃瓶，裝著透明偏紅的液體。
+
+## 206
+:: en
+Mallet
+:: zh
+木槌
+
+## 208
+:: en
+Good for pounding things. Or breaking them
+:: zh
+適合用來敲打東西，或是打破東西。
+
+## 212
+:: en
+Anvil
+:: zh
+鐵砧
+
+## 214
+:: en
+Work has been done here
+:: zh
+有人在這裡動過工。
+
+## 218
+:: en
+Fireplace
+:: zh
+壁爐
+
+## 220
+:: en
+Ashes
+:: zh
+灰燼
+
+## 224
+:: en
+Charcoal fire
+:: zh
+炭火
+
+## 225
+:: en
+Ouch! Its hot!
+:: zh
+哎唷！好燙！
+
+## 226
+:: en
+Its coals glow orange
+:: zh
+炭火發出橙色的光。
+
+## 230
+:: en
+Red candle
+:: zh
+紅色蠟燭
+
+## 232
+:: en
+Tall thin candle. Half burnt
+:: zh
+又高又細的蠟燭，已經燒了一半。
+
+## 236
+:: en
+Wooden altar
+:: zh
+木製祭壇
+
+## 238
+:: en
+It is made of black wood.
+:: zh
+由黑色的木頭製成。
+
+## 242
+:: en
+Man in glass
+:: zh
+玻璃裡的男子
+
+## 244
+:: en
+A man has been sealed inside a glass case here. He appears to be in a trance
+:: zh
+這裡有個男人被封在玻璃箱裡，看起來像是陷入了恍惚。
+
+## 248
+:: en
+Man in trance
+:: zh
+恍惚的男子
+
+## 250
+:: en
+He stares off into space and cannot be spoken to.
+:: zh
+他呆滯地望向遠方，無法與他交談。
+
+## 253
+:: en
+He comes out of the trance and speaks- 'Qoorik! I've seen it! They tried to shut me up but I've seen it! Its entrance is hidden in the forest to the northwest of Idlewood.'
+:: zh
+他從恍惚中醒來，開口說道：「庫瑞克！我見過了！他們想讓我閉嘴，但我真的見過了！入口就藏在閒林鎮西北方的森林裡。」
+
+## 254
+:: en
+Bag
+:: zh
+布袋
+
+## 256
+:: en
+Empty
+:: zh
+空的。
+
+## 260
+:: en
+Red dust
+:: zh
+紅色粉末
+
+## 261
+:: en
+It slips through your fingers
+:: zh
+它從你的指縫間滑落。
+
+## 262
+:: en
+Red powder
+:: zh
+紅色的粉末。
+
+## 266
+:: en
+Bag/red dust
+:: zh
+布袋（紅粉）
+
+## 272
+:: en
+Censer
+:: zh
+香爐
+
+## 273
+:: en
+Its anchored to the floor
+:: zh
+它被固定在地板上。
+
+## 274
+:: en
+Residue of red stuff
+:: zh
+殘留著紅色的東西。
+
+## 277
+:: en
+A demon appears and speaks- 'The father of demons sees all. Only those who possess the demon crystal can escape his sight'
+:: zh
+一個惡魔出現，開口說道：「惡魔之父洞察一切，唯有持有惡魔水晶者，才能逃過他的目光。」
+
+## 278
+:: en
+Magic circle
+:: zh
+魔法陣
+
+## 279
+:: en
+It is drawn on the ground
+:: zh
+它畫在地面上。
+
+## 280
+:: en
+Mystic markings
+:: zh
+神秘的紋樣。
+
+## 284
+:: en
+Ancient tome
+:: zh
+古老典籍
+
+## 286
+:: en
+It is written in an unknown language
+:: zh
+它以一種不明的語言寫成。
+
+## 289
+:: en
+Through the spectacles you can now read the book. It tells of gods called the Ancients who created everything and then died out many eons ago before Man ever walked the earth
+:: zh
+戴上眼鏡之後，你終於能讀懂這本書了。書中記載著一群名為遠古種族的神明，祂們創造了萬物，卻在人類尚未行走於大地之前的無數紀元以前，便已經滅絕。
+
+## 290
+:: en
+Spectacles
+:: zh
+眼鏡
+
+## 292
+:: en
+Wearing them makes you feel smarter
+:: zh
+戴上之後，你覺得自己變聰明了。
+
+## 296
+:: en
+Silver pen
+:: zh
+銀製鋼筆
+
+## 298
+:: en
+The barrel is empty
+:: zh
+筆管是空的。
+
+## 302
+:: en
+Papyrus
+:: zh
+莎草紙
+
+## 304
+:: en
+It is blank
+:: zh
+紙上一片空白。
+
+## 307
+:: en
+The pen takes control of your hand and writes in glowing letters- 'Asaht is the Holy City of the Ancients'
+:: zh
+那支筆控制住你的手，寫下發光的文字：「阿薩特是遠古種族的聖城。」
+
+## 308
+:: en
+Glowing pen
+:: zh
+發光的筆
+
+## 310
+:: en
+It seems to guide your hand
+:: zh
+它似乎在引導你的手。
+
+## 314
+:: en
+Unicorn blood
+:: zh
+獨角獸之血
+
+## 316
+:: en
+A transparent silver fluid
+:: zh
+一種透明的銀色液體。
+
+## 320
+:: en
+Goblin blood
+:: zh
+哥布林之血
+
+## 322
+:: en
+A greenish ooze
+:: zh
+帶點綠色的黏液。
+
+## 326
+:: en
+Serpent pillar
+:: zh
+蛇形石柱
+
+## 328
+:: en
+The pillar is a statue of a serpent with its mouth open. Its mouth is filled with oil
+:: zh
+這根石柱是一尊蛇形雕像，蛇口大張，口中盛滿了油。
+
+## 332
+:: en
+Jade torch
+:: zh
+玉製火炬
+
+## 334
+:: en
+It burns with magic green flame
+:: zh
+它燃燒著帶有魔力的綠色火焰。
+
+## 338
+:: en
+Ouiji board
+:: zh
+通靈板
+
+## 340
+:: en
+It has the alphabet on it and is used by the gypsy for spiritual messages
+:: zh
+上面有字母，吉普賽人用它來傳遞靈界的訊息。
+
+## 343
+:: en
+The scryer guides your hand to letters spelling out 'Walk along river Styx until you find Ferryman'
+:: zh
+占卜器引導著你的手，拼出文字：「沿著冥河前行，直到你找到擺渡人。」
+
+## 344
+:: en
+Microscope
+:: zh
+顯微鏡
+
+## 345
+:: en
+Its kind of bulky
+:: zh
+它有點笨重。
+
+## 346
+:: en
+Looking through it makes tiny things seem larger
+:: zh
+透過它看東西，微小的物體會被放大。
+
+## 349
+:: en
+Reading the tiny writing reveals that the ruins of the Ice Temple of the Ancients lies in the tundra far to the north
+:: zh
+讀懂上面的細小文字後，你發現遠古種族的寒冰神殿遺跡，就位在北方遙遠的凍原之中。
+
+## 350
+:: en
+Scryer
+:: zh
+占卜器
+
+## 352
+:: en
+It is wooden with a circular glass window and used by psychics to interpret psychic messages
+:: zh
+它是木製的，中央嵌著一個圓形玻璃窗，通靈者用它來解讀靈界的訊息。
+
+## 356
+:: en
+Black wand
+:: zh
+黑色魔杖
+
+## 358
+:: en
+It is made of black metal
+:: zh
+它是用黑色金屬打造的。
+
+## 362
+:: en
+Black archway
+:: zh
+黑色拱門
+
+## 364
+:: en
+Made of a curious black metal and carved with runes
+:: zh
+以一種奇特的黑色金屬打造而成，上面刻著符文。
+
+## 368
+:: en
+Heavy amulet
+:: zh
+沉重護符
+
+## 370
+:: en
+It signifies Jesric as a high priest of Malifon
+:: zh
+它顯示傑斯瑞克是馬利馮的大祭司。
+
+## 374
+:: en
+Old bookcase
+:: zh
+舊書櫃
+
+## 376
+:: en
+It is dusty
+:: zh
+積了灰。
+
+## 380
+:: en
+Altar
+:: zh
+祭壇
+
+## 382
+:: en
+It has demonic references to the demon Xeres
+:: zh
+上面有與惡魔澤瑞斯有關的記述。
+
+## 386
+:: en
+Black coins
+:: zh
+黑色錢幣
+
+## 388
+:: en
+Ominous black coins with a picture of a scythe
+:: zh
+不祥的黑色錢幣，上面刻著一把鐮刀。
+
+## 392
+:: en
+Ferryman
+:: zh
+擺渡人
+
+## 393
+:: en
+He dodges you
+:: zh
+他躲開了你的手。
+
+## 394
+:: en
+A skeletal figure with a black cloak and a scythe. He is on a raft and holds his skeletal hand out palm up
+:: zh
+披著黑色斗篷、持鐮刀的骷髏身影，他在木筏上，伸出骷髏般的手，掌心朝上。
+
+## 398
+:: en
+Tomb door
+:: zh
+墓門
+
+## 400
+:: en
+It is carved with pictures of skeletons and has a keyhole
+:: zh
+上面刻著骷髏圖案，還有一個鑰匙孔。
+
+## 404
+:: en
+Skeleton key
+:: zh
+骷髏鑰匙
+
+## 406
+:: en
+A key made of white bone
+:: zh
+一把用白骨打造的鑰匙。
+
+## 410
+:: en
+Bed
+:: zh
+床
+
+## 412
+:: en
+Just a straw mattress
+:: zh
+只是一張稻草床墊。
+
+## 416
+:: en
+Tiny scroll
+:: zh
+小卷軸
+
+## 418
+:: en
+Its print is too small to read
+:: zh
+上面的字太小，難以辨讀。
+
+## 422
+:: en
+Prayer scroll
+:: zh
+祈禱卷軸
+
+## 424
+:: en
+It contains an ancient prayer
+:: zh
+上面寫著一段古老的禱詞。
+
+## 428
+:: en
+Ice altar
+:: zh
+寒冰祭壇
+
+## 430
+:: en
+It has a blue glow
+:: zh
+泛著一層藍光。
+
+## 434
+:: en
+Ice door
+:: zh
+寒冰門
+
+## 436
+:: en
+It has a round hole in it
+:: zh
+上面有一個圓孔。
+
+## 440
+:: en
+Icicle
+:: zh
+冰柱
+
+## 442
+:: en
+A large round icicle
+:: zh
+一根又大又圓的冰柱。
+
+## 446
+:: en
+Crystal eye
+:: zh
+水晶眼
+
+## 448
+:: en
+It seems to be a scanner of sorts
+:: zh
+看起來像是某種掃描裝置。
+
+## 452
+:: en
+Facet mirror
+:: zh
+多面鏡
+
+## 454
+:: en
+Multifaceted mirror
+:: zh
+多切面的鏡子。
+
+## 458
+:: en
+Circle light
+:: zh
+光之環
+
+## 460
+:: en
+A blinding circle of light
+:: zh
+一圈刺眼的光環。

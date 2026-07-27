@@ -347,17 +347,14 @@ func (a *app) useDungeonItem(target int, targetName string, onCharacter bool) {
 	}
 }
 
-// useResultText 是 `+5` 的敘述，去掉動作碼之後再走翻譯。
+// useResultText 是 `+5` 的敘述。
 //
-// **翻譯檔存的是整條**（含開頭的 `D`），因為 `cmd/dwstrings` 抽的是原始字串。
-// 所以查表用整條、顯示時才切掉第一個字元。
+// **翻譯檔存的是去掉動作碼 `D` 之後的內文**（`cmd/dwstrings dungeonitems`
+// 抽的時候就切掉了）—— 動作碼是控制字元不是台詞，讓譯者看到它只會多一種
+// 翻壞的方式。所以這裡直接查、直接用，不再切第一個字元。
 func (a *app) useResultText(index int, param string) string {
 	i := gamedata.DungeonItemFirstString + index*gamedata.DungeonItemFields + 5
-	full := a.tr.Event(dungeonSourceFile, i, "D"+param)
-	if full == "" {
-		return param
-	}
-	return full[1:]
+	return a.tr.Event(dungeonSourceFile, i, param)
 }
 
 // becomeDungeonItem 是動作碼 `N`。
@@ -564,10 +561,11 @@ func (a *app) refusalText(index int, r game.DungeonRefusal, msg string) string {
 // 而且 `dwstrings spells` 重生那個目錄時會把這些條目沖掉。
 //
 // 索引沿用 `FILES.DTT` 的**絕對條目編號**（第 i 件的 `+0` 欄 ＝ `164 + i×6`），
-// 這樣抽字工具日後補上 `dungeonitems` 子指令時對得起來。
+// 與 `cmd/dwstrings dungeonitems` 抽出來的目錄對齊。
 //
-// ⚠ **那 300 條目前還沒抽、也還沒翻**，所以畫面上是英文
-// （`/Iron key`、`One of the rats runs out…`）。見 `CONTEXT.md` §7 A10。
+// **300 條裡只有 112 條抽出來翻。** `+3`（座標）與 `+4`（另一件道具的名字，
+// 是查表鍵）一條都不能翻，`*` 是佔位、`T`／`P`／`S` 的參數是數字 ——
+// 判準與理由寫在 `cmd/dwstrings/dungeonitems.go`。
 const dungeonSourceFile = "DUNGEONITEM"
 
 // dungeonStringIndex 把名字換回 `FILES.DTT` 的條目編號，給翻譯查表用。
