@@ -34,7 +34,15 @@ const (
 	PlotGiftArmorySword PlotGiftID = 3
 	// PlotGiftBlacksmith 是地點劇情 case 4（鐵匠鋪）送的那把闊劍。
 	PlotGiftBlacksmith PlotGiftID = 4
+	// PlotGiftDemonCrystal 是地點劇情 case 7（地圖 4 的 (7,4)）送的惡魔水晶
+	// （`docs/re/101` §4）。分支只寫型別 ＝ `param + 0x17` ＝ 28，
+	// 其餘欄位留共用前置段的值。
+	PlotGiftDemonCrystal PlotGiftID = 5
 )
+
+// plotGiftTypeBase 是 param 5／6 那一段共用的型別基底
+// （`0x1ab6c` 的 `mov ax,[bp+6] / add ax,0x17`）。
+const plotGiftTypeBase = 0x17
 
 // blacksmithSword 是鐵匠那把武器的完整規格（`0x1ab33`–`0x1ab61`）。
 //
@@ -154,10 +162,27 @@ var armoryGifts = map[PlotGiftID]scenario.InventorySlot{
 	},
 }
 
-// plotGiftSpec 是 id → 道具規格。param 5／6 還沒有呼叫端，故不在表內。
+// demonCrystal 是 case 7 送的惡魔水晶（`0x1ab6c`）。
+//
+// 那一段只寫一個欄位：`[+0x00] = param + 0x17`。param 5 → 型別 28，
+// 而 `ITEMS.DAT` 第 28 件就是 `Demon Crystal`。其餘欄位是共用前置段的值
+// （附魔 0、已鑑定），**沒有附帶法術也沒有效果** —— 它是劇情道具不是裝備。
+//
+// param 6（永恆之寶珠，型別 29）走同一段程式，但**不放進這張表** ——
+// 它的「拿過了」旗標落在 `+0xb9`，那個 byte 已經是劇情階段
+// （`docs/re/101` §3.2），要由 case 8 直接推進階段，不要多一格旗標。
+var demonCrystal = scenario.InventorySlot{
+	Type:       plotGiftTypeBase + byte(PlotGiftDemonCrystal),
+	Identified: true,
+}
+
+// plotGiftSpec 是 id → 道具規格。param 6 刻意不在表內（見 demonCrystal）。
 func plotGiftSpec(id PlotGiftID) (scenario.InventorySlot, bool) {
-	if id == PlotGiftBlacksmith {
+	switch id {
+	case PlotGiftBlacksmith:
 		return blacksmithSword, true
+	case PlotGiftDemonCrystal:
+		return demonCrystal, true
 	}
 	s, ok := armoryGifts[id]
 	return s, ok

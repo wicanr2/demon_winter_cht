@@ -84,6 +84,19 @@ func (a *app) openArmory(x, y int) {
 	a.trace.note("兵器庫：(%d,%d) 台座 %d", x, y, id)
 }
 
+// openDemonCrystal 是地點劇情 case 7（地圖 4 的 (7,4)，`docs/re/101` §4）。
+//
+// 原版**沒有任何場景敘述** —— 一個音效之後就直接問「誰來拿」
+// （送道具常式對 param >= 4 會跳過「球體亮了起來」那一句）。
+// 所以這裡不開文字框，直接進選人頁。
+func (a *app) openDemonCrystal() {
+	if game.PlotGiftTaken(a.save, game.PlotGiftDemonCrystal) {
+		return
+	}
+	a.plotGift = &plotGiftScreen{id: game.PlotGiftDemonCrystal}
+	a.trace.note("惡魔水晶：開場")
+}
+
 func (a *app) updatePlotGift() error {
 	g := a.plotGift
 	if g.ask {
@@ -141,8 +154,12 @@ func (a *app) takePlotGift(member int) {
 
 // plotGiftLabel 是訊息裡那件道具怎麼稱呼。
 func (a *app) plotGiftLabel(id game.PlotGiftID) string {
-	if id == game.PlotGiftBlacksmith {
+	switch id {
+	case game.PlotGiftBlacksmith:
 		return a.tr.UI("blacksmith.sword", "那把武器")
+	case game.PlotGiftDemonCrystal:
+		// 譯名對齊主線提示鏈既有的用字（`translations/glossary.md`）。
+		return a.tr.UI("plotgift.democrystal", "惡魔水晶")
 	}
 	return a.armoryItemName(id)
 }

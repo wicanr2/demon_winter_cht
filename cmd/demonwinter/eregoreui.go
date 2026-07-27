@@ -34,9 +34,10 @@ type eregoreScreen struct {
 // case 編號是**全域唯一**的（1–15 分佈在五張子地圖，零碰撞，
 // `docs/re/83` §2），所以不必再配地圖編號。
 //
-// **只剩 6／7／8／9 沒接** —— 那四個連字串都還沒讀出來
-// （6 與 9 各 8 bytes 是轉呼叫），而它們正是「劇情送道具」跳表
-// 最後兩個 param 的呼叫端（`docs/re/99` §2）。
+// **只剩 6／8／9 沒接。** 三格的內容都讀完了（`docs/re/101`），
+// 但每一格都是一整塊子系統，不是一格小工作：
+// 6 ＝ 矮人大師的附魔工坊（＝ worklist C2 的入口）、
+// 8 ＝ 十間試煉室全過才給的永恆之寶珠、9 ＝ 那十間試煉室本身。
 //
 // 這裡明確報未接，不要靜默什麼都不做，那會讓人以為那一格本來就沒事。
 func (a *app) locationPlot(c int) {
@@ -56,6 +57,8 @@ func (a *app) locationPlot(c int) {
 		a.ringBell()
 	case plotCaseNpcBed:
 		a.sleepAtNpc()
+	case plotCaseDemonCrystal:
+		a.openDemonCrystal()
 
 	case game.RiddleCaseSpectralPriest, game.RiddleCaseTempleName:
 		a.openRiddle(c)

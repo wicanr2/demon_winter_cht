@@ -66,10 +66,12 @@ func TestBlacksmithGiftDoesNotBurnTheFlagWhenFull(t *testing.T) {
 
 // 沒讀出來的 id 一律不給（寧可少給，不要憑空生道具）。
 //
-// 0–3 在 `docs/re/99` 解出來之後移出這張清單 —— 剩 param 5／6 沒有呼叫端。
+// **param 0–5 都解出來了**（`docs/re/99`、`101`），只剩 6 不在表內 ——
+// 而 6 是刻意不收：它的旗標落在 `+0xb9`（劇情階段），要由 case 8
+// 直接推進階段，不是多一格旗標（`docs/re/101` §3.2）。
 func TestUnknownPlotGiftGivesNothing(t *testing.T) {
 	s, c := giftSave(), taker()
-	for _, id := range []PlotGiftID{5, -1, 99} {
+	for _, id := range []PlotGiftID{6, -1, 99} {
 		if res := TakePlotGift(s, c, id); res.OK {
 			t.Errorf("未讀出的 id %d 卻發了道具", id)
 		}
@@ -152,5 +154,29 @@ func TestPlotGiftFlagsRoundTrip(t *testing.T) {
 	}
 	if !PlotGiftTaken(s, PlotGiftBlacksmith) {
 		t.Error("旗標設了卻說沒拿過")
+	}
+}
+
+// 惡魔水晶（case 7 ＝ 跳表 param 5）：型別 ＝ `param + 0x17` ＝ 28，
+// 而 `ITEMS.DAT` 第 28 件就是 `Demon Crystal`（`docs/re/101` §4）。
+func TestDemonCrystalSpec(t *testing.T) {
+	spec, ok := plotGiftSpec(PlotGiftDemonCrystal)
+	if !ok {
+		t.Fatal("惡魔水晶沒有規格")
+	}
+	if spec.Type != 28 {
+		t.Errorf("型別 %d，預期 28（0x17 + param 5）", spec.Type)
+	}
+	if !spec.Identified {
+		t.Error("共用前置段寫 +0x10 = 1，應該是已鑑定")
+	}
+	// 劇情道具不是裝備：沒有附帶法術、沒有效果、沒有材質。
+	if spec.SpellA != 0 || spec.Power != 0 || spec.MaterialClass != 0 {
+		t.Errorf("惡魔水晶不該有效果欄位：%+v", spec)
+	}
+	// 旗標是 `+0xb3 + 5` ＝ `+0xb8`，而且落在 PlotGiftCount 之內。
+	if int(PlotGiftDemonCrystal) >= scenario.PlotGiftCount {
+		t.Errorf("編號 %d 超出旗標陣列 %d 格",
+			PlotGiftDemonCrystal, scenario.PlotGiftCount)
 	}
 }

@@ -31,6 +31,8 @@ const (
 	plotCaseBell = 12
 	// plotCaseNpcBed 是旅人的床（地圖 4 的 (21,57)，見 bellui.go）。
 	plotCaseNpcBed = 13
+	// plotCaseDemonCrystal 是惡魔水晶（地圖 4 的 (7,4)，見 plotgiftui.go）。
+	plotCaseDemonCrystal = 7
 )
 
 // resetCrushingWalls 是 case 1：從檔案重讀地圖。
