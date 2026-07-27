@@ -32,8 +32,10 @@ const (
 
 // DungeonItem 是一件地城道具的六個欄位。
 //
-// 欄位語意是**從資料的形狀與手冊推的**，消費 `Immovable` 之後那幾欄的
-// 程式碼還沒逐支讀完 —— 見 `docs/re/95` §3 的信心標註。
+// **拿到手之後它住在角色的道具槽裡**（`docs/re/95` §3.1）：17-byte 的槽
+// 對地城道具是另一種解讀 —— `[0]` 是型別 `0xfe`／`0xff`、`[1..16]` 是名字。
+// 與一般道具（`docs/re/25` 的效果／強度欄）是同一塊記憶體的兩種用法。
+// 手冊說地城道具在清單裡前面加 `/`，那個記號的來源就是這兩個型別值。
 type DungeonItem struct {
 	// Name 是道具名（`+0`）。50 件全部非空。
 	Name string
@@ -61,8 +63,9 @@ type DungeonItem struct {
 
 // DungeonItemAction 是 `UseResult` 的首字元動作碼。
 //
-// **這一組是判讀**：五個字母的分布與內容都很一致，但**消費它的程式碼
-// 還沒讀**（`docs/re/95` §3）。實作動作層之前要先把那一段讀完。
+// **已確認**：分派表在 `0x186fd`（`docs/re/95` §3）——
+// `cmp ax,0x4e/0x50/0x53/0x54` 四格，`'D'` 在前面用 `cmp al,0x44` 先擋掉。
+// 內容從第二個字元起算（原版 `0x18285` 的 `inc`）。
 type DungeonItemAction byte
 
 const (
@@ -74,12 +77,14 @@ const (
 	// ActionBecome `N`：這一格的道具**變成另一件**，內容是新道具的名字
 	// （`Man in glass` → `Man in trance`、`Red dust` → `Bag/red dust`）。
 	ActionBecome DungeonItemAction = 'N'
-	// ActionTeleport `T`：傳送。參數看起來是 `XXYYMM`
-	// （`T564603` → (56,46) 子地圖 3）。
+	// ActionTeleport `T`：傳送。參數是 **`XXYYMM`，逐 2 位數 `atoi`**
+	// （`0x183f8`–`0x18441`：分別寫進隊伍的 `+0xa1`／`+0xa2`／`+0xa3`）。
+	// `T564603` ＝ (56,46) 子地圖 3。
 	ActionTeleport DungeonItemAction = 'T'
-	// ActionPassage `P`：疑似在某座標開一條路，參數形狀與 MoveResult 的數字相同。
+	// ActionPassage `P`：同樣三組 2 位數 `atoi`（`0x1849d`），但**不寫隊伍座標**。
+	// 目的地未讀 —— 參數形狀與 MoveResult 的數字相同，疑似改地圖 tile。
 	ActionPassage DungeonItemAction = 'P'
-	// ActionStory `S`：疑似推進劇情，參數只有一位數（`S1`／`S2`）。
+	// ActionStory `S`：參數只有一位數（`S1`／`S2`）。處理在 `0x185b2`，**未讀**。
 	// `S2` 掛在 `Circle light` 上 —— 那正是主線的光之環。
 	ActionStory DungeonItemAction = 'S'
 )
