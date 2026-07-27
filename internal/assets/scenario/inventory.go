@@ -77,6 +77,28 @@ const (
 	// slotEmpty 是空槽的型別值。
 	slotEmpty = 0xff
 
+	// slotDungeon 是**地城道具**的型別值（`docs/re/95` §3.1）。
+	//
+	// 這一格因此有第二種解讀 —— 17 bytes 不再是「效果／強度／附魔」那一排，
+	// 而是「型別 ＋ 16 bytes 的名字」：
+	//
+	//	[0]      0xfe
+	//	[1..16]  名字，NUL 結尾
+	//
+	// 寫入端在 `0x182ea`–`0x18382`：名字逐字元複製到
+	// `角色記錄 + 角色×0x104 + 0x0d + 槽位×17`（`0x0d` ＝ `inventoryStart+1`），
+	// 型別寫到同一個槽的 `+0x0c`。兩處的槽位索引之間沒有被改動，
+	// 所以確定是**同一格**。
+	//
+	// 兩條獨立證據指向 `0xfe` 而不是 `0xff`（`docs/re/33` §3／§4）：
+	// 營地丟棄的判定寫 `> 0xfd`（把空格一起擋掉），而找空格用的是 `== 0xff`。
+	// 手冊說地城道具在清單裡前面加 `/`，那個記號就是這個型別值。
+	slotDungeon = 0xfe
+
+	// slotDungeonName 是名字在槽裡的起點，slotDungeonNameMax 是可用長度。
+	slotDungeonName    = 0x01
+	slotDungeonNameMax = inventorySlotLen - slotDungeonName // 16
+
 	// slotMaterialClass 是**材質／品質類別**（`+0x0f`）。它有兩個讀取端：
 	//
 	//   - 名稱：掉寶結算用它查一張名稱表（`docs/re/30`）
@@ -101,6 +123,12 @@ const (
 
 // SlotEmpty 是空槽的型別值，給 game 層清空用。
 const SlotEmpty = slotEmpty
+
+// SlotDungeon 是地城道具的型別值，SlotDungeonNameMax 是名字放得下幾個 byte。
+const (
+	SlotDungeon        = slotDungeon
+	SlotDungeonNameMax = slotDungeonNameMax
+)
 
 // InventorySlot 是一格裝備／道具。
 type InventorySlot struct {
@@ -140,6 +168,12 @@ type InventorySlot struct {
 	CondA, EffectAByte int
 	CondB, EffectBByte int
 
+	// DungeonName 是**地城道具的名字**（`Type == SlotDungeon` 時才有意義）。
+	//
+	// 這一欄與上面那一排是**互斥的**：地城道具的 17 bytes 全部拿去放名字了，
+	// 沒有效果、強度、附魔可言。判斷用 Dungeon()，不要看某個欄位是不是 0。
+	DungeonName string
+
 	// ExorciseResist 是驅邪成功率（`+0x0d`）。紮營選單的 Xorcise
 	// 擲 `rnd(100)`，大於這個值就失敗 —— **越大越好驅**，
 	// 所以嚴格說是「好驅程度」不是抗性（見 `docs/re/41`）。
@@ -151,12 +185,30 @@ type InventorySlot struct {
 // 原版的兩道條件（`17c5:1976`／`17c5:1981`）：強度為 0、或次數用完，
 // 這一格就不會出現在 Use 選單裡。裝備類另有「必須是已裝備的那一件」
 // 的限制，那條在 game.UsableItems。
+// 地城道具**永遠不在**這張選單裡：它的 17 bytes 是名字，沒有效果欄可讀。
+// 原版靠「強度 0」自然擋掉，這裡明寫，免得有人手造一格 0xfe 就漏進來。
 func (s InventorySlot) Usable() bool {
-	return !s.Empty() && s.Power != 0 && s.Used != s.Total
+	return !s.Empty() && !s.Dungeon() && s.Power != 0 && s.Used != s.Total
 }
 
 // Empty 回報這格是不是空的。
+//
+// **只認 `0xff`。** 原版有一處把「空格」與「地城道具」用 `> 0xfd` 一起擋掉
+// （營地丟棄），那是隨手複用不是語意 —— 找空格的那一支用的是 `== 0xff`
+// （`docs/re/33` §4）。這裡照後者。
 func (s InventorySlot) Empty() bool { return s.Type == slotEmpty }
+
+// Dungeon 回報這格裝的是不是地城道具（型別 `0xfe`）。
+func (s InventorySlot) Dungeon() bool { return s.Type == slotDungeon }
+
+// NewDungeonSlot 造一格地城道具。名字超過 16 bytes 就截掉 ——
+// 原版的槽只有這麼大，而 50 件的名字實際上最長 14 個字元。
+func NewDungeonSlot(name string) InventorySlot {
+	if len(name) > slotDungeonNameMax {
+		name = name[:slotDungeonNameMax]
+	}
+	return InventorySlot{Type: slotDungeon, DungeonName: name}
+}
 
 // parseInventorySlot 解出一格的已解欄位。
 //
@@ -173,6 +225,11 @@ func parseInventorySlot(raw []byte) InventorySlot {
 	}
 	// 空槽的其餘欄位沒有意義，不要解讀成「附魔 −10」。
 	if out.Empty() {
+		return out
+	}
+	// 地城道具的其餘 16 bytes 是名字，更不能當成效果欄讀。
+	if out.Dungeon() {
+		out.DungeonName = readSlotName(raw)
 		return out
 	}
 	out.Effect = int(raw[slotEffect])
@@ -218,6 +275,10 @@ func (s InventorySlot) encodeInto(raw []byte) {
 	if s.Empty() {
 		return
 	}
+	if s.Dungeon() {
+		writeSlotName(raw, s.DungeonName)
+		return
+	}
 	raw[slotEffect] = byte(s.Effect)
 	raw[slotPower] = byte(s.Power)
 	raw[slotTotal] = byte(s.Total)
@@ -237,6 +298,35 @@ func (s InventorySlot) encodeInto(raw []byte) {
 		raw[slotIdentified] = 1
 	} else {
 		raw[slotIdentified] = 0
+	}
+}
+
+// readSlotName 讀出地城道具的名字：`[1..16]`，NUL 結尾。
+//
+// **沒有 NUL 就讀滿 16 bytes**。原版的複製迴圈自己補 NUL，所以正常存檔一定有；
+// 但名字剛好 16 bytes 時最後那個 NUL 會寫到槽外，這裡不模擬那個溢位
+// （50 件的名字最長 14 個字元，實際到不了）。
+func readSlotName(raw []byte) string {
+	b := raw[slotDungeonName : slotDungeonName+slotDungeonNameMax]
+	for i, c := range b {
+		if c == 0 {
+			return string(b[:i])
+		}
+	}
+	return string(b)
+}
+
+// writeSlotName 寫回名字 ＋ 一個 NUL，**後面的 bytes 不動**。
+//
+// 原版就是這樣（`0x18316` 的複製迴圈 ＋ `0x18349` 補一個 0），
+// 所以換過內容的槽會留著前一個名字的尾巴。照做，逐位元組往返才對得上。
+func writeSlotName(raw []byte, name string) {
+	if len(name) > slotDungeonNameMax {
+		name = name[:slotDungeonNameMax]
+	}
+	n := copy(raw[slotDungeonName:], name)
+	if slotDungeonName+n < inventorySlotLen {
+		raw[slotDungeonName+n] = 0
 	}
 }
 

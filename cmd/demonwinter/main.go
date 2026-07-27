@@ -68,6 +68,13 @@ type app struct {
 	world *game.World
 	// pool 是治療水池的選人畫面（tile 0x35，`docs/re/90`）。
 	pool *poolScreen
+	// dungeon 是地城道具的拾取／丟棄選單（`T`／`D`，`docs/spec/10`）。
+	dungeon *dungeonScreen
+	// itemloc 是地城道具的位置表（`ITEMLOCB.DAT`）。**它是存檔的一部分** ——
+	// 拿走一件就地改寫，不寫回去的話關掉遊戲東西就都回來了。
+	itemloc *scenario.ItemLocTable
+	// dungeonItems 是 50 件的內容（名稱／敘述／動作），靜態資料。
+	dungeonItems gamedata.DungeonItems
 	// trapSpots 是上一次 `L` 掃到的陷阱格，畫成白框（原版 ds:0x5192）。
 	// 走一步就清掉 —— 框是「這一次掃描的結果」，不是地圖的長期狀態。
 	trapSpots []game.TrapSpot
@@ -319,6 +326,9 @@ func (a *app) update() error {
 	if a.pool != nil {
 		return a.updatePool()
 	}
+	if a.dungeon != nil {
+		return a.updateDungeon()
+	}
 
 	// 文字視窗開著時吃掉所有輸入，只認翻頁鍵 —— 與原版一樣，
 	// 讀完敘述才能繼續走。
@@ -411,7 +421,19 @@ func (a *app) update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyP) {
 		a.showRoster = !a.showRoster
 	}
+	// T：拾取地城道具（手冊「物品 → 拿取」，原版動作 0x09）。
+	// **這個鍵原本綁著偵錯用的「就地進城」** —— T 是原版的鍵，
+	// 偵錯捷徑讓位到 F3（與 F1 建角、F2 手札同一排「不在原版裡」的位置）。
 	if inpututil.IsKeyJustPressed(ebiten.KeyT) {
+		a.openDungeonTake()
+	}
+	// D：丟棄地城道具（手冊「物品 → 丟棄」，原版 222f:2088(1)）。
+	// 與營地的丟棄是兩回事：地城道具只能在移動途中丟，而且撿得回來。
+	if inpututil.IsKeyJustPressed(ebiten.KeyD) {
+		a.openDungeonDrop()
+	}
+	// F3 是偵錯用的「就地進城」。
+	if inpututil.IsKeyJustPressed(ebiten.KeyF3) {
 		a.openTownPicker()
 	}
 	// B 是偵錯用的「就地開打」，和 T 鍵直接進城同一個性質：戰鬥只在
@@ -567,6 +589,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawMerchant(a.canvas)
 	case a.pool != nil:
 		a.drawPool(a.canvas)
+	case a.dungeon != nil:
+		a.drawDungeon(a.canvas)
 	case a.showRoster:
 		a.drawRoster(a.canvas)
 	default:
@@ -1102,12 +1126,13 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"方向鍵：移動",
 		"Tab：切換季節",
 		"P：隊伍名冊",
-		"T：進入城鎮",
-		"B：測試戰鬥（偵錯）",
+		"T：拿取　D：丟棄",
 		"C：紮營",
 		"L：查看陷阱　V：觀室",
+		"B：測試戰鬥（偵錯）",
 		"F1：建立角色（偵錯）",
 		"F2：手札",
+		"F3：進入城鎮（偵錯）",
 		"M：遇到商隊（偵錯）",
 		"S：存檔",
 		"空白鍵：翻頁",
@@ -1373,6 +1398,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入特殊格清單：%v", err)
 	}
+	// 地城道具：位置表與 nSS.DAT 走同一套三段優先序（存檔 → 母本 → 出貨），
+	// 內容表則是純靜態的 FILES.DTT 切片。
+	itemloc, err := scenario.LoadItemLocTable(filepath.Dir(*savePath), *dataDir, fresh)
+	if err != nil {
+		log.Fatalf("載入地城道具位置表：%v", err)
+	}
+	dungeonItems, err := gamedata.LoadDungeonItems(strs)
+	if err != nil {
+		log.Fatalf("載入地城道具內容：%v", err)
+	}
 	members := make([]game.Character, 0, len(save.Characters))
 	for _, sc := range save.Characters {
 		members = append(members, game.FromSave(sc))
@@ -1470,7 +1505,9 @@ func main() {
 		save:       save,
 		torch:      save.LightSource,
 		savePath:   *savePath,
-		dataDir:    *dataDir,
+		dataDir:      *dataDir,
+		itemloc:      itemloc,
+		dungeonItems: dungeonItems,
 	}
 
 	// 船停在海上，而海面在可通行性表裡是不可通行的 —— 沒有這一條，

@@ -147,7 +147,7 @@ func TestItemLocEncodeRoundTrip(t *testing.T) {
 	}
 }
 
-// 拿走 ＝ 子地圖寫 0，而且**只動那三個 byte**。
+// 拿走 ＝ 那一筆三個 byte 全清，而且**只動那三個**。
 func TestItemLocTakeWritesOnlyThatRecord(t *testing.T) {
 	tab, err := LoadItemLoc(itemLocPath(t, ItemLocLiveFile))
 	if err != nil {
@@ -165,18 +165,25 @@ func TestItemLocTakeWritesOnlyThatRecord(t *testing.T) {
 		t.Error("同一筆拿了兩次")
 	}
 
+	// **只動那一筆的三個 byte。** 原版 `Take:` 連寫三個 0
+	// （`0x199f4`–`0x19a10`：`si = j/2` ＝ `i×3`，寫三次）。
+	//
+	// > 這裡原本斷言「只該改子地圖那一個 byte」—— **那是 `N` 動作的作法**
+	// > （`0x1839b` 的 `mov es:[bx+si+2],0`），不是 `Take:` 的。
+	// > 兩條路在原版就不一樣，查詢結果相同但寫回檔案的位元組不同。
 	after := tab.Encode()
-	diff := 0
 	for i := range before {
-		if before[i] != after[i] {
-			diff++
-			if i != 2 {
-				t.Errorf("第 %d 個 byte 被動到了 —— 拿走只該改子地圖那一個", i)
-			}
+		if before[i] == after[i] {
+			continue
+		}
+		if i >= ItemLocRecordLen {
+			t.Errorf("第 %d 個 byte 被動到了 —— 拿走只該動那一筆自己的三個 byte", i)
 		}
 	}
-	if diff != 1 {
-		t.Errorf("有 %d 個 byte 不同，預期 1", diff)
+	for i := 0; i < ItemLocRecordLen; i++ {
+		if after[i] != 0 {
+			t.Errorf("拿走之後第 %d 個 byte = %#x，預期 0", i, after[i])
+		}
 	}
 }
 

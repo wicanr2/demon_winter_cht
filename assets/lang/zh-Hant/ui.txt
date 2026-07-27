@@ -485,3 +485,71 @@ You see nothing
 A trap!
 :: zh
 前方有陷阱
+
+## dungeon.nothing
+:: en
+There's nothing here.
+:: zh
+這裡沒有東西
+
+## dungeon.carry.none
+:: en
+You carry no dungeon items.
+:: zh
+身上沒有地城道具
+
+## dungeon.take.title
+:: en
+Take:
+:: zh
+拿哪一件？
+
+## dungeon.take.who
+:: en
+Character to take
+:: zh
+誰來拿 %s？
+
+## dungeon.drop.title
+:: en
+Drop
+:: zh
+放下哪一件？
+
+## dungeon.taken
+:: en
+Taken.
+:: zh
+%s 拿走了 %s
+
+## dungeon.dropped
+:: en
+%s Dropped.
+:: zh
+放下了 %s
+
+## dungeon.cant
+:: en
+You can't
+:: zh
+你辦不到
+
+## dungeon.noroom
+:: en
+No more room.
+:: zh
+放不下了
+
+## dungeon.keys
+:: en
+Up/Down: select  Enter: confirm  Esc: back
+:: zh
+↑↓：選擇　Enter：確定　Esc：返回
+
+## dungeon.gone
+:: zh
+那件東西已經不在這裡了
+
+## dungeon.drop.failed
+:: zh
+放不下去

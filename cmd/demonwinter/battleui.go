@@ -594,6 +594,11 @@ const itemSourceFile = "ITEMS.DAT"
 
 // itemLabel 回傳道具的顯示名稱（已翻譯）。
 func (a *app) itemLabel(it scenario.InventorySlot) string {
+	// 地城道具的 17 bytes 是名字不是 ITEMS.DAT 索引 —— 拿 0xfe 去查表
+	// 只會得到「道具 254」。手冊說它們在清單裡前面加 `/`。
+	if it.Dungeon() {
+		return a.dungeonName(it.DungeonName)
+	}
 	item, err := a.items.ByIndex(int(it.Type))
 	if err != nil {
 		return fmt.Sprintf("道具 %d", it.Type)

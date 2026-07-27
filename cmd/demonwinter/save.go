@@ -72,6 +72,12 @@ func (a *app) writeSave() error {
 	if err := a.writeSpecialTiles(); err != nil {
 		return err
 	}
+	// 地城道具的位置表同理：拿走／丟下都是就地改寫，不寫回去的話
+	// 關掉遊戲東西全部回到原位，而且**已經在身上的那件還留著** ——
+	// 重開一次就能再拿一件，複製到飽。
+	if err := scenario.WriteItemLocTable(filepath.Dir(a.savePath), a.itemloc); err != nil {
+		return err
+	}
 	return a.save.SaveTo(a.savePath)
 }
 

@@ -167,7 +167,15 @@ func (t *ItemLocTable) Encode() []byte {
 	return out
 }
 
-// Take 把第 i 筆標成「已拿走」（子地圖寫 0，原版 `0x18397`）。
+// Take 把第 i 筆標成「已拿走」。
+//
+// **三個 byte 全部寫 0**，這是原版 `Take:` 那一支的作法
+// （`0x199f4`–`0x19a10`：`si = j/2` ＝ `i×3`，然後連寫三個 0）。
+//
+// > `U` 的 `N` 動作**只清子地圖那一個 byte**（`0x1839b` 的
+// > `mov es:[bx+si+2], 0`）。兩條路在原版就是不一樣的，查詢結果相同
+// > （子地圖 0 對不上任何座標），但寫回檔案的位元組不同。
+// > 接 `N` 的時候要照它自己那一支，別共用這一支。
 //
 // **不刪除記錄** —— 陣列是固定 50 格，索引就是道具的身分
 // （與 `gamedata.DungeonItem` 對齊）。刪掉會讓後面每一件都換身分。
@@ -175,7 +183,7 @@ func (t *ItemLocTable) Take(i int) bool {
 	if i < 0 || i >= len(t.Records) || t.Records[i].MapID == ItemLocTaken {
 		return false
 	}
-	t.Records[i].MapID = ItemLocTaken
+	t.Records[i] = ItemLoc{}
 	return true
 }
 
