@@ -740,19 +740,33 @@ const (
 	dungeonItemTile = 0x38
 )
 
-func (a *app) drawWorld(dst *ebiten.Image) {
+// tileMetrics 回傳目前素材下「一格佔幾像素」與繪製時的放大倍率。
+//
+// **所有畫地圖或戰場的地方都要用這一支。** 各自寫死
+// `gfx.TileWidth * layout.TileScale` 的話，換成 EGA 就會把「已經是顯示尺寸」
+// 的 frame 再放大一倍 —— 症狀是地形橫向溢出到右側狀態欄、縱向互相蓋掉。
+//
+// 這個坑實際踩過：`drawWorld` 改成跟著素材走的時候，戰場（`drawBattlefield`）
+// 與營地看地圖（`drawMapWindow`）兩處沒跟著改，於是同一份素材在三個畫面裡
+// 有兩個是壞的，而且**只有截圖比對才看得出來**（測試全綠）。
+//
+// EGA 的 frame 已經是 32×28（載入時水平加倍過），所以 scale 是 1；
+// CGA 是 16×16，要放大兩倍。兩種模式的**格寬都是 32**，
+// 所以地圖視窗寬固定 288，右側狀態欄那 21 個中文格不受影響。
+func (a *app) tileMetrics() (cellW, cellH, scale int) {
 	ts := a.tileset()
-	halfX, halfY := layout.ViewTilesX/2, layout.ViewTilesY/2
-
-	// 一格佔幾像素**跟著素材走**，不是固定值：EGA 的 frame 已經是顯示尺寸
-	// 32×28（載入時水平加倍過），CGA 是 16×16 要放大兩倍。
-	// 兩種模式的格寬都是 32，所以右側狀態欄的位置不受影響。
 	fw, fh := ts.FrameSize()
-	scale := 1
+	scale = 1
 	if ts.Mode() == gfx.ModeCGA {
 		scale = layout.TileScale
 	}
-	cellW, cellH := fw*scale, fh*scale
+	return fw * scale, fh * scale, scale
+}
+
+func (a *app) drawWorld(dst *ebiten.Image) {
+	ts := a.tileset()
+	halfX, halfY := layout.ViewTilesX/2, layout.ViewTilesY/2
+	cellW, cellH, scale := a.tileMetrics()
 
 	// `I` 探查標出的格子。原版是**改寫繪製緩衝區**（`222f:150b`
 	// 把該格寫成 tile 0x38），不是在上面加框 —— 所以這裡也是換 tile。

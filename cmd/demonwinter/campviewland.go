@@ -6,7 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
-	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
@@ -119,6 +118,7 @@ func (a *app) drawViewLand(dst *ebiten.Image, line func(string)) {
 func (a *app) drawMapWindow(dst *ebiten.Image, cx, cy int) {
 	ts := a.tileset()
 	halfX, halfY := layout.ViewTilesX/2, layout.ViewTilesY/2
+	cellW, cellH, scale := a.tileMetrics()
 
 	for dy := 0; dy < layout.ViewTilesY; dy++ {
 		for dx := 0; dx < layout.ViewTilesX; dx++ {
@@ -130,12 +130,8 @@ func (a *app) drawMapWindow(dst *ebiten.Image, cx, cy int) {
 			if img == nil {
 				continue
 			}
-			ui.DrawImageScaled(dst, img,
-				dx*gfx.TileWidth*layout.TileScale,
-				dy*gfx.TileHeight*layout.TileScale, layout.TileScale)
+			ui.DrawImageScaled(dst, img, dx*cellW, dy*cellH, scale)
 		}
 	}
-	ui.StrokeRect(dst,
-		halfX*gfx.TileWidth*layout.TileScale, halfY*gfx.TileHeight*layout.TileScale,
-		gfx.TileWidth*layout.TileScale, gfx.TileHeight*layout.TileScale, markerColor)
+	ui.StrokeRect(dst, halfX*cellW, halfY*cellH, cellW, cellH, markerColor)
 }

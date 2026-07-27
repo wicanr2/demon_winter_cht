@@ -8,7 +8,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
-	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
@@ -1064,8 +1063,9 @@ func (b *breathAnim) done() bool { return b.shown() >= len(b.cells)+2 }
 // 這裡直接對準行動單位，不做逐格追趕 —— 追趕的動畫感在無頭截圖裡看不出來，
 // 而且會讓「現在在看誰」變得不確定。夾在牆框之內，視窗不會飄到空白區。
 func (a *app) battleCam() (x, y int) {
-	cell := gfx.TileWidth * layout.TileScale
-	cols, rows := layout.MapWidth/cell, layout.MapHeight/cell
+	// 視窗格數是版面常數，不從像素寬回推 —— 回推會跟著素材尺寸變，
+	// 而「視窗開幾格」是規則（原版固定 9×9），與一格幾像素無關。
+	cols, rows := layout.ViewTilesX, layout.ViewTilesY
 
 	cx, cy := game.BattleCentreX, game.BattleCentreY
 	if cur := a.battle.Current(); cur != nil && cur.Alive() {
@@ -1087,14 +1087,14 @@ func clampCam(v, span int) int {
 }
 
 func (a *app) drawBattlefield(dst *ebiten.Image) {
-	cell := gfx.TileWidth * layout.TileScale
+	cellW, cellH, scale := a.tileMetrics()
 	cur := a.battle.Current()
 	camX, camY := a.battleCam()
 
 	// 先鋪地形，格線疊在上面。地形是 3×3 個世界 tile 各放大 5×5 拼出來的
 	// （docs/re/36），外圍那圈牆也是地形的一部分。
 	ts := a.tileset()
-	cols, rows := layout.MapWidth/cell, layout.MapHeight/cell
+	cols, rows := layout.ViewTilesX, layout.ViewTilesY
 	for vy := 0; vy < rows; vy++ {
 		for vx := 0; vx < cols; vx++ {
 			// 畫不畫要看座標，**不能看地形值是不是 0** —— 0 是合法的
@@ -1103,10 +1103,10 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 			if a.battleTerrain != nil && game.InArena(tx, ty) {
 				v := a.battleTerrain.TileAt(tx, ty)
 				if img := ts.Tile(v & 0x7f); img != nil {
-					ui.DrawImageScaled(dst, img, vx*cell, vy*cell, layout.TileScale)
+					ui.DrawImageScaled(dst, img, vx*cellW, vy*cellH, scale)
 				}
 			}
-			ui.StrokeRect(dst, vx*cell, vy*cell, cell, cell, gridColor)
+			ui.StrokeRect(dst, vx*cellW, vy*cellH, cellW, cellH, gridColor)
 		}
 	}
 
@@ -1116,7 +1116,7 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 			if i > a.breath.shown() {
 				break
 			}
-			ui.FillRect(dst, (c.X-camX)*cell, (c.Y-camY)*cell, cell, cell, breathColor)
+			ui.FillRect(dst, (c.X-camX)*cellW, (c.Y-camY)*cellH, cellW, cellH, breathColor)
 		}
 	}
 
@@ -1124,18 +1124,22 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 		if a.aoe.area {
 			// 5×5 的效果範圍畫出來，玩家才知道會掃到誰（包含自己人）。
 			r := game.AOERadius
-			ui.StrokeRect(dst, (a.aoeX-r-camX)*cell, (a.aoeY-r-camY)*cell,
-				(2*r+1)*cell, (2*r+1)*cell, aoeColor)
+			ui.StrokeRect(dst, (a.aoeX-r-camX)*cellW, (a.aoeY-r-camY)*cellH,
+				(2*r+1)*cellW, (2*r+1)*cellH, aoeColor)
 		}
-		ui.StrokeRect(dst, (a.aoeX-camX)*cell, (a.aoeY-camY)*cell, cell, cell, aoeColor)
+		ui.StrokeRect(dst, (a.aoeX-camX)*cellW, (a.aoeY-camY)*cellH, cellW, cellH, aoeColor)
 	}
 
 	for _, u := range a.battle.Units() {
 		if !u.Alive() {
 			continue
 		}
-		x, y := (u.X-camX)*cell, (u.Y-camY)*cell
-		if x < 0 || x >= layout.MapWidth || y < 0 || y >= layout.MapHeight {
+		x, y := (u.X-camX)*cellW, (u.Y-camY)*cellH
+		// 上下界用**實際畫出來的**格數算，不用 layout.MapHeight ——
+		// EGA 一格 28 高，9 格是 252 而不是 288，用後者會讓單位標記
+		// 畫到地圖框外面。
+		if x < 0 || x >= layout.ViewTilesX*cellW ||
+			y < 0 || y >= layout.ViewTilesY*cellH {
 			continue
 		}
 		mark := "怪"
@@ -1145,13 +1149,13 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 		a.font.Draw(dst, mark, x, y)
 		a.font.Draw(dst, facingArrow[u.Facing&3], x+16, y)
 		if u == cur {
-			ui.StrokeRect(dst, x, y, cell, cell, markerColor)
+			ui.StrokeRect(dst, x, y, cellW, cellH, markerColor)
 		}
 		// 檢視游標。原版是**反白**（`ds:0x5192 = 0xff` 之後重畫那一格，
 		// 與 `L` 查看陷阱的白框同一個機制）；這裡先用白框，
 		// 因為文字反白要動到字型繪製那一層。
 		if a.examine != nil && u.Slot == a.examine.slot() {
-			ui.StrokeRect(dst, x, y, cell, cell, trapMarkerColor)
+			ui.StrokeRect(dst, x, y, cellW, cellH, trapMarkerColor)
 		}
 	}
 }
