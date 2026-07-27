@@ -124,8 +124,16 @@ func NewTileset(src *gfx.Tileset) *Tileset {
 	return t
 }
 
-// Name 回傳這套圖塊的來源（常態或雪地）。
-func (t *Tileset) Name() string { return string(t.src.Set()) }
+// Name 回傳這套圖塊實際載入的檔名（含模式）——狀態列靠它分辨現在跑的是
+// EGA 還是 CGA 素材。回 TerrainSet 會永遠顯示 `.SHP`，看不出模式。
+func (t *Tileset) Name() string { return t.src.Mode().FileName(t.src.Set()) }
+
+// FrameSize 回傳一格的顯示尺寸。EGA 是 32×28、CGA 是 16×16 ——
+// 呈現層不該假設它是正方形（原版 EGA 就不是）。
+func (t *Tileset) FrameSize() (int, int) { return t.src.FrameSize() }
+
+// Mode 回傳這一套是 EGA 還是 CGA 素材。
+func (t *Tileset) Mode() gfx.VideoMode { return t.src.Mode() }
 
 // Tile 以 tile 值取材質，超出範圍回傳 nil。
 func (t *Tileset) Tile(v byte) *ebiten.Image {

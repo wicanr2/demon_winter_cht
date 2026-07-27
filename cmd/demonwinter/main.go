@@ -744,12 +744,27 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 	ts := a.tileset()
 	halfX, halfY := layout.ViewTilesX/2, layout.ViewTilesY/2
 
+	// 一格佔幾像素**跟著素材走**，不是固定值：EGA 的 frame 已經是顯示尺寸
+	// 32×28（載入時水平加倍過），CGA 是 16×16 要放大兩倍。
+	// 兩種模式的格寬都是 32，所以右側狀態欄的位置不受影響。
+	fw, fh := ts.FrameSize()
+	scale := 1
+	if ts.Mode() == gfx.ModeCGA {
+		scale = layout.TileScale
+	}
+	cellW, cellH := fw*scale, fh*scale
+
 	// `I` 探查標出的格子。原版是**改寫繪製緩衝區**（`222f:150b`
 	// 把該格寫成 tile 0x38），不是在上面加框 —— 所以這裡也是換 tile。
 	inspected := make(map[[2]byte]bool, len(a.inspectSpots))
 	for _, s := range a.inspectSpots {
 		inspected[[2]byte{s.X, s.Y}] = true
 	}
+
+	// 隊伍 glyph 也是一個圖塊，與地形一起畫（原版 `222f:0bbc` 直接把索引
+	// 寫進繪製緩衝區）—— 所以它走同一條繪製路徑，不是疊在上面的裝飾。
+	partyGlyph := game.PartyGlyph(a.party.Facing(),
+		a.party.X(), a.party.Y(), a.party.Sailing())
 
 	for dy := 0; dy < layout.ViewTilesY; dy++ {
 		for dx := 0; dx < layout.ViewTilesX; dx++ {
@@ -761,32 +776,25 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 			if inspected[[2]byte{byte(mx), byte(my)}] {
 				tile = dungeonItemTile
 			}
+			if dx == halfX && dy == halfY {
+				tile = partyGlyph
+			}
 			img := ts.Tile(tile)
 			if img == nil {
 				continue
 			}
-			ui.DrawImageScaled(dst, img,
-				dx*gfx.TileWidth*layout.TileScale, dy*gfx.TileHeight*layout.TileScale, layout.TileScale)
+			ui.DrawImageScaled(dst, img, dx*cellW, dy*cellH, scale)
 		}
 	}
 
 	// `L` 掃到的陷阱畫白框（原版 `ds:0x5192 = 0xff` 之後畫、畫完設回 0）。
-	// 畫在隊伍框之前，位置重疊時隊伍框蓋在上面。
 	for _, sp := range a.trapSpots {
 		dx, dy := sp.X-a.party.X()+halfX, sp.Y-a.party.Y()+halfY
 		if dx < 0 || dx >= layout.ViewTilesX || dy < 0 || dy >= layout.ViewTilesY {
 			continue
 		}
-		ui.StrokeRect(dst,
-			dx*gfx.TileWidth*layout.TileScale, dy*gfx.TileHeight*layout.TileScale,
-			gfx.TileWidth*layout.TileScale, gfx.TileHeight*layout.TileScale, trapMarkerColor)
+		ui.StrokeRect(dst, dx*cellW, dy*cellH, cellW, cellH, trapMarkerColor)
 	}
-
-	// 隊伍位置暫時用方框標示。原版的隊伍 glyph 動畫表（0x210f）尚未解讀，
-	// 見 docs/spec/04-movement.md 未解表。
-	ui.StrokeRect(dst,
-		halfX*gfx.TileWidth*layout.TileScale, halfY*gfx.TileHeight*layout.TileScale,
-		gfx.TileWidth*layout.TileScale, gfx.TileHeight*layout.TileScale, markerColor)
 }
 
 // checkEvent 走 docs/spec/03-events.md 的觸發鏈：
@@ -1291,6 +1299,10 @@ func main() {
 		"遊戲內手札的內容檔（缺檔就是沒有手札，不影響遊玩）")
 	langDir := flag.String("lang", "assets/lang/zh-Hant",
 		"翻譯目錄。指向不存在的路徑即為原文模式")
+	// 原版同時出貨 EGA 與 CGA 兩套美術。**預設 EGA** —— 那是絕大多數玩家
+	// 當年看到的畫面；CGA 保留（完整性原則，`rulebook/83`），不是畫質選項。
+	videoMode := flag.String("video", "ega",
+		"素材版本：ega（16 色 .SHE，一格 32×28）或 cga（4 色 .SHP，一格 16×16）")
 	startX := flag.Int("x", -1, "起始 X。負值代表用存檔裡的座標")
 	startY := flag.Int("y", -1, "起始 Y。負值代表用存檔裡的座標")
 	// B 鍵那條偵錯路徑在 headless 截圖底下不好按（xdotool 送的鍵不一定
@@ -1492,8 +1504,16 @@ func main() {
 			"重跑 `dwstrings events` 更新翻譯檔。", len(bad), *dataFile)
 	}
 
+	mode := gfx.ModeEGA
+	switch strings.ToLower(*videoMode) {
+	case "ega":
+	case "cga":
+		mode = gfx.ModeCGA
+	default:
+		log.Fatalf("-video 只接受 ega 或 cga，收到 %q", *videoMode)
+	}
 	loadSet := func(s gfx.TerrainSet) *ui.Tileset {
-		ts, err := gfx.LoadTileset(filepath.Join(*dataDir, string(s)), s)
+		ts, err := gfx.LoadTilesetMode(*dataDir, s, mode)
 		if err != nil {
 			log.Fatalf("載入圖塊集 %s：%v", s, err)
 		}

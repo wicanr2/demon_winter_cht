@@ -124,6 +124,20 @@ func DecodeEGAPlanar(data []byte, width, height int, layout EGAPlaneLayout, pale
 // 3.5x 規律也都成立，**算術完全分不出來**——這是本專案在 sprite 尺寸上
 // 踩的第四個坑。定案靠的是遊戲自己宣告的 `[0x5226]` 常數加上肉眼比對。
 func DecodeEGASpriteSheet(data []byte, frameW, frameH int, layout EGAPlaneLayout) ([]*image.RGBA, error) {
+	return DecodeEGASpriteSheetPalette(data, frameW, frameH, layout, nil)
+}
+
+// DecodeEGASpriteSheetPalette 與 DecodeEGASpriteSheet 相同，但可以指定
+// 6-bit 調色盤。
+//
+// **地形圖塊與精靈圖一定要傳 GamePalette**，不能用標準 16 色表 ——
+// `.SHE` 檔本身不帶調色盤，而原版開機時把 16 個調色盤暫存器整組換掉了
+// （見 GamePalette）。用標準表解出來的顏色會系統性地錯，而且**看起來像
+// 解碼失敗的雜訊**：沙地變黃、水變紅、樹幹變青、海岸線變成紅綠色塊。
+// 本專案為此把一整批正確解出來的地形圖塊誤判成「雜訊格」過。
+func DecodeEGASpriteSheetPalette(data []byte, frameW, frameH int,
+	layout EGAPlaneLayout, palette *[16]byte) ([]*image.RGBA, error) {
+
 	if frameW%8 != 0 {
 		return nil, fmt.Errorf("gfx: EGA frame width 必須是 8 的倍數，得到 %d", frameW)
 	}
@@ -135,7 +149,7 @@ func DecodeEGASpriteSheet(data []byte, frameW, frameH int, layout EGAPlaneLayout
 	frames := make([]*image.RGBA, 0, n)
 	for i := 0; i < n; i++ {
 		chunk := data[i*frameBytes : (i+1)*frameBytes]
-		img, err := DecodeEGAPlanar(chunk, frameW, frameH, layout, nil)
+		img, err := DecodeEGAPlanar(chunk, frameW, frameH, layout, palette)
 		if err != nil {
 			return nil, fmt.Errorf("gfx: frame %d: %w", i, err)
 		}
