@@ -107,6 +107,53 @@ func CircleOfLightOpen(flags [3]byte) bool {
 	return true
 }
 
+// CircleOfLightCase 是光之環的門在地點劇情表裡的 case 編號（`docs/re/65` §3）。
+//
+// 觸發格是繞著中心 (11,50) 的**四格十字**：(10,50)、(11,49)、(11,51)、(12,50)
+// （地圖 5，`docs/re/83` §2）。**不是整張地圖 5** —— 這一點曾經寫錯，
+// 見 `docs/re/98` §1。
+const CircleOfLightCase = 15
+
+// CircleOfLightPushBack 回傳被力場擋下之後隊伍會被放到哪裡。
+//
+// 原版（`25be:0d85` 起）不是「不准走」，而是先讓隊伍走上觸發格、印訊息、
+// 再把座標寫回去：
+//
+//	1a592  if (party[+0xa1] == 0x0b)                  ; X == 11
+//	1a59a      party[+0xa2] = 0x36 − (面向×2 + 2)     ; 0x36 = 54
+//	1a5b0  if (party[+0xa2] == 0x32)                  ; Y == 50
+//	1a5b8      party[+0xa1] = 面向×2 + 7
+//
+// 面向從 `ds:0x4e32` 讀，那是 `222f:0b0e` 在這一步開頭從 `party+0xa4`
+// 抄過去的（`222f:0b34`）—— **不是**矮人黑暗視覺那個同位址的用途
+// （`docs/re/97` §5.2 是另一支函式裡的語意，見 `docs/re/98` §2）。
+//
+// 這兩條式子看起來像魔術，代進四格就知道它算的是「**退回你剛才那一格**」：
+//
+//	(11,49) 面向南(2) → Y = 54−4−2 = 48 → (11,48)
+//	(11,51) 面向北(0) → Y = 54−0−2 = 52 → (11,52)
+//	(10,50) 面向東(1) → Y 不變 → X = 2+7 = 9  → (9,50)
+//	(12,50) 面向西(3) → Y 不變 → X = 6+7 = 13 → (13,50)
+//
+// **但它只在這四格成立。** 從 (10,49) 往東走進 (11,49) 的話兩條式子會接連
+// 生效，把隊伍丟到 (9,50)。所以這裡照抄式子，不改寫成通用的「退一步」——
+// 那會把一個巧合當成規則（`docs/re/62` §3.3 同一條紀律）。
+func CircleOfLightPushBack(x, y int, f Facing) (int, int) {
+	const (
+		pushYBase = 0x36 // 54
+		pushXBase = 7
+		pushXGate = 0x0b // 11
+		pushYGate = 0x32 // 50
+	)
+	if x == pushXGate {
+		y = pushYBase - (int(f)*2 + 2)
+	}
+	if y == pushYGate {
+		x = int(f)*2 + pushXBase
+	}
+	return x, y
+}
+
 // GlyphActive 回報這個符印是否還在傷害隊伍。
 //
 // 用的是傷害判定那一處的門檻（`< 0x80`），與 CircleOfLightOpen 刻意不同 ——

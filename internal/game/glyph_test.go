@@ -81,6 +81,36 @@ func TestCircleOfLightOpen(t *testing.T) {
 	}
 }
 
+// TestCircleOfLightPushBack 釘住四格十字的推回結果 ＝ 剛才那一格。
+//
+// 這四組是原版那兩條式子唯一「算得漂亮」的輸入（`docs/re/98` §1）。
+// 誰要是把它改寫成通用的「退一步」，第五個 case 會證明那不等價。
+func TestCircleOfLightPushBack(t *testing.T) {
+	for _, c := range []struct {
+		x, y         int
+		f            Facing
+		wantX, wantY int
+		label        string
+	}{
+		{11, 49, South, 11, 48, "從北邊走進來"},
+		{11, 51, North, 11, 52, "從南邊走進來"},
+		{10, 50, East, 9, 50, "從西邊走進來"},
+		{12, 50, West, 13, 50, "從東邊走進來"},
+	} {
+		x, y := CircleOfLightPushBack(c.x, c.y, c.f)
+		if x != c.wantX || y != c.wantY {
+			t.Errorf("%s（%d,%d 面向 %d）：推到 (%d,%d)，預期 (%d,%d)",
+				c.label, c.x, c.y, c.f, x, y, c.wantX, c.wantY)
+		}
+	}
+
+	// **不是通用的「退一步」。** 斜著進 (11,49) 的話兩條式子接連生效，
+	// 原版會把隊伍丟到 (9,50) 而不是退回 (10,49)。照抄式子才會有這個行為。
+	if x, y := CircleOfLightPushBack(11, 49, East); x != 9 || y != 50 {
+		t.Errorf("斜向進入：推到 (%d,%d)，預期 (9,50) —— 這一格證明它不是退一步", x, y)
+	}
+}
+
 // TestGlyphActiveUsesDifferentThreshold 釘住「兩處門檻不同」這件事。
 // 原版擋門比 != 0、傷害判定比 < 0x80；中間值在原版資料裡不存在，
 // 但不要為了看起來一致而把兩者合併。

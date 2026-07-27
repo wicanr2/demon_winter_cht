@@ -88,9 +88,9 @@ type app struct {
 	// 照抄「畫完就清」會讓標記閃 1/60 秒等於看不見 —— 所以改成
 	// 跟著「下一步」清，玩家看到的行為與原版相同。
 	inspectSpots []game.InspectSpot
-	party     *game.Party
-	clock     *game.Clock
-	tiles     *world.Map
+	party        *game.Party
+	clock        *game.Clock
+	tiles        *world.Map
 
 	// drawTiles 是「拿來畫」的那份 tile 陣列：與 tiles 相同，但海面已經
 	// 隨機摻過另一種浪花（見 world.OceanDither）。原版是在載入時就地改寫
@@ -376,13 +376,12 @@ func (a *app) update() error {
 			continue
 		}
 		a.party.Turn(kf.f)
-		// 光之環的門：三個符印沒解完就擋下（`docs/re/59` §3）。
-		// 原版是走進去之後才擋並把玩家推開；這裡在移動前擋，
-		// 效果一樣而且不必實作推開 —— 差異記在 docs/re/62。
-		if a.mapID == game.ImprisonSubMap && !game.CircleOfLightOpen(a.save.GlyphFlags) {
-			a.message = a.tr.UI("plot.forcefield", "緋紅的力場擋住了通往光之環的路")
-			return nil
-		}
+		// 光之環的門**不在這裡擋**。它是地點劇情表的 case 15，只在
+		// 繞著 (11,50) 的四格十字上判定，走上去之後才印訊息並推回來
+		// （`a.circleOfLightDoor`）。這裡原本有一條「`mapID == 5` 就擋」
+		// 的閘門 —— 少了座標比對，等於符印沒解完就在整張地圖 5
+		// 一步都走不了（`docs/re/98` §1）。
+		//
 		// **治療水池在移動之前攔下來。** 原版的回傳碼 `0x11` 發生在
 		// 寫座標之前，所以隊伍轉了向但不會走上去（`docs/re/90` §4）。
 		if t, ok := a.world.TileAhead(a.party); ok && game.TriggerFor(t) == game.TriggerPool {
@@ -769,6 +768,9 @@ func (a *app) tileMetrics() (cellW, cellH, scale int) {
 // 那只是**戶外**的時辰值 —— 在地城裡它與實際生效的內縮量無關，
 // 於是畫面顯示「光照 0」而視野其實縮到 3×3。那個落差害我把一次驗證
 // 的理由判斷錯（誤以為隊伍有矮人在加成），所以現在兩邊只讀同一個值。
+//
+// 狀態列的欄位名也跟著改成「內縮」：這支回的是 `4 − 光照`，
+// 掛「光照」的標籤會讓數字讀起來剛好相反。
 func (a *app) viewInset() int {
 	return game.ViewInset(a.mapID, a.clock.Hour(), a.torch, a.members)
 }
@@ -1206,7 +1208,10 @@ func (a *app) monthName() string {
 func (a *app) drawStatus(dst *ebiten.Image) {
 	lines := []string{
 		fmt.Sprintf("%2d時 %2d日 %s月", a.clock.Hour(), a.clock.Day(), a.monthName()),
-		fmt.Sprintf("步數 %2d  光照 %d", a.clock.Steps(), a.viewInset()),
+		// **標「內縮」不標「光照」。** 印的是視窗四邊各縮掉幾格
+		// （原版 `ds:0x4c86`），那是 `4 − 光照`，方向相反 ——
+		// 標成「光照」的話「光照 3」看起來像很亮，其實是只剩中央 3×3。
+		fmt.Sprintf("步數 %2d  內縮 %d", a.clock.Steps(), a.viewInset()),
 		fmt.Sprintf("座標 %2d,%-2d 面向%s", a.party.X(), a.party.Y(), facingName[a.party.Facing()]),
 		fmt.Sprintf("地形 %3d  深度 %d", a.lastTile, a.party.Depth()),
 		fmt.Sprintf("圖塊 %s", a.tileset().Name()),
@@ -1598,26 +1603,26 @@ func main() {
 		ditherSeed:  uint16(*seed),
 		// -ending 直接跳結局序列。破關要走完整條主線，沒有這個旗標
 		// 就沒辦法驗收結局畫面（同 -glyphs／-ruins 的性質）。
-		won:        *endingFlag,
-		events:     events,
-		tr:         tr,
-		eventsFile: *dataFile,
-		tables:     tables,
-		members:    members,
-		monsters:   monsters,
-		towns:      towns,
-		strings:    strs,
-		items:      items,
-		rng:        newRNG(*seed),
-		normal:     loadSet(gfx.NormalTiles),
-		winter:     loadSet(gfx.WinterTiles),
-		font:       font,
-		speaker:    ui.NewSpeaker(*volume),
-		title:      loadTitle(*dataDir),
-		runeFont:   loadRuneFont(*dataDir),
-		save:       save,
-		torch:      save.LightSource,
-		savePath:   *savePath,
+		won:          *endingFlag,
+		events:       events,
+		tr:           tr,
+		eventsFile:   *dataFile,
+		tables:       tables,
+		members:      members,
+		monsters:     monsters,
+		towns:        towns,
+		strings:      strs,
+		items:        items,
+		rng:          newRNG(*seed),
+		normal:       loadSet(gfx.NormalTiles),
+		winter:       loadSet(gfx.WinterTiles),
+		font:         font,
+		speaker:      ui.NewSpeaker(*volume),
+		title:        loadTitle(*dataDir),
+		runeFont:     loadRuneFont(*dataDir),
+		save:         save,
+		torch:        save.LightSource,
+		savePath:     *savePath,
 		dataDir:      *dataDir,
 		itemloc:      itemloc,
 		dungeonItems: dungeonItems,

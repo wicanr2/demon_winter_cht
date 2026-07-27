@@ -57,7 +57,17 @@ DISPLAY=:99 /tmp/demonwinter $* >/tmp/app.log 2>&1 &
 APP_PID=\$!
 sleep 3
 if [ -n '$KEYS' ]; then
-    WID=\$(DISPLAY=:99 xdotool search --sync --onlyvisible --name "冬之魔" | head -1)
+    # **一定要包 timeout。** \`xdotool search --sync\` 在視窗永遠不出現時
+    # 會無限等下去，而「視窗不出現」最常見的原因是程式參數打錯
+    # （例 \`-trace\` 少了值 —— flag 套件印出用法就退出）。
+    # 沒有這道 timeout 的症狀是整個截圖流程靜靜掛住，看不到任何錯誤。
+    WID=\$(timeout 20 env DISPLAY=:99 xdotool search --sync --onlyvisible --name "冬之魔" 2>/dev/null | head -1) || true
+    if [ -z \"\$WID\" ]; then
+        echo '!!! 視窗沒出現 —— 看下面的 app log，多半是程式參數錯了'
+        echo '--- app log ---'; cat /tmp/app.log || true
+        kill -9 \$APP_PID \$XVFB_PID 2>/dev/null || true
+        exit 1
+    fi
     DISPLAY=:99 xdotool windowactivate --sync \$WID 2>/dev/null || true
     sleep 1
     for k in \$(echo '$KEYS' | tr ',' ' '); do
