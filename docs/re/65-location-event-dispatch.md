@@ -63,7 +63,7 @@
 | 1 | `0x19f5b` | `You hear the whirring of massive machinery` | **壓牆走廊復位**（見 §3.1）|
 | 2 | `0x19f84` | `Your party has been` / `crushed by the walls.` | **壓牆走廊推進 ＋ 全隊死亡**（見 §3.1）|
 | 3 | `0x1a03c` | `%s%s%s` / `Do you approach?` | 接近詢問 |
-| 4 | `0x1a0f9` | `I have been working on a new weapon.` / `It is designed for the ones` / `who wish to kill Xeres!` | **NPC：打造對付 Xeres 的武器** |
+| 4 | `0x1a0f9` | `I have been working on a new weapon.` / … / `who wish to kill Xeres!` | **鐵匠鋪：白送一把闊劍**（見 §3.2）|
 | 5 | `0x1a169` | `The tombstones` / `shift before you` | 墓碑移動 |
 | 6 | `0x1a228` | — | 8 bytes，轉呼叫 |
 | 7 | `0x1a230` | — | |
@@ -125,6 +125,67 @@
 順帶一個資料上的觀察：**(16,38) 不觸發 case 2**，最西邊會觸發的是 (17,38)。
 `docs/re/83` §2 寫「(16..20, 36..40) 共 12 格」是就 `ALL_SS.DAT` 的座標集
 說的，實際那一列的起點在 17。
+
+### 3.2 case 4 是鐵匠鋪 —— 順帶解出「劇情送道具」的共用常式
+
+```
+1a0fd  if (party[+0xb7] != 0) return 2          ; ← 已經拿過了
+1a10b  印 ds:0x27e4 那個遠指標指到的場景敘述
+       "You have entered a blacksmith's shop. The blacksmith, an old troll,
+        has a hideously disfigured face with one eye permenantly closed…"
+1a125  122f:1813(0)                             ; 等 `Continue`
+1a12c  印 "I have been working on a new weapon."
+1a139  印 "It is designed for the ones"
+1a146  印 "who wish to kill Xeres!"
+1a156  122f:1813(2)
+1a160  call 15be:11ff(4)                        ; ← **送道具**
+```
+
+`15be:11ff`（＝ `0x1a9df`）是**好幾個劇情 case 共用的「送一件道具」常式**：
+
+```
+1a9f3  [bp-0xc] = party + 0xb3                  ; ← 旗標陣列基底
+1a9fc  if (param < 4) 印 "The spheres glow brighter."
+1aa0f  印 "Character to take?" → 選一名角色
+1aa85  掃 10 格找第一個型別 0xff 的空槽
+1aaa7  把那一格 16 bytes 清零
+1aabf  [+0x0e] = 0x0a   (附魔 0)
+1aac7  [+0x10] = 0x01   (已鑑定)
+1aacc  party[0xb3 + param] = 1                  ; ← **記「拿過了」**
+1ab88  switch (param) → 7 格跳表（cs:0x139a），逐欄位寫死道具規格
+```
+
+**`+0xb3` 起是「劇情道具拿過了沒」的旗標陣列** —— 而 case 4 的入口閘門
+`+0xb7` 正好是 `0xb3 + 4`。兩邊互相印證。
+
+> ⚠ **只認 6 格（`+0xb3`–`+0xb8`）。** 跳表有 7 個 param，param 6 會寫到
+> `+0xb9` —— 而 `+0xb9` 是**劇情階段**（`docs/re/81` 驗過）。兩者衝突，
+> 已驗證的那個優先。要嘛 param 6 到不了，要嘛那是原版的溢位。
+> **在查清楚之前不要把陣列擴成 7 格。**
+
+param 4（鐵匠那把）的完整規格（`0x1ab33`–`0x1ab61`）：
+
+| 欄位 | 值 | 意義 |
+|---|---|---|
+| `+0x00` | `0x05` | `ITEMS.DAT` 第 5 件 ＝ **broad sword** |
+| `+0x01` | `0x94` | 附帶法術 A（最高位 `0x80` 是旗標 → 法術 `0x14`）|
+| `+0x02` | `0x04` | 附帶法術 A 的強度 |
+| `+0x0d` | `0x14` | 驅邪成功率 20 |
+| `+0x0e` | `0x09` | 附魔 ＝ 9 − 10 ＝ **−1** |
+| `+0x0f` | `0x08` | 材質類別 8（估價倍率 ×75，最高一級）|
+| `+0x10` | `0x01` | 已鑑定 |
+
+**附魔 −1 不是筆誤**：共用那一段先寫 `0x0a`（＝0），param 4 的分支再覆寫成
+`0x09`。一把 −1 的闊劍配強度 4 的附帶法術、材質類別拉到頂 ——
+台詞說它是「為了要殺 Xeres 的人打造的」，那個 −1 大概是代價。**照抄。**
+
+其餘六個 param 的規格沒讀（param 0 → 型別 `0x0a` ＋ 材質 3、param 1 → 型別 3、
+param 3 → 型別 2…），因為對應的劇情 case 還沒接，**沒有呼叫端就確認不了誰是誰**。
+附近的字串 `Spear `／`Dart `／`Silver Suit of Chain Mail`／`a Mace`
+（`ds:0x27e8` 起）看起來是這幾件的標籤。
+
+**實跑驗過**（2026-07-27）：地圖 3 從 (22,26) 走進 (23,26) → 台詞 → 選人 →
+Wopple 第 2 格拿到闊劍，七個欄位逐一對上；存檔重讀 `PlotGifts[4] = 1` 還在。
 
 ### 兩個密碼
 

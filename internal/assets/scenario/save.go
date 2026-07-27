@@ -270,6 +270,19 @@ const (
 	// 兩份原版存檔是 1 與 4 —— 所以早期遇到的都是小商隊。
 	merchantBaseOffset = 0xaf
 
+	// plotGiftOffset 是**劇情送的道具「已經拿過了」旗標陣列**的起點
+	// （`docs/re/65` §3.2）。送道具那支常式（`25be:11ff` ＝ `0x1a9df`）
+	// 在 `0x1aacc` 做 `party[0xb3 + param] = 1`，而地點劇情 case 4（鐵匠鋪）
+	// 的入口閘門 `0x1a0fd` 檢查的正是 `+0xb7` ＝ `0xb3 + 4`。兩邊對上。
+	//
+	// ⚠ **只認 6 格（`+0xb3`–`+0xb8`）。** 那支常式的跳表有 7 個 param，
+	// param 6 會寫到 `+0xb9` —— 而 `+0xb9` 是**劇情階段**（`plotStageOffset`，
+	// `docs/re/81` 驗過）。兩者衝突，而已驗證的那個優先：
+	// 要嘛 param 6 到不了，要嘛那是原版的溢位。**在查清楚之前不擴到 7 格。**
+	plotGiftOffset = 0xb3
+	// PlotGiftCount 是上面那個陣列的格數（見警告）。
+	PlotGiftCount = 6
+
 	boatOffset = 0xb0
 
 	// templeRuinsOffset／shardShatteredOffset：**世界變成廢墟的兩個旗標**
@@ -494,6 +507,9 @@ type SaveGame struct {
 	// EregoreMet 是艾瑞戈爾的兩階段狀態（見 eregoreMetOffset 註解）。
 	EregoreMet byte
 
+	// PlotGifts 是「劇情送的那幾件道具拿過了沒」（見 plotGiftOffset 註解）。
+	PlotGifts [PlotGiftCount]byte
+
 	// PlotStage／FirstDream 是睡覺推進的劇情階段（見 plotStageOffset 註解）。
 	PlotStage  byte
 	FirstDream byte
@@ -598,6 +614,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.TempleRuins = trailer[templeRuinsOffset]
 	save.ShardShattered = trailer[shardShatteredOffset]
 	save.EregoreMet = trailer[eregoreMetOffset]
+	copy(save.PlotGifts[:], trailer[plotGiftOffset:plotGiftOffset+PlotGiftCount])
 	save.PlotStage = trailer[plotStageOffset]
 	save.FirstDream = trailer[firstDreamOffset]
 	save.EncounterCountdown = trailer[encounterCountdownOffset]

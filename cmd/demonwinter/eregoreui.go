@@ -34,8 +34,8 @@ type eregoreScreen struct {
 // case 編號是**全域唯一**的（1–15 分佈在五張子地圖，零碰撞，
 // `docs/re/83` §2），所以不必再配地圖編號。
 //
-// **接上的是 1／2（壓牆走廊）、10／11（兩道密語）與 14（艾瑞戈爾）。**
-// 其餘 10 個 case 的內容在 `docs/re/65` §3 都讀出來了，但引擎還沒實作 ——
+// **接上的是 1／2（壓牆走廊）、4（鐵匠鋪）、10／11（兩道密語）
+// 與 14（艾瑞戈爾）。** 其餘 9 個 case 的內容在 `docs/re/65` §3 都讀出來了，但引擎還沒實作 ——
 // 這裡明確報未接，不要靜默什麼都不做，那會讓人以為那一格本來就沒事。
 func (a *app) locationPlot(c int) {
 	switch c {
@@ -43,6 +43,8 @@ func (a *app) locationPlot(c int) {
 		a.resetCrushingWalls()
 	case plotCaseCrush:
 		a.advanceCrushingWalls()
+	case plotCaseBlacksmith:
+		a.openBlacksmith()
 
 	case game.RiddleCaseSpectralPriest, game.RiddleCaseTempleName:
 		a.openRiddle(c)

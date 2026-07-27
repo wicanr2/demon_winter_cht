@@ -21,6 +21,8 @@ const (
 	plotCaseMachinery = 1
 	// plotCaseCrush 是走廊中段：牆各推進一列，夾到就死。
 	plotCaseCrush = 2
+	// plotCaseBlacksmith 是鐵匠鋪（見 blacksmithui.go）。
+	plotCaseBlacksmith = 4
 )
 
 // resetCrushingWalls 是 case 1：從檔案重讀地圖。

@@ -681,3 +681,37 @@ You hear the whirring of massive machinery
 Your party has been crushed by the walls.
 :: zh
 隊伍被牆壓碎了
+
+## blacksmith.scene
+:: en
+You have entered a blacksmith's shop. The blacksmith, an old troll, has a hideously disfigured face with one eye permenantly closed. He is surprised when you first enter, but then he smiles and speaks.
+:: zh
+你走進一間鐵匠鋪。鐵匠是個年邁的巨魔，一邊的眼睛永遠閉著，臉孔扭曲得嚇人。他先是一驚，隨即咧嘴笑了起來。
+
+## blacksmith.line1
+:: en
+I have been working on a new weapon.
+:: zh
+「我一直在打一把新武器。
+
+## blacksmith.line2
+:: en
+It is designed for the ones
+:: zh
+　它是為了那些想殺掉 Xeres 的人
+
+## blacksmith.line3
+:: en
+who wish to kill Xeres!
+:: zh
+　準備的！」
+
+## blacksmith.who
+:: en
+Character to take?
+:: zh
+誰來收下？
+
+## blacksmith.taken
+:: zh
+%s 收下了那把武器
