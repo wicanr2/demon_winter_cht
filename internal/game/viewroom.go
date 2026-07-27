@@ -23,9 +23,10 @@ const (
 	ViewRoomRange = 3
 	// PsychicUsesPerDay 是靈視技能的每日次數（`0x19027` 的 `cmp …,3`）。
 	//
-	// ⚠ **手冊寫「每天只能使用一次」，機器碼是 3。** 手冊講的是 Apple II 版，
-	// 而這裡移植的是 DOS 版的執行檔。差異記在 `docs/re/93` §4，
-	// 待 DOSBox 實跑複核。
+	// ⚠ **手冊寫「每天只能使用一次」，機器碼是 3 —— 3 才對。**
+	// 手冊講的是 Apple II 版。DOSBox 實跑已複核（`docs/re/93` §4.1）：
+	// 把存檔的 `+0xad` 預設成 2 按一次 `V` 照樣跑得動，預設成 3 就印
+	// `Your psychic powers are weak`。兩個相鄰值配成一對，沒有含糊空間。
 	PsychicUsesPerDay = 3
 )
 
