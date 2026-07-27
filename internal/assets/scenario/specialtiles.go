@@ -60,8 +60,15 @@ const (
 	// SpecialClassLocationPlot 是主線的地點劇情格。判定條件在原版是
 	// `cmp ds:0x5c62, 5`（`0x19f15`），不通過就走預設的房間文字路徑。
 	SpecialClassLocationPlot = 5
-	// SpecialClassTrapAlt 跟類別 3 走同一條陷阱路徑（`0x19a52`）。
-	// **出貨資料裡一筆都沒有** —— 程式路徑留著、資料沒用到，是原版自己的狀態。
+	// SpecialClassTrapAlt 是**已被 `L` 標記過的陷阱**（`docs/re/91` §2）：
+	// 察覺陷阱之後 `attr += 0x60`，類別 3 就變成 6；觸發時多一道
+	// `Roll(2)` 的迴避 —— 手冊「經過時可能不會觸發」的精確值就是 50%。
+	//
+	// ⚠ 這裡原本寫「出貨資料裡一筆都沒有，程式路徑留著、資料沒用到」，
+	// **那是錯的**：`1SS.DAT` 的 (11,17) 就是一筆。`nSS.DAT` 是存檔
+	// （`docs/re/78`）、出貨的存檔又是玩過的（`docs/re/87`）——
+	// 那一格是 1988 年那位玩家自己標記下來的。
+	// 釘在 `TestShippedDataHasANoticedTrap`。
 	SpecialClassTrapAlt = 6
 
 	// specialClassAdvance 是「狀態推進」的加量：類別 +3（`0x1788e` 的 `+0x60`）。

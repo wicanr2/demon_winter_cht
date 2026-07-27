@@ -205,3 +205,145 @@ have died.
 ## death.dismiss
 :: zh
 （按任意鍵離開）
+
+## trap.name0
+:: en
+Something you cannot
+:: zh
+有什麼東西你看不見
+
+## trap.name1
+:: en
+Poison needle hits 
+:: zh
+毒針射中了
+
+## trap.name2
+:: en
+A Bungei pit!
+:: zh
+一個 Bungei 陷坑！
+
+## trap.name3
+:: en
+Poison pit!
+:: zh
+毒坑！
+
+## trap.name4
+:: en
+Spear trap!
+:: zh
+長矛陷阱！
+
+## trap.name5
+:: en
+Darts shoot from holes in the wall
+:: zh
+飛鏢從牆上的孔洞射出
+
+## trap.name6
+:: en
+A pool!
+:: zh
+一池水！
+
+## trap.name7
+:: en
+An acid pool!
+:: zh
+一池酸液！
+
+## trap.name8
+:: en
+You set off an alarm!
+:: zh
+觸動了警報！
+
+## trap.avoided
+:: en
+You carefully avoid the trap
+:: zh
+小心翼翼地避開了陷阱
+
+## trap.careful
+:: en
+Even being extra careful
+:: zh
+即使再小心
+
+## trap.triggered
+:: en
+you set off the trap
+:: zh
+還是觸動了陷阱
+
+## trap.pit.safe
+:: en
+: safe
+:: zh
+：沒事
+
+## trap.pool.escape
+:: en
+swims out.
+:: zh
+游了出來
+
+## trap.spear.miss
+:: en
+Spear misses
+:: zh
+長矛落空
+
+## trap.dart.miss
+:: en
+Dart misses
+:: zh
+飛鏢落空
+
+## trap.miss
+:: zh
+落空
+
+## trap.damage
+:: zh
+ 受到傷害 
+
+## trap.died
+:: en
+ died.
+:: zh
+，倒下了
+
+## trap.none
+:: en
+No traps found.
+:: zh
+沒有發現陷阱
+
+## trap.noticed
+:: en
+Noticed.
+:: zh
+已注意
+
+## trap.disarmed
+:: en
+Disarmed.
+:: zh
+已解除
+
+## trap.found.prefix
+:: zh
+找到
+
+## trap.found.suffix
+:: en
+ traps found.
+:: zh
+個陷阱
+
+## trap.alarm.steps
+:: zh
+%d 步之內必定遇敵

@@ -251,3 +251,48 @@ func TestParseSpecialTiles_RejectsWrongSize(t *testing.T) {
 			len(st.Tiles), len(st.Dests))
 	}
 }
+
+// 出貨資料裡**有**一筆類別 6，在 `1SS.DAT` 的 (11,17)。
+//
+// 這一條原本寫成「類別 6 出貨資料裡一筆都沒有 —— 程式路徑留著、資料沒用到」，
+// 是**被推翻的斷言**。類別 6 ＝ 已被 `L` 標記過的陷阱（`docs/re/91` §2），
+// 而出貨的 `PARTY.DAT` 本來就是一份**玩過的存檔**（`docs/re/87`）——
+// `nSS.DAT` 也是存檔（`docs/re/78`），所以那一格記的是
+// **1988 年那位玩家自己標記下來的陷阱**。
+//
+// 釘住它，因為它同時證明三件事：類別 6 真的會出現、`L` 的改寫真的會落地、
+// 而且出貨資料是遊玩中途的狀態而不是新遊戲。
+func TestShippedDataHasANoticedTrap(t *testing.T) {
+	path := dataPath("1SS.DAT")
+	skipIfMissing(t, path)
+
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("讀 %s：%v", path, err)
+	}
+	st, err := ParseSpecialTiles(raw)
+	if err != nil {
+		t.Fatalf("解析 %s：%v", path, err)
+	}
+
+	var noticed []SpecialTile
+	traps := 0
+	for _, tile := range st.Tiles {
+		switch tile.Class() {
+		case SpecialClassTrapAlt:
+			noticed = append(noticed, tile)
+		case SpecialClassTrap:
+			traps++
+		}
+	}
+	if traps == 0 {
+		t.Error("1SS.DAT 一個類別 3 的陷阱都沒有 —— 解析大概錯了")
+	}
+	if len(noticed) != 1 {
+		t.Fatalf("類別 6 有 %d 筆，預期 1（出貨資料裡就有一格已注意的陷阱）", len(noticed))
+	}
+	got := noticed[0]
+	if got.X != 11 || got.Y != 17 {
+		t.Errorf("已注意的那一格在 (%d,%d)，預期 (11,17)", got.X, got.Y)
+	}
+}

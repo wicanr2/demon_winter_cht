@@ -153,6 +153,12 @@ func NewWorld(tiles TileSource, tables *gamedata.Tables) *World {
 	return &World{tiles: tiles, tables: tables}
 }
 
+// Tiles 回傳這個世界的圖塊來源。
+//
+// 給「不是移動、但要沿路徑讀 tile」的規則用（目前是 `LookForTraps`）。
+// **不要在呼叫端另外留一份 TileSource** —— 兩份一定會漂到不同的地圖上。
+func (w *World) Tiles() TileSource { return w.tiles }
+
 // tileAt 取得遮罩後的 tile 值。超出地圖範圍回傳 ok=false。
 //
 // 原版是否有 64×64 邊界檢查未確認（見 04-movement.md 未解表）。

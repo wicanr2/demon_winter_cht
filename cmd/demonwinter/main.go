@@ -57,12 +57,18 @@ const scale = 2
 
 var (
 	markerColor = color.RGBA{0xff, 0xff, 0x55, 0xff}
+	// trapMarkerColor 是 `L` 掃到的陷阱框。原版畫的就是**白色**方框
+	// （手冊「找到的每個陷阱都會用白色方框標示位置」），與隊伍的黃框分開。
+	trapMarkerColor = color.RGBA{0xff, 0xff, 0xff, 0xff}
 	// textColor 是中文的前景色。倚天字模是 1bpp，顏色在渲染時決定。
 	textColor = color.RGBA{0xff, 0xff, 0xff, 0xff}
 )
 
 type app struct {
 	world *game.World
+	// trapSpots 是上一次 `L` 掃到的陷阱格，畫成白框（原版 ds:0x5192）。
+	// 走一步就清掉 —— 框是「這一次掃描的結果」，不是地圖的長期狀態。
+	trapSpots []game.TrapSpot
 	party *game.Party
 	clock *game.Clock
 	tiles *world.Map
@@ -352,6 +358,7 @@ func (a *app) update() error {
 		}
 		res, tile, advanced := a.world.Walk(a.party, a.clock)
 		a.lastTile = tile
+		a.trapSpots = nil // 白框只屬於上一次掃描
 
 		switch res {
 		case game.MoveBlocked:
@@ -424,6 +431,10 @@ func (a *app) update() error {
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyS) {
 		a.saveNow()
+	}
+	// L：查看陷阱（手冊「地底 → 偵測與解除陷阱」，原版動作 0x07）。
+	if inpututil.IsKeyJustPressed(ebiten.KeyL) {
+		a.lookForTraps()
 	}
 	return nil
 }
@@ -654,6 +665,18 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 		}
 	}
 
+	// `L` 掃到的陷阱畫白框（原版 `ds:0x5192 = 0xff` 之後畫、畫完設回 0）。
+	// 畫在隊伍框之前，位置重疊時隊伍框蓋在上面。
+	for _, sp := range a.trapSpots {
+		dx, dy := sp.X-a.party.X()+halfX, sp.Y-a.party.Y()+halfY
+		if dx < 0 || dx >= layout.ViewTilesX || dy < 0 || dy >= layout.ViewTilesY {
+			continue
+		}
+		ui.StrokeRect(dst,
+			dx*gfx.TileWidth*layout.TileScale, dy*gfx.TileHeight*layout.TileScale,
+			gfx.TileWidth*layout.TileScale, gfx.TileHeight*layout.TileScale, trapMarkerColor)
+	}
+
 	// 隊伍位置暫時用方框標示。原版的隊伍 glyph 動畫表（0x210f）尚未解讀，
 	// 見 docs/spec/04-movement.md 未解表。
 	ui.StrokeRect(dst,
@@ -839,9 +862,14 @@ func (a *app) checkEvent(tile byte) {
 		}
 		// 類別 3／6 是陷阱（`0x19a4b`）。原版印完 "A trap!" 之後
 		// 還是會走文字路徑，所以這裡只多一則訊息、不 return。
+		//
+		// **在這之前這裡只有訊息，不扣血** —— 七種陷阱的擲點
+		// `docs/re/68` 早就讀完了，是「解完沒接」。現在接上了。
 		if cls := hit.Tile.Class(); cls == scenario.SpecialClassTrap ||
 			cls == scenario.SpecialClassTrapAlt {
-			a.message = a.tr.UI("site.trap", "有陷阱！")
+			if a.springTrap(hit) {
+				return
+			}
 		}
 		idx = hit.EventIndex
 		// 記錄「看過了」：類別留著，記錄之後照樣命中（`docs/re/78` §3）。
@@ -1055,6 +1083,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"T：進入城鎮",
 		"B：測試戰鬥（偵錯）",
 		"C：紮營",
+		"L：查看陷阱",
 		"F1：建立角色（偵錯）",
 		"F2：手札",
 		"M：遇到商隊（偵錯）",
