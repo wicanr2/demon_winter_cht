@@ -313,8 +313,13 @@ func MoveDungeonItem(items gamedata.DungeonItems, index int,
 
 // parseTileSpec 解 `XXYYTT…` —— 前兩組固定兩位，第三組是剩下的全部。
 //
-// 動作碼 `P` 用的是同一套（原版 `0x1849d` 與 `0x195bb` 兩段程式碼一樣），
-// 所以這支之後給 `P` 共用，**不要再抄一份**。
+// **`+3`（`Move:`）、`P`、`T` 三個共用這一支。** 原版的三段程式碼寫法不同
+// （`Move:` 是 `atoi(s+4)` 讀到結尾，`P`／`T` 是各取兩個字元），
+// 但**結果一樣**：五個字元的參數（`P04480`、`T07203`）第二個字元讀到的是
+// 字串結尾的 NUL，`atoi` 出來的值與讀到結尾相同。
+//
+// > 我一度照著「`T` 是三組兩位數」另外寫了一支，然後被 `T07203`
+// > 只有五個字元打臉。**判讀來自反組譯，驗證要來自資料。**
 func parseTileSpec(s string) (x, y int, tile byte, ok bool) {
 	if len(s) < 5 {
 		return 0, 0, 0, false

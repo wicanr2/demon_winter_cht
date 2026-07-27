@@ -437,6 +437,11 @@ func (a *app) update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyE) {
 		a.openDungeonExamine()
 	}
+	// U：用手上一件地城道具對另一件用（手冊「物品 → 使用」，
+	// 原版動作 0x0c ＝ 222f:2088(0)）。**整套地城解謎的入口。**
+	if inpututil.IsKeyJustPressed(ebiten.KeyU) {
+		a.openDungeonUse()
+	}
 	// F3 是偵錯用的「就地進城」。
 	if inpututil.IsKeyJustPressed(ebiten.KeyF3) {
 		a.openTownPicker()
@@ -1138,6 +1143,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"P：隊伍名冊",
 		"T：拿取　D：丟棄",
 		"E：檢視　M：推開家具",
+		"U：使用（解謎）",
 		"C：紮營",
 		"L：查看陷阱　V：觀室",
 		"B：測試戰鬥（偵錯）",

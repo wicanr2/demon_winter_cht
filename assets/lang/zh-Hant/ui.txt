@@ -583,3 +583,57 @@ Nothing happens.
 Something happened...
 :: zh
 發生了什麼事……
+
+## dungeon.use.title
+:: en
+Use 
+:: zh
+用哪一件？
+
+## dungeon.use.on
+:: en
+Use on:
+:: zh
+%s 要用在哪？
+
+## dungeon.use.onwhat
+:: zh
+%s 用在哪一件？
+
+## dungeon.use.target.C
+:: en
+Character
+:: zh
+身上的另一件
+
+## dungeon.use.target.R
+:: en
+Room
+:: zh
+這個房間裡的
+
+## dungeon.use.target.Q
+:: en
+Quit
+:: zh
+取消
+
+## dungeon.use.noother
+:: zh
+身上沒有別的地城道具
+
+## dungeon.yousee
+:: en
+You see a %s
+:: zh
+你看到 %s
+
+## dungeon.story.notyet
+:: en
+Nothing happens
+:: zh
+什麼也沒發生
+
+## dungeon.story.done
+:: zh
+已經沒有下文了

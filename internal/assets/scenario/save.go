@@ -323,11 +323,18 @@ const (
 	// 兩個旗標語意相近但比較方式不一樣，照原版分開寫，不要統一。
 	TempleRuinsThreshold = 0x7f
 
-	// unknownC1Offset 是 trailer 的**最後一個 byte**。語意未解，
-	// 唯一已知的讀取端是紮營選單的 Drop：型別 0x1d 的道具要這個值
-	// 不為 0 才丟得掉（`1000:21fe`，見 `docs/re/33` §3）。
-	// 起始存檔是 0。
-	unknownC1Offset = 0xc1
+	// endingOfferedOffset 是 trailer 的**最後一個 byte**：
+	// **結局抉擇的一次性閂鎖**。
+	//
+	// 這個欄位一度叫 `UnknownC1`（「語意未解」）。`docs/re/95` §3.5 解開了：
+	// 動作碼 `S1`（冰之祭壇 ＋ 祈禱卷軸）先看劇情階段 `+0xb9`，
+	// 再看這個值 —— **不為 0 就直接返回**（`0x185de`），
+	// 所以「Who wishes to become a god?」一輪遊戲只問一次。
+	//
+	// 另一個讀取端是紮營選單的 Drop：型別 0x1d 的道具要它不為 0
+	// 才丟得掉（`1000:21fe`，`docs/re/33` §3）——「結局已經開場」
+	// 之後才准丟，兩邊語意是一致的。起始存檔是 0。
+	endingOfferedOffset = 0xc1
 
 	// facingOffset：**待複核**，中高信心（單一角色樣本，反向確認未做）。
 	// DOSBox 動態 diff 顯示對應順時針四方位，推測 0=北 1=東 2=南 3=西。
@@ -517,9 +524,8 @@ type SaveGame struct {
 	// 見 boatOffset 註解與 ship.go。
 	Boat byte
 
-	// UnknownC1 是 trailer 最後一個 byte。語意未解，只知道它會擋掉
-	// 型別 0x1d 道具的丟棄（見 unknownC1Offset 註解）。
-	UnknownC1 byte
+	// EndingOffered 是結局抉擇的一次性閂鎖（見 endingOfferedOffset 註解）。
+	EndingOffered byte
 
 	// Hour 是遊戲內時辰（已驗證，見 hourOffset 註解）。
 	Hour byte
@@ -611,7 +617,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.ViewRoomUses = trailer[viewRoomUsesOffset]
 	save.ViewItemUses = trailer[viewItemUsesOffset]
 	save.Boat = trailer[boatOffset]
-	save.UnknownC1 = trailer[unknownC1Offset]
+	save.EndingOffered = trailer[endingOfferedOffset]
 
 	return &save, nil
 }

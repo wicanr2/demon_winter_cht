@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
@@ -368,5 +369,98 @@ func TestMoveHandlesOutOfRange(t *testing.T) {
 	oob := func(int, int) (byte, bool) { return 0, false }
 	if got := MoveDungeonItem(movableItems(), 0, oob).Kind; got != MoveNothingHappens {
 		t.Errorf("越界座標回 %v", got)
+	}
+}
+
+// --- UseDungeonItem ---
+
+func useItems() gamedata.DungeonItems {
+	return gamedata.DungeonItems{
+		{Name: "Iron key"},
+		{Name: "Cage", UseWith: "Iron key", UseResult: "DOne of the rats runs out"},
+		{Name: "Mallet"},
+		{Name: "Man in glass", UseWith: "Mallet", UseResult: "NMan in trance"},
+		{Name: "Black wand"},
+		{Name: "Black archway", UseWith: "Black wand", UseResult: "T07203"},
+		{Name: "Jade torch"},
+		{Name: "Serpent pillar", UseWith: "Jade torch", UseResult: "P04480"},
+		{Name: "Facet mirror"},
+		{Name: "Circle light", UseWith: "Facet mirror", UseResult: "S2"},
+		{Name: "Anvil"}, // `+4` 空著
+		{Name: "萬用", UseWith: "=", UseResult: "D什麼都行"},
+	}
+}
+
+func TestUseMatchesAndDispatches(t *testing.T) {
+	items := useItems()
+	for _, tc := range []struct {
+		src    string
+		target int
+		want   DungeonUseOutcome
+		check  func(DungeonUseResult) string
+	}{
+		{"Iron key", 1, DungeonUseDescribe, func(r DungeonUseResult) string {
+			if r.Text != "One of the rats runs out" {
+				return "敘述沒有去掉動作碼：" + r.Text
+			}
+			return ""
+		}},
+		{"Mallet", 3, DungeonUseBecome, func(r DungeonUseResult) string {
+			if r.NewName != "Man in trance" {
+				return "新名字 = " + r.NewName
+			}
+			return ""
+		}},
+		{"Black wand", 5, DungeonUseTeleport, func(r DungeonUseResult) string {
+			// T07203 ＝ (07,20) 子地圖 3。**三組都是兩位數。**
+			if r.X != 7 || r.Y != 20 || r.MapID != 3 {
+				return fmt.Sprintf("傳送到 (%d,%d) 圖%d，預期 (7,20) 圖3", r.X, r.Y, r.MapID)
+			}
+			return ""
+		}},
+		{"Jade torch", 7, DungeonUsePassage, func(r DungeonUseResult) string {
+			// P04480 ＝ (04,48) → tile 0。**參數只有 5 個字元。**
+			if r.X != 4 || r.Y != 48 || r.Tile != 0 {
+				return fmt.Sprintf("改 (%d,%d)→%d，預期 (4,48)→0", r.X, r.Y, r.Tile)
+			}
+			return ""
+		}},
+		{"Facet mirror", 9, DungeonUseStory, func(r DungeonUseResult) string {
+			if r.Story != 2 {
+				return fmt.Sprintf("劇情 %d，預期 2", r.Story)
+			}
+			return ""
+		}},
+	} {
+		res := UseDungeonItem(items, tc.src, tc.target)
+		if res.Outcome != tc.want {
+			t.Errorf("%s → 第 %d 件：結果 %v，預期 %v", tc.src, tc.target, res.Outcome, tc.want)
+			continue
+		}
+		if msg := tc.check(res); msg != "" {
+			t.Errorf("%s → 第 %d 件：%s", tc.src, tc.target, msg)
+		}
+	}
+}
+
+// 用錯東西、目標沒有 `+4` → 什麼也沒發生（**而且不消耗任何東西**，
+// 那一條由呼叫端保證：這一支本來就不改狀態）。
+func TestUseRejectsWrongPairing(t *testing.T) {
+	items := useItems()
+	if got := UseDungeonItem(items, "Mallet", 1).Outcome; got != DungeonUseNothing {
+		t.Errorf("Mallet 對 Cage 用得到 %v", got)
+	}
+	if got := UseDungeonItem(items, "Iron key", 10).Outcome; got != DungeonUseNothing {
+		t.Errorf("`+4` 空著的目標回 %v", got)
+	}
+	if got := UseDungeonItem(items, "Iron key", 99).Outcome; got != DungeonUseNothing {
+		t.Errorf("越界索引回 %v", got)
+	}
+}
+
+// `=` 是萬用字元（原版 `0x1824c`）。出貨資料沒用到，但規則要在。
+func TestUseWildcardMatchesAnything(t *testing.T) {
+	if got := UseDungeonItem(useItems(), "隨便什麼", 11).Outcome; got != DungeonUseDescribe {
+		t.Errorf("`=` 萬用字元沒生效，得到 %v", got)
 	}
 }

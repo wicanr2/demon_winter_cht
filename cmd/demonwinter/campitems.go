@@ -187,7 +187,7 @@ func (a *app) updateItemTarget(p *itemPicker) error {
 func (a *app) dropSelected(p *itemPicker) {
 	m := &a.members[p.member]
 	label := a.itemLabel(m.Inventory[p.slot])
-	res := game.DropItem(m, p.slot, a.save.UnknownC1)
+	res := game.DropItem(m, p.slot, a.save.EndingOffered)
 	if !res.OK {
 		a.camp.message = res.Reason
 		return

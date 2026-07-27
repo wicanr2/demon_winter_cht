@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
+	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
@@ -30,6 +31,12 @@ const (
 	dungeonDrop
 	dungeonExamine
 	dungeonMove
+	// dungeonUse 是 `U`：三段（選手上那件 → 用在哪 → 選目標）。
+	dungeonUse
+	// dungeonUseRoom／dungeonUseChar 是 `U` 的第三段，兩條路分開記
+	// 因為**後果不同**（`docs/re/95` §3.1 的對照表）。
+	dungeonUseRoom
+	dungeonUseChar
 )
 
 // fromInventory 回報這個模式選的是「身上的道具」而不是「腳下的東西」。
@@ -37,7 +44,8 @@ const (
 // **原版就是這樣分的**：`Use`／`Drop`／`Examine` 共用 `122f:1d23`
 // 選「哪個角色的第幾格」，`Take:`／`Move:` 才掃腳下（`docs/re/95` §3.8）。
 func (m dungeonMode) fromInventory() bool {
-	return m == dungeonDrop || m == dungeonExamine
+	return m == dungeonDrop || m == dungeonExamine ||
+		m == dungeonUse || m == dungeonUseChar
 }
 
 // dungeonScreen 是拾取／丟棄的選單。
@@ -54,6 +62,23 @@ type dungeonScreen struct {
 	cursor int
 	// pick 是第一段選中的那一件，第二段才有意義。
 	pick int
+
+	// source 是 `U` 第一段選中的那件（手上的）。
+	source game.CarriedDungeonItem
+	// onMenu 為真時停在「用在：角色／房間／取消」那一頁。
+	onMenu bool
+}
+
+// useTargets 是「用在哪」那三個選項（原版 ds:0x2334 的 `Character`／
+// `Room`／`Quit`，熱鍵 `CRQ`）。
+var useTargets = []struct {
+	key   string
+	label string
+	mode  dungeonMode
+}{
+	{"C", "身上的另一件", dungeonUseChar},
+	{"R", "這個房間裡的", dungeonUseRoom},
+	{"Q", "取消", dungeonUse},
 }
 
 // openDungeonTake 是 `T` 拾取，openDungeonMove 是 `M` 移動。
@@ -81,6 +106,7 @@ func (a *app) openUnderfootPicker(mode dungeonMode, what string) {
 // （`122f:1d23`）回傳的就是「哪個角色的第幾格」。
 func (a *app) openDungeonDrop()    { a.openCarriedPicker(dungeonDrop, "丟棄") }
 func (a *app) openDungeonExamine() { a.openCarriedPicker(dungeonExamine, "檢視") }
+func (a *app) openDungeonUse()     { a.openCarriedPicker(dungeonUse, "使用") }
 
 func (a *app) openCarriedPicker(mode dungeonMode, what string) {
 	if a.itemloc == nil {
@@ -104,12 +130,16 @@ func (a *app) updateDungeon() error {
 	}
 	switch {
 	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
-		// 第二段按 ESC 退回選道具，不是整個關掉。
-		if d.stage == 1 {
+		// 後面的段落按 ESC 退回上一段，不是整個關掉。
+		switch {
+		case d.onMenu:
+			d.onMenu, d.cursor = false, 0
+		case d.stage == 1:
 			d.stage, d.cursor = 0, 0
-			return nil
+		default:
+			a.dungeon = nil
 		}
-		a.dungeon = nil
+		return nil
 	case inpututil.IsKeyJustPressed(ebiten.KeyDown):
 		d.cursor = (d.cursor + 1) % n
 	case inpututil.IsKeyJustPressed(ebiten.KeyUp):
@@ -124,6 +154,10 @@ func (a *app) updateDungeon() error {
 func (a *app) dungeonChoices() int {
 	d := a.dungeon
 	switch {
+	case d.onMenu:
+		return len(useTargets)
+	case d.mode == dungeonUseRoom:
+		return len(d.spots)
 	case d.mode.fromInventory():
 		return len(d.carried)
 	case d.stage == 1:
@@ -135,7 +169,22 @@ func (a *app) dungeonChoices() int {
 
 func (a *app) confirmDungeon() {
 	d := a.dungeon
+	if d.onMenu {
+		a.pickUseTarget(useTargets[d.cursor].mode)
+		return
+	}
 	switch d.mode {
+	case dungeonUse:
+		// 第一段選完 → 進「用在哪」那一頁。
+		d.source = d.carried[d.cursor]
+		d.onMenu, d.cursor = true, 0
+		return
+	case dungeonUseChar:
+		a.useDungeonItem(d.carried[d.cursor].Index, d.carried[d.cursor].Name, true)
+		return
+	case dungeonUseRoom:
+		a.useDungeonItem(d.spots[d.cursor].Index, d.spots[d.cursor].Item.Name, false)
+		return
 	case dungeonDrop:
 		a.dropDungeonItem(d.carried[d.cursor])
 		return
@@ -193,6 +242,172 @@ func (a *app) dropDungeonItem(c game.CarriedDungeonItem) {
 		a.dungeonName(c.Name))
 	a.trace.note("丟棄 %s 於 (%d,%d) 地圖%d",
 		c.Name, a.party.X(), a.party.Y(), a.mapID)
+}
+
+// pickUseTarget 處理「用在：角色／房間／取消」那一頁的選擇。
+func (a *app) pickUseTarget(mode dungeonMode) {
+	d := a.dungeon
+	switch mode {
+	case dungeonUseChar:
+		// 排掉自己 —— 拿一件東西對它自己用沒有意義，而原版的清單
+		// 會把它列出來（同一個選取常式），選了就是 `Nothing happens`。
+		var others []game.CarriedDungeonItem
+		for _, c := range d.carried {
+			if c.Member != d.source.Member || c.Slot != d.source.Slot {
+				others = append(others, c)
+			}
+		}
+		if len(others) == 0 {
+			a.message = a.tr.UI("dungeon.use.noother", "身上沒有別的地城道具")
+			a.dungeon = nil
+			return
+		}
+		d.mode, d.carried, d.onMenu, d.cursor = dungeonUseChar, others, false, 0
+	case dungeonUseRoom:
+		spots := game.ItemsUnderfoot(a.itemloc, a.dungeonItems,
+			byte(a.party.X()), byte(a.party.Y()), byte(a.mapID))
+		if len(spots) == 0 {
+			a.message = a.tr.UI("dungeon.nothing", "這裡沒有東西")
+			a.dungeon = nil
+			return
+		}
+		d.mode, d.spots, d.onMenu, d.cursor = dungeonUseRoom, spots, false, 0
+	default:
+		a.dungeon = nil
+	}
+}
+
+// useDungeonItem 是 `U` 的第三段：比對 `+4` 並執行 `+5`。
+//
+// onCharacter 分開兩條路的後果（`docs/re/95` §3.1）：
+//
+//	Room       來源那一格清空、目標從地圖上消失、**新道具放在腳下**
+//	Character  來源那一格清空、目標那一格變成新道具（型別 0xfe）
+func (a *app) useDungeonItem(target int, targetName string, onCharacter bool) {
+	d := a.dungeon
+	src := d.source
+	a.dungeon = nil
+
+	res := game.UseDungeonItem(a.dungeonItems, src.Name, target)
+	if res.Outcome == game.DungeonUseNothing {
+		// **什麼都不消耗** —— 用錯東西不該懲罰玩家。
+		a.message = a.tr.UI("dungeon.nothing.happens", "什麼也沒發生")
+		a.trace.note("使用 %s → %s：什麼也沒發生", src.Name, targetName)
+		return
+	}
+	a.trace.note("使用 %s → %s：%v", src.Name, targetName, res.Outcome)
+
+	switch res.Outcome {
+	case game.DungeonUseDescribe:
+		// 敘述在 `FILES.DTT` 的第 `164 + i×6 + 5` 條，去掉開頭那個動作碼。
+		a.box = ui.NewMixedTextBox(a.useResultText(target, res.Text))
+	case game.DungeonUseBecome:
+		a.becomeDungeonItem(src, target, res.NewName, onCharacter)
+	case game.DungeonUseTeleport:
+		a.teleportTo(res.X, res.Y, int(res.MapID))
+	case game.DungeonUsePassage:
+		if err := a.writeTile(res.X, res.Y, res.Tile); err != nil {
+			a.message = fmt.Sprintf("改寫地圖失敗：%v", err)
+			return
+		}
+		a.message = a.tr.UI("dungeon.something", "發生了什麼事……")
+	case game.DungeonUseStory:
+		a.runDungeonStory(res.Story)
+	}
+}
+
+// useResultText 是 `+5` 的敘述，去掉動作碼之後再走翻譯。
+//
+// **翻譯檔存的是整條**（含開頭的 `D`），因為 `cmd/dwstrings` 抽的是原始字串。
+// 所以查表用整條、顯示時才切掉第一個字元。
+func (a *app) useResultText(index int, param string) string {
+	i := gamedata.DungeonItemFirstString + index*gamedata.DungeonItemFields + 5
+	full := a.tr.Event(dungeonSourceFile, i, "D"+param)
+	if full == "" {
+		return param
+	}
+	return full[1:]
+}
+
+// becomeDungeonItem 是動作碼 `N`。
+func (a *app) becomeDungeonItem(src game.CarriedDungeonItem, target int,
+	newName string, onCharacter bool) {
+
+	// 來源那一件被用掉了（原版寫型別 0xff，名字留在後面當殘值）。
+	a.members[src.Member].Inventory[src.Slot] =
+		scenario.InventorySlot{Type: scenario.SlotEmpty}
+
+	if onCharacter {
+		// 目標那一格直接變成新道具（型別 0xfe），不碰位置表。
+		if t, ok := a.dungeonSlotOf(target); ok {
+			a.members[t.Member].Inventory[t.Slot] = scenario.NewDungeonSlot(newName)
+		}
+	} else {
+		// 目標從地圖上消失（只清子地圖那一個 byte，`0x1839b`），
+		// 新道具用 Drop 那一支放在腳下（`0x183e0`）。
+		if target >= 0 && target < len(a.itemloc.Records) {
+			a.itemloc.Records[target].MapID = scenario.ItemLocTaken
+		}
+		if i, ok := a.dungeonItems.ByName(newName); ok {
+			a.itemloc.Drop(i, byte(a.party.X()), byte(a.party.Y()), byte(a.mapID))
+		}
+	}
+	a.message = fmt.Sprintf(a.tr.UI("dungeon.yousee", "你看到 %s"),
+		a.dungeonName(newName))
+}
+
+// dungeonSlotOf 找出第 index 件現在在誰的哪一格。
+func (a *app) dungeonSlotOf(index int) (game.CarriedDungeonItem, bool) {
+	for _, c := range game.CarriedDungeonItems(a.members, a.dungeonItems) {
+		if c.Index == index {
+			return c, true
+		}
+	}
+	return game.CarriedDungeonItem{}, false
+}
+
+// runDungeonStory 是動作碼 `S`。
+//
+// **只做讀得出來的那一半。** `S1` 的門檻與一次性閂鎖、`S2` 的傳送座標
+// 都是明碼（`docs/re/95` §3.5）；`15be:1694(n)` 那個「播第 n 段劇情」
+// 還沒讀出來（那支是資源載入常式，不是劇情播放器），所以劇情文字先缺。
+func (a *app) runDungeonStory(n int) {
+	switch n {
+	case 1:
+		// 冰之祭壇 ＋ 祈禱卷軸 ＝ 結局的不朽／凡人抉擇。
+		if a.save.PlotStage == 0 {
+			a.message = a.tr.UI("dungeon.story.notyet", "什麼也沒發生")
+			return
+		}
+		if a.save.EndingOffered != 0 {
+			a.message = a.tr.UI("dungeon.story.done", "已經沒有下文了")
+			return
+		}
+		a.save.EndingOffered = 1
+		a.won = true
+	case 2:
+		// 光之環：傳送到 (11,27)。
+		a.teleportTo(circleLightX, circleLightY, a.mapID)
+	}
+}
+
+// circleLightX／circleLightY 是 `S2` 的落點（原版 `0x186e7`：
+// `+0xa1 = 0x0b`、`+0xa2 = 0x1b`）。**不改子地圖** —— 那一段沒有寫 `+0xa3`。
+const (
+	circleLightX = 11
+	circleLightY = 27
+)
+
+// teleportTo 把隊伍搬到指定座標；子地圖不同就換圖。
+func (a *app) teleportTo(x, y, mapID int) {
+	if mapID != a.mapID {
+		// changeMap 自己會在失敗時留在原地並說清楚。
+		a.changeMap(mapID, x, y)
+	} else {
+		a.party.TeleportTo(x, y)
+	}
+	a.message = a.tr.UI("dungeon.something", "發生了什麼事……")
+	a.trace.note("傳送到 (%d,%d) 地圖%d", x, y, mapID)
 }
 
 // moveDungeonItem 是 `M`：推開一件家具（原版 `222f:3621`）。
@@ -315,11 +530,31 @@ func (a *app) drawDungeon(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
+	// 「用在哪」那一頁自成一格，先擋在前面。
+	if d.onMenu {
+		line(fmt.Sprintf(a.tr.UI("dungeon.use.on", "%s 要用在哪？"),
+			a.dungeonName(d.source.Name)))
+		line("")
+		for i, t := range useTargets {
+			line(memberMark(d.cursor, i) + t.key + "：" +
+				a.tr.UI("dungeon.use.target."+t.key, t.label))
+		}
+		line("")
+		line(a.tr.UI("dungeon.keys", "↑↓：選擇　Enter：確定　Esc：返回"))
+		return
+	}
+
 	switch {
 	case d.mode.fromInventory():
 		title := a.tr.UI("dungeon.drop.title", "放下哪一件？")
-		if d.mode == dungeonExamine {
+		switch d.mode {
+		case dungeonExamine:
 			title = a.tr.UI("dungeon.examine.title", "看哪一件？")
+		case dungeonUse:
+			title = a.tr.UI("dungeon.use.title", "用哪一件？")
+		case dungeonUseChar:
+			title = fmt.Sprintf(a.tr.UI("dungeon.use.onwhat", "%s 用在哪一件？"),
+				a.dungeonName(d.source.Name))
 		}
 		line(title)
 		line("")
@@ -339,8 +574,12 @@ func (a *app) drawDungeon(dst *ebiten.Image) {
 		}
 	default:
 		title := a.tr.UI("dungeon.take.title", "拿哪一件？")
-		if d.mode == dungeonMove {
+		switch d.mode {
+		case dungeonMove:
 			title = a.tr.UI("dungeon.move.title", "推哪一件？")
+		case dungeonUseRoom:
+			title = fmt.Sprintf(a.tr.UI("dungeon.use.onwhat", "%s 用在哪一件？"),
+				a.dungeonName(d.source.Name))
 		}
 		line(title)
 		line("")
