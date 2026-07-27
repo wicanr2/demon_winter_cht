@@ -174,6 +174,16 @@ func (w *World) tileAt(x, y int) (byte, bool) {
 	return t & 0x7f, true
 }
 
+// TileAhead 回傳隊伍正前方那一格的 tile（已遮罩 `&0x7f`）。
+//
+// 給「移動之前就要看落點」的規則用 —— 目前是治療水池：原版在寫座標
+// **之前**就回傳動作碼 `0x11`，所以隊伍不會走上去（`docs/re/90` §4）。
+// 走 `w.tileAt` 查，與 Walk 用的是同一份邊界檢查與遮罩。
+func (w *World) TileAhead(p *Party) (byte, bool) {
+	dx, dy := p.facing.delta()
+	return w.tileAt(p.x+dx, p.y+dy)
+}
+
 // Walk 讓隊伍沿目前面向前進一格，並回報結果與這一步是否推進了小時。
 //
 // 呼叫順序對應 docs/spec/04-movement.md「一步移動的完整順序」的第 6–9 步。

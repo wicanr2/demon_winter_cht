@@ -66,6 +66,8 @@ var (
 
 type app struct {
 	world *game.World
+	// pool 是治療水池的選人畫面（tile 0x35，`docs/re/90`）。
+	pool *poolScreen
 	// trapSpots 是上一次 `L` 掃到的陷阱格，畫成白框（原版 ds:0x5192）。
 	// 走一步就清掉 —— 框是「這一次掃描的結果」，不是地圖的長期狀態。
 	trapSpots []game.TrapSpot
@@ -314,6 +316,9 @@ func (a *app) update() error {
 	if a.merchant != nil {
 		return a.updateMerchant()
 	}
+	if a.pool != nil {
+		return a.updatePool()
+	}
 
 	// 文字視窗開著時吃掉所有輸入，只認翻頁鍵 —— 與原版一樣，
 	// 讀完敘述才能繼續走。
@@ -358,6 +363,13 @@ func (a *app) update() error {
 			a.message = a.tr.UI("plot.forcefield", "緋紅的力場擋住了通往光之環的路")
 			return nil
 		}
+		// **治療水池在移動之前攔下來。** 原版的回傳碼 `0x11` 發生在
+		// 寫座標之前，所以隊伍轉了向但不會走上去（`docs/re/90` §4）。
+		if t, ok := a.world.TileAhead(a.party); ok && game.TriggerFor(t) == game.TriggerPool {
+			a.openPool()
+			return nil
+		}
+
 		res, tile, advanced := a.world.Walk(a.party, a.clock)
 		a.lastTile = tile
 		a.trapSpots = nil // 白框只屬於上一次掃描
@@ -549,6 +561,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawCamp(a.canvas)
 	case a.merchant != nil:
 		a.drawMerchant(a.canvas)
+	case a.pool != nil:
+		a.drawPool(a.canvas)
 	case a.showRoster:
 		a.drawRoster(a.canvas)
 	default:
@@ -818,7 +832,9 @@ func (a *app) checkEvent(tile byte) {
 	idx := -1
 
 	switch game.TriggerFor(tile) {
-	case game.TriggerHardBlock, game.TriggerNone:
+	case game.TriggerPool, game.TriggerNone:
+		// 水池不走這條 —— 它在移動之前就攔下來了（見下面 Update 的
+		// `TileAhead` 檢查）。落到這裡代表隊伍真的踩上去了，不該發生。
 		return
 
 	case game.TriggerSite:

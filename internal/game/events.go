@@ -14,15 +14,14 @@ import "github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 // 觸發閘門用到的 tile 值。移動後看落點 tile 決定要不要查特殊格清單。
 // 見 docs/spec/03-events.md「觸發閘門」與「第二路徑」。
 //
-// ⚠ **`tileHardBlock` 這個名字是被推翻的斷言**（`docs/re/90`）。`0x35` 不是牆，
-// 是一口**治療用的水池**：走向它不會移動，但要選一名角色喝水回 1–4 HP，
-// 額度是隊伍共用、一天七次（trailer `+0xaa`，睡覺補回 7）。
-// 原版的動作 `0x11` ＝ `222f:37c4`，空了才印 `The pool is empty`。
-// 目前引擎照舊當成「什麼都不發生」，接上之前這個名字先留著並標記。
+// `tilePool` 一度叫 `tileHardBlock`，理由是 `docs/re/05` 把它推測成
+// 「寫死的阻擋（撞牆）」。**那條推測已推翻**（`docs/re/90`）：`0x35` 是一口
+// **治療用的水池**。隊伍確實不會走上去（回傳碼在寫座標之前），
+// 但要選一名角色喝水回 1–4 HP，額度隊伍共用、一天七次。
 const (
 	tileEventGateA = 0x11
 	tileEventGateB = 0x53
-	tileHardBlock  = 0x35
+	tilePool       = 0x35
 )
 
 // siteTiles 是五個「地點」tile。
@@ -95,8 +94,9 @@ const (
 	// TriggerSite 是地點 tile（城鎮／神殿／學院／廢墟），用 SiteFor 分派。
 	// 不查特殊格清單。
 	TriggerSite
-	// TriggerHardBlock 寫死的阻擋，完全不查特殊格清單。
-	TriggerHardBlock
+	// TriggerPool 是治療水池（tile `0x35`）：**不移動，但要跑一段互動**。
+	// 完全不查特殊格清單（原版直接回傳動作碼 `0x11`）。
+	TriggerPool
 )
 
 // TriggerFor 依落點 tile 值決定觸發方式。tile 應已遮罩過 &0x7f。
@@ -105,8 +105,8 @@ const (
 // 這個閘門要照做，否則每步掃 110 筆不只慢，語意也不對。
 func TriggerFor(tile byte) TriggerKind {
 	switch {
-	case tile == tileHardBlock:
-		return TriggerHardBlock
+	case tile == tilePool:
+		return TriggerPool
 	case tile == tileEventGateA || tile == tileEventGateB:
 		return TriggerLookup
 	case siteTiles[tile]:

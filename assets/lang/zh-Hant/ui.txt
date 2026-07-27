@@ -435,3 +435,31 @@ C：下一個　B：上一個　Q／Esc：離開
 ## examine.status5
 :: zh
 已死亡
+
+## pool.title
+:: zh
+一池清水
+
+## pool.left
+:: zh
+今天還能喝 %d 口
+
+## pool.who
+:: zh
+誰要喝？
+
+## pool.healed
+:: en
+He is healed %d
+:: zh
+%s 回復了 %d 點
+
+## pool.empty
+:: en
+The pool is empty
+:: zh
+水池乾了
+
+## pool.keys
+:: zh
+↑↓：選人　Enter：喝　Esc：離開

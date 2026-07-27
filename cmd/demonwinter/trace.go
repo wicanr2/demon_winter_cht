@@ -141,6 +141,8 @@ func (a *app) screenName() string {
 		return "紮營"
 	case a.merchant != nil:
 		return "商隊"
+	case a.pool != nil:
+		return "水池"
 	}
 	return "野外"
 }

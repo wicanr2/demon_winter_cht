@@ -88,6 +88,10 @@ func ApplyNewGame(s *scenario.SaveGame, encounterCountdown int) {
 	s.MapID = NewGameMapID
 	s.Facing = NewGameFacing
 	s.LightSource = NewGameLight
+	// **治療水池的額度刻意不設。** 原版的新遊戲初始化沒有寫 `+0xaa`
+	// （全檔只有三處碰它：水池的比較與遞減、以及睡覺補回 7，
+	// `docs/re/90` §2），所以剛開局是 0 —— 第一次睡覺之前喝不到水池。
+	// 不要「順手補滿」，那會改變玩家第一晚要不要紮營的決定。
 	s.MerchantBase = NewGameMerchantBase
 
 	if encounterCountdown < NewGameEncounterMin {

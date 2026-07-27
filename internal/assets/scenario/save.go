@@ -223,6 +223,15 @@ const (
 	// 而且是整隊共用一次。
 	viewedLandTodayOffset = 0xac
 
+	// poolDrinksOffset：**還能喝幾口治療水池**（`docs/re/90`）。
+	//
+	// 全檔只有三處碰它：水池比較是不是 0（`0x196ca`，空了就印
+	// `The pool is empty`）、喝一次遞減（`0x1974a`）、**睡覺重設成 7**
+	// （`0x1eee6`，就在印 `You sleep.` 的那支裡）。
+	// 所以它是隊伍層級的每日次數，與觀地（`+0xac`）同一組，額度是 7 不是 1；
+	// **換一口池子不會回滿**。
+	poolDrinksOffset = 0xaa
+
 	// encounterCountdownOffset：**離下一場隨機戰鬥還有幾步**（`docs/re/51`）。
 	//
 	// 走一步減一，歸零時主迴圈回傳動作碼 `0x16`（`0x16aee`）去挑怪。
@@ -486,6 +495,9 @@ type SaveGame struct {
 	// ViewedLandToday 是「本日已用過觀地」（trailer +0xac，整隊共用）。
 	ViewedLandToday bool
 
+	// PoolDrinks 是今天還能喝幾口治療水池（trailer +0xaa，整隊共用）。
+	PoolDrinks byte
+
 	// Boat 是目前搭乘的船（船隻陣列格號 +1，0 代表沒搭船）。
 	// 見 boatOffset 註解與 ship.go。
 	Boat byte
@@ -580,6 +592,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.Unknown9C = trailer[unknown9COffset]
 	save.Ships = parseShips(trailer)
 	save.ViewedLandToday = trailer[viewedLandTodayOffset] != 0
+	save.PoolDrinks = trailer[poolDrinksOffset]
 	save.Boat = trailer[boatOffset]
 	save.UnknownC1 = trailer[unknownC1Offset]
 

@@ -11,7 +11,7 @@ func TestTriggerFor(t *testing.T) {
 	}{
 		{0x11, TriggerLookup},
 		{0x53, TriggerLookup},
-		{0x35, TriggerHardBlock},
+		{0x35, TriggerPool},
 		{0x25, TriggerSite},
 		{0x26, TriggerSite},
 		{0x2e, TriggerSite},

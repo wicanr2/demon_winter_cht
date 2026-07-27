@@ -188,6 +188,8 @@ func (a *app) campSleep() {
 	a.torch = game.RestCampTorch
 	// 隊伍層級的「每日一次」旗標也由睡覺清掉（`2aed:03f1` 那一段）。
 	a.save.ViewedLandToday = false
+	// 治療水池的額度也在同一段補回 7（原版 `0x1eee6`，`docs/re/90` §2）。
+	game.ResetPoolDrinks(a.save)
 
 	msg := fmt.Sprintf("睡了 %d 個時辰，%d 日 %d 時醒來",
 		res.Hours, a.clock.Day(), a.clock.Hour())
