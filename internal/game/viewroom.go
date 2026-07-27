@@ -93,13 +93,10 @@ func ViewRoom(party []Character, st *scenario.SpecialTiles, tiles TileSource,
 	return ViewRoomResult{}
 }
 
+// partyHasViewRoom 走 partyHasSkill（`viewitem.go`）—— 兩個靈視技能
+// 共用同一份掃隊迴圈，不要各自抄一份「死人不算」的判斷。
 func partyHasViewRoom(party []Character) bool {
-	for i := range party {
-		if party[i].Status != scenario.StatusDead && party[i].HasSkill(SkillViewRoom) {
-			return true
-		}
-	}
-	return false
+	return partyHasSkill(party, SkillViewRoom)
 }
 
 // ResetPsychicUses 是睡覺把兩個靈視計數清 0（原版 `0x1ef68`–`0x1ef7c`

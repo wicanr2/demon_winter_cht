@@ -442,6 +442,12 @@ func (a *app) update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyU) {
 		a.openDungeonUse()
 	}
+	// X：鑑物（手冊「靈視 → 鑑物」，原版主選單就叫 `X)View item`，
+	// 動作 0x10 ＝ 222f:34d2）。**它讀的是地城道具的 `+4` 欄** ——
+	// 解謎提示，不是鑑定價值。
+	if inpututil.IsKeyJustPressed(ebiten.KeyX) {
+		a.openViewItem()
+	}
 	// F3 是偵錯用的「就地進城」。
 	if inpututil.IsKeyJustPressed(ebiten.KeyF3) {
 		a.openTownPicker()
@@ -1138,21 +1144,16 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 	}
 	lines = append(lines, []string{
 		"",
-		"方向鍵：移動",
-		"Tab：切換季節",
-		"P：隊伍名冊",
-		"T：拿取　D：丟棄",
-		"E：檢視　M：推開家具",
-		"U：使用（解謎）",
-		"C：紮營",
-		"L：查看陷阱　V：觀室",
-		"B：測試戰鬥（偵錯）",
-		"F1：建立角色（偵錯）",
-		"F2：手札",
-		"F3：進入城鎮（偵錯）",
-		"F4：遇到商隊（偵錯）",
-		"S：存檔",
-		"空白鍵：翻頁",
+		// **21 格寬，一行放兩到三個。** 一鍵一行的版本在接上地城道具的
+		// 六個指令之後就溢出畫面了 —— `F10：離開遊戲` 被切掉一半，
+		// 而畫面上看起來只是「最後一行怪怪的」。
+		"方向鍵移動　Tab 季節",
+		"T 拿取 D 丟棄 E 檢視",
+		"M 推開家具 U 使用解謎",
+		"L 陷阱 V 觀室 X 鑑物",
+		"P 名冊 C 紮營 S 存檔",
+		"空白鍵翻頁　F2 手札",
+		"偵錯 B F1 F3 F4",
 		"F10：離開遊戲",
 	}...)
 	// 溢出欄寬的字會畫到畫布外被裁掉 —— 看起來像訊息被砍一半，

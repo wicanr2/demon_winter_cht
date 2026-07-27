@@ -79,6 +79,11 @@
 這一項的**前置是 A2，不是它自己** —— 記在這裡，免得下一輪又把它排進
 「只差接線」那一類。
 
+> **2026-07-27 補**：A2 做完了，這一項因此解封並已實作
+> （`internal/game/viewitem.go`＋`X` 鍵）。當時那句「前置是 A2」是對的 ——
+> 從標記到解封中間隔了十幾輪，而**沒有這句話的話，中間任何一輪都可能
+> 有人去接它然後得到一個空選單**，再花時間查為什麼。
+
 ## 3. 兩處與別處不一致的細節
 
 **觀室比的是沒遮罩的 tile。** `0x190b3` 是 `cmp byte es:[bx+si], 0x11`，
@@ -110,5 +115,8 @@
 
 - **觀室已接**（`internal/game/viewroom.go` ＋ `cmd/demonwinter/viewroomui.go`，
   `V` 鍵）：三格、三次、peek 模式、不改寫 `nSS.DAT`。
-- **鑑物未接**，前置是 A2。
+- **鑑物已接**（`internal/game/viewitem.go` ＋ `dungeonui.go`，`X` 鍵 ——
+  原版主選單那一項就叫 `X)View item`）：一天三次、`Roll(3)==2` 失敗、
+  **失敗照樣扣額度**、選一件腳下的地城道具後印它的 `+4` 欄。
+- 兩者共用 `partyHasSkill`（死掉的人不算）。
 - 存檔多了 `ViewRoomUses`／`ViewItemUses` 兩欄（trailer `+0xad`／`+0xae`）。

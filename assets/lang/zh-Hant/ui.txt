@@ -637,3 +637,31 @@ Nothing happens
 ## dungeon.story.done
 :: zh
 已經沒有下文了
+
+## viewitem.noskill
+:: zh
+隊伍裡沒有人會鑑物
+
+## viewitem.fails
+:: en
+Fails
+:: zh
+看不出所以然
+
+## viewitem.title
+:: en
+View item:
+:: zh
+鑑定哪一件？
+
+## viewitem.nothing
+:: en
+You can discern nothing
+:: zh
+看不出什麼名堂
+
+## viewitem.image
+:: en
+An image of %s comes to you
+:: zh
+%s 的影像浮現在腦海裡

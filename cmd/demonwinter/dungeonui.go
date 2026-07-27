@@ -37,6 +37,8 @@ const (
 	// 因為**後果不同**（`docs/re/95` §3.1 的對照表）。
 	dungeonUseRoom
 	dungeonUseChar
+	// dungeonViewItem 是 `X` 鑑物：選一件腳下的，看它的 `+4`（技能 28）。
+	dungeonViewItem
 )
 
 // fromInventory 回報這個模式選的是「身上的道具」而不是「腳下的東西」。
@@ -85,6 +87,32 @@ var useTargets = []struct {
 // 兩者選的都是**腳下這一格**（原版共用 `222f:2da5`）。
 func (a *app) openDungeonTake() { a.openUnderfootPicker(dungeonTake, "拾取") }
 func (a *app) openDungeonMove() { a.openUnderfootPicker(dungeonMove, "移動") }
+
+// openViewItem 是 `X` 鑑物（手冊「靈視 → 鑑物」，原版動作 `0x10`）。
+//
+// 三道前置（有沒有人會／額度／擲點）在選東西**之前**就跑完，照原版順序 ——
+// 所以失敗時連選單都不會開，而且**額度照樣扣掉**。
+func (a *app) openViewItem() {
+	if a.itemloc == nil {
+		return
+	}
+	switch res := game.BeginViewItem(a.rng, a.members, &a.save.ViewItemUses); {
+	case res.NoSkill:
+		// 原版什麼都不印。這裡說一句，不然按了沒反應像壞掉。
+		a.message = a.tr.UI("viewitem.noskill", "隊伍裡沒有人會鑑物")
+		a.trace.note("鑑物：沒有人會")
+		return
+	case res.Exhausted:
+		a.message = a.tr.UI("viewroom.weak", "你們的靈視之力已經耗盡")
+		a.trace.note("鑑物：額度用完")
+		return
+	case res.Failed:
+		a.message = a.tr.UI("viewitem.fails", "看不出所以然")
+		a.trace.note("鑑物：擲點失敗（剩 %d 次）", game.PsychicUsesPerDay-a.save.ViewItemUses)
+		return
+	}
+	a.openUnderfootPicker(dungeonViewItem, "鑑物")
+}
 
 func (a *app) openUnderfootPicker(mode dungeonMode, what string) {
 	if a.itemloc == nil {
@@ -184,6 +212,9 @@ func (a *app) confirmDungeon() {
 		return
 	case dungeonUseRoom:
 		a.useDungeonItem(d.spots[d.cursor].Index, d.spots[d.cursor].Item.Name, false)
+		return
+	case dungeonViewItem:
+		a.viewItemHint(d.spots[d.cursor])
 		return
 	case dungeonDrop:
 		a.dropDungeonItem(d.carried[d.cursor])
@@ -410,6 +441,24 @@ func (a *app) teleportTo(x, y, mapID int) {
 	a.trace.note("傳送到 (%d,%d) 地圖%d", x, y, mapID)
 }
 
+// viewItemHint 是 `X` 鑑物的結果：印出這件東西要搭配哪一件。
+//
+// **這是解謎提示系統**，不是鑑定價值 —— 原版讀的是 `+4` 欄
+// （`0x1949b`），與 `U` 的比對用同一欄。
+func (a *app) viewItemHint(spot game.DungeonSpot) {
+	a.dungeon = nil
+	with, ok := game.ViewItemHint(a.dungeonItems, spot.Index)
+	if !ok {
+		a.message = a.tr.UI("viewitem.nothing", "看不出什麼名堂")
+		a.trace.note("鑑物 %s：沒有搭配對象", spot.Item.Name)
+		return
+	}
+	// 原版是 `An image of %s` ＋ `comes to you` 兩行。
+	a.message = fmt.Sprintf(a.tr.UI("viewitem.image", "%s 的影像浮現在腦海裡"),
+		a.dungeonName(with))
+	a.trace.note("鑑物 %s → %s", spot.Item.Name, with)
+}
+
 // moveDungeonItem 是 `M`：推開一件家具（原版 `222f:3621`）。
 //
 // 改的那一格**不一定是腳下那一格** —— 三件推得動的家具開的都是自己
@@ -580,6 +629,8 @@ func (a *app) drawDungeon(dst *ebiten.Image) {
 		case dungeonUseRoom:
 			title = fmt.Sprintf(a.tr.UI("dungeon.use.onwhat", "%s 用在哪一件？"),
 				a.dungeonName(d.source.Name))
+		case dungeonViewItem:
+			title = a.tr.UI("viewitem.title", "鑑定哪一件？")
 		}
 		line(title)
 		line("")
