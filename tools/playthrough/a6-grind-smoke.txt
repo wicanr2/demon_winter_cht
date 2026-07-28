@@ -1,0 +1,13 @@
+# A6 練功 smoke：從 a6-leg3 的已裝備存檔出發，以 seed 11 重播第一場遭遇。
+#
+# 這一場曾因自動戰鬥只走主軸、被隊友擋住後反覆撞格，拖到 15 回合並造成
+# 兩人陣亡。保留成短腳本，先驗「低階遭遇能結束且隊伍還能回到野外」，
+# 再跑 190 步的長觀測。
+
+key Return
+wait 1
+rep 10 Left
+rep 8 Right
+shot 00-after-first-encounter
+key s
+wait 0.5

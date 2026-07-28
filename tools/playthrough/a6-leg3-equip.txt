@@ -1,4 +1,4 @@
-# A6 第三段：把匕首與布甲裝上。從 leg2 的存檔接續（不要帶 -newgame）。
+# A6 第三段：把五人的匕首與布甲全部裝上。從 leg2 的存檔接續。
 #
 # ⚠ 兩個坑，都在 `docs/playtest/12` §5：
 #   1. **每一段都要先關掉標題畫面** —— 從存檔接續一樣會先進標題。
@@ -8,7 +8,7 @@
 #      第一版就是這樣：截圖看到「a 換上匕首」，存檔裡卻什麼都沒裝上。
 #
 # 所以每個人一次 `e`：選人 → 選背包格 → Enter，就結束。
-# a 的匕首在第 4 格、布甲在第 5 格；b–e 各自的在第 0 格。
+# a 的匕首在第 4 格、布甲在第 5 格；b–e 的匕首／布甲在第 0／1 格。
 
 key Return
 wait 1
@@ -49,6 +49,16 @@ wait 0.2
 key Return
 wait 0.4
 
+# b 的布甲（第 1 格）
+key e
+wait 0.4
+key Down
+key Return
+wait 0.2
+key Down
+key Return
+wait 0.4
+
 # c 的匕首（第 0 格）
 key e
 wait 0.4
@@ -56,6 +66,17 @@ key Down
 key Down
 key Return
 wait 0.2
+key Return
+wait 0.4
+
+# c 的布甲（第 1 格）
+key e
+wait 0.4
+key Down
+key Down
+key Return
+wait 0.2
+key Down
 key Return
 wait 0.4
 
@@ -70,6 +91,18 @@ wait 0.2
 key Return
 wait 0.4
 
+# d 的布甲（第 1 格）
+key e
+wait 0.4
+key Down
+key Down
+key Down
+key Return
+wait 0.2
+key Down
+key Return
+wait 0.4
+
 # e 的匕首（第 0 格）
 key e
 wait 0.4
@@ -79,6 +112,31 @@ key Down
 key Down
 key Return
 wait 0.2
+key Return
+wait 0.4
+
+# e 的布甲（第 1 格）
+key e
+wait 0.4
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.2
+key Down
+key Return
+wait 0.4
+
+# 排陣：兩名近戰守中央；三名低 HP 施法者分居角落，降低被包圍機率。
+# a→E、b→D、c→C、d→A、e→I。
+key r
+wait 0.4
+key e
+key d
+key c
+key a
+key i
 key Return
 wait 0.4
 

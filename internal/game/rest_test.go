@@ -59,6 +59,23 @@ func TestRest_ClampsToMax(t *testing.T) {
 	}
 }
 
+func TestRest_DoesNotResurrectDead(t *testing.T) {
+	p := restParty(0, 0)
+	// 即使舊結果漏寫了死亡狀態，HP 0 也不能靠睡眠免費復活。
+	p[0].IdentifiedToday = true
+	p[0].WorshipedToday = true
+	p[0].ExorcisedToday = true
+
+	Rest(&fixedRolls{vals: []int{1}}, RestCamp, p, NewClock(), nil)
+	if p[0].CurrentHP != 0 || p[0].Status != scenario.StatusDead {
+		t.Fatalf("死人睡醒變成 HP=%d、狀態=%d；睡眠不得免費復活",
+			p[0].CurrentHP, p[0].Status)
+	}
+	if p[0].IdentifiedToday || p[0].WorshipedToday || p[0].ExorcisedToday {
+		t.Fatal("死人也要跟全隊一起跨日清除每日旗標")
+	}
+}
+
 // 沒糧食紮營，全隊扣 2 HP。
 func TestRest_StarvingCostsHP(t *testing.T) {
 	food := 0

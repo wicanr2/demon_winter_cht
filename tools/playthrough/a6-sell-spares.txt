@@ -1,0 +1,62 @@
+# A6 正常練功：出售已換下／撿到且未裝備的物品。
+# 前提為 a6-upgrade-armor 後的固定背包：
+# a slot0/1/2/3/5；b slot1；c slot1。武器與新護甲都不在這些格。
+
+key Return
+wait 1
+rep 1 Right
+key Left
+wait 0.8
+key m
+wait 0.5
+
+# a：slot0、1、2、3、5。
+key s
+key Return
+key Return
+key s
+key Return
+key Down
+key Return
+key s
+key Return
+key Down
+key Down
+key Return
+key s
+key Return
+key Down
+key Down
+key Down
+key Return
+key s
+key Return
+key Down
+key Down
+key Down
+key Down
+key Down
+key Return
+
+# b：slot1。
+key s
+key Down
+key Return
+key Down
+key Return
+
+# c：slot1。
+key s
+key Down
+key Down
+key Return
+key Down
+key Return
+
+# 每次賣出後出售選擇器會自動關閉；離開市集與城鎮。
+key Escape
+key Escape
+settle
+key s
+wait 0.5
+expect 已存檔

@@ -1,4 +1,4 @@
-# A6 第一段：新遊戲 → 建五個角色 → 陸路走到新格里昂（買船的城鎮）
+# A6 第一段：新遊戲 → 建五個角色 → 走到海濱鎮買齊基礎裝備
 #
 # 不用任何 debug 捷徑。`-newgame` 是「新開檔」不是捷徑，
 # `-autofight` 只替玩家選戰鬥動作，規則與擲點照跑（`docs/playtest/02`）。
@@ -84,8 +84,9 @@ key s
 wait 0.5
 
 # ============ 海濱鎮買裝備 ============
-# 攻略第一句：「往北走到海濱鎮，先把裝備買齊。我會建議每個人先買一把匕首，
-# 再買一件布甲給其中一名角色。」（`docs/walkthrough/part-4.md` §3.1）
+# 攻略只建議一件布甲，但自動重播的第二個遭遇組合會把兩名裸甲施法者擊倒，
+# 而海濱鎮復活每人要 100 金。起始 75 金足以讓五人各買一件，這不是加資源：
+# 全部照市集原價購買，買完剩 1 金；第一場無傷勝利會補回週轉金。
 #
 # ⚠ 踏進城鎮那一步一定要用 `key` 不能用 `rep`：`rep` 每步之後都 settle，
 # 而 settle 對「城鎮」畫面送 Escape（白名單只有野外），一進城就被踢出來。
@@ -95,28 +96,36 @@ key Right
 wait 1
 shot 10-town
 
-# 市集：游標開在第 0 項（匕首，2 金）。五把匕首全部進第一個人的背包
-# （`game.Buy` 找第一個有空格的成員），等下再用紮營的「交出」分給大家。
+# 市集：三名施法者先用匕首；遊俠買闊劍、聖騎士買釘頭鎚。
+# 十件物品都先進 a 的背包，等下再用紮營的「交出」分給大家。
 key m
 wait 0.8
 key b
 key b
 key b
-key b
-key b
 wait 0.5
-shot 11-daggers
+shot 11-weapons
+
+# 釘頭鎚是第 3 項，13 金。
+key Down
+key Down
+key Down
+key b
+
+# 闊劍是第 5 項，30 金。
+key Down
+key Down
+key b
 
 # 布甲是道具表第 8 項（0–7 是八種武器，見 `tools/parse_items.py`），5 金。
 key Down
 key Down
 key Down
-key Down
-key Down
-key Down
-key Down
-key Down
 wait 0.3
+key b
+key b
+key b
+key b
 key b
 wait 0.5
 shot 12-armour

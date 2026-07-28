@@ -130,8 +130,12 @@ func (a *app) drawMapWindow(dst *ebiten.Image, cx, cy int) {
 			if img == nil {
 				continue
 			}
-			ui.DrawImageScaled(dst, img, dx*cellW, dy*cellH, scale)
+			ui.DrawImageScaled(dst, img,
+				layout.MapOriginX+dx*cellW, layout.MapOriginY+dy*cellH, scale)
 		}
 	}
-	ui.StrokeRect(dst, halfX*cellW, halfY*cellH, cellW, cellH, markerColor)
+	ui.StrokeRect(dst,
+		layout.MapOriginX+halfX*cellW, layout.MapOriginY+halfY*cellH,
+		cellW, cellH, markerColor)
+	drawMapFrame(dst, cellW, cellH)
 }

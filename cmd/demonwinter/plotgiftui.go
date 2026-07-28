@@ -40,7 +40,7 @@ func (a *app) openBlacksmith() {
 	}
 	a.box = ui.NewMixedTextBox(a.tr.UI("blacksmith.scene",
 		"你走進一間鐵匠鋪。鐵匠是個年邁的巨魔，一邊的眼睛永遠閉著，"+
-			"臉孔扭曲得嚇人。他先是一驚，隨即咧嘴笑了起來。")+
+			"臉孔扭曲得嚇人。他先是一驚，隨即咧嘴笑了起來。") +
 		"\n\n" +
 		a.tr.UI("blacksmith.line1", "「我一直在打一把新武器。") + "\n" +
 		a.tr.UI("blacksmith.line2", "　它是為了那些想殺掉 Xeres 的人") + "\n" +
@@ -80,8 +80,8 @@ func (a *app) openArmory(x, y int) {
 	}
 	a.box = ui.NewMixedTextBox(a.tr.UI("armory.scene",
 		"你走進一間兵器庫，裡頭堆滿了陳舊的武器與甲冑。房間中央的台座上"+
-			"放著一件特別的東西：")+
-		a.armoryItemName(id)+
+			"放著一件特別的東西：") +
+		a.armoryItemName(id) +
 		a.tr.UI("armory.spheres",
 			"。幾團發光的球體懸在台座上方，似乎很不歡迎你的到來。"))
 	a.plotGift = &plotGiftScreen{id: id, ask: true}

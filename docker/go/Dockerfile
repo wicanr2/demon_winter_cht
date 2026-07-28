@@ -20,6 +20,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         x11-utils \
         xdotool \
         imagemagick \
+        # 宣傳片的實機片段用 x11grab 錄製；仍封在 Docker，不污染主機。
+        ffmpeg \
         mesa-utils \
     && rm -rf /var/lib/apt/lists/*
 

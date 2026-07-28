@@ -229,6 +229,58 @@ func TestLoad_RejectsMalformedFile(t *testing.T) {
 	}
 }
 
+func TestEmboldenRow_GrowsRightAcrossByteBoundary(t *testing.T) {
+	// x=7 是第一個 byte 的末位；加粗後 x=8 也必須亮，不能各 byte 分開處理。
+	const x7 = uint16(1) << (15 - 7)
+	got := emboldenRow(x7)
+	want := x7 | uint16(1)<<(15-8)
+	if got != want {
+		t.Errorf("emboldenRow(%016b) = %016b，預期 %016b", x7, got, want)
+	}
+}
+
+func TestEmboldenRow_DoesNotGrowLeftOrWrap(t *testing.T) {
+	const (
+		left  = uint16(1) << 15
+		right = uint16(1)
+	)
+	if got := emboldenRow(left); got != left|left>>1 {
+		t.Errorf("最左像素加粗 = %016b", got)
+	}
+	if got := emboldenRow(right); got != right {
+		t.Errorf("最右像素不應溢位或回繞，得到 %016b", got)
+	}
+}
+
+func TestGlyph_BoldContainsNormalAndAddsInk(t *testing.T) {
+	d := etenDir(t)
+	normal, err := LoadDir(d, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	bold, err := LoadDir(d, Options{Bold: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	n, _ := normal.Glyph('冬')
+	b, _ := bold.Glyph('冬')
+	added := 0
+	for y := 0; y < GlyphHeight; y++ {
+		for x := 0; x < GlyphWidth; x++ {
+			na, ba := n.AlphaAt(x, y).A, b.AlphaAt(x, y).A
+			if na != 0 && ba == 0 {
+				t.Fatalf("粗體遺失原字像素 (%d,%d)", x, y)
+			}
+			if na == 0 && ba != 0 {
+				added++
+			}
+		}
+	}
+	if added == 0 {
+		t.Error("粗體沒有增加任何像素")
+	}
+}
+
 // Go 的 Big5 編碼器會把一批簡體字映進造字區，編碼成功但沒有字模。
 //
 // Big() 必須驗碼位落在標準 Big5 區間（首 A1–F9、次 40–7E／A1–FE），

@@ -74,13 +74,19 @@ func (b *Battle) AITarget(u *Unit) *Unit {
 		u.AITargetSlot = noAITarget
 		return nil
 	}
-	for {
+	// 原版用 rejection sampling；16-bit 確定性 RNG 在某些狀態下，
+	// `Roll(15)` 可能長時間只落在空槽，不能讓整個遊戲主迴圈因此鎖死。
+	// 先保留同樣的隨機重挑，超過有限次數後直接從已知有效槽位中選。
+	for tries := 0; tries < CombatSlots*4; tries++ {
 		slot := b.rng.Roll(CombatSlots) - 1
 		if t := b.Unit(slot); b.validAITarget(u, t) {
 			u.AITargetSlot = slot
 			return t
 		}
 	}
+	slot := alive[b.rng.Roll(len(alive))-1]
+	u.AITargetSlot = slot
+	return b.Unit(slot)
 }
 
 // validAITarget 回報這個單位能不能當 of 的攻擊目標。

@@ -1,0 +1,24 @@
+# A6 練功陣型修正：兩名近戰放 D/E，三名低 HP 施法者放 A/C/I。
+# 從已在野外的存檔接續；全程只走玩家可用的 Camp → Reorder。
+
+key Return
+wait 1
+key c
+wait 0.5
+key r
+wait 0.4
+
+# 成員順序 a/b/c/d/e，各自指定 E/D/C/A/I。
+key e
+key d
+key c
+key a
+key i
+key Return
+wait 0.5
+
+key Escape
+settle
+key s
+wait 0.5
+expect 已存檔

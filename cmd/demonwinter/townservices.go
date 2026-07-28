@@ -269,10 +269,11 @@ func (a *app) levelUpCurrent(t *townScreen) {
 			}
 		}
 		if len(gains) > 0 {
-			msg += "\n"+a.tr.UI("townsvc.guild.traitgains", "　　屬性成長：") + strings.Join(gains, "　")
+			msg += "\n" + a.tr.UI("townsvc.guild.traitgains", "　　屬性成長：") + strings.Join(gains, "　")
 		}
 	}
 	t.message = msg
+	a.trace.note("%s", strings.ReplaceAll(msg, "\n", " "))
 }
 
 // --- 市集出售 ---

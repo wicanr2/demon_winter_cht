@@ -992,14 +992,6 @@ U 使用道具
 :: zh
 %s 撿到%s%s
 
-## battle.field.monster
-:: zh
-怪
-
-## battle.field.party
-:: zh
-我
-
 ## battle.header.actor
 :: zh
 %s 行動　%d 點
@@ -1388,37 +1380,125 @@ F4 商隊
 :: zh
 圖塊 %s
 
-## status.keys.items1
+## world.menu.move
 :: zh
-T 拿取 D 丟棄 E 檢視
+方向鍵 行走
 
-## status.keys.items2
+## world.menu.party
 :: zh
-M 推開家具 U 使用解謎
+[P] 隊伍
 
-## status.keys.items3
+## world.menu.save
 :: zh
-I 探查周圍 R 重讀
+[S] 存檔
 
-## status.keys.meta
+## world.menu.camp
 :: zh
-空白翻頁 F2 手札 F10 離開
+[C] 紮營
 
-## status.keys.move
+## world.menu.take
 :: zh
-方向鍵移動　Tab 季節
+[T] 拿取
 
-## status.keys.party
+## world.menu.drop
 :: zh
-P 名冊 C 紮營 S 存檔
+[D] 丟棄
 
-## status.keys.psychic
+## world.menu.examine
 :: zh
-L 陷阱 V 觀室 X 鑑物
+[E] 檢視
 
-## battle.log.roundfirst
+## world.menu.moveitem
 :: zh
-第 %d 回合
+[M] 推開
+
+## world.menu.use
+:: zh
+[U] 使用
+
+## world.menu.inspect
+:: zh
+[I] 探查
+
+## world.menu.reread
+:: zh
+[R] 重讀
+
+## world.menu.traps
+:: zh
+[L] 陷阱
+
+## world.menu.viewroom
+:: zh
+[V] 觀室
+
+## world.menu.viewitem
+:: zh
+[X] 鑑物
+
+## world.menu.manual
+:: zh
+[F2] 手札
+
+## world.menu.quit
+:: zh
+[F10] 離開
+
+## camp.menu.party
+:: zh
+[P] 角色卡
+
+## camp.menu.reorder
+:: zh
+[R] 排陣
+
+## camp.menu.sleep
+:: zh
+[S] 睡覺
+
+## camp.menu.identify
+:: zh
+[I] 鑑定
+
+## camp.menu.worship
+:: zh
+[W] 敬拜
+
+## camp.menu.exorcise
+:: zh
+[X] 驅邪
+
+## camp.menu.viewland
+:: zh
+[V] 觀地
+
+## camp.menu.trade
+:: zh
+[T] 交出
+
+## camp.menu.drop
+:: zh
+[D] 丟棄
+
+## camp.menu.equip
+:: zh
+[E] 換裝
+
+## camp.menu.use
+:: zh
+[U] 使用
+
+## camp.menu.hunt
+:: zh
+[H] 打獵
+
+## camp.menu.cast
+:: zh
+[C] 施法
+
+## camp.menu.quit
+:: zh
+[Esc] 收帳
 
 ## battle.terrainfailed
 :: zh
@@ -1879,38 +1959,6 @@ beige
 :: zh
 你走進一間兵器庫，裡頭堆滿了陳舊的武器與甲冑。房間中央的台座上放著一件特別的東西：
 
-## camp.cmd.drop
-:: zh
-  D 丟棄　T 交給隊友
-
-## camp.cmd.equip
-:: zh
-  E 換裝
-
-## camp.cmd.hunt
-:: zh
-  H 打獵
-
-## camp.cmd.party
-:: zh
-  P 角色卡　X 驅邪　C 施法　W 敬拜
-
-## camp.cmd.quit
-:: zh
-Esc：收帳篷
-
-## camp.cmd.reorder
-:: zh
-  R 排列陣型　I 鑑定道具　V 觀地　U 使用
-
-## camp.cmd.sleep
-:: zh
-  S 睡覺
-
-## camp.cmd.sleep_off
-:: zh
-  S 睡覺（現在睡不著，要 15–24 時）
-
 ## camp.empty
 :: zh
 隊伍是空的
@@ -2323,6 +2371,10 @@ Esc：收帳篷
 :: zh
 建立角色
 
+## create.header.en
+:: zh
+Character Creation
+
 ## create.name.keys
 :: zh
 Enter：確定　Backspace：刪除　Esc：回上一步
@@ -2335,9 +2387,9 @@ Enter：確定　Backspace：刪除　Esc：回上一步
 :: zh
 　 中文塞不下，原版也讀不回來
 
-## create.name.prompt
+## create.name.label
 :: zh
-姓名：%s_
+姓名：
 
 ## create.nav.keys
 :: zh
@@ -2918,3 +2970,7 @@ Esc：下來
 ## world.edge
 :: zh
 船員拒絕再往前航行了……
+
+## world.sleepy
+:: zh
+你睏了，必須紮營休息。

@@ -1,0 +1,39 @@
+# A6 練功／休息循環：從海濱鎮的已裝備存檔出發，白天在鎮外來回，
+# 15 時後回旅店免費睡一晚，再存檔。
+#
+# 190 步不休息的觀測會在第三場把低階隊伍打出傷亡；正常流程必須使用
+# 原版既有的旅店恢復。最後一次進城刻意用 key，避免 rep 的 settle() 自動
+# 送 Escape 離城。
+
+key Return
+wait 1
+
+rep 10 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+
+# 此時在 (35,45)，約 15 時。停在城鎮西側一格後，用單鍵踏入海濱鎮。
+rep 3 Left
+key Left
+wait 0.5
+shot 00-inn-ready
+key i
+wait 0.5
+key r
+wait 0.5
+shot 01-after-rest
+key Escape
+key Escape
+key s
+wait 0.5

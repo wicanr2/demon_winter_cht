@@ -494,6 +494,7 @@ func (c *Character) CombatUnit(slot, x, y int, facing Facing) *Unit {
 		MaxHP:        c.MaxHP,
 		MaxSP:        c.MaxSP,
 		CurrentSP:    c.CurrentSP,
+		Status:       UnitStatus(c.Status),
 		Armor:        c.ArmorRating(),
 		WeaponIndex:  c.WeaponDieIndex(),
 		WeaponEffect: w.WeaponEffect,

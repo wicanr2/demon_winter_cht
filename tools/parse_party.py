@@ -6,18 +6,17 @@
 
 record 結構（每名角色 0x104 = 260 bytes，共 5 名角色，之後接 194 bytes 隊伍共用資料）：
     0x000            姓名（NUL 結尾字串，欄位保留 12 bytes）
-    0x00c            種族索引（1 byte；0xFF = 尚未設定）
-    0x00d - 0x019    未知（13 bytes，本檔 5 名角色全為 0）
-    0x01a - 0x0c3    裝備／道具欄位區（10 個 slot，每 slot 17 bytes；欄位內部語意未解，
-                     只驗證了 slot 邊界與「空 slot」規律：slot 內第 4 byte 常為 0xFF
-                     代表空 slot；有裝備的 slot 開頭常見 0x0a 0x01，語意未定）
-    0x0c4            經驗值（3 bytes，little-endian／攻略稱「反序」）
+    0x00c - 0x0b5    裝備／道具欄位區（10 個 slot，每 slot 17 bytes；第 1 byte
+                     是 ITEMS.DAT 型別，0xFF 代表空 slot）
+    0x0c4            經驗值（4 bytes little-endian；遊戲規則另封頂 0x00FFFFFF）
     0x0e8 - 0x0ff    屬性區（見 ATTR_OFFSETS，相對於經驗值欄位 0x0c4 的位移沿用攻略寫法）
-    0x100 - 0x103    未知（4 bytes）
+    0x0f4            等級
+    0x0f5            種族索引
+    0x0f6            職業索引
+    0x100 / 0x101    已裝備武器／護甲的 slot 索引（0xFF = 無）
 
 隊伍共用資料（record 5 之後，abs 0x514 起，194 bytes）：
-    0x51e (trailer 相對 0x0a)   隊伍金幣，3 或 4 bytes little-endian（長度未能從現有存檔消歧，
-                                 兩份存檔尾端都剛好是 0，見文件）
+    0x51e (trailer 相對 0x0a)   隊伍金幣，4 bytes little-endian
     其餘 trailer 欄位大多未解，dump_trailer() 會印出 raw bytes 供比對。
 
 用法：
@@ -32,17 +31,22 @@ DEFAULT_PATH = "workplace/orig/demwin/DEM_DATA/PARTY.DAT"
 RECORD_LEN = 0x104
 NUM_CHARACTERS = 5
 NAME_FIELD_LEN = 12
-RACE_OFFSET = 0x0c
+LEVEL_OFFSET = 0xf4
+RACE_OFFSET = 0xf5
+CLASS_OFFSET = 0xf6
+WEAPON_SLOT_OFFSET = 0x100
+ARMOR_SLOT_OFFSET = 0x101
 EXP_OFFSET = 0xc4  # 相對於 record 起始
-INVENTORY_START = 0x1a
+INVENTORY_START = 0x0c
 INVENTORY_SLOT_LEN = 17
 INVENTORY_SLOT_COUNT = 10
 
 TRAILER_START = NUM_CHARACTERS * RECORD_LEN  # 0x514
 GOLD_TRAILER_OFFSET = 0x0a  # abs 0x51e
+EXP_LEN = 4
 
 # 相對於 EXP 欄位（0xc4）的屬性位移，沿用 docs/walkthrough/part-6.md 已知/反推的寫法。
-# 型別皆為 1 byte，除了 EXP 本身是 3 bytes。
+# 型別皆為 1 byte，除了 EXP 本身是 4 bytes。
 ATTR_OFFSETS = {
     "strength_natural": 0x24,
     "skill_natural": 0x25,
@@ -59,19 +63,14 @@ ATTR_OFFSETS = {
     "current_sp": 0x3b,
 }
 
-# 種族索引 -> 名稱：採 translations/glossary.md 第 3 節（原版手冊順序）的假設映射。
-# 驗證狀態：本檔案 5 名角色只出現索引 0/1/2，用「屬性上限刪去法」
-# （docs/walkthrough/part-2.md 種族屬性上限表）排除了索引 2 不可能是黑暗精靈或巨魔或精靈
-# （Norman 的天生速度/耐力/力量超過那三個種族的上限），縮小到人類或矮人，
-# 再依此處假設的序列順序（人類=0, 精靈=1, 矮人=2, 黑暗精靈=3, 巨魔=4）採用矮人。
-# 索引 3、4（黑暗精靈、巨魔）在這份存檔完全沒出現，尚無法驗證。
+# 種族索引已由 FILES.DAT 0x422 的 5×5 屬性上限表與手冊附錄 B 交叉驗證。
 RACE_NAMES = {
     0xFF: "（未設定）",
-    0: "人類（假設）",
-    1: "精靈（假設，弱驗證）",
-    2: "矮人（假設，用屬性上限刪去法部分驗證）",
-    3: "黑暗精靈（假設，本存檔未出現，無法驗證）",
-    4: "巨魔（假設，本存檔未出現，無法驗證）",
+    0: "人類",
+    1: "精靈",
+    2: "矮人",
+    3: "黑暗精靈",
+    4: "巨魔",
 }
 
 
@@ -81,8 +80,10 @@ def le_bytes_to_int(b: bytes) -> int:
 
 def parse_character(rec: bytes) -> dict:
     name = rec[0:NAME_FIELD_LEN].split(b"\x00")[0].decode("latin1")
+    level = rec[LEVEL_OFFSET]
     race_byte = rec[RACE_OFFSET]
-    exp = le_bytes_to_int(rec[EXP_OFFSET : EXP_OFFSET + 3])
+    class_byte = rec[CLASS_OFFSET]
+    exp = le_bytes_to_int(rec[EXP_OFFSET : EXP_OFFSET + EXP_LEN])
 
     attrs = {}
     for field, off in ATTR_OFFSETS.items():
@@ -96,8 +97,12 @@ def parse_character(rec: bytes) -> dict:
 
     return {
         "name": name,
+        "level": level,
         "race_byte": race_byte,
         "race_guess": RACE_NAMES.get(race_byte, f"未知索引({race_byte})"),
+        "class_byte": class_byte,
+        "equipped_weapon": rec[WEAPON_SLOT_OFFSET],
+        "equipped_armor": rec[ARMOR_SLOT_OFFSET],
         "experience": exp,
         **attrs,
         "inventory_slots_raw": inventory_slots,
@@ -116,12 +121,12 @@ def parse_party_dat(path) -> dict:
 
     trailer = data[TRAILER_START:]
     gold = None
-    if len(trailer) >= GOLD_TRAILER_OFFSET + 3:
-        gold = le_bytes_to_int(trailer[GOLD_TRAILER_OFFSET : GOLD_TRAILER_OFFSET + 3])
+    if len(trailer) >= GOLD_TRAILER_OFFSET + 4:
+        gold = le_bytes_to_int(trailer[GOLD_TRAILER_OFFSET : GOLD_TRAILER_OFFSET + 4])
 
     return {
         "characters": characters,
-        "party_gold_3byte_guess": gold,
+        "party_gold": gold,
         "trailer_raw": trailer.hex(" "),
         "file_len": len(data),
     }
@@ -131,7 +136,13 @@ def print_report(result: dict):
     print(f"檔案長度: {result['file_len']} bytes\n")
     for i, ch in enumerate(result["characters"], 1):
         print(f"=== {i} 號角色: {ch['name']} ===")
-        print(f"  種族 byte = {ch['race_byte']:#04x} -> {ch['race_guess']}")
+        print(
+            f"  等級 = {ch['level']}  種族 byte = {ch['race_byte']:#04x} -> {ch['race_guess']}"
+            f"  職業 byte = {ch['class_byte']}"
+        )
+        print(
+            f"  裝備索引：武器 {ch['equipped_weapon']}／護甲 {ch['equipped_armor']}"
+        )
         print(f"  經驗值 = {ch['experience']}")
         print(
             "  力量(天生/含加成) = {}/{}   技巧(天生/含加成) = {}/{}   "
@@ -152,13 +163,12 @@ def print_report(result: dict):
                 ch["current_hp"], ch["max_hp"], ch["current_sp"]
             )
         )
-        print("  裝備欄（10 slot，raw hex，欄位語意未解）：")
+        print("  道具欄（10 slot，raw hex；第 1 byte 是型別）：")
         for i2, slot in enumerate(ch["inventory_slots_raw"]):
             print(f"    slot{i2}: {slot}")
         print()
 
-    print(f"隊伍金幣（3-byte little-endian 假設值） = {result['party_gold_3byte_guess']}")
-    print("（金幣欄位實際長度未能從單一存檔消歧，見文件說明；此處僅取 3 bytes 供參考）")
+    print(f"隊伍金幣（4-byte little-endian） = {result['party_gold']}")
 
 
 def diff_files(path_a, path_b):

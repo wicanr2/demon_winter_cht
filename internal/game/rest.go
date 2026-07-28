@@ -144,6 +144,17 @@ func Rest(r RollSource, kind RestKind, members []Character, clock *Clock,
 
 	for i := range members {
 		c := &members[i]
+		// 死亡只能由治療所復活。原版把死亡列為獨立服務且依等級收費；
+		// 若讓一般睡眠的 +1/+2 HP 套到屍體，0 HP 會免費變回 1 HP，
+		// 直接繞過整條復活規則。
+		if c.Status == scenario.StatusDead || c.CurrentHP <= 0 {
+			c.CurrentHP = 0
+			c.Status = scenario.StatusDead
+			c.IdentifiedToday = false
+			c.WorshipedToday = false
+			c.ExorcisedToday = false
+			continue
+		}
 		hp, sp := c.CurrentHP, c.CurrentSP
 
 		if res.Starved {

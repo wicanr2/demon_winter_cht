@@ -1,0 +1,43 @@
+# 狗頭人營地後由海濱鎮前往厄加德公會，讓經驗已達 300 的
+# a、b、d、e 正常升到 2 級。公會免費；c 尚未達門檻所以略過。
+
+key Return
+wait 1
+to 34:33,45 Right
+to 34:33,42 Up
+to 34:42,42 Right
+to 34:42,39 Up
+to 34:46,39 Right
+to 34:46,37 Up
+to 34:52,37 Right
+to 34:52,33 Up
+to 34:55,33 Right
+to 34:55,24 Up
+to 34:59,24 Right
+key Right
+settle
+at 44:4,24
+to 44:24,24 Right
+key Right
+wait 0.5
+at 44:25,24
+
+key g
+wait 0.5
+key l
+key Down
+key l
+key Down
+key Down
+key l
+key Down
+key l
+wait 0.5
+shot 00-level-two
+key Escape
+key Escape
+settle
+key s
+wait 0.5
+expect 升到 2 級
+expect 已存檔

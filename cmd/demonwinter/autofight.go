@@ -76,6 +76,26 @@ func (a *app) updateAutoFight() bool {
 		// 沒有活著的敵人 —— 交給 updateBattle 去結算。
 		return false
 	}
+	// 生命降到一半時先保命。閃避會把這回合尚未花掉的行動點換成命中率
+	// 修正；若仍照「貼近就連砍」的簡單策略，1 HP 的後排角色也會主動
+	// 留在敵人面前攻擊，下一個怪物回合幾乎必死。一半生命不是隱藏資訊：
+	// 玩家在畫面上看得到目前／最大生命，也能按同一個 D 指令。
+	if cur.HP*2 <= cur.MaxHP && a.aliveEnemyCount(cur) > 1 {
+		if dir, ok := a.safestRetreat(cur); ok {
+			needed := game.ActionTurnCW
+			if game.Facing(cur.Facing) == dir {
+				needed = game.ActionForward
+			}
+			if a.battle.CanAct(needed) {
+				a.faceToward(cur, dir)
+				a.auto.stalls = 0
+				return true
+			}
+		}
+		a.runPlayerAction(cur, game.ActionDodge)
+		a.auto.stalls = 0
+		return true
+	}
 
 	// **沿用怪物 AI 的 `stepToward`**（`battleui.go`）。
 	// 自己再寫一份「朝目標走」只會多一種行為 ——
@@ -86,17 +106,42 @@ func (a *app) updateAutoFight() bool {
 		return false
 	}
 	adjacent := absInt(target.X-cur.X)+absInt(target.Y-cur.Y) == 1
+	if !adjacent {
+		planned, found := a.battle.FirstStepToward(cur, target, dir)
+		if !found {
+			a.runPlayerAction(cur, game.ActionEndTurn)
+			a.auto.stalls = 0
+			return true
+		}
+		dir = planned
+	}
 	before := *cur
 
 	if adjacent {
 		if game.Facing(cur.Facing) != dir {
+			if !a.battle.CanAct(game.ActionTurnCW) {
+				a.runPlayerAction(cur, game.ActionEndTurn)
+				return true
+			}
 			a.faceToward(cur, dir)
 		} else {
+			if !a.battle.CanAct(game.ActionAttack) {
+				a.runPlayerAction(cur, game.ActionEndTurn)
+				return true
+			}
 			a.runPlayerAction(cur, game.ActionAttack)
 		}
 	} else {
 		// faceToward 在「已經面向該方位」時本身就會前進一步，
 		// 所以移動與轉向共用同一個呼叫。
+		needed := game.ActionTurnCW
+		if game.Facing(cur.Facing) == dir {
+			needed = game.ActionForward
+		}
+		if !a.battle.CanAct(needed) {
+			a.runPlayerAction(cur, game.ActionEndTurn)
+			return true
+		}
 		a.faceToward(cur, dir)
 	}
 
@@ -107,6 +152,51 @@ func (a *app) updateAutoFight() bool {
 		a.auto.stalls = 0
 	}
 	return true
+}
+
+func (a *app) aliveEnemyCount(u *game.Unit) int {
+	n := 0
+	for _, o := range a.battle.Units() {
+		if o.Alive() && o.OnPlayerSide() != u.OnPlayerSide() {
+			n++
+		}
+	}
+	return n
+}
+
+// safestRetreat 找一個可走、而且能拉開最近敵人距離的相鄰格。
+// 只看戰場上玩家本來就看得到的位置與佔位；找不到更安全的格就留在原地閃避。
+func (a *app) safestRetreat(u *game.Unit) (game.Facing, bool) {
+	minEnemyDistance := func(x, y int) int {
+		best := 1 << 30
+		for _, o := range a.battle.Units() {
+			if !o.Alive() || o.OnPlayerSide() == u.OnPlayerSide() {
+				continue
+			}
+			d := absInt(o.X-x) + absInt(o.Y-y)
+			if d < best {
+				best = d
+			}
+		}
+		return best
+	}
+
+	bestDist := minEnemyDistance(u.X, u.Y)
+	var best game.Facing
+	found := false
+	for _, dir := range []game.Facing{game.North, game.East, game.South, game.West} {
+		probe := *u
+		probe.Facing = int(dir)
+		if !a.battle.CanStep(&probe) {
+			continue
+		}
+		dx, dy := dir.Delta()
+		d := minEnemyDistance(u.X+dx, u.Y+dy)
+		if d > bestDist {
+			best, bestDist, found = dir, d, true
+		}
+	}
+	return best, found
 }
 
 // stalled 記一次空轉，到達上限就結束這名單位的回合。

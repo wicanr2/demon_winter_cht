@@ -13,6 +13,7 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"path/filepath"
 
 	"golang.org/x/text/encoding/traditionalchinese"
 )
@@ -61,6 +62,13 @@ var manualBig5 = map[rune][2]byte{
 type Font struct {
 	std []byte // STDFONT.15：漢字區
 	spc []byte // SPCFONT.15：全形符號／標點
+	bold bool   // 每列向右膨脹 1px，保留原生 16×15 的手工字形
+}
+
+// Options 控制倚天字模的顯示方式。
+type Options struct {
+	// Bold 以 MI2 中文化相同的方式橫向加粗一像素。
+	Bold bool
 }
 
 // Load 讀取倚天 16 點字型。
@@ -70,6 +78,11 @@ type Font struct {
 // 「，。！？「」『』（）《》」全部落到 fallback，
 // 畫面上「字是倚天、標點是另一種字」很突兀。
 func Load(stdPath, spcPath string) (*Font, error) {
+	return LoadWithOptions(stdPath, spcPath, Options{})
+}
+
+// LoadWithOptions 讀取倚天 16×15 點陣字型並套用顯示選項。
+func LoadWithOptions(stdPath, spcPath string, opts Options) (*Font, error) {
 	std, err := readFontFile(stdPath)
 	if err != nil {
 		return nil, err
@@ -78,13 +91,37 @@ func Load(stdPath, spcPath string) (*Font, error) {
 	if err != nil {
 		return nil, err
 	}
-	f := &Font{std: std, spc: spc}
+	f := &Font{std: std, spc: spc, bold: opts.Bold}
 
 	// 索引公式的自我檢查：idx 0 必須是「一」—— 只有第 7 列有連續橫線。
 	if !f.looksLikeYi() {
 		return nil, fmt.Errorf("cjk: %s 的第 0 個字不像「一」，索引公式或檔案版本不符", stdPath)
 	}
 	return f, nil
+}
+
+// LoadDir 從目錄載入字型。倚天光碟使用大寫檔名，但 Linux 上常見的
+// 解壓工具會轉成小寫，因此兩種拼法都接受。
+func LoadDir(dir string, opts Options) (*Font, error) {
+	std, err := fontPath(dir, "STDFONT.15", "stdfont.15")
+	if err != nil {
+		return nil, err
+	}
+	spc, err := fontPath(dir, "SPCFONT.15", "spcfont.15")
+	if err != nil {
+		return nil, err
+	}
+	return LoadWithOptions(std, spc, opts)
+}
+
+func fontPath(dir string, names ...string) (string, error) {
+	for _, name := range names {
+		path := filepath.Join(dir, name)
+		if st, err := os.Stat(path); err == nil && !st.IsDir() {
+			return path, nil
+		}
+	}
+	return "", fmt.Errorf("cjk: %s 缺少 %s", dir, names[0])
 }
 
 func readFontFile(path string) ([]byte, error) {
@@ -205,6 +242,9 @@ func (f *Font) Glyph(ch rune) (*image.Alpha, bool) {
 	img := image.NewAlpha(image.Rect(0, 0, GlyphWidth, GlyphHeight))
 	for y := 0; y < GlyphHeight; y++ {
 		w := uint16(src[off+y*2])<<8 | uint16(src[off+y*2+1])
+		if f.bold {
+			w = emboldenRow(w)
+		}
 		for x := 0; x < GlyphWidth; x++ {
 			if w>>(15-x)&1 == 1 {
 				img.SetAlpha(x, y, color.Alpha{A: 0xff})
@@ -212,6 +252,12 @@ func (f *Font) Glyph(ch rune) (*image.Alpha, bool) {
 		}
 	}
 	return img, true
+}
+
+// emboldenRow 與 MI2 的 16×15 粗體實作一致：原列與向右移一格的副本 OR。
+// 以數值表示時，MSB 是畫面最左像素，所以向右移是 >> 1。
+func emboldenRow(row uint16) uint16 {
+	return row | row>>1
 }
 
 // locate 依 Big5 分區決定這個字在哪個檔案的第幾個位置。

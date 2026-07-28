@@ -56,7 +56,11 @@ import (
 const scale = 2
 
 var (
+	// UI 顏色只取原版 EGA 調色盤。用途分工見 docs/ui/01 §3.5。
+	frameColor  = color.RGBA{0xff, 0xff, 0xff, 0xff}
 	markerColor = color.RGBA{0xff, 0xff, 0x55, 0xff}
+	partyColor  = color.RGBA{0x55, 0xff, 0x55, 0xff}
+	enemyColor  = color.RGBA{0xff, 0x55, 0x55, 0xff}
 	// trapMarkerColor 是 `L` 掃到的陷阱框。原版畫的就是**白色**方框
 	// （手冊「找到的每個陷阱都會用白色方框標示位置」），與隊伍的黃框分開。
 	trapMarkerColor = color.RGBA{0xff, 0xff, 0xff, 0xff}
@@ -101,8 +105,8 @@ type app struct {
 	// 會被武裝成 1，按 `R` 才讀得回來。
 	reread int
 	party  *game.Party
-	clock        *game.Clock
-	tiles        *world.Map
+	clock  *game.Clock
+	tiles  *world.Map
 
 	// drawTiles 是「拿來畫」的那份 tile 陣列：與 tiles 相同，但海面已經
 	// 隨機摻過另一種浪花（見 world.OceanDither）。原版是在載入時就地改寫
@@ -120,7 +124,10 @@ type app struct {
 
 	normal, winter *ui.Tileset
 	useWinter      bool
+	combatSprites  *ui.SpriteSheet
+	monsterSprites *ui.SpriteSheet
 	font           *ui.MixedFont
+	gotFont        *ui.Font
 
 	// exits 是 EXITS.DAT。**事件查表已經不用它了** —— 那是 `docs/re/05` §1.3
 	// 誤判造成的（見 special 欄位）。留著是因為 EXITS.DAT 本身確實存在、
@@ -132,11 +139,17 @@ type app struct {
 	special map[int]*scenario.SpecialTiles
 
 	events *scenario.EventTable
-	tables *gamedata.Tables
+	// eventTables 是五座地城各自的 DATA1..5.TXT。原版換地圖時會一起換
+	// 事件表；只載啟動時那一張會讓狗頭人營地開出 DATA1 的巨鼠與戰士。
+	eventTables map[int]*scenario.EventTable
+	tables      *gamedata.Tables
 
 	// tr 把事件敘述換成中文。查不到就回原文 —— 缺譯在畫面上是英文，看得見。
 	tr         *i18n.Translator
 	eventsFile string
+	// eventsOverride 非空只供 -events 的單一事件表視覺驗收；正常遊戲留空，
+	// 依 mapID 自動挑 DATA{1..5}.TXT。
+	eventsOverride string
 
 	members    []game.Character
 	showRoster bool
@@ -466,6 +479,14 @@ func (a *app) update() error {
 			if a.checkPartyDeath() {
 				return nil
 			}
+			// 時辰 24 的步進回傳動作 0x0e，主迴圈立刻分派到 Camp。
+			// 沒接這一格的話玩家可以一路走到 37 時，與手冊「太暗時會被
+			// 強制紮營」及原版 `1000:018b` 的 "You are sleepy" 不符。
+			if advanced && a.clock.ForcedCamp() {
+				a.message = a.tr.UI("world.sleepy", "你睏了，必須紮營休息。")
+				a.openCamp()
+				return nil
+			}
 			// 出口要排在事件之前，而且命中就收工 —— 踩到樓梯是
 			// 「離開這張圖」，原地的事件與遭遇都不該再跑
 			// （`docs/re/05` §3：出口那條路徑不經過事件表）。
@@ -683,6 +704,7 @@ func (a *app) Draw(screen *ebiten.Image) {
 	// 文字會疊在圖塊上完全讀不了。
 	if a.battle == nil && a.camp == nil && a.merchant == nil {
 		a.drawWorld(a.canvas)
+		a.drawTopBar(a.canvas, false)
 	}
 	switch {
 	case a.battle != nil && a.spInput != nil:
@@ -693,6 +715,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawItemMenu(a.canvas)
 	case a.battle != nil:
 		a.drawBattlefield(a.canvas)
+		a.drawTopBar(a.canvas, true)
+		a.drawLogPanel(a.canvas, a.log)
 		a.drawBattle(a.canvas)
 	case a.camp != nil:
 		a.drawCamp(a.canvas)
@@ -711,7 +735,11 @@ func (a *app) Draw(screen *ebiten.Image) {
 	case a.showRoster:
 		a.drawRoster(a.canvas)
 	default:
+		a.drawLogPanel(a.canvas, []string{a.message})
 		a.drawStatus(a.canvas)
+		if !a.debugHUD {
+			a.drawWorldMenu(a.canvas)
+		}
 	}
 	if a.battle != nil && a.spells == nil && a.spInput == nil && a.useMenu == nil && !a.box.Active() {
 		a.drawBattleCommands(a.canvas)
@@ -887,7 +915,8 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 			if img == nil {
 				continue
 			}
-			ui.DrawImageScaled(dst, img, dx*cellW, dy*cellH, scale)
+			ui.DrawImageScaled(dst, img,
+				layout.MapOriginX+dx*cellW, layout.MapOriginY+dy*cellH, scale)
 		}
 	}
 
@@ -898,8 +927,71 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 		if !game.ViewVisible(dx, dy, inset) {
 			continue
 		}
-		ui.StrokeRect(dst, dx*cellW, dy*cellH, cellW, cellH, trapMarkerColor)
+		ui.StrokeRect(dst,
+			layout.MapOriginX+dx*cellW, layout.MapOriginY+dy*cellH,
+			cellW, cellH, trapMarkerColor)
 	}
+	drawMapFrame(dst, cellW, cellH)
+}
+
+// drawMapFrame 畫原版地圖／戰場共用的雙線白框。
+//
+// 高度必須由 tileMetrics 的實際格高算：EGA 一格 28、CGA 一格 32。
+// 用 layout.MapHeight 會讓 EGA 框多出 36 px，這類錯單元測試看不見。
+func drawMapFrame(dst *ebiten.Image, cellW, cellH int) {
+	w := layout.ViewTilesX*cellW + 2*layout.MapFramePad
+	h := layout.ViewTilesY*cellH + 2*layout.MapFramePad
+	x, y := layout.MapFrameX, layout.MapFrameY
+	ui.StrokeRect(dst, x, y, w, h, frameColor)
+	// 內框 2 px；兩圈相鄰矩形各畫 1 px。
+	ui.StrokeRect(dst, x+2, y+2, w-4, h-4, frameColor)
+	ui.StrokeRect(dst, x+3, y+3, w-6, h-6, frameColor)
+}
+
+// drawTopBar 畫全寬第 0 列。世界畫面顯示資源，戰鬥畫面改以回合為首要資訊；
+// 日期留在右側，切換畫面時不必猜時間是否推進。
+func (a *app) drawTopBar(dst *ebiten.Image, battle bool) {
+	left := fmt.Sprintf(a.tr.UI("status.goldfood", "金幣 %d　糧食 %d"),
+		a.gold(), a.save.Rations)
+	if battle && a.battle != nil {
+		left = fmt.Sprintf(a.tr.UI("battle.header.round", "戰鬥　第 %d 回合"), a.battle.Round())
+	}
+	right := fmt.Sprintf(a.tr.UI("status.datetime", "%2d時 %2d日 %s月"),
+		a.clock.Hour(), a.clock.Day(), a.monthName())
+	a.font.Draw(dst, left, layout.LogX, 0)
+	a.font.Draw(dst, right, layout.StatusX, 0)
+}
+
+// drawLogPanel 畫地圖框正下方的訊息／戰鬥紀錄。長篇敘事仍由全幅 modal
+// 文字框處理；這裡只放玩家剛做了什麼，讓右欄專心顯示隊伍與選單。
+func (a *app) drawLogPanel(dst *ebiten.Image, messages []string) {
+	y := a.logTop()
+	maxLines := (layout.CanvasHeight - y) / ui.LineHeight
+	var lines []string
+	for _, s := range messages {
+		if s == "" {
+			continue
+		}
+		lines = append(lines, textlayout.WrapMixed(s, layout.LogW)...)
+	}
+	if len(lines) > maxLines {
+		lines = lines[len(lines)-maxLines:]
+	}
+	for _, s := range lines {
+		a.font.Draw(dst, s, layout.LogX, y)
+		y += ui.LineHeight
+	}
+}
+
+// logTop 避免 CGA 的 288px 高內容與左下訊息重疊。EGA 內容高 252，
+// 使用設計座標 y=288；CGA 框較高，訊息順延到框底下。
+func (a *app) logTop() int {
+	_, cellH, _ := a.tileMetrics()
+	frameBottom := layout.MapFrameY + layout.ViewTilesY*cellH + 2*layout.MapFramePad
+	if y := frameBottom + 8; y > layout.LogY {
+		return y
+	}
+	return layout.LogY
 }
 
 // checkEvent 走 docs/spec/03-events.md 的觸發鏈：
@@ -1188,6 +1280,7 @@ const monsterSourceFile = "MONSTER.DAT"
 // 怪物的速度與生命在 MONSTER.DAT 的基礎值上做進場擾動。
 func (a *app) startBattle(ids []int) {
 	var units []*game.Unit
+	var encountered []string
 
 	// 地形要先切出來 —— 擺位與移動都要問「這一格是不是空地」。
 	terrain := a.terrainForBattle()
@@ -1234,13 +1327,16 @@ func (a *app) startBattle(ids []int) {
 		}
 		taken[[2]int{x, y}] = true
 		speed, hp := game.RollMonsterStats(a.rng, m.Speed, m.HP)
+		name := a.tr.Event(monsterSourceFile, id, m.Name)
+		encountered = append(encountered, name)
 		units = append(units, &game.Unit{
-			Slot: i, Name: a.tr.Event(monsterSourceFile, id, m.Name),
+			Slot: i, Name: name,
 			X: x, Y: y, Facing: int(game.East),
 			Speed: speed, Strength: m.Strength, Skill: m.Skill,
 			Level: m.Level, Intellect: m.Level, Experience: m.Experience,
 			HP: hp, MaxHP: hp,
 			WeaponIndex:   m.AttackType,
+			SpriteIndex:   m.SpriteIndex,
 			RaceOrElement: m.Special,
 			MaxSP:         m.SP, CurrentSP: m.SP,
 		})
@@ -1250,12 +1346,17 @@ func (a *app) startBattle(ids []int) {
 	a.battle.Terrain = terrain
 	a.battle.BeginRound()
 	a.battleTerrain = terrain
+	if len(encountered) != 0 {
+		// 只記玩家在戰鬥畫面上看得到的譯名，不把怪物 id、數值等
+		// 內部資料洩漏給驗收腳本。這樣死亡或卡關時仍能重現是哪一群敵人。
+		a.trace.note("遭遇：%s", strings.Join(encountered, "、"))
+	}
 	// 祈禱成功率跨戰鬥保留、每次祈禱永久遞減；初值 20% 來自手冊
 	// （反組譯只確認了遞減量 −5，初始化位置未逐指令追出）。
 	if a.prayChance == 0 {
 		a.prayChance = game.PrayInitialChance
 	}
-	a.log = []string{fmt.Sprintf(a.tr.UI("battle.log.roundfirst", "第 %d 回合"), a.battle.Round())}
+	a.log = nil
 }
 
 // logLine 把一行**已經組好**的訊息推進戰鬥紀錄。
@@ -1271,6 +1372,9 @@ func (a *app) logLine(s string) {
 	if logToStderr {
 		fmt.Fprintln(os.Stderr, "[log] "+s)
 	}
+	// 戰鬥紀錄本來就在畫面右側，寫進 trace 只讓自動驗收也能讀到同一份
+	// 可見資訊；不額外輸出命中率、擲點或單位內部數值。
+	a.trace.note("戰鬥紀錄：%s", s)
 }
 
 // logf 把一行訊息推進戰鬥紀錄，只留最後幾行。
@@ -1285,6 +1389,7 @@ func (a *app) logf(format string, args ...any) {
 	if logToStderr {
 		log.Print(line)
 	}
+	a.trace.note("戰鬥紀錄：%s", line)
 }
 
 // logToStderr 由環境變數 DW_LOG 開啟，只影響輸出、不影響任何規則。
@@ -1332,26 +1437,29 @@ func (a *app) monthName() string {
 	return a.tr.Event(monthSourceFile, m, names[m])
 }
 
-// 常駐狀態欄的鍵位提示。**釘在畫面下緣**（文字視窗上方），不跟著
-// 訊息長度浮動 —— 訊息一長就把提示擠出畫面，而那是溢出型的錯誤，
-// 測試看不到（`rulebook` 的「排版溢出」那一類）。
-var statusKeyHints = []uiLabel{
-	// **21 格寬，一行放兩到三個。** 一鍵一行的版本在接上地城道具的
-	// 六個指令之後就溢出畫面了 —— `F10：離開遊戲` 被切掉一半，
-	// 而畫面上看起來只是「最後一行怪怪的」。
-	{"status.keys.move", "方向鍵移動　Tab 季節"},
-	{"status.keys.items1", "T 拿取 D 丟棄 E 檢視"},
-	{"status.keys.items2", "M 推開家具 U 使用解謎"},
-	{"status.keys.items3", "I 探查周圍 R 重讀"},
-	{"status.keys.psychic", "L 陷阱 V 觀室 X 鑑物"},
-	{"status.keys.party", "P 名冊 C 紮營 S 存檔"},
-	{"status.keys.meta", "空白翻頁 F2 手札 F10 離開"},
-}
-
 var statusDebugKeys = []uiLabel{
 	{"status.debug.header", "── 偵錯　F12 收起"},
 	{"status.debug.keys1", "B 開打 F1 建角 F3 進城"},
 	{"status.debug.keys2", "F4 商隊"},
+}
+
+var worldMenuLabels = []uiLabel{
+	{"world.menu.move", "方向鍵 行走"},
+	{"world.menu.party", "[P] 隊伍"},
+	{"world.menu.save", "[S] 存檔"},
+	{"world.menu.camp", "[C] 紮營"},
+	{"world.menu.take", "[T] 拿取"},
+	{"world.menu.drop", "[D] 丟棄"},
+	{"world.menu.examine", "[E] 檢視"},
+	{"world.menu.moveitem", "[M] 推開"},
+	{"world.menu.use", "[U] 使用"},
+	{"world.menu.inspect", "[I] 探查"},
+	{"world.menu.reread", "[R] 重讀"},
+	{"world.menu.traps", "[L] 陷阱"},
+	{"world.menu.viewroom", "[V] 觀室"},
+	{"world.menu.viewitem", "[X] 鑑物"},
+	{"world.menu.manual", "[F2] 手札"},
+	{"world.menu.quit", "[F10] 離開"},
 }
 
 // hintLines 把一組 uiLabel 翻成可以直接畫的字串。
@@ -1376,44 +1484,9 @@ func (a *app) hintLines(list []uiLabel) []string {
 //
 // 偵錯欄位（步數／內縮／座標／地形／圖塊）收進 `F12` 疊層。
 func (a *app) drawStatus(dst *ebiten.Image) {
-	lines := []string{
-		fmt.Sprintf(a.tr.UI("status.goldfood", "金幣 %d　糧食 %d"), a.gold(), a.save.Rations),
-		fmt.Sprintf(a.tr.UI("status.datetime", "%2d時 %2d日 %s月"), a.clock.Hour(), a.clock.Day(), a.monthName()),
-	}
-	lines = append(lines, a.partyStatusLines()...)
-	lines = append(lines, "")
-
-	// **訊息要斷行，不能截斷。** 其餘幾行是固定格式、寬度可控，
-	// 截斷只會掉尾巴的空白；訊息是變動長度的句子，截斷會把後半句吃掉。
-	//
-	// 這是全程試玩的截圖抓到的（`docs/playtest/01`）：走到 (23,31) 時
-	// 「（地點劇情 3 還沒接，見 docs/re/65）」被切成「…見 docs/re」——
-	// 而畫面上完全看不出那是被裁掉的，看起來就像訊息本來就那樣寫。
-	// 單點截圖驗收沒抓到，因為那些畫面的訊息都夠短。
-	if a.message != "" {
-		lines = append(lines, textlayout.WrapMixed(a.message, layout.StatusPixels)...)
-	}
-
-	// 下緣那一塊：平常是鍵位提示，`F12` 時換成偵錯欄位。
-	//
-	// **是「換掉」不是「疊加」** —— 上面那一塊已經用掉大半高度，
-	// 再往上塞就會被下面的 clamp 吃掉（第一版就是這樣，按了 F12
-	// 什麼都沒出現，log 卻顯示旗標有翻）。而且要看座標的時候
-	// 本來就不需要同時看鍵位表。
-	bottom := a.hintLines(statusKeyHints)
+	lines := a.partyStatusLines()
 	if a.debugHUD {
-		bottom = a.debugStatusLines()
-	}
-
-	// 下緣那一塊釘住，中間留給訊息。訊息真的長到撞上它時**砍訊息**，
-	// 不要砍提示 —— 訊息在文字視窗那邊還看得到，提示沒有第二個出處。
-	hintTop := layout.TextBoxTop - len(bottom)*ui.LineHeight - ui.LineHeight/2
-	maxLines := (hintTop - layout.StatusY) / ui.LineHeight
-	if maxLines < 0 {
-		maxLines = 0
-	}
-	if len(lines) > maxLines {
-		lines = lines[:maxLines]
+		lines = a.debugStatusLines()
 	}
 
 	// 溢出欄寬的字會畫到畫布外被裁掉 —— 看起來像訊息被砍一半，
@@ -1423,7 +1496,22 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		lines[i] = textlayout.TruncateCells(s, layout.StatusCells)
 	}
 	a.font.DrawLines(dst, lines, layout.StatusX, layout.StatusY)
-	a.font.DrawLines(dst, bottom, layout.StatusX, hintTop)
+}
+
+func (a *app) drawWorldMenu(dst *ebiten.Image) {
+	dungeon := a.mapID < worldMapMinID
+	items := make([]ui.MenuItem, len(worldMenuLabels))
+	for i, l := range worldMenuLabels {
+		items[i] = ui.MenuItem{Label: a.tr.UI(l.key, l.zh), Enabled: true}
+	}
+	// 地城物件與靈視命令在世界地圖上沒有目標；重讀只在目前踩過
+	// 可重讀事件時可用。保留項目並畫網點，不把功能藏起來。
+	for _, i := range []int{4, 7, 8, 9, 11, 12, 13} {
+		items[i].Enabled = dungeon
+	}
+	items[10].Enabled = a.reread > 0
+	ui.DrawMenuList(dst, a.font, items, -1,
+		layout.MenuX, layout.MenuY, layout.MenuW)
 }
 
 // 常駐隊伍表的欄寬（排版格）。表頭與資料列**共用這組常數** ——
@@ -1566,7 +1654,9 @@ func main() {
 	dataDir := flag.String("data", "workplace/orig/demwin/DEM_DATA",
 		"原版資料目錄（玩家自備合法副本）")
 	etenDir := flag.String("eten", "workplace/eten",
-		"倚天中文字型目錄，需含 STDFONT.15 與 SPCFONT.15（自備）")
+		"倚天 16×15 中文字型目錄，需含 STDFONT.15 與 SPCFONT.15（自備；檔名大小寫皆可）")
+	etenBold := flag.Bool("eten-bold", true,
+		"將倚天 16×15 字模橫向加粗 1 像素（預設開啟）")
 	// **預設空字串 ＝ 用存檔裡的 MapID。**
 	// 原本預設是 `MAP1.MAP`，於是載入的地圖與存檔的 `+0xa3` 無關 ——
 	// 出貨存檔剛好是圖 1，所以兩年都沒人發現。接上 `-newgame`（起始圖 34）
@@ -1574,7 +1664,8 @@ func main() {
 	mapFile := flag.String("map", "",
 		"要載入的地圖：檔名（MAP1.MAP…）或 SUM.MAP 的子地圖編號（如 34）。"+
 			"留空 ＝ 用存檔裡的地圖編號")
-	dataFile := flag.String("events", "DATA1.TXT", "要載入的事件表")
+	dataFile := flag.String("events", "",
+		"事件表覆寫（如 DATA5.TXT）；留空會依地城編號自動載入 DATA1..5.TXT")
 	seed := flag.Uint("seed", 0,
 		"亂數種子。0 = 依時間。指定固定值可讓截圖驗收重跑得到同一結果")
 	volume := flag.Float64("volume", 0.25,
@@ -1694,10 +1785,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入 EXITS.DAT：%v", err)
 	}
-	events, err := scenario.LoadEventTable(filepath.Join(*dataDir, *dataFile))
-	if err != nil {
-		log.Fatalf("載入事件表：%v", err)
-	}
 	monsters, err := gamedata.LoadMonsterTable(filepath.Join(*dataDir, "MONSTER.DAT"))
 	if err != nil {
 		log.Fatalf("載入怪物表：%v", err)
@@ -1782,18 +1869,47 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入翻譯：%v", err)
 	}
-	// 逐條比對譯文的原文與現在的資料。索引錯位的譯文每一句都通順、
-	// 每一句都接錯地方，不自動比對根本看不出來。
-	texts := make([]string, 0, events.Len())
-	for _, ev := range events.All() {
-		texts = append(texts, ev.Text)
+	// 五張地城各有自己的 DATA 表。全部在啟動時載入與核對，換圖只切指標；
+	// 這樣不會玩到第二座地城才發現檔案或譯文壞了。
+	eventTables := make(map[int]*scenario.EventTable, 5)
+	for i := 1; i <= 5; i++ {
+		name := fmt.Sprintf("DATA%d.TXT", i)
+		table, loadErr := scenario.LoadEventTable(filepath.Join(*dataDir, name))
+		if loadErr != nil {
+			log.Fatalf("載入事件表 %s：%v", name, loadErr)
+		}
+		eventTables[i] = table
+		texts := make([]string, 0, table.Len())
+		for _, ev := range table.All() {
+			texts = append(texts, ev.Text)
+		}
+		if err := tr.Verify(*langDir, name, texts); err != nil {
+			log.Fatalf("核對翻譯 %s：%v", name, err)
+		}
 	}
-	if err := tr.Verify(*langDir, *dataFile, texts); err != nil {
-		log.Fatalf("核對翻譯：%v", err)
+	initialEventID := mapID
+	if initialEventID < 1 || initialEventID > 5 {
+		initialEventID = 1 // 戶外不查 DATA 表；先給偵錯 -event 一個穩定預設。
+	}
+	events := eventTables[initialEventID]
+	eventsFile := fmt.Sprintf("DATA%d.TXT", initialEventID)
+	if *dataFile != "" {
+		override, loadErr := scenario.LoadEventTable(filepath.Join(*dataDir, *dataFile))
+		if loadErr != nil {
+			log.Fatalf("載入事件表覆寫 %s：%v", *dataFile, loadErr)
+		}
+		events, eventsFile = override, *dataFile
+		texts := make([]string, 0, override.Len())
+		for _, ev := range override.All() {
+			texts = append(texts, ev.Text)
+		}
+		if err := tr.Verify(*langDir, *dataFile, texts); err != nil {
+			log.Fatalf("核對翻譯 %s：%v", *dataFile, err)
+		}
 	}
 	if bad := tr.Mismatched(); len(bad) > 0 {
-		log.Printf("警告：%d 條譯文的原文與 %s 對不上，那幾條退回英文。"+
-			"重跑 `dwstrings events` 更新翻譯檔。", len(bad), *dataFile)
+		log.Printf("警告：%d 條事件譯文的原文與 DATA1..5.TXT 對不上，那幾條退回英文。"+
+			"重跑 `dwstrings events` 更新翻譯檔。", len(bad))
 	}
 
 	mode := gfx.ModeEGA
@@ -1810,6 +1926,13 @@ func main() {
 			log.Fatalf("載入圖塊集 %s：%v", s, err)
 		}
 		return ui.NewTileset(ts)
+	}
+	loadSprites := func(base string) *ui.SpriteSheet {
+		ss, err := gfx.LoadSpriteSheetMode(*dataDir, base, mode)
+		if err != nil {
+			log.Fatalf("載入戰鬥 sprite %s：%v", base, err)
+		}
+		return ui.NewSpriteSheet(ss)
 	}
 	// ASCII 的字模來源三選一，見 -ascii。預設 `eten`：英數走倚天全形，
 	// 與漢字同一套設計、同一個筆畫重量。
@@ -1835,9 +1958,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("載入原版字型：%v", err)
 	}
-	cjkFont, err := cjk.Load(
-		filepath.Join(*etenDir, "STDFONT.15"),
-		filepath.Join(*etenDir, "SPCFONT.15"))
+	gotFont, err := ui.LoadEGAFont(filepath.Join(*dataDir, "GOT.FNE"),
+		textColor, color.RGBA{})
+	if err != nil {
+		log.Fatalf("載入原版哥德字型：%v", err)
+	}
+	cjkFont, err := cjk.LoadDir(*etenDir, cjk.Options{Bold: *etenBold})
 	if err != nil {
 		log.Fatalf("載入倚天中文字型：%v\n"+
 			"本專案不散布倚天字型，請用 -eten 指向含 STDFONT.15／SPCFONT.15 的目錄。", err)
@@ -1877,29 +2003,34 @@ func main() {
 		ditherSeed:  uint16(*seed),
 		// -ending 直接跳結局序列。破關要走完整條主線，沒有這個旗標
 		// 就沒辦法驗收結局畫面（同 -glyphs／-ruins 的性質）。
-		won:          *endingFlag,
-		events:       events,
-		tr:           tr,
-		eventsFile:   *dataFile,
-		tables:       tables,
-		members:      members,
-		monsters:     monsters,
-		towns:        towns,
-		strings:      strs,
-		items:        items,
-		rng:          newRNG(*seed),
-		normal:       loadSet(gfx.NormalTiles),
-		winter:       loadSet(gfx.WinterTiles),
-		font:         font,
-		speaker:      ui.NewSpeaker(*volume),
-		title:        loadTitle(*dataDir),
-		runeFont:     loadRuneFont(*dataDir),
-		save:         save,
-		torch:        save.LightSource,
-		savePath:     *savePath,
-		dataDir:      *dataDir,
-		itemloc:      itemloc,
-		dungeonItems: dungeonItems,
+		won:            *endingFlag,
+		events:         events,
+		tr:             tr,
+		eventsFile:     eventsFile,
+		eventTables:    eventTables,
+		eventsOverride: *dataFile,
+		tables:         tables,
+		members:        members,
+		monsters:       monsters,
+		towns:          towns,
+		strings:        strs,
+		items:          items,
+		rng:            newRNG(*seed),
+		normal:         loadSet(gfx.NormalTiles),
+		winter:         loadSet(gfx.WinterTiles),
+		combatSprites:  loadSprites("COMBAT"),
+		monsterSprites: loadSprites("MONSTER"),
+		font:           font,
+		gotFont:        gotFont,
+		speaker:        ui.NewSpeaker(*volume),
+		title:          loadTitle(*dataDir),
+		runeFont:       loadRuneFont(*dataDir),
+		save:           save,
+		torch:          save.LightSource,
+		savePath:       *savePath,
+		dataDir:        *dataDir,
+		itemloc:        itemloc,
+		dungeonItems:   dungeonItems,
 	}
 
 	// 船停在海上，而海面在可通行性表裡是不可通行的 —— 沒有這一條，

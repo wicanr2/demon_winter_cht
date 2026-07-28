@@ -1,0 +1,100 @@
+# A6 正常練功裝備升級：用戰利金在海濱鎮買 1 鎖子甲＋2 皮甲。
+# 前提：a 的 6/7/8 格為空；b、c 的第 2 格為空；隊伍至少 70 金。
+# 分配：a 皮甲、b 皮甲、c 鎖子甲。d/e 受職業上限限制只能穿布甲。
+
+key Return
+wait 1
+
+# 從城鎮格離開一步再踏回，進海濱鎮。
+rep 1 Right
+key Left
+wait 0.8
+
+key m
+wait 0.5
+
+# 鎖子甲是 index 10；皮甲是 index 9。
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key b
+key Up
+key b
+key b
+wait 0.5
+key Escape
+key Escape
+settle
+
+# 交出：a slot6 的鎖子甲給 c；slot7 的皮甲給 b。
+key c
+wait 0.5
+key t
+key Return
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Return
+key Down
+key Return
+wait 0.4
+
+key t
+key Return
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Return
+key Return
+wait 0.4
+
+# 換裝：a slot8、b slot2、c slot2。
+key e
+key Return
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.4
+
+key e
+key Down
+key Return
+key Down
+key Down
+key Return
+wait 0.4
+
+key e
+key Down
+key Down
+key Return
+key Down
+key Down
+key Return
+wait 0.5
+
+key Escape
+settle
+key s
+wait 0.5
+expect 已存檔

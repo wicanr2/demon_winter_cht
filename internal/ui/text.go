@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -30,7 +31,9 @@ const (
 // Font 是已上傳成 Ebiten 材質的點陣字型。字元尺寸隨來源而異，
 // 由 Width()/Height() 取得，呼叫端不要自己假設。
 type Font struct {
-	glyphs        []*ebiten.Image
+	atlas         *ebiten.Image
+	glyphCount    int
+	atlasCols     int
 	width, height int
 }
 
@@ -61,11 +64,17 @@ func LoadCGAFont(path string) (*Font, error) {
 }
 
 func newFont(imgs []*image.RGBA, w, h int) *Font {
-	f := &Font{glyphs: make([]*ebiten.Image, len(imgs)), width: w, height: h}
+	const cols = 16
+	rows := (len(imgs) + cols - 1) / cols
+	rgba := image.NewRGBA(image.Rect(0, 0, cols*w, rows*h))
 	for i, g := range imgs {
-		f.glyphs[i] = ebiten.NewImageFromImage(g)
+		x, y := (i%cols)*w, (i/cols)*h
+		draw.Draw(rgba, image.Rect(x, y, x+w, y+h), g, g.Bounds().Min, draw.Src)
 	}
-	return f
+	return &Font{
+		atlas: ebiten.NewImageFromImage(rgba), glyphCount: len(imgs),
+		atlasCols: cols, width: w, height: h,
+	}
 }
 
 // LoadEGAFont 讀取 ASC.FNE／GOT.FNE 並轉成可繪製的字型。
@@ -90,23 +99,24 @@ func LoadEGAFont(path string, fg, bg color.RGBA) (*Font, error) {
 func (f *Font) Draw(dst *ebiten.Image, s string, x, y int) {
 	for i := 0; i < len(s); i++ {
 		ch := s[i]
-		idx := int(ch) - firstGlyph
-		if idx < 0 || idx >= len(f.glyphs) {
+		g := f.glyphFor(rune(ch))
+		if g == nil {
 			continue
 		}
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(x+i*f.width), float64(y))
-		dst.DrawImage(f.glyphs[idx], op)
+		dst.DrawImage(g, op)
 	}
 }
 
 // glyphFor 取一個 ASCII 字元的材質，超出字表回傳 nil。
 func (f *Font) glyphFor(ch rune) *ebiten.Image {
 	idx := int(ch) - firstGlyph
-	if idx < 0 || idx >= len(f.glyphs) {
+	if idx < 0 || idx >= f.glyphCount {
 		return nil
 	}
-	return f.glyphs[idx]
+	x, y := (idx%f.atlasCols)*f.width, (idx/f.atlasCols)*f.height
+	return f.atlas.SubImage(image.Rect(x, y, x+f.width, y+f.height)).(*ebiten.Image)
 }
 
 // Tileset 是已上傳成 Ebiten 材質的地形圖塊集。

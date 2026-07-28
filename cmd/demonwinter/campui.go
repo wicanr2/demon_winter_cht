@@ -57,6 +57,23 @@ type campScreen struct {
 	worship *worshipScreen
 }
 
+var campMenuLabels = []uiLabel{
+	{"camp.menu.party", "[P] 角色卡"},
+	{"camp.menu.reorder", "[R] 排陣"},
+	{"camp.menu.sleep", "[S] 睡覺"},
+	{"camp.menu.identify", "[I] 鑑定"},
+	{"camp.menu.worship", "[W] 敬拜"},
+	{"camp.menu.exorcise", "[X] 驅邪"},
+	{"camp.menu.viewland", "[V] 觀地"},
+	{"camp.menu.trade", "[T] 交出"},
+	{"camp.menu.drop", "[D] 丟棄"},
+	{"camp.menu.equip", "[E] 換裝"},
+	{"camp.menu.use", "[U] 使用"},
+	{"camp.menu.hunt", "[H] 打獵"},
+	{"camp.menu.cast", "[C] 施法"},
+	{"camp.menu.quit", "[Esc] 收帳"},
+}
+
 // openCamp 進入紮營畫面。
 func (a *app) openCamp() {
 	a.camp = &campScreen{hunter: -1, equipMember: -1, equipSlot: -1}
@@ -281,6 +298,10 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		return
 	}
 
+	// 營地各層共用地圖視窗的面板骨架；先畫框，再讓標題壓在上框線。
+	cellW, cellH, _ := a.tileMetrics()
+	drawMapFrame(dst, cellW, cellH)
+
 	line(fmt.Sprintf(a.tr.UI("camp.header", "紮營　%s月 %d 日 %d 時　糧食 %d 份"),
 		a.monthName(), a.clock.Day(), a.clock.Hour(), a.save.Rations))
 	line("")
@@ -340,28 +361,25 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		return
 	}
 
-	if a.clock.CanSleep() {
-		line(a.tr.UI("camp.cmd.sleep", "  S 睡覺"))
-	} else {
-		line(a.tr.UI("camp.cmd.sleep_off", "  S 睡覺（現在睡不著，要 15–24 時）"))
+	items := make([]ui.MenuItem, len(campMenuLabels))
+	for i, l := range campMenuLabels {
+		items[i] = ui.MenuItem{Label: a.tr.UI(l.key, l.zh), Enabled: true}
 	}
-	line(a.tr.UI("camp.cmd.hunt", "  H 打獵"))
-	line(a.tr.UI("camp.cmd.equip", "  E 換裝"))
-	line(a.tr.UI("camp.cmd.drop", "  D 丟棄　T 交給隊友"))
-	line(a.tr.UI("camp.cmd.reorder", "  R 排列陣型　I 鑑定道具　V 觀地　U 使用"))
-	line(a.tr.UI("camp.cmd.party", "  P 角色卡　X 驅邪　C 施法　W 敬拜"))
-	line("")
-	line(a.tr.UI("camp.cmd.quit", "Esc：收帳篷"))
-	line("")
+	items[2].Enabled = a.clock.CanSleep()
+	if len(a.members) == 0 {
+		for _, i := range []int{0, 1, 3, 4, 5, 7, 8, 9, 10, 11, 12} {
+			items[i].Enabled = false
+		}
+	}
+	ui.DrawMenuList(dst, a.font, items, -1,
+		layout.MenuX, layout.MenuY, layout.MenuW)
+
 	if c.message != "" {
 		for _, l := range strings.Split(c.message, "\n") {
 			line(l)
 		}
 		line("")
 	}
-	// ⚠ 這裡原本有一行「※ 原版紮營選單的 14 項已全部接上（見 docs/re/33）」。
-	// 那是寫給自己看的進度註記，不是給玩家的資訊 —— 已移除。
-	// 進度狀態的單一真相來源是 `CONTEXT.md` §7，不是遊戲畫面。
 }
 
 func (a *app) drawEquipPicker(line func(string)) {

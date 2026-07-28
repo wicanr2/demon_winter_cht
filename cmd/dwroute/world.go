@@ -252,6 +252,17 @@ func rebuildWorld(prev map[wpoint]wpoint, start, goal wpoint) []wpoint {
 // **換圖不需要按鍵** —— 走到邊界格就自動換了。註解是給讀腳本的人對照用的，
 // 因為腳本裡連續的 `rep 40 Right` 看不出中間跨了兩張圖。
 func toWorldScript(path []wpoint) []string {
+	return toWorldScriptWithStep(path, nil)
+}
+
+// toWorldScriptWithStep 在跨圖不是相鄰世界區塊時（也就是踩 EXITS.DAT
+// 傳送格），用實際的 step 函式反查觸發它的方向。
+//
+// 只看 mapID 差只能處理世界邊界；例如 34:(56,18) 往左踩出口會直接到
+// 1:(3,31)，編號差 −33 完全看不出按鍵。舊版因此只印換圖註解、漏掉
+// 那一下 Left，實機腳本永遠停在出口前。
+func toWorldScriptWithStep(path []wpoint,
+	step func(wpoint, int, int) (wpoint, bool)) []string {
 	var out []string
 	runKey, runN := "", 0
 	flush := func() {
@@ -275,6 +286,14 @@ func toWorldScript(path []wpoint) []string {
 			case 1:
 				key = "Down"
 			}
+			if key == "" && step != nil {
+				for _, d := range dirs {
+					if next, ok := step(a, d.dx, d.dy); ok && next == b {
+						key = d.key
+						break
+					}
+				}
+			}
 		} else {
 			for _, d := range dirs {
 				if d.dx == b.x-a.x && d.dy == b.y-a.y {
@@ -282,11 +301,15 @@ func toWorldScript(path []wpoint) []string {
 				}
 			}
 		}
-		if key != runKey {
+		if key == "" {
+			flush()
+		} else if key != runKey {
 			flush()
 			runKey = key
 		}
-		runN++
+		if key != "" {
+			runN++
+		}
 		if b.mapID != a.mapID {
 			flush()
 			out = append(out, fmt.Sprintf("# → 子地圖 %d 的 (%d,%d)", b.mapID, b.x, b.y))
@@ -336,7 +359,7 @@ func runWorldRoute(dataDir string, tables *gamedata.Tables, fromArg, toArg strin
 		}
 	}
 	fmt.Printf("# %s → %s：%d 步，跨圖 %d 次\n", start, goal, len(path)-1, crossings)
-	for _, line := range toWorldScript(path) {
+	for _, line := range toWorldScriptWithStep(path, c.step) {
 		fmt.Println(line)
 	}
 }

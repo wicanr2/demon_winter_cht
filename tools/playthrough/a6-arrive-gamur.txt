@@ -1,0 +1,27 @@
+# 艾巴拉特補滿生命後前往北方加穆爾神殿。路線會穿過骸骨廳
+# （地圖 1）的連接段；最後一步不用 settle，保留神殿畫面供驗收。
+
+key Return
+wait 1
+rep 8 Up
+rep 6 Right
+rep 4 Up
+rep 3 Right
+rep 15 Up
+at 1:3,31
+rep 8 Up
+rep 1 Left
+rep 5 Up
+at 34:55,16
+to 34:55,9 Up
+# 長途跋涉到這裡已是 23 時；原版疲勞規則會攔住最後一步，先正常紮營。
+key c
+wait 0.5
+key s
+wait 0.5
+key Escape
+settle
+key Up
+wait 0.5
+at 34:55,8
+shot 00-gamur-temple

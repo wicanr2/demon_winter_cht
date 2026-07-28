@@ -1,4 +1,4 @@
-# A6 第二段：把匕首分給其他四個人。從 leg1 的存檔接續（不要帶 -newgame）。
+# A6 第二段：把武器與布甲分給其他四個人。從 leg1 的存檔接續。
 #
 # 紮營 → T 交出，三段：選持有人 → 選道具欄 → 選收方。
 #   收方游標預設指向「下一個人」，所以給第二個人是 0 次 Down。
@@ -14,23 +14,25 @@ shot 20-start
 key c
 wait 0.8
 
-# 第 1 把匕首（第 0 格）給 b
+# 釘頭鎚（第 3 格）給 b
 key t
 wait 0.4
 key Return
 wait 0.2
+key Down
+key Down
+key Down
 key Return
 wait 0.2
 key Return
 wait 0.4
 shot 21-gave-b
 
-# 第 2 把匕首（第 1 格）給 c
+# 第 1 把匕首（第 0 格）給 c
 key t
 wait 0.4
 key Return
 wait 0.2
-key Down
 key Return
 wait 0.2
 key Down
@@ -38,12 +40,11 @@ key Return
 wait 0.4
 shot 21-gave-c
 
-# 第 3 把匕首（第 2 格）給 d
+# 第 2 把匕首（第 1 格）給 d
 key t
 wait 0.4
 key Return
 wait 0.2
-key Down
 key Down
 key Return
 wait 0.2
@@ -53,12 +54,11 @@ key Return
 wait 0.4
 shot 21-gave-d
 
-# 第 4 把匕首（第 3 格）給 e
+# 第 3 把匕首（第 2 格）給 e
 key t
 wait 0.4
 key Return
 wait 0.2
-key Down
 key Down
 key Down
 key Return
@@ -69,6 +69,83 @@ key Down
 key Return
 wait 0.4
 shot 21-gave-e
+
+# 布甲在 a 的第 5–9 格；保留第 5 格給 a，把第 6–9 格分給 b–e。
+# 第 2 件布甲（第 6 格）給 b
+key t
+wait 0.4
+key Return
+wait 0.2
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.2
+key Return
+wait 0.4
+
+# 第 3 件布甲（第 7 格）給 c
+key t
+wait 0.4
+key Return
+wait 0.2
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.2
+key Down
+key Return
+wait 0.4
+
+# 第 4 件布甲（第 8 格）給 d
+key t
+wait 0.4
+key Return
+wait 0.2
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.2
+key Down
+key Down
+key Return
+wait 0.4
+
+# 第 5 件布甲（第 9 格）給 e
+key t
+wait 0.4
+key Return
+wait 0.2
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.2
+key Down
+key Down
+key Down
+key Return
+wait 0.4
 
 # 退回紮營選單再離開，然後存檔。
 key Escape

@@ -50,6 +50,27 @@ func TestTextWidth_MixesHalfAndFullWidth(t *testing.T) {
 	}
 }
 
+func TestAdvanceWidth_CompressesClosingPunctuation(t *testing.T) {
+	for _, ch := range "，。、；：？！" {
+		if got := AdvanceWidth(ch); got != ClosingPunctuationWidth {
+			t.Errorf("AdvanceWidth(%q) = %d，預期 %d", ch, got, ClosingPunctuationWidth)
+		}
+	}
+	for _, ch := range "冬A（）「」" {
+		if got := AdvanceWidth(ch); got != CellWidth(ch) {
+			t.Errorf("AdvanceWidth(%q) = %d，不應壓縮固定格寬 %d", ch, got, CellWidth(ch))
+		}
+	}
+}
+
+func TestTextWidth_UsesPunctuationAdvance(t *testing.T) {
+	const in = "冬，魔。"
+	want := 2*CellWidthCJK + 2*ClosingPunctuationWidth
+	if got := TextWidth(in); got != want {
+		t.Errorf("TextWidth(%q) = %d，預期 %d", in, got, want)
+	}
+}
+
 // 中文必須逐字可斷。沿用英文的逐詞斷行會讓整段中文變成一個「詞」擠成一行 ——
 // 這是中文排版最容易被寫錯的地方，釘死它。
 func TestWrapMixed_BreaksChineseBetweenCharacters(t *testing.T) {

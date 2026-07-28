@@ -1,0 +1,38 @@
+# A6 第一個主線地城：由海濱鎮穿過圖 34 東南出口，依序掃過狗頭人
+# 營地八座帳篷（含 Uffuspgot 首領帳）。路線由 dwroute 產生。
+
+key Return
+wait 1
+
+# 海濱鎮 (31,45) → 圖 2 狗頭人營地入口 (10,45)。
+to 34:31,47 Down
+to 34:39,47 Right
+to 34:39,49 Down
+to 34:42,49 Right
+to 34:42,50 Down
+to 2:10,45 Right
+at 2:10,45
+shot 00-camp-entrance
+
+# DATA2 把 `3...` 戰後文字折進前一筆，所以事件序號與原始文字欄位並非
+# 一對一。先踩純線索，再以滿血狀態打第 3 筆 Uffuspgot 首領帳。
+to 2:10,49 Down
+to 2:6,49 Left
+to 2:6,48 Up
+to 2:6,51 Down
+to 2:7,51 Right
+
+# 其餘營地帳篷。刻意不踩 (13,49)：那是洞穴熊巢，攻略明說前期先略過。
+to 2:7,55 Down
+to 2:10,55 Right
+to 2:10,57 Down
+to 2:10,56 Up
+to 2:7,56 Left
+to 2:7,47 Up
+to 2:17,47 Right
+settle
+shot 01-camp-cleared
+
+key s
+wait 0.5
+expect 已存檔

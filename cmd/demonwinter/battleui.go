@@ -1049,11 +1049,6 @@ func (a *app) reportAttack(attacker, target *game.Unit, res game.AttackResult) {
 	}
 }
 
-var facingArrow = []string{"↑", "→", "↓", "←"}
-
-// gridColor 是戰場格線的顏色，刻意比行動游標暗。
-var gridColor = color.RGBA{0x40, 0x40, 0x40, 0xff}
-
 // aoeColor 是範圍法術的選取框顏色。
 var aoeColor = color.RGBA{0xff, 0x55, 0x55, 0xff}
 
@@ -1125,7 +1120,7 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 	cur := a.battle.Current()
 	camX, camY := a.battleCam()
 
-	// 先鋪地形，格線疊在上面。地形是 3×3 個世界 tile 各放大 5×5 拼出來的
+	// 先鋪地形。地形是 3×3 個世界 tile 各放大 5×5 拼出來的
 	// （docs/re/36），外圍那圈牆也是地形的一部分。
 	ts := a.tileset()
 	cols, rows := layout.ViewTilesX, layout.ViewTilesY
@@ -1137,10 +1132,10 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 			if a.battleTerrain != nil && game.InArena(tx, ty) {
 				v := a.battleTerrain.TileAt(tx, ty)
 				if img := ts.Tile(v & 0x7f); img != nil {
-					ui.DrawImageScaled(dst, img, vx*cellW, vy*cellH, scale)
+					ui.DrawImageScaled(dst, img,
+						layout.MapOriginX+vx*cellW, layout.MapOriginY+vy*cellH, scale)
 				}
 			}
-			ui.StrokeRect(dst, vx*cellW, vy*cellH, cellW, cellH, gridColor)
 		}
 	}
 
@@ -1150,7 +1145,10 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 			if i > a.breath.shown() {
 				break
 			}
-			ui.FillRect(dst, (c.X-camX)*cellW, (c.Y-camY)*cellH, cellW, cellH, breathColor)
+			ui.FillRect(dst,
+				layout.MapOriginX+(c.X-camX)*cellW,
+				layout.MapOriginY+(c.Y-camY)*cellH,
+				cellW, cellH, breathColor)
 		}
 	}
 
@@ -1158,32 +1156,37 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 		if a.aoe.area {
 			// 5×5 的效果範圍畫出來，玩家才知道會掃到誰（包含自己人）。
 			r := game.AOERadius
-			ui.StrokeRect(dst, (a.aoeX-r-camX)*cellW, (a.aoeY-r-camY)*cellH,
+			ui.StrokeRect(dst,
+				layout.MapOriginX+(a.aoeX-r-camX)*cellW,
+				layout.MapOriginY+(a.aoeY-r-camY)*cellH,
 				(2*r+1)*cellW, (2*r+1)*cellH, aoeColor)
 		}
-		ui.StrokeRect(dst, (a.aoeX-camX)*cellW, (a.aoeY-camY)*cellH, cellW, cellH, aoeColor)
+		ui.StrokeRect(dst,
+			layout.MapOriginX+(a.aoeX-camX)*cellW,
+			layout.MapOriginY+(a.aoeY-camY)*cellH,
+			cellW, cellH, aoeColor)
 	}
 
 	for _, u := range a.battle.Units() {
 		if !u.Alive() {
 			continue
 		}
-		x, y := (u.X-camX)*cellW, (u.Y-camY)*cellH
+		x := layout.MapOriginX + (u.X-camX)*cellW
+		y := layout.MapOriginY + (u.Y-camY)*cellH
 		// 上下界用**實際畫出來的**格數算，不用 layout.MapHeight ——
 		// EGA 一格 28 高，9 格是 252 而不是 288，用後者會讓單位標記
 		// 畫到地圖框外面。
-		if x < 0 || x >= layout.ViewTilesX*cellW ||
-			y < 0 || y >= layout.ViewTilesY*cellH {
+		if x < layout.MapOriginX || x >= layout.MapOriginX+layout.ViewTilesX*cellW ||
+			y < layout.MapOriginY || y >= layout.MapOriginY+layout.ViewTilesY*cellH {
 			continue
 		}
-		mark := a.tr.UI("battle.field.monster", "怪")
-		if u.IsPlayer {
-			mark = a.tr.UI("battle.field.party", "我")
-		}
-		a.font.Draw(dst, mark, x, y)
-		a.font.Draw(dst, facingArrow[u.Facing&3], x+16, y)
+		a.drawBattleUnitSprite(dst, u, x, y, scale)
 		if u == cur {
 			ui.StrokeRect(dst, x, y, cellW, cellH, markerColor)
+		} else if u.IsPlayer {
+			ui.StrokeRect(dst, x, y, cellW, cellH, partyColor)
+		} else {
+			ui.StrokeRect(dst, x, y, cellW, cellH, enemyColor)
 		}
 		// 檢視游標。原版是**反白**（`ds:0x5192 = 0xff` 之後重畫那一格，
 		// 與 `L` 查看陷阱的白框同一個機制）；這裡先用白框，
@@ -1191,6 +1194,45 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 		if a.examine != nil && u.Slot == a.examine.slot() {
 			ui.StrokeRect(dst, x, y, cellW, cellH, trapMarkerColor)
 		}
+	}
+	drawMapFrame(dst, cellW, cellH)
+}
+
+// drawBattleUnitSprite 把原版的兩條戰鬥圖像路徑接回來：
+//
+//   - 隊員：COMBAT.SHP/SHE 的職業／面向 glyph（17c5:0def–0e29）
+//   - 怪物與召喚物：MONSTER.SHP/SHE，每種外觀 8 幀
+//
+// 兩者都整格覆寫地形，包含素材原有的黑底；這與原版把圖塊索引直接寫進
+// 戰場緩衝的做法一致。
+func (a *app) drawBattleUnitSprite(dst *ebiten.Image, u *game.Unit, x, y, scale int) {
+	if u.Slot >= game.PlayerSlotStart && u.Slot < game.PlayerSlotEnd {
+		member := u.Slot - game.PlayerSlotStart
+		if member >= 0 && member < len(a.members) {
+			frame := 0x14 + (u.Facing&3)*2
+			class := int(a.members[member].Class)
+			switch {
+			case class > 5:
+				frame += 8
+			case class > 2:
+				frame += 0x10
+			}
+			if img := a.combatSprites.Frame(frame); img != nil {
+				ui.DrawImageScaled(dst, img, x, y, scale)
+				return
+			}
+		}
+	}
+
+	// 每組八幀＝四個方向各兩個姿勢。素材順序肉眼與原版載入單位共同確認：
+	// 南 0/1、西 2/3、東 4/5、北 6/7。
+	pair := [...]int{6, 4, 0, 2}
+	frame := u.SpriteIndex*8 + pair[u.Facing&3]
+	if a.battle != nil {
+		frame += a.battle.Round() & 1
+	}
+	if img := a.monsterSprites.Frame(frame); img != nil {
+		ui.DrawImageScaled(dst, img, x, y, scale)
 	}
 }
 
@@ -1209,18 +1251,19 @@ func (a *app) drawBattle(dst *ebiten.Image) {
 	}
 
 	cur := a.battle.Current()
-	line(fmt.Sprintf(a.tr.UI("battle.header.round", "戰鬥　第 %d 回合"), a.battle.Round()))
 	if cur != nil {
 		line(fmt.Sprintf(a.tr.UI("battle.header.actor", "%s 行動　%d 點"), cur.Name, a.battle.Points()))
 	}
 
-	// 單位最多 15 個，加上抬頭與紀錄會超出地圖高度。先算出能放幾行，
-	// 剩下的留給戰鬥紀錄 —— 紀錄比完整名單重要，看不到最後一擊很難受。
-	const headerLines = 2
-	rows := layout.MapHeight/ui.LineHeight - headerLines - battleLogLines - 1
+	// 戰鬥紀錄已移到地圖下方；右欄只留行動者與單位名單。
+	const headerLines = 1
+	rows := (layout.MenuY-layout.StatusY)/ui.LineHeight - headerLines
 	units := a.battle.Units()
 	hidden := 0
 	if len(units) > rows {
+		// 「另有 N 個」自己也佔一列，先替它留位，不能讓最後一列
+		// 與 y=MenuY 的紅底選單互相覆蓋。
+		rows--
 		hidden = len(units) - rows
 		units = units[:rows]
 	}
@@ -1243,21 +1286,12 @@ func (a *app) drawBattle(dst *ebiten.Image) {
 		line(fmt.Sprintf(a.tr.UI("battle.unit.more", " …另有 %d 個單位"), hidden))
 	}
 
-	line("")
-	// 紀錄依面板寬度斷行。不斷行的話長名字會把「命中 12 點」的尾巴
-	// 畫到畫布外，看起來像少了一個字。
-	width := layout.CanvasWidth - layout.StatusX
-	for _, s := range a.log {
-		for _, ln := range textlayout.WrapMixed(s, width) {
-			line(ln)
-		}
-	}
 }
 
 // drawBattleCommands 把可用指令畫在文字視窗的位置。
 func (a *app) drawBattleCommands(dst *ebiten.Image) {
 	cur := a.battle.Current()
-	y := layout.TextBoxTop + layout.BoxPadY
+	y := a.logTop() + layout.BoxPadY
 
 	if a.battle.Outcome() != game.Ongoing {
 		a.font.Draw(dst, a.tr.UI("battle.over.keys", "戰鬥結束　空白鍵：繼續"), layout.BoxPadX, y)
@@ -1278,21 +1312,18 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 		return
 	}
 
-	// 付不起的指令仍然列出來但標成不可用 —— 藏起來會讓玩家以為功能不存在。
-	x := layout.BoxPadX
+	// 付不起的指令仍保留在紅底選單，以棋盤網點表示不可用。
+	items := make([]ui.MenuItem, len(playerCommands))
 	for i, c := range playerCommands {
-		label := a.tr.UI(c.uikey, c.label)
-		if !a.battle.CanAct(c.action) {
-			label = "(" + label + ")"
+		items[i] = ui.MenuItem{
+			Label:   a.tr.UI(c.uikey, c.label),
+			Enabled: a.battle.CanAct(c.action),
 		}
-		if i == 3 {
-			x = layout.BoxPadX
-			y += ui.LineHeight
-		}
-		x = a.font.Draw(dst, label+"  ", x, y)
 	}
+	ui.DrawMenuList(dst, a.font, items, -1,
+		layout.MenuX, layout.MenuY, layout.MenuW)
 	a.font.Draw(dst, a.tr.UI("battle.move.keys", "方向鍵：轉向／前進　Enter：前進　? 檢視"),
-		layout.BoxPadX, y+ui.LineHeight)
+		layout.StatusX, layout.MenuY+len(items)*ui.LineHeight+ui.LineHeight)
 }
 
 // awardExperience 發放戰鬥勝利的經驗值（`docs/re/56`）。

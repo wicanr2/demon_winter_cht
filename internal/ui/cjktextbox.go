@@ -27,12 +27,12 @@ func DrawMixedTextBox(dst *ebiten.Image, b *TextBox, f *MixedFont, x, y int, fra
 	dst.SubImage(rect(x, y, w, layout.BoxHeight)).(*ebiten.Image).Fill(color.RGBA{0, 0, 0, 0xff})
 	StrokeRect(dst, x, y, w, layout.BoxHeight, frame)
 
-	f.DrawLines(dst, b.Lines(), x+layout.BoxPadX, y+layout.BoxPadY)
+	f.DrawProseLines(dst, b.Lines(), x+layout.BoxPadX, y+layout.BoxPadY)
 
 	hint := "－ 續 －"
 	if !b.HasMore() {
 		hint = "－ 完 －"
 	}
 	f.Draw(dst, hint, x+layout.BoxPadX,
-		y+layout.BoxPadY+textlayout.PageLines*textlayout.CellHeight)
+		y+layout.BoxPadY+textlayout.PageLines*ProseLineHeight)
 }

@@ -1,0 +1,34 @@
+# A6 單場練功：在海濱鎮西側巡邏到一場遭遇完整結算，立即回治療所，
+# 逐員治療／必要時復活，再存檔。下一輪以這份存檔接續。
+
+key Return
+wait 1
+hunt Left Right
+
+# 無論戰鬥結束在巡邏帶哪一格，先靠西牆校正，再走到城鎮西側。
+to 34:27,45 Left
+to 34:30,45 Right
+key Right
+wait 0.5
+at 34:31,45
+shot 00-before-heal
+
+key h
+wait 0.5
+key h
+key Down
+key h
+key Down
+key h
+key Down
+key h
+key Down
+key h
+wait 0.5
+shot 01-after-heal
+key Escape
+key Escape
+settle
+key s
+wait 0.5
+expect 已存檔

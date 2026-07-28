@@ -36,16 +36,42 @@ const (
 
 	MapWidth  = ViewTilesX * gfx.TileWidth * TileScale
 	MapHeight = ViewTilesY * gfx.TileHeight * TileScale
+
+	// MapFrameX/Y 是雙線框左上角；MapFramePad 是框到內容的內距。
+	// 世界與戰場都必須走這組原點，否則切換畫面時框會留在原處、
+	// 內容卻跳動。頂端留一列給金幣／糧食／日期。
+	MapFrameX   = 8
+	MapFrameY   = textlayout.CellHeight
+	MapFramePad = 4
+	MapOriginX  = MapFrameX + MapFramePad
+	MapOriginY  = MapFrameY + MapFramePad
+
+	// LogX/Y/W 是世界訊息與戰鬥紀錄的左下區域。EGA 框高 260，
+	// 底端在 276，留 12 px 後從 288 開始。
+	LogX = 8
+	LogY = 288
+	LogW = 296
+
+	// MenuX/Y/W 是世界、戰鬥、營地與城鎮共用的選單面板。
+	// 中文標籤較英文短，保留寬度給熱鍵與可用狀態，不把面板縮窄。
+	MenuX = 480
+	MenuY = 128
+	MenuW = 160
 )
 
-// StatusX 是狀態欄左緣，留 8 像素與地圖分開。
-const StatusX = MapWidth + 8
+// StatusX 是右欄左緣。地圖框右緣在 304，再留 16 px 分隔。
+const StatusX = 320
 
-// StatusY 是狀態欄第一行的頂端。
-const StatusY = 4
+// StatusY 是狀態欄第一行的頂端；第 0 列留給全寬抬頭。
+const StatusY = textlayout.CellHeight
 
-// BoxHeight 是文字視窗的高度：5 行內文 + 一行提示 + 上下內距。
-const BoxHeight = (textlayout.PageLines+1)*textlayout.CellHeight + 2*BoxPadY
+// BoxHeight 是文字視窗的高度：5 行疏排內文 + 一行提示 + 上下內距。
+// 事件框是 modal，為了中文行距會覆蓋地圖底端一小段，但永遠貼齊畫布下緣。
+const BoxHeight = textlayout.PageLines*uiProseLineHeight +
+	textlayout.CellHeight + 2*BoxPadY
+
+// layout 不依賴 ui 套件；此值須與 ui.ProseLineHeight 保持一致。
+const uiProseLineHeight = 20
 
 // 文字視窗的內距：左右各一個中文格、上下各半格。
 const (
@@ -53,8 +79,7 @@ const (
 	BoxPadY = textlayout.CellHeight / 2
 )
 
-// TextBoxTop 是文字視窗頂端。它與畫布下緣切齊 ——
-// 版面靠這條等式閉合，改任一個常數都會被 layout 的測試擋下來。
+// TextBoxTop 是 modal 文字視窗頂端；視窗永遠與畫布下緣切齊。
 const TextBoxTop = CanvasHeight - BoxHeight
 
 // RosterLinesPerMember 是隊伍名冊每個成員佔幾行。
@@ -72,5 +97,5 @@ const StatusCells = (CanvasWidth - StatusX) / textlayout.CellWidthCJK
 // StatusPixels 是狀態欄的可用像素寬，給 textlayout.WrapMixed 用。
 //
 // 有了 StatusCells 為什麼還要這個：`WrapMixed` 是按像素算的
-//（它要處理半形與全形混排），拿格數餵它會斷在錯的地方。
+// （它要處理半形與全形混排），拿格數餵它會斷在錯的地方。
 const StatusPixels = CanvasWidth - StatusX

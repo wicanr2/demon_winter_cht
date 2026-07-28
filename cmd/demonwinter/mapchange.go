@@ -44,7 +44,7 @@ func (a *app) checkExit(tile byte) bool {
 	if a.exits == nil {
 		return false
 	}
-	if a.tables.Passability(tile & 0x7f).Raw() != exitPassability {
+	if a.tables.Passability(tile&0x7f).Raw() != exitPassability {
 		return false
 	}
 	rec, ok := a.exits.Lookup(byte(a.party.X()), byte(a.party.Y()))
@@ -72,6 +72,7 @@ func (a *app) changeMap(id, x, y int) {
 
 	a.tiles = m
 	a.mapID = id
+	a.selectEventTable(id)
 	a.world = game.NewWorld(m, a.tables)
 	// Boardable 是閉包，重建 world 之後要重新掛上，
 	// 不然換過一次地圖之後船就上不去了（而且完全沒有錯誤訊息）。
@@ -84,4 +85,16 @@ func (a *app) changeMap(id, x, y int) {
 	a.save.MapID = byte(id)
 	a.message = fmt.Sprintf(a.tr.UI("mapchange.entered", "進入地圖 %d 的 (%d,%d)"), id, x, y)
 	a.trace.note("換地圖 → %d (%d,%d)", id, x, y)
+}
+
+// selectEventTable 讓 DATA*.TXT 與地城編號同步。戶外地圖（>=9）沒有
+// nSS 特殊格，所以保留目前指標即可；進 1..5 時一定切到同號資料表。
+func (a *app) selectEventTable(id int) {
+	if a.eventsOverride != "" || id < 1 || id > 5 {
+		return
+	}
+	if table := a.eventTables[id]; table != nil {
+		a.events = table
+		a.eventsFile = fmt.Sprintf("DATA%d.TXT", id)
+	}
 }

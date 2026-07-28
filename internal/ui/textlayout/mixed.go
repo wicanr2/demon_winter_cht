@@ -18,7 +18,11 @@ const (
 	CellHeight   = 16
 	CellWidthCJK = 16
 	CellWidthASC = 16
+	// ClosingPunctuationWidth 是中文收尾標點的段落前進量。
+	ClosingPunctuationWidth = 12
 )
+
+var compressedPunctuation = runeSet("，。、；：？！")
 
 // MixedColumns 是中文化後文字區的像素寬。
 //
@@ -34,11 +38,20 @@ func CellWidth(ch rune) int {
 	return CellWidthCJK
 }
 
+// AdvanceWidth 回傳混排段落中的實際前進量。
+// 繪製與 WrapMixed 共用此函式，避免斷行寬度與畫面不一致。
+func AdvanceWidth(ch rune) int {
+	if compressedPunctuation[ch] {
+		return ClosingPunctuationWidth
+	}
+	return CellWidth(ch)
+}
+
 // runeWidth 回傳一段字元排出來的像素寬。
 func runeWidth(rs []rune) int {
 	w := 0
 	for _, r := range rs {
-		w += CellWidth(r)
+		w += AdvanceWidth(r)
 	}
 	return w
 }
@@ -47,7 +60,7 @@ func runeWidth(rs []rune) int {
 func TextWidth(s string) int {
 	w := 0
 	for _, ch := range s {
-		w += CellWidth(ch)
+		w += AdvanceWidth(ch)
 	}
 	return w
 }
@@ -136,7 +149,7 @@ func WrapMixed(s string, pixelWidth int) []string {
 			continue
 		}
 
-		w := CellWidth(ch)
+		w := AdvanceWidth(ch)
 		if curW+w > pixelWidth && len(cur) > 0 {
 			// 斷點違反標點禁則時往回退，把結尾幾個字一起帶到下一行。
 			// 退太多會讓下一行一開始就塞不下 —— 那時放棄禁則，
@@ -150,7 +163,7 @@ func WrapMixed(s string, pixelWidth int) []string {
 			flush()
 			cur = carry
 			for _, r := range carry {
-				curW += CellWidth(r)
+				curW += AdvanceWidth(r)
 			}
 			// 行首不留空白。
 			if ch == ' ' {

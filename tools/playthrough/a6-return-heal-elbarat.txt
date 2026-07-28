@@ -1,0 +1,50 @@
+# 厄加德升級後回到艾巴拉特治療。升級會提高 MaxHP 但不會免費補血，
+# 因此長途主線前要先把新上限補滿。
+
+key Return
+wait 1
+to 44:25,36 Down
+to 44:23,36 Left
+to 44:23,37 Down
+to 44:22,37 Left
+to 44:22,39 Down
+to 44:16,39 Left
+to 44:16,40 Down
+to 44:12,40 Left
+to 44:12,42 Down
+to 44:9,42 Left
+to 44:9,45 Down
+to 44:4,45 Left
+key Left
+settle
+at 34:59,45
+to 34:47,45 Left
+key Left
+wait 0.5
+at 34:46,45
+
+# 每人按兩次：若沿途死亡就是「復活、補滿」，仍存活則第二次只會提示已健康。
+key h
+wait 0.5
+key h
+key h
+key Down
+key h
+key h
+key Down
+key h
+key h
+key Down
+key h
+key h
+key Down
+key h
+key h
+wait 0.5
+shot 00-level-two-healed
+key Escape
+key Escape
+settle
+key s
+wait 0.5
+expect 已存檔

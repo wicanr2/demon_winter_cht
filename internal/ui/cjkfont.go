@@ -30,6 +30,10 @@ const (
 // LineHeight 是混排文字的行高，等於中文格高。
 const LineHeight = textlayout.CellHeight
 
+// ProseLineHeight 只給事件／敘事段落使用。表格仍維持 16 px 格線，
+// 長文每行多留 4 px，避免 15 px 高的中文字上下只隔 1 px。
+const ProseLineHeight = 20
+
 // MixedFont 是可同時排中文與 ASCII 的字型。
 //
 // 中文走倚天點陣（16×15，在 16×16 格內置中），
@@ -44,6 +48,10 @@ type MixedFont struct {
 
 	// cache 存已上傳成材質的中文字模，避免每幀重建。
 	cache map[rune]*ebiten.Image
+	// colorCache 為選單黑字／disabled 灰字保存獨立材質。
+	// 不與白字共用 ColorScale，避免大量 sprite 載入後同幀不同色的 CJK
+	// 在 Ebiten atlas 合批時互相污染。
+	colorCache map[color.RGBA]map[rune]*ebiten.Image
 	// fg 是中文的前景色。倚天字模是 1bpp，顏色由這裡決定。
 	fg color.RGBA
 
@@ -117,6 +125,7 @@ func NewMixedFont(c *cjk.Font, ascii *Font, fg color.RGBA) (*MixedFont, error) {
 		asciiScale:   scale,
 		asciiOffsetY: (textlayout.CellHeight - ascii.Height()*scale) / 2,
 		cache:        map[rune]*ebiten.Image{},
+		colorCache:   map[color.RGBA]map[rune]*ebiten.Image{},
 		fg:           fg,
 		missing:      map[rune]bool{},
 	}, nil
@@ -148,24 +157,82 @@ func (m *MixedFont) glyph(ch rune) *ebiten.Image {
 	return img
 }
 
+func (m *MixedFont) colorGlyph(ch rune, fg color.RGBA) *ebiten.Image {
+	cache := m.colorCache[fg]
+	if cache == nil {
+		cache = map[rune]*ebiten.Image{}
+		m.colorCache[fg] = cache
+	}
+	if img, ok := cache[ch]; ok {
+		return img
+	}
+	src, ok := m.cjk.Glyph(ch)
+	if !ok {
+		m.missing[ch] = true
+		cache[ch] = nil
+		return nil
+	}
+	b := src.Bounds()
+	rgba := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	for y := 0; y < b.Dy(); y++ {
+		for x := 0; x < b.Dx(); x++ {
+			if src.AlphaAt(x, y).A != 0 {
+				rgba.SetRGBA(x, y, fg)
+			}
+		}
+	}
+	img := ebiten.NewImageFromImage(rgba)
+	cache[ch] = img
+	return img
+}
+
+func (m *MixedFont) drawGlyph(ch rune, tint *color.RGBA) *ebiten.Image {
+	if tint != nil {
+		return m.colorGlyph(ch, *tint)
+	}
+	return m.glyph(ch)
+}
+
 // Draw 在 (x, y) 畫一行中英混排文字，回傳排完後的 x 座標。
 //
 // 中文字模 16×15 在 16×16 格內垂直置中；ASCII 同理（EGA 16×14 上下各留 1）。
 // 取不到字模的字畫成空格並記進 missing，不中斷渲染。
 func (m *MixedFont) Draw(dst *ebiten.Image, s string, x, y int) int {
+	return m.draw(dst, s, x, y, nil)
+}
+
+// DrawColor 用指定顏色畫字。字模本身仍只快取一份白色 1bpp 材質，
+// 由 ColorScale 在繪製時著色；紅底選單因此不必為黑字再載一整套字型。
+func (m *MixedFont) DrawColor(dst *ebiten.Image, s string, x, y int, c color.RGBA) int {
+	return m.draw(dst, s, x, y, &c)
+}
+
+func tintText(op *ebiten.DrawImageOptions, c *color.RGBA) {
+	if c == nil {
+		return
+	}
+	op.ColorScale.Scale(
+		float32(c.R)/0xff,
+		float32(c.G)/0xff,
+		float32(c.B)/0xff,
+		float32(c.A)/0xff,
+	)
+}
+
+func (m *MixedFont) draw(dst *ebiten.Image, s string, x, y int, tint *color.RGBA) int {
 	for _, ch := range s {
 		if ch < 0x80 {
 			// 全形英數走中文那條路。取不到字模就掉回原版字模 ——
 			// Big5 的全形區沒有涵蓋每一個 ASCII，靜默畫成空白比較糟。
 			if m.fullWidthASCII {
 				if w := fullWidthOf(ch); w != 0 {
-					if g := m.glyph(w); g != nil {
+					if g := m.drawGlyph(w, tint); g != nil {
 						op := &ebiten.DrawImageOptions{}
 						ox := (textlayout.CellWidthCJK - cjk.GlyphWidth) / 2
 						oy := (textlayout.CellHeight - cjk.GlyphHeight) / 2
 						op.GeoM.Translate(float64(x+ox), float64(y+oy))
 						dst.DrawImage(g, op)
-						x += textlayout.CellWidthASC
+						x += textlayout.AdvanceWidth(ch)
 						continue
 					}
 					// 掉回原版字模時把它從 missing 移掉，
@@ -177,13 +244,14 @@ func (m *MixedFont) Draw(dst *ebiten.Image, s string, x, y int) int {
 			op.GeoM.Scale(float64(m.asciiScale), float64(m.asciiScale))
 			op.GeoM.Translate(float64(x), float64(y+m.asciiOffsetY))
 			if g := m.ascii.glyphFor(ch); g != nil {
+				tintText(op, tint)
 				dst.DrawImage(g, op)
 			}
-			x += textlayout.CellWidthASC
+			x += textlayout.AdvanceWidth(ch)
 			continue
 		}
 
-		if g := m.glyph(ch); g != nil {
+		if g := m.drawGlyph(ch, tint); g != nil {
 			op := &ebiten.DrawImageOptions{}
 			// 字模 16×15、格子 16×16 → 垂直置中偏移 (16−15)/2 = 0（向下取整）。
 			// 寫成算式而不是常數，換 24×24 字模時不用改這裡。
@@ -192,7 +260,7 @@ func (m *MixedFont) Draw(dst *ebiten.Image, s string, x, y int) int {
 			op.GeoM.Translate(float64(x+ox), float64(y+oy))
 			dst.DrawImage(g, op)
 		}
-		x += textlayout.CellWidthCJK
+		x += textlayout.AdvanceWidth(ch)
 	}
 	return x
 }
@@ -213,5 +281,12 @@ func (m *MixedFont) Missing() []rune {
 func (m *MixedFont) DrawLines(dst *ebiten.Image, lines []string, x, y int) {
 	for i, ln := range lines {
 		m.Draw(dst, ln, x, y+i*textlayout.CellHeight)
+	}
+}
+
+// DrawProseLines 以較寬鬆的段落行距繪製已斷行文字。
+func (m *MixedFont) DrawProseLines(dst *ebiten.Image, lines []string, x, y int) {
+	for i, ln := range lines {
+		m.Draw(dst, ln, x, y+i*ProseLineHeight)
 	}
 }

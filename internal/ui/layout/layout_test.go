@@ -8,19 +8,25 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/ui/textlayout"
 )
 
-// 版面是靠幾條等式閉合的：地圖高 + 文字視窗高 = 畫布高、
+// 版面是靠幾條等式閉合的：modal 文字視窗貼齊畫布下緣、
 // 狀態欄右緣不出界。改任何一個常數都要在這裡被擋下來，
 // 不然只會在畫面上默默破版。
 func TestLayout_FillsCanvas(t *testing.T) {
-	if MapHeight+BoxHeight != CanvasHeight {
-		t.Errorf("地圖高 %d + 文字視窗高 %d = %d，預期等於畫布高 %d",
-			MapHeight, BoxHeight, MapHeight+BoxHeight, CanvasHeight)
+	if TextBoxTop+BoxHeight != CanvasHeight {
+		t.Errorf("文字視窗底端 %d，預期貼齊畫布底端 %d",
+			TextBoxTop+BoxHeight, CanvasHeight)
 	}
-	if TextBoxTop != MapHeight {
-		t.Errorf("文字視窗頂端 %d，應接在地圖下緣 %d", TextBoxTop, MapHeight)
+	if TextBoxTop < 0 {
+		t.Errorf("文字視窗頂端 %d 已超出畫布", TextBoxTop)
 	}
 	if MapWidth >= CanvasWidth {
 		t.Errorf("地圖寬 %d 已佔滿畫布寬 %d，狀態欄沒有位置", MapWidth, CanvasWidth)
+	}
+	if MapOriginX+MapWidth > StatusX {
+		t.Errorf("地圖內容右緣 %d 撞進狀態欄 x=%d", MapOriginX+MapWidth, StatusX)
+	}
+	if LogX+LogW > StatusX {
+		t.Errorf("訊息區右緣 %d 撞進狀態欄 x=%d", LogX+LogW, StatusX)
 	}
 }
 

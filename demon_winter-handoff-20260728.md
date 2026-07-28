@@ -1,4 +1,4 @@
-# 交接：2026-07-28（A6 全程試玩開場已跑通）
+# 交接：2026-07-28（A6 前期垂直切片與後期抽樣完成）
 
 接手的第一件事是讀 [`CONTEXT.md`](CONTEXT.md) —— 狀態的單一真相來源在那裡，
 這份只補「上一輪做了什麼、哪裡踩過坑、下一步從哪個指令開始」。
@@ -17,7 +17,7 @@ tools/go.sh build ./...        # 一律走 docker，不要在系統裝 Go
 tools/go.sh vet ./...
 tools/go.sh test ./...                    # 13 個套件
 tools/go.sh run ./cmd/dwstrings check     # 資料字串 500/500
-tools/go.sh run ./cmd/dwstrings uicheck   # 介面文案 677/677、硬編 0
+tools/go.sh run ./cmd/dwstrings uicheck   # 目前介面文案 691/691、硬編 0
 ```
 
 四道都過才動手。`uicheck` 不是可選的：**打錯一個 key 的後果是靜默退回
@@ -100,6 +100,12 @@ c／d／e 同 b
 （`tools/parse_items.py workplace/orig/demwin/DEM_DATA/ITEMS.DAT` 印全表）。
 
 ### 下一段要解的第一個問題
+
+> **同日接手後訂正：本節的「36 步拿船」前提錯了。**
+> `EXITS.DAT` 的 `(25,48) → 1:(20,48)` 來源格實際由世界子地圖 **64**
+> 認領，不是起點子地圖 34。從 34 實跑到 `(25,48)` 不會換圖；
+> `dwroute -world-reach -from 34:31,45` 也確認開局陸路只到
+> 34／2／44／1。詳見 `docs/playtest/12` §4 的訂正。
 
 新遊戲**就有一艘船**（地圖 1 的 (13,51)，船體 67），從起點 36 步走得到：
 
@@ -188,3 +194,36 @@ F3–F6、C1／C5–C10／C13、E1–E3 的逐項現況見 `CONTEXT.md` §7。
   一定會漂，症狀是看起來合理的錯數字。動手前先 `grep`。
 - 不要 force push 到 `main`，不要跳過 hook。
 - 規劃／設計文件寫成 repo 裡的 markdown，不要放 Claude Artifact。
+
+---
+
+## 7. 同日續跑結果（交付前狀態）
+
+使用者同意把驗收範圍定為「前期完整垂直切片＋後期高風險抽樣」，
+不逐格重跑所有大型地城。正常流程已實跑至加穆爾神殿：
+
+- 狗頭人營地首領與三批守軍、正常 EXP／金幣結算
+- 死亡、紮營不復活、返城復活與治療
+- 四名角色在厄加德升至 2 級
+- 艾巴拉特補滿升級後生命上限
+- 穿越 34 → 1 → 34，依疲勞規則紮營後抵達 Gamur 神殿
+
+這段新增／修正：
+
+- `DATA1..5.TXT` 隨地城編號切換；`-events` 只保留為偵錯覆寫
+- `Character.CombatUnit` 帶入死亡狀態，HP 0 寫回與休息皆強制視為死亡
+- `dwroute -world` 遇 `EXITS.DAT` 傳送時不再漏掉觸發方向鍵
+- `tools/playthrough/` 新增狗頭人營地、治療、升級、Gamur 路線
+- 倚天 16×15 預設橫向粗體（`-eten-bold=true`）
+- 實機錄影與本機宣傳片流程在 `tools/promo/`
+
+後期抽樣已看過：
+
+- 新格里昂成功購船：1000 金 → 390 金，船體 75/75
+- 神殿門房英文密語輸入畫面
+- 中文結局長文
+- 既有 `docs/re/59`–`64` 的三符印、光之環、禁錮與結局分段證據
+
+宣傳片輸出位於 gitignore 的
+`workplace/promo/out/demon-winter-cht-promo.mp4`（61 秒，1280×720，
+實機畫面與原版 PC Speaker 音效；未公開上傳）。

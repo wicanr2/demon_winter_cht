@@ -11,6 +11,7 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
+	"github.com/wicanr2/demon_winter_cht/internal/ui/textlayout"
 )
 
 // createStage 是建角流程的階段。
@@ -84,7 +85,7 @@ func (a *app) openCreate() {
 // 為什麼要強制：`-newgame` 只改隊伍共用欄位（位置、時間、金幣……），
 // 角色仍是出貨存檔那五個。不強制的話玩家會拿著**別人玩過的角色**
 // 從正確的起點開始 —— 而畫面上看不出那五個人不是自己建的
-//（`docs/re/87` §6）。
+// （`docs/re/87` §6）。
 func (a *app) openNewGameParty() {
 	a.newGameSlots = len(a.members)
 	a.createSlot = 0
@@ -244,13 +245,15 @@ func (a *app) drawCreate(dst *ebiten.Image) {
 	}
 
 	line(a.tr.UI("create.header", "建立角色"))
+	a.gotFont.Draw(dst, a.tr.UI("create.header.en", "Character Creation"),
+		layout.StatusX, layout.StatusY)
 	line("")
 
 	switch c.stage {
 	case stageRace:
 		line(a.tr.UI("create.race.header", "選擇種族："))
-		for i, n := range raceName {
-			line(fmt.Sprintf("  %d  %s", i+1, n))
+		for i := range raceName {
+			line(fmt.Sprintf("  %d  %s", i+1, a.label(raceName, i)))
 		}
 		line("")
 		line(a.tr.UI("create.race.keys", "數字鍵：選擇　Esc：取消"))
@@ -260,12 +263,12 @@ func (a *app) drawCreate(dst *ebiten.Image) {
 
 	case stageClass:
 		line(a.tr.UI("create.class.header", "選擇職業："))
-		for i, n := range className {
+		for i := range className {
 			mark := "   "
 			if i == c.cursor {
 				mark = " > "
 			}
-			line(fmt.Sprintf("%s%s", mark, n))
+			line(fmt.Sprintf("%s%s", mark, a.label(className, i)))
 		}
 		line("")
 		line(a.tr.UI("create.nav.keys", "↑↓：選擇　Enter：確定　Esc：回上一步"))
@@ -274,7 +277,11 @@ func (a *app) drawCreate(dst *ebiten.Image) {
 		line(fmt.Sprintf("%s %s", a.label(raceName, int(c.create.Race)),
 			a.label(className, int(c.class))))
 		line("")
-		line(fmt.Sprintf(a.tr.UI("create.name.prompt", "姓名：%s_"), string(c.name)))
+		nameLabel := a.tr.UI("create.name.label", "姓名：")
+		a.font.Draw(dst, nameLabel, layout.BoxPadX, y)
+		a.gotFont.Draw(dst, string(c.name)+"_",
+			layout.BoxPadX+textlayout.TextWidth(nameLabel), y)
+		y += ui.LineHeight
 		line("")
 		line(a.tr.UI("create.name.note1", "※ 姓名只收英數字：存檔的姓名欄是 12 bytes，"))
 		line(a.tr.UI("create.name.note2", "　 中文塞不下，原版也讀不回來"))

@@ -297,8 +297,12 @@ func (a *app) drawTown(dst *ebiten.Image) {
 	case t.picking:
 		a.drawTownPicker(dst, line)
 	case t.facility != nil:
+		cellW, cellH, _ := a.tileMetrics()
+		drawMapFrame(dst, cellW, cellH)
 		a.drawFacility(dst, line)
 	default:
+		cellW, cellH, _ := a.tileMetrics()
+		drawMapFrame(dst, cellW, cellH)
 		a.drawTownMenu(dst, line)
 	}
 }
@@ -347,6 +351,7 @@ func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 	// 下面那行 labels[i] 會直接 panic（加學院時踩過一次）。
 	labels := []string{a.tr.UI("town.menu.label_market", "M 市集"), a.tr.UI("town.menu.label_healers", "H 治療所"), a.tr.UI("town.menu.label_inn", "I 旅店"), a.tr.UI("town.menu.label_guild", "G 城鎮公會"),
 		a.tr.UI("town.menu.label_temple", "C 神殿"), a.tr.UI("town.menu.label_docks", "D 碼頭"), a.tr.UI("town.menu.label_pub", "B 酒館"), a.tr.UI("town.menu.label_college", "L 學院")}
+	var menu []ui.MenuItem
 	for i, f := range game.AllFacilities {
 		if i >= len(labels) {
 			break
@@ -358,10 +363,13 @@ func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 		if f == game.FacilityDocks && !v.HasDocks() {
 			note = a.tr.UI("town.menu.no_ship", "（這裡沒有船）")
 		}
-		line("  " + labels[i] + note)
+		menu = append(menu, ui.MenuItem{Label: labels[i] + note, Enabled: true})
 	}
-	line("")
-	line(a.tr.UI("town.menu.keys", "Esc：離開城鎮"))
+	menu = append(menu, ui.MenuItem{
+		Label: a.tr.UI("town.menu.keys", "Esc：離開城鎮"), Enabled: true,
+	})
+	ui.DrawMenuList(dst, a.font, menu, -1,
+		layout.MenuX, layout.MenuY, layout.MenuW)
 }
 
 // restAtInn 在旅店睡一晚。

@@ -7,6 +7,11 @@
 #
 #   key Return          送一個按鍵（xdotool 的鍵名）
 #   rep 5 Up            同一個鍵送 5 次（每一步前後都等到畫面回到野外）
+#   at 34:23,31         驗目前確實在指定地圖／座標；不符就立刻中止
+#   to 34:23,31 Up      沿單一方向送鍵直到抵達座標（可抵抗 X11 偶發漏鍵）
+#   hunt Left Right     兩方向各走 8 鍵巡邏，打完第一場隨機遭遇就停止
+#   settle              關完目前所有模態畫面，直到回到野外
+#   expect 已存檔       驗證 trace 至少出現過指定文字
 #   wait 1.5            等幾秒（讓動畫／載入跑完）
 #   shot 名稱           截一張圖到 <輸出目錄>/名稱.png
 #   #  註解
@@ -23,6 +28,9 @@
 # **單點截圖驗收永遠遇不到這兩件事**，因為它只按幾下就拍照。
 #
 # 產出：`<輸出目錄>/trace.txt`（每一次狀態變化一行）＋ 沿路的截圖。
+#
+# 設 `DW_RECORD=live.mp4` 可另外把整段實機操作錄成影片；檔名相對於輸出目錄。
+# 這走 Xvfb 的 x11grab，錄到的是遊戲真正畫出的每一幀，不是重畫的 mockup。
 #
 # **為什麼不用 tools/screenshot.sh 就好。**
 # 那支是單點驗收：開一個畫面、拍一張。長路徑上它會騙人 ——
@@ -65,6 +73,8 @@ docker run --rm --name "$CONTAINER" \
     -e GOCACHE=/gocache \
     -e GOMODCACHE=/gomod \
     -e LIBGL_ALWAYS_SOFTWARE=1 \
+    -e "DW_RECORD=${DW_RECORD:-}" \
+    -e "DW_RECORD_FPS=${DW_RECORD_FPS:-25}" \
     -w /src \
     "$IMAGE" bash -c '
 set -e
@@ -83,6 +93,18 @@ sleep 3
 WID=$(DISPLAY=:99 xdotool search --sync --onlyvisible --name "冬之魔" | head -1)
 DISPLAY=:99 xdotool windowactivate --sync $WID 2>/dev/null || true
 sleep 1
+
+REC_PID=
+if [ -n "$DW_RECORD" ]; then
+    case "$DW_RECORD" in
+        */*|.*) echo "!! DW_RECORD 只能是輸出目錄內的檔名"; exit 1 ;;
+    esac
+    DISPLAY=:99 ffmpeg -y -loglevel error \
+        -f x11grab -framerate "$DW_RECORD_FPS" -video_size 1600x900 -i :99.0 \
+        -threads 2 -c:v libx264 -preset veryfast -pix_fmt yuv420p \
+        "/out/$DW_RECORD" &
+    REC_PID=$!
+fi
 
 # **按住再放，不要用 `xdotool key`。**
 #
@@ -105,6 +127,72 @@ send() {
 
 # 目前狀態 = 軌跡檔的最後一行（軌跡只在狀態改變時寫，所以末行就是現況）。
 now() { tail -1 /out/trace.txt 2>/dev/null || true; }
+
+# 長路徑不能只信「送了幾個鍵」。X11 偶發漏一鍵時，後面的路段仍可能全部
+# 跑完，最後只留下一張看似合理、其實在別處的截圖。路線腳本可在轉折點用
+# `at 地圖:X,Y` 及早失敗，把偏航定位在上一小段。
+is_at() {
+    map="${1%%:*}"
+    xy="${1#*:}"
+    x="${xy%%,*}"
+    y="${xy#*,}"
+    st="$(now)"
+    printf "%s\n" "$st" | grep -Eq "\\( *${x}, *${y}\\) 地圖${map}( |$)"
+}
+
+assert_at() {
+    if ! is_at "$1"; then
+        echo "!! 座標驗證失敗：預期 $1，實際：$st"
+        return 1
+    fi
+}
+
+expect_trace() {
+    text="$1"
+    if ! grep -Fq "$text" /out/trace.txt; then
+        echo "!! 軌跡缺少預期文字：$text；末態：$(now)"
+        return 1
+    fi
+}
+
+walk_to() {
+    target="$1"
+    key="$2"
+    for i in $(seq 1 128); do
+        if is_at "$target"; then
+            return 0
+        fi
+        settle
+        send "$key"
+        settle
+    done
+    echo "!! 直線移動超過 128 鍵：預期 $target，實際：$(now)"
+    return 1
+}
+
+# hunt_until_battle 給正常練功腳本用：只把方向鍵送進真實世界移動，
+# 遭遇、戰鬥與獎勵仍全走遊戲本身。以 trace 中新增的「戰鬥」狀態為證，
+# 一場結束後立刻停，不會因固定步數又撞進第二場。
+hunt_until_battle() {
+    first="$1"
+    second="$2"
+    start_lines="$(wc -l < /out/trace.txt)"
+    for i in $(seq 0 199); do
+        block=$((i / 8))
+        key="$first"
+        if [ $((block % 2)) -eq 1 ]; then
+            key="$second"
+        fi
+        settle
+        send "$key"
+        settle
+        if tail -n "+$((start_lines + 1))" /out/trace.txt | grep -q "戰鬥"; then
+            return 0
+        fi
+    done
+    echo "!! 巡邏 200 鍵仍未遇敵，停在：$(now)"
+    return 1
+}
 
 # 等到隊伍又走得動為止：軌跡的畫面欄位回到「野外」才算。
 #
@@ -132,7 +220,18 @@ settle() {
         case "$st" in
             *文字框*) send Return ;;
             *戰鬥*)   sleep 0.25 ;;
+            *死亡*)
+                echo "!! 隊伍全滅，停在：$st"
+                return 1
+                ;;
             *標題*)   send Return ;;
+            *紮營*)
+                # 時辰 24 會由遊戲強制開營。正常流程在這裡睡一晚；
+                # 睡完仍停在營地選單，所以再收帳回野外。
+                send s
+                sleep 0.2
+                if now | grep -q "紮營"; then send Escape; fi
+                ;;
             *野外*)   return 0 ;;
             *)        send Escape ;;
         esac
@@ -145,6 +244,11 @@ while read -r cmd arg rest; do
         ""|"#") ;;
         key)  send "$arg" ;;
         rep)  for i in $(seq 1 "$arg"); do settle; send "$rest"; settle; done ;;
+        at)   assert_at "$arg" ;;
+        to)   walk_to "$arg" "$rest" ;;
+        hunt) hunt_until_battle "$arg" "$rest" ;;
+        settle) settle ;;
+        expect) expect_trace "$arg${rest:+ $rest}" ;;
         wait) sleep "$arg" ;;
         shot) sleep 0.4; DISPLAY=:99 import -window root "/out/$arg.png" ;;
         *)    echo "!! 看不懂的指令：$cmd $arg" ;;
@@ -158,6 +262,10 @@ while read -r cmd arg rest; do
 done < /script.txt
 
 sleep 0.6
+if [ -n "$REC_PID" ]; then
+    kill -INT "$REC_PID" 2>/dev/null || true
+    wait "$REC_PID" 2>/dev/null || true
+fi
 kill -9 $APP_PID $XVFB_PID 2>/dev/null || true
 wait $APP_PID 2>/dev/null || true
 echo "--- app log ---"; cat /tmp/app.log || true

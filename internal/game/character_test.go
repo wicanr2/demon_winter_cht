@@ -368,6 +368,7 @@ func TestCharacter_EquipmentToCombatUnit(t *testing.T) {
 	c.Name = "Kern"
 	c.Level = 3
 	c.CurrentHP, c.MaxHP = 20, 30
+	c.Status = scenario.StatusPoison
 	c.Traits[gamedata.Speed] = 11
 	c.Traits[gamedata.Strength] = 9
 
@@ -391,6 +392,9 @@ func TestCharacter_EquipmentToCombatUnit(t *testing.T) {
 	}
 	if !u.IsPlayer || u.Speed != 11 || u.HP != 20 || u.MaxHP != 30 {
 		t.Errorf("基本欄位沒帶過來：%+v", u)
+	}
+	if u.Status != UnitStatus(scenario.StatusPoison) {
+		t.Errorf("戰鬥狀態 = %d，預期中毒 %d", u.Status, scenario.StatusPoison)
 	}
 }
 

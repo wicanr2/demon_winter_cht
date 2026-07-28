@@ -103,7 +103,12 @@ func CampCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, sp int) C
 func writeBackFromUnit(c *Character, u *Unit) {
 	c.CurrentHP = u.HP
 	c.CurrentSP = u.CurrentSP
-	c.Status = scenario.CombatStatus(u.Status)
+	if u.HP <= 0 {
+		c.CurrentHP = 0
+		c.Status = scenario.StatusDead
+	} else {
+		c.Status = scenario.CombatStatus(u.Status)
+	}
 }
 
 // CampCastCandidates 列出這名角色在營地放得出來的法術索引。
@@ -147,7 +152,7 @@ func CampCastCandidates(t *gamedata.Tables) []int {
 // 而遊戲允許同名（建角不查重複）。
 //
 // 判別式只看槽位範圍，**不看 `Side`**。三段槽位是不相交的
-//（怪物 0–6、隊伍 7–11、召喚 12–14，見 `battle.go`），所以槽位就夠了；
+// （怪物 0–6、隊伍 7–11、召喚 12–14，見 `battle.go`），所以槽位就夠了；
 // 而且被魅惑的隊員 `Side` 會變成 `SideCharmedPlayer`，
 // 用 `Side == SidePlayer` 篩會把他的傷害漏掉。
 func WriteBackParty(members []Character, units []*Unit) {

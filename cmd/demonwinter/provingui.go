@@ -40,7 +40,7 @@ func (a *app) enterProvingRoom() {
 	intro := fmt.Sprintf(a.tr.UI("proving.room", "%s的試煉室。"), classLabel) + "\n" +
 		fmt.Sprintf(a.tr.UI("proving.colour",
 			"你身處一間%s的房間，地板與牆壁磨得發亮，空無一物。"),
-				provingColour(a.tr, room.Colour)) + "\n" +
+			provingColour(a.tr, room.Colour)) + "\n" +
 		a.tr.UI("proving.flood", "房間忽然被光灌滿，一個宏大的聲音說道：")
 
 	switch entry {

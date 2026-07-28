@@ -69,3 +69,17 @@ func TestToWorldScript_CrossingDirectionComesFromMapID(t *testing.T) {
 		}
 	}
 }
+
+func TestToWorldScript_ExitTeleportKeepsTriggeringKey(t *testing.T) {
+	path := []wpoint{{34, 56, 18}, {1, 3, 31}, {1, 3, 30}}
+	step := func(from wpoint, dx, dy int) (wpoint, bool) {
+		if from == path[0] && dx == -1 && dy == 0 {
+			return path[1], true
+		}
+		return from, false
+	}
+	want := []string{"rep 1 Left", "# → 子地圖 1 的 (3,31)", "rep 1 Up"}
+	if got := toWorldScriptWithStep(path, step); !reflect.DeepEqual(got, want) {
+		t.Fatalf("出口傳送腳本：\n得到 %q\n預期 %q", got, want)
+	}
+}

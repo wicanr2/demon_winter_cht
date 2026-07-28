@@ -121,6 +121,10 @@ type Unit struct {
 	// Facing 是單位面向（0–3），召喚生物進場時擲定。
 	Facing int
 
+	// SpriteIndex 是 MONSTER.SHP/SHE 的八幀外觀組索引。
+	// 玩家隊員另依職業取 COMBAT.SHP/SHE glyph，因此此欄只供怪物／召喚物使用。
+	SpriteIndex int
+
 	// MaxSP／CurrentSP 是法力。幻化出來的生物法力被歸零，因此不能施法。
 	MaxSP, CurrentSP int
 

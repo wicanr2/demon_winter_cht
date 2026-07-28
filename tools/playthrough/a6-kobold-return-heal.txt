@@ -1,0 +1,44 @@
+# 狗頭人營地通關後返海濱鎮：先在 21 時紮營睡一晚，再避開洞穴熊原路
+# 返回，以正常治療所復活／治療全隊。起點 2:(17,47)。
+
+key Return
+wait 1
+key c
+wait 0.5
+key s
+wait 0.5
+key Escape
+settle
+
+to 2:17,45 Up
+to 2:10,45 Left
+# 出口把隊伍送到 34:(45,50)。
+to 34:45,50 Up
+to 34:45,45 Up
+to 34:32,45 Left
+key Left
+wait 0.5
+at 34:31,45
+
+# 治療所：a、b、c（先復活再治療）、d、e。
+key h
+wait 0.5
+key h
+key Down
+key h
+key Down
+key h
+key h
+key Down
+key h
+key Down
+key h
+key h
+wait 0.5
+shot 00-party-restored
+key Escape
+key Escape
+settle
+key s
+wait 0.5
+expect 已存檔

@@ -1,0 +1,41 @@
+# A6 正常航路前置：由海濱鎮徒步 93 步到新格里昂。
+# 路線由 dwroute 產生；最後一步改用 key，讓腳本停在城內驗公會與碼頭。
+
+key Return
+wait 1
+to 34:33,45 Right
+to 34:33,42 Up
+to 34:42,42 Right
+to 34:42,39 Up
+to 34:46,39 Right
+to 34:46,37 Up
+to 34:52,37 Right
+to 34:52,33 Up
+to 34:55,33 Right
+to 34:55,19 Up
+to 34:56,19 Right
+to 34:56,18 Up
+to 34:58,18 Right
+to 34:58,16 Up
+to 34:59,16 Right
+to 34:59,12 Up
+to 44:4,12 Right
+# -> 子地圖 44 的 (4,12)
+to 44:4,11 Up
+to 44:33,11 Right
+key Right
+wait 0.5
+at 44:34,11
+shot 00-new-gleon
+
+key g
+wait 0.5
+shot 01-guild
+key Escape
+key d
+wait 0.5
+shot 02-docks
+key Escape
+key Escape
+key s
+wait 0.5
