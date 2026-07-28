@@ -126,6 +126,9 @@ type app struct {
 	useWinter      bool
 	combatSprites  *ui.SpriteSheet
 	monsterSprites *ui.SpriteSheet
+	shipSprites    *ui.SpriteSheet
+	videoMode      gfx.VideoMode
+	videoThemes    map[gfx.VideoMode]*videoTheme
 	font           *ui.MixedFont
 	gotFont        *ui.Font
 
@@ -198,6 +201,9 @@ type app struct {
 
 	// battle 非 nil 時遊戲進入戰鬥模式，地圖輸入停止。
 	battle *game.Battle
+	// sea 非 nil 時正在海戰；seaShipSlot 是世界存檔中玩家目前那艘船。
+	sea         *game.SeaBattle
+	seaShipSlot int
 	// examine 是戰鬥中的 `?` 檢視面板（原版動作 case 10）。
 	examine *examineView
 	// settled 代表這場戰鬥的結算（訊息、戰利品）已經做過了。
@@ -312,6 +318,15 @@ func (a *app) Update() error {
 }
 
 func (a *app) update() error {
+	// F8：在同一局遊戲中切換原版 EGA／CGA 素材。放在各模態分派之前，
+	// 讓地圖、戰鬥、城鎮或文字框開著時都能直接比較；切換只換呈現資產，
+	// 不碰遊戲狀態與倚天中文字型。
+	if inpututil.IsKeyJustPressed(ebiten.KeyF8) {
+		if err := a.toggleVideoTheme(); err != nil {
+			log.Printf("切換顯示主題：%v", err)
+			a.message = fmt.Sprintf(a.tr.UI("theme.failed", "切換顯示主題失敗：%v"), err)
+		}
+	}
 	if handled, err := a.updateQuitDialog(); handled || err != nil {
 		return err
 	}
@@ -352,6 +367,9 @@ func (a *app) update() error {
 	}
 	if a.town != nil {
 		return a.updateTown()
+	}
+	if a.sea != nil {
+		return a.updateSeaBattle()
 	}
 	if a.battle != nil {
 		return a.updateBattle()
@@ -702,11 +720,13 @@ func (a *app) Draw(screen *ebiten.Image) {
 	}
 	// 戰鬥與紮營有自己的畫面，不畫世界地圖 —— 把大地圖留在底下，
 	// 文字會疊在圖塊上完全讀不了。
-	if a.battle == nil && a.camp == nil && a.merchant == nil {
+	if a.battle == nil && a.sea == nil && a.camp == nil && a.merchant == nil {
 		a.drawWorld(a.canvas)
 		a.drawTopBar(a.canvas, false)
 	}
 	switch {
+	case a.sea != nil:
+		a.drawSeaBattle(a.canvas)
 	case a.battle != nil && a.spInput != nil:
 		a.drawSPPrompt(a.canvas)
 	case a.battle != nil && a.spells != nil:
@@ -1013,7 +1033,7 @@ func (a *app) logTop() int {
 // 戶外（子地圖編號 >= 9）、而且不在別的畫面裡。
 func (a *app) checkMerchantEncounter() {
 	if a.mapID < worldMapMinID || a.battle != nil || a.box.Active() ||
-		a.merchant != nil || a.camp != nil {
+		a.merchant != nil || a.camp != nil || a.party.Sailing() {
 		return
 	}
 	if !game.EncounterTriggered(int(a.rng.Next())) {
@@ -1034,6 +1054,12 @@ func (a *app) checkRandomEncounter(tile byte) {
 	left, fight := game.StepEncounterCountdown(int(a.save.EncounterCountdown))
 	a.save.EncounterCountdown = byte(left)
 	if !fight {
+		return
+	}
+	if a.party.Sailing() {
+		// IDA 1C427 的海戰收尾：Roll(50)+150 寫回存檔 +0x9c。
+		a.save.EncounterCountdown = byte(a.rng.Roll(50) + 150)
+		a.startSeaBattle()
 		return
 	}
 	a.save.EncounterCountdown = byte(game.EncounterCountdownAfterBattle(a.rng))
@@ -1685,6 +1711,7 @@ func main() {
 	// B 鍵那條偵錯路徑在 headless 截圖底下不好按（xdotool 送的鍵不一定
 	// 進得了 ebiten 的輸入佇列）。開一個旗標走同一條路，讓截圖驗收可重跑。
 	startBattle := flag.Bool("battle", false, "啟動後直接開一場測試戰鬥（偵錯）")
+	startSeaBattle := flag.Bool("sea-battle", false, "啟動後直接開一場海戰（偵錯）")
 	// 用 xdotool 打完一場戰鬥不切實際（要走位、要相鄰才打得到），
 	// 但「打贏之後會怎樣」得看得到 —— 這個旗標直接把怪物血量清零。
 	battleWin := flag.Bool("battle-win", false,
@@ -1920,20 +1947,17 @@ func main() {
 	default:
 		log.Fatalf("-video 只接受 ega 或 cga，收到 %q", *videoMode)
 	}
-	loadSet := func(s gfx.TerrainSet) *ui.Tileset {
-		ts, err := gfx.LoadTilesetMode(*dataDir, s, mode)
-		if err != nil {
-			log.Fatalf("載入圖塊集 %s：%v", s, err)
+	// 兩套原版素材都在啟動時建立 atlas。F8 若臨時解碼、上傳五張 atlas，
+	// 第一個 frame 會只畫出一半；預載後切換只是五個指標的交換。
+	videoThemes := make(map[gfx.VideoMode]*videoTheme, 2)
+	for _, m := range []gfx.VideoMode{gfx.ModeEGA, gfx.ModeCGA} {
+		theme, loadErr := loadVideoTheme(*dataDir, m)
+		if loadErr != nil {
+			log.Fatalf("載入 %s 顯示主題：%v", videoModeName(m), loadErr)
 		}
-		return ui.NewTileset(ts)
+		videoThemes[m] = theme
 	}
-	loadSprites := func(base string) *ui.SpriteSheet {
-		ss, err := gfx.LoadSpriteSheetMode(*dataDir, base, mode)
-		if err != nil {
-			log.Fatalf("載入戰鬥 sprite %s：%v", base, err)
-		}
-		return ui.NewSpriteSheet(ss)
-	}
+	initialTheme := videoThemes[mode]
 	// ASCII 的字模來源三選一，見 -ascii。預設 `eten`：英數走倚天全形，
 	// 與漢字同一套設計、同一個筆畫重量。
 	//
@@ -2016,10 +2040,13 @@ func main() {
 		strings:        strs,
 		items:          items,
 		rng:            newRNG(*seed),
-		normal:         loadSet(gfx.NormalTiles),
-		winter:         loadSet(gfx.WinterTiles),
-		combatSprites:  loadSprites("COMBAT"),
-		monsterSprites: loadSprites("MONSTER"),
+		normal:         initialTheme.normal,
+		winter:         initialTheme.winter,
+		combatSprites:  initialTheme.combat,
+		monsterSprites: initialTheme.monsters,
+		shipSprites:    initialTheme.ships,
+		videoMode:      mode,
+		videoThemes:    videoThemes,
 		font:           font,
 		gotFont:        gotFont,
 		speaker:        ui.NewSpeaker(*volume),
@@ -2152,6 +2179,9 @@ func main() {
 			}
 			log.Print("偵錯：怪物全部打倒，直接進入勝利流程")
 		}
+	}
+	if *startSeaBattle {
+		a.startSeaBattle()
 	}
 
 	ebiten.SetWindowSize(layout.CanvasWidth*scale, layout.CanvasHeight*scale)

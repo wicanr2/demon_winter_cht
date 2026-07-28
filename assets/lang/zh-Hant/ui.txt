@@ -2974,3 +2974,103 @@ Esc：下來
 ## world.sleepy
 :: zh
 你睏了，必須紮營休息。
+
+## theme.changed
+:: zh
+顯示主題：
+
+## theme.failed
+:: zh
+切換顯示主題失敗：%v
+
+## sea.enemy.pirate
+:: zh
+海盜船
+
+## sea.enemy.monster
+:: zh
+海怪
+
+## sea.encounter
+:: zh
+海上遭遇：%d 名敵人
+
+## sea.move.forward
+:: zh
+船向前航行
+
+## sea.move.left
+:: zh
+船向左轉
+
+## sea.move.right
+:: zh
+船向右轉
+
+## sea.move.reverse
+:: zh
+船倒航
+
+## sea.hull.inspect
+:: zh
+船體：%d / %d
+
+## sea.enemy.hit
+:: zh
+敵方命中，船體受損 %d
+
+## sea.enemy.miss
+:: zh
+敵方砲擊落空
+
+## sea.cannon.miss
+:: zh
+砲彈落入海中
+
+## sea.cannon.sunk
+:: zh
+命中 %s，造成 %d 點傷害並擊沉
+
+## sea.cannon.hit
+:: zh
+命中 %s，造成 %d 點傷害
+
+## sea.victory.exp
+:: zh
+海戰勝利，每人獲得 %d 點經驗
+
+## sea.escaped
+:: zh
+成功駛離戰場
+
+## sea.header.round
+:: zh
+海戰　第 %d 回合
+
+## sea.header.hull
+:: zh
+船體　%d / %d
+
+## sea.header.points
+:: zh
+移動點　%d
+
+## sea.keys.move
+:: zh
+Enter 前進（1）　←→ 轉向（2）
+
+## sea.keys.reverse
+:: zh
+/ 倒航（3）
+
+## sea.keys.fire
+:: zh
+I/J/K/M 四向砲擊（3）
+
+## sea.keys.other
+:: zh
+? 查看船體　Esc 結束回合
+
+## sea.victory.dismiss
+:: zh
+敵方全滅（按空白鍵返回）
