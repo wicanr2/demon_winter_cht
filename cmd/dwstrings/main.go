@@ -41,6 +41,8 @@ func main() {
 		dumpEvents(os.Args[2:])
 	case "ui":
 		dumpUI(os.Args[2:])
+	case "uicheck":
+		uiCheck(os.Args[2:])
 	case "spells":
 		dumpSpells(os.Args[2:])
 	case "items":
@@ -66,7 +68,7 @@ func main() {
 
 func usage() {
 	fmt.Fprintln(os.Stderr,
-		"用法：dwstrings events|spells|items|monsters|towns|months|skills|dungeonitems|ui|story|check [選項]")
+		"用法：dwstrings events|spells|items|monsters|towns|months|skills|dungeonitems|ui|uicheck|story|check [選項]")
 	os.Exit(2)
 }
 

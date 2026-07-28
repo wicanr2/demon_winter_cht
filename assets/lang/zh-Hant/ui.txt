@@ -100,12 +100,6 @@ You are walking through ruins
 :: zh
 隊伍走過一片廢墟
 
-## site.trap
-:: en
-A trap!
-:: zh
-有陷阱！
-
 ## eregore.shattered
 :: zh
 春之石碎了。冬天開始了。
@@ -706,12 +700,190 @@ who wish to kill Xeres!
 :: zh
 　準備的！」
 
-## blacksmith.who
-:: en
-Character to take?
+## armory.approach
+:: zh
+你要靠近嗎？
+
+## armory.brighter
+:: zh
+球體的光亮了起來。
+
+## armory.item.chain
+:: zh
+一件銀製鏈甲
+
+## armory.item.dagger
+:: zh
+一把水晶匕首
+
+## armory.item.mace
+:: zh
+一把釘頭鎚
+
+## armory.item.sword
+:: zh
+一把冰藍色的短劍
+
+## armory.keys
+:: zh
+Y：靠近　N／Esc：離開
+
+## armory.spheres
+:: zh
+。幾團發光的球體懸在台座上方，似乎很不歡迎你的到來。
+
+## battle.aura
+:: zh
+（偵測到靈光）
+
+## bell.angels
+:: zh
+天使的哭聲自天上傳來，隨後一切又歸於寂靜
+
+## bell.ask
+:: zh
+你要敲那口鐘嗎？
+
+## bell.nothing
+:: zh
+什麼事都沒發生。
+
+## blacksmith.sword
+:: zh
+那把武器
+
+## confirm.keys
+:: zh
+Y：是　N／Esc：否
+
+## npcbed.ask
+:: zh
+你要在這裡睡一覺嗎？
+
+## npcbed.farewell
+:: zh
+她向你道別，又補了一句「願遠古種族保護你……」
+
+## npcbed.slept
+:: zh
+你睡了一覺……
+
+## orb.taken
+:: zh
+%s 收下了恆世寶珠
+
+## plotgift.democrystal
+:: zh
+惡魔水晶
+
+## plotgift.taken
+:: zh
+%s 收下了%s
+
+## plotgift.who
 :: zh
 誰來收下？
 
-## blacksmith.taken
+## proving.blessing
 :: zh
-%s 收下了那把武器
+「這位%s —— 讓他在將來的日子裡證明自己的價值。」
+
+## proving.colour
+:: zh
+你身處一間%s的房間，地板與牆壁磨得發亮，空無一物。
+
+## proving.fight
+:: zh
+「這位%s —— 讓他在殊死戰中證明自己。」
+
+## proving.flood
+:: zh
+房間忽然被光灌滿，一個宏大的聲音說道：
+
+## proving.lore
+:: zh
+「這位%s —— 讓他知道這件事。」
+
+## proving.nopass
+:: zh
+「既然你沒有%s，我就讓你過。」
+
+## proving.room
+:: zh
+%s的試煉室。
+
+## proving.taunt
+:: zh
+「這位%s —— 他要是踩上了那個陷阱，可就丟臉了！」
+
+## proving.unwell
+:: zh
+「等你的%s好了再回來。」
+
+## read.nothing
+:: zh
+這裡沒有值得再看一次的東西
+
+## tombstone.shift
+:: zh
+墓碑在你面前挪動了起來
+
+## workshop.already
+:: zh
+它已經是 +%d 了
+
+## workshop.cost
+:: zh
+費用 %d 金（你有 %d）
+
+## workshop.done
+:: zh
+%s 的%s附魔到 +%d，花了 %d 金
+
+## workshop.empty
+:: zh
+那一格是空的
+
+## workshop.max
+:: zh
+附魔不能超過 +10
+
+## workshop.nocost
+:: zh
+這一件不用附魔
+
+## workshop.nogold
+:: zh
+你付不起這個價錢。
+
+## workshop.pluskeys
+:: zh
+←→：調整　Enter：確定　Esc：返回
+
+## workshop.raise
+:: zh
+要把%s附魔到 +%d
+
+## workshop.scene
+:: zh
+你面前是一間了不起的工坊，矮人大師們正在為閃亮的武器附上魔力。
+
+## workshop.slotempty
+:: zh
+（空）
+
+## workshop.unidentified
+:: zh
+只有已鑑定的道具能附魔。
+
+## workshop.which
+:: zh
+要附魔哪一件？
+
+## workshop.who
+:: zh
+誰要附魔？
+
+## workshop.wrongtype
+:: zh
+只有武器與護甲能附魔。
