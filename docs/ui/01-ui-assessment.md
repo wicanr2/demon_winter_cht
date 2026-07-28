@@ -11,6 +11,10 @@
 與 `workplace/dump/ux/*.png`（remake，640×400 邏輯畫布，nearest 放大 2 倍後
 貼在 1600×900 視窗的 (160,33)）。文中原版尺寸都是從截圖量出來的，量法附在該條後面。
 
+![原版版面](img/01-layout-original.svg)
+
+![目前版面](img/02-layout-current.svg)
+
 ## 1. 逐項對照
 
 | 元素 | 原版 | remake | 落差 |
@@ -217,6 +221,12 @@ A1–A3 是同一次改動的三面：把偵錯欄挪走，空出來的位置正
 | B8 | 標點壓縮 | 在 `MixedFont.Draw` 對「，。、；：」等收尾標點採用 12 px 前進量（字模仍畫在 16 格內、靠左），`textlayout` 這邊要有對應的寬度函式，兩邊同源 |
 
 ### 3.3 線框圖
+
+> SVG 版見 [`img/03-layout-proposed-world.svg`](img/03-layout-proposed-world.svg) 與
+> [`img/04-layout-proposed-battle.svg`](img/04-layout-proposed-battle.svg)（在
+> [`02-ui-plan.md`](02-ui-plan.md) §0 直接看得到）。
+> ⚠ 下面 B1 寫的外框 `296×264` 與原版量得的 `296×260` 差 4 —— 內容 252 + 上下各 4 的內距
+> ＝ 260，SVG 用的是 260。
 
 畫布 640×400，格 16×16（40 欄 × 25 列）。座標都是邏輯像素。
 

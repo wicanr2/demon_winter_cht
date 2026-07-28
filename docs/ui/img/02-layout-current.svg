@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="520" viewBox="0 0 940 520" role="img" aria-label="目前版面">
+<title>目前版面</title>
+<defs><marker id="arw" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#9a9ab2"/></marker><pattern id="dead" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#6a6a80" stroke-width="2" opacity="0.35"/></pattern><pattern id="cell9" width="9" height="9" patternUnits="userSpaceOnUse"><path d="M9,0 L0,0 L0,9" fill="none" stroke="#1e1e2c" stroke-width="0.5"/></pattern><pattern id="hatch" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="1" height="1" fill="#000"/><rect x="1" y="1" width="1" height="1" fill="#000"/></pattern></defs>
+<rect width="940" height="520" fill="#0d0d14"/>
+<rect x="39" y="55" width="642" height="402" fill="#000" stroke="#3c3c4e" stroke-width="1"/>
+<text x="40" y="44" fill="#e8e8f0" font-size="13" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start" font-weight="600">目前 remake　640×400</text>
+<text x="680" y="44" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="end">邏輯畫布，顯示時 ×2</text>
+<rect x="40" y="56" width="288" height="252" fill="#05050a" stroke="#3c3c4e" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="184" y="176" fill="#e8e8f0" font-size="12" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="middle">地圖 288×252</text>
+<text x="184" y="194" fill="#ffaa55" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="middle">無外框、無內距，貼齊 (0,0)</text>
+<rect x="336" y="60" width="344" height="84" fill="#181822" stroke="#ffaa55" stroke-width="1"/>
+<text x="343" y="75" fill="#ffaa55" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start" font-weight="600">狀態欄</text>
+<text x="343" y="90" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">13時 17日 紅玉月</text>
+<text x="343" y="102" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">步數 1　內縮 3　　← 偵錯</text>
+<text x="343" y="114" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">座標 9,32　面向南　← 偵錯</text>
+<text x="343" y="126" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">地形 0　深度 0　　 ← 偵錯</text>
+<text x="343" y="138" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">圖塊 DEMON.SHE　　 ← 偵錯</text>
+<rect x="336" y="156" width="344" height="158" fill="#181822" stroke="#ffff55" stroke-width="1"/>
+<text x="343" y="171" fill="#ffff55" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start" font-weight="600">鍵位提示塊（9 行）</text>
+<text x="343" y="186" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">方向鍵移動　Tab 季節</text>
+<text x="343" y="198" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">T 拿取 D 丟棄 E 檢視</text>
+<text x="343" y="210" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">M 推開家具 U 使用解謎</text>
+<text x="343" y="222" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">I 探查周圍 R 重讀</text>
+<text x="343" y="234" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">L 陷阱 V 觀室 X 鑑物</text>
+<text x="343" y="246" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">P 名冊 C 紮營 S 存檔</text>
+<text x="343" y="258" fill="#9a9ab2" font-size="9.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">偵錯 B F1 F3 F4　　← 偵錯</text>
+<rect x="40" y="314" width="640" height="142" fill="url(#dead)" stroke="#6a6a80" stroke-width="1" stroke-dasharray="5 4"/>
+<text x="360" y="378" fill="#6a6a80" font-size="13" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="middle">長期空白　142 px ＝ 畫布的 35%</text>
+<text x="360" y="398" fill="#6a6a80" font-size="10" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="middle">營地 53%、角色卡 45%、施法選單 67%</text>
+<text x="40" y="494" fill="#ffaa55" font-size="10" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">缺席的東西：金幣、糧食、任何一個人的生命與法力。原版把這三塊放在最顯眼的兩個位置。</text>
+<text x="40" y="510" fill="#9a9ab2" font-size="10" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">第一眼焦點（亮度 × 面積）落在鍵位提示塊上，不是地圖。</text>
+</svg>

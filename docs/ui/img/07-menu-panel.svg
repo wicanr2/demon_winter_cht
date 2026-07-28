@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="476" viewBox="0 0 940 476" role="img" aria-label="紅底選單元件規格">
+<title>紅底選單元件規格</title>
+<defs><marker id="arw" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#9a9ab2"/></marker><pattern id="dead" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#6a6a80" stroke-width="2" opacity="0.35"/></pattern><pattern id="cell9" width="9" height="9" patternUnits="userSpaceOnUse"><path d="M9,0 L0,0 L0,9" fill="none" stroke="#1e1e2c" stroke-width="0.5"/></pattern><pattern id="hatch" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="1" height="1" fill="#000"/><rect x="1" y="1" width="1" height="1" fill="#000"/></pattern></defs>
+<rect width="940" height="476" fill="#0d0d14"/>
+<text x="30" y="34" fill="#e8e8f0" font-size="15" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start" font-weight="600">紅底選單元件　—　四個畫面共用一支</text>
+<text x="30" y="54" fill="#9a9ab2" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">世界 15 項、營地 14 項、城鎮 6+1 項、戰鬥 11 項。原版尺寸量自 DOSBox 截圖。</text>
+<rect x="60" y="88" width="240" height="192" fill="#aa0000"/>
+<rect x="60" y="118" width="240" height="2" fill="#000"/>
+<text x="78" y="108" fill="#000" font-size="14" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">行　走</text>
+<rect x="256" y="95" width="30" height="16" fill="none" stroke="#550000" stroke-width="1" rx="3"/>
+<text x="271" y="107" fill="#550000" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="middle">W</text>
+<rect x="60" y="150" width="240" height="2" fill="#000"/>
+<rect x="60" y="120" width="240" height="30" fill="#ffffff"/>
+<text x="78" y="140" fill="#000" font-size="14" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start" font-weight="600">隊伍資料</text>
+<rect x="256" y="127" width="30" height="16" fill="none" stroke="#000" stroke-width="1" rx="3"/>
+<text x="271" y="139" fill="#000" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="middle">P</text>
+<rect x="60" y="182" width="240" height="2" fill="#000"/>
+<text x="78" y="172" fill="#000" font-size="14" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">存　檔</text>
+<rect x="256" y="159" width="30" height="16" fill="none" stroke="#550000" stroke-width="1" rx="3"/>
+<text x="271" y="171" fill="#550000" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="middle">S</text>
+<rect x="60" y="214" width="240" height="2" fill="#000"/>
+<text x="78" y="204" fill="#000" font-size="14" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">紮　營</text>
+<rect x="256" y="191" width="30" height="16" fill="none" stroke="#550000" stroke-width="1" rx="3"/>
+<text x="271" y="203" fill="#550000" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="middle">C</text>
+<rect x="60" y="246" width="240" height="2" fill="#000"/>
+<rect x="60" y="216" width="240" height="30" fill="url(#hatch)"/>
+<text x="78" y="236" fill="#550000" font-size="14" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">重　讀</text>
+<rect x="60" y="278" width="240" height="2" fill="#000"/>
+<text x="78" y="268" fill="#000" font-size="14" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">離開遊戲</text>
+<rect x="256" y="255" width="30" height="16" fill="none" stroke="#550000" stroke-width="1" rx="3"/>
+<text x="271" y="267" fill="#550000" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="middle">Q</text>
+<line x1="306" y1="103" x2="326" y2="103" stroke="#9a9ab2" stroke-width="0.8" marker-end="url(#arw)"/>
+<text x="332" y="107" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">一般列：底 #AA0000、字黑</text>
+<line x1="306" y1="135" x2="326" y2="135" stroke="#9a9ab2" stroke-width="0.8" marker-end="url(#arw)"/>
+<text x="332" y="139" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">游標列：反白（白底黑字）—— 原版主選單就是這樣</text>
+<line x1="306" y1="167" x2="326" y2="167" stroke="#9a9ab2" stroke-width="0.8" marker-end="url(#arw)"/>
+<text x="332" y="171" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">列高 16 px（原版量得），列間 1 px 黑縫</text>
+<line x1="306" y1="231" x2="326" y2="231" stroke="#9a9ab2" stroke-width="0.8" marker-end="url(#arw)"/>
+<text x="332" y="235" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">停用列：棋盤網點（黑:紅 ≈ 59:41）</text>
+<line x1="306" y1="263" x2="326" y2="263" stroke="#9a9ab2" stroke-width="0.8" marker-end="url(#arw)"/>
+<text x="332" y="267" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">右緣鍵帽：中文標籤短，用鍵帽把空白填成資訊</text>
+<text x="30" y="318" fill="#ffaa55" font-size="13" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start" font-weight="600">為什麼不沿用鍵位提示塊</text>
+<text x="30" y="342" fill="#9a9ab2" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">① 玩家要自己把字母和動作配對，而不是移游標選一項。</text>
+<text x="30" y="360" fill="#9a9ab2" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">② 「現在能不能做」這個訊息消失了 —— 原版靠網點講，remake 全部一樣亮，按下去才知道不行。</text>
+<text x="30" y="378" fill="#9a9ab2" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">③ 提示塊隨功能長大。程式註解已經記到「一鍵一行會溢出畫面」，於是改成一行塞三個 ——</text>
+<text x="30" y="396" fill="#9a9ab2" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">　 那是版面在推著資訊走，不是資訊在決定版面。</text>
+<text x="30" y="414" fill="#9a9ab2" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">④ 同一個概念在專案裡有兩套表現：戰鬥指令會把付不起的加括號，世界與營地不會。</text>
+<text x="30" y="452" fill="#ffaa55" font-size="10.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">熱鍵一定要保留原版鍵位（改掉會讓既有攻略與 docs/re 的對照失效），只換顯示方式。</text>
+</svg>

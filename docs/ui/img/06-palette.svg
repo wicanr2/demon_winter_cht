@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="940" height="418" viewBox="0 0 940 418" role="img" aria-label="EGA 顏色分工">
+<title>EGA 顏色分工</title>
+<defs><marker id="arw" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#9a9ab2"/></marker><pattern id="dead" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="8" stroke="#6a6a80" stroke-width="2" opacity="0.35"/></pattern><pattern id="cell9" width="9" height="9" patternUnits="userSpaceOnUse"><path d="M9,0 L0,0 L0,9" fill="none" stroke="#1e1e2c" stroke-width="0.5"/></pattern><pattern id="hatch" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="1" height="1" fill="#000"/><rect x="1" y="1" width="1" height="1" fill="#000"/></pattern></defs>
+<rect width="940" height="418" fill="#0d0d14"/>
+<text x="30" y="34" fill="#e8e8f0" font-size="15" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start" font-weight="600">顏色分工　—　全部取自原版 EGA 16 色，不引入表外顏色</text>
+<text x="30" y="54" fill="#9a9ab2" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">目前畫面幾乎只有白色；#404040 的戰場格線不在 EGA 調色盤裡（最接近的是 #555555）。</text>
+<rect x="30" y="84" width="44" height="22" fill="#FFFFFF" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="100" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">15 白</text>
+<text x="170" y="100" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#FFFFFF</text>
+<text x="260" y="100" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">主要內文、地圖框</text>
+<rect x="30" y="114" width="44" height="22" fill="#AAAAAA" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="130" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">7 淺灰</text>
+<text x="170" y="130" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#AAAAAA</text>
+<text x="260" y="130" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">次要文字、說明、翻頁提示</text>
+<rect x="30" y="144" width="44" height="22" fill="#FFFF55" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="160" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">14 黃</text>
+<text x="170" y="160" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#FFFF55</text>
+<text x="260" y="160" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">目前焦點：選單游標、行動者框</text>
+<rect x="30" y="174" width="44" height="22" fill="#AA0000" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="190" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">4 紅</text>
+<text x="170" y="190" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#AA0000</text>
+<text x="260" y="190" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">選單底</text>
+<rect x="30" y="204" width="44" height="22" fill="#000000" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="220" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">0 黑</text>
+<text x="170" y="220" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#000000</text>
+<text x="260" y="220" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">選單字</text>
+<rect x="30" y="234" width="44" height="22" fill="#55FF55" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="250" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">10 淺綠</text>
+<text x="170" y="250" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#55FF55</text>
+<text x="260" y="250" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">我方單位框</text>
+<rect x="30" y="264" width="44" height="22" fill="#FF5555" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="280" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">12 淺紅</text>
+<text x="170" y="280" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#FF5555</text>
+<text x="260" y="280" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">敵方、危險（生命 &lt; 25%）</text>
+<rect x="30" y="294" width="44" height="22" fill="#55FFFF" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="310" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">11 淺青</text>
+<text x="170" y="310" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#55FFFF</text>
+<text x="260" y="310" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">可互動提示、快捷鍵鍵帽</text>
+<rect x="30" y="324" width="44" height="22" fill="#555555" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="340" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">8 深灰</text>
+<text x="170" y="340" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#555555</text>
+<text x="260" y="340" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">停用項目</text>
+<rect x="30" y="354" width="44" height="22" fill="#AA5500" stroke="#3c3c4e" stroke-width="1"/>
+<text x="88" y="370" fill="#9a9ab2" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">6 棕</text>
+<text x="170" y="370" fill="#e8e8f0" font-size="11" font-family="ui-monospace,'DejaVu Sans Mono',monospace" text-anchor="start">#AA5500</text>
+<text x="260" y="370" fill="#e8e8f0" font-size="11" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">面板次線、分隔</text>
+<text x="30" y="406" fill="#ffaa55" font-size="10.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">分區原則：大面積色塊降明度與飽和度，小面積保留原始 EGA 純色當強調。</text>
+<text x="30" y="424" fill="#ffaa55" font-size="10.5" font-family="'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif" text-anchor="start">背景不要留純黑 —— 四個重製版無一例外，都改成帶色偏的近黑或低對比底紋。</text>
+</svg>
