@@ -123,7 +123,8 @@ Ebiten 在 init 期就要求顯示器，混進去這兩件事在無頭環境下�
 卡在「選單指令碼 → 動作碼」中間還有一步沒讀到。**下一次的入口很明確**：
 `FUN_222f_0b0e`（`0x169fe`）的開頭，把方向鍵與指令選單兩條輸入路徑分開。
 
-**下一輪最划算的一項**：A6（全程試玩破關驗收）—— A1／A2 都接上之後，地城段第一次跑得完整。
+**下一輪最划算的一項**：A6（全程試玩破關驗收）。邊界換圖已接上（`docs/playtest/10`），
+路線問得出來了；剩下的是**買船 ＋ 練到 120 法力**這兩段真的跑一次。
 與 A6（全程試玩 —— A1／A2 接上之後地城段第一次跑得完整）。
 
 ### 這一輪（2026-07-27 續三十九）：鐵匠鋪，順帶解出「劇情送道具」的共用常式
@@ -3140,6 +3141,24 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`graphics.md`](docs/formats/graphics.md) | CGA / EGA 素材格式 |
 | [`resource-index.md`](docs/formats/resource-index.md) | `FILES.DAT` / `FILES.DTT` |
 
+### 試玩紀錄 `docs/playtest/` — 實機跑出來的東西
+
+**最高階的 oracle。** 版面溢出、輸入順序、「解完但沒接」這三類問題
+單元測試看不到，只有實跑抓得到（`rulebook/60`）。
+
+| 檔案 | 內容 |
+|---|---|
+| [`01-harness-and-first-run.md`](docs/playtest/01-harness-and-first-run.md) | headless 驗收流程、`playthrough.sh`、軌跡檔為什麼非有不可 |
+| [`02-autofight-first-full-leg.md`](docs/playtest/02-autofight-first-full-leg.md) | `-autofight`：第一段主線真的走完 |
+| [`03-first-map-change.md`](docs/playtest/03-first-map-change.md) | 第一次換地圖 |
+| [`04-world-map-sites.md`](docs/playtest/04-world-map-sites.md) | 世界地圖的地點格 |
+| [`05-route-in-go-and-the-way-out.md`](docs/playtest/05-route-in-go-and-the-way-out.md) | 找路搬進 Go（`cmd/dwroute`）—— 規劃與遊戲用同一份判定 |
+| [`06-the-real-opening.md`](docs/playtest/06-the-real-opening.md) | **前四輪都從遊戲中段開始玩**：出貨 `PARTY.DAT` 是玩過的存檔 |
+| [`07-character-creation-and-ten-daggers.md`](docs/playtest/07-character-creation-and-ten-daggers.md) | 建角流程、強制建滿五人 |
+| [`08-battle-had-no-consequences.md`](docs/playtest/08-battle-had-no-consequences.md) | 戰鬥傷害沒寫回、全隊死亡 |
+| [`09-traps-wired.md`](docs/playtest/09-traps-wired.md) | 陷阱七種傷害實機驗收 |
+| [`10-world-edge-was-never-wired.md`](docs/playtest/10-world-edge-was-never-wired.md) | **世界只有一格**：`CrossEdge` 解完沒有呼叫端。加上跨圖規劃器之後量出「沒有船主線走不完」（陸路 4 張 vs 含航海 23 張）、破關在 220 步外、41／51／52 進不去（未解）|
+
 ### 研究與計畫
 
 | 檔案 | 內容 |
@@ -3510,7 +3529,11 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > `nSS.DAT` 的類別編號裡，不需要逐筆判斷。順帶補上原版的 `R) Read descr.`。
 >
 > **玩法缺口只剩 A6（全程試玩）。**
-> 換句話說：**已知的玩法缺口清完了，剩下的是「連起來玩得完嗎」。**
+> ~~換句話說：已知的玩法缺口清完了，剩下的是「連起來玩得完嗎」。~~
+> —— **2026-07-28 修正**：去排 A6 的路線就撞到一個沒接的閘門
+> （世界地圖邊界換圖，`docs/playtest/10`）。「已知的缺口清完了」這句話
+> 成立的前提是**清單本身完整**，而「解完但沒有呼叫端」這一類不會出現在
+> 任何待辦清單上 —— 它在文件裡是綠的、在測試裡是綠的、在畫面上看起來像撞牆。
 
 ---
 
@@ -3527,7 +3550,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 | ~~A4~~ | ~~治療水池~~（tile `0x35`）| **全解**（`docs/re/90`）| **已接**：`internal/game/pool.go` ＋ `cmd/demonwinter/poolui.go`，`TriggerHardBlock` 改名 `TriggerPool`。實跑地圖 3 的 `(14,48)`（全遊戲僅此一格）：Menhir `15/27` 連喝三口 `+1/+1/+4` → `21/27`，額度 `7→4`，座標從頭到尾沒動 | — |
 | ~~A5a~~ | ~~觀室（技能 27）~~ | **全解**（`docs/re/93` §1）：往前三格、一天**三**次、peek 模式（陷阱只 announce 不觸發） | **已接**：`internal/game/viewroom.go` ＋ `cmd/demonwinter/viewroomui.go`，`V` 鍵 | 剩：實機未驗（要有靈視者角色）|
 | ~~A5b~~ | ~~鑑物（技能 28）~~ | **全解**（`docs/re/93` §2）：一天三次、`Roll(3)` 有 1/3 失敗、選一件**地城道具**後印它的 `+4` 欄 | **已接**：`internal/game/viewitem.go` ＋ `dungeonui.go`，`X` 鍵（原版主選單就叫 `X)View item`）| A2 做完就解封了。實跑驗過：站在 `Cage` 上鑑物 → `/Iron key`；失敗兩次各扣一次額度；第四次耗盡 |
-| **A6** | **全程試玩（破關驗收）** | — | 工具齊了（`-trace`／`cmd/dwroute`／`tools/playthrough.sh`／`-autofight`），**最長一段 95 步、四次換地圖**（`docs/playtest/02`、`05`）| 新開檔 → 建角 → 走主線 → 破關，**不得用任何 debug 捷徑**。~~A1／A2 沒接之前地城段跑不完整~~ → **兩者都接上了，這一項現在跑得起來**，是下一輪最划算的一項 |
+| **A6** | **全程試玩（破關驗收）** | — | 工具齊了（`-trace`／`cmd/dwroute -world`／`tools/playthrough.sh`／`-autofight`）| 新開檔 → 建角 → 走主線 → 破關，**不得用任何 debug 捷徑**。<br>**2026-07-28：擋住它的不是體力活，是一個沒接的閘門。** 世界地圖的邊界換圖（`world.CrossEdge`）解完、測完、**全專案零呼叫端** —— 新遊戲那張子地圖走到邊就過不去，另外 20 張一張都到不了。四輪試玩沒撞到是因為都用 `-map` 直接跳過去（`docs/playtest/10`）。現在接上了，並把 `dwroute` 擴成跨子地圖規劃。<br>**量出來的三件事**：①「沒有船主線走不完」——陸路只到 4 張圖，含航海 23 張；② 破關地點（地圖 5）在 **220 步**外，三個符印在 98／154／210；③ 41／51／52 含航海也進不去（未解，見 `docs/playtest/10` §5.3）。<br>剩下的缺口：**買船的路線沒排**、**要練到 120 法力**（解咒 ×3 各 50、禁錮 100，起始上限 29）|
 | ~~A7~~ | ~~地點劇情表 16 格~~ | **全解**（`docs/re/83` 座標 ＋ `docs/re/65`／`99`／`100`／`101`／`102` 內容）| **16 格全部接上了**（`docs/re/65`／`83`／`98`–`102`）| — |
 | ~~**A8**~~ | `nSS.DAT` 的類別 1／2 | **已完成**（`docs/re/104`）| ~~判定哪些事件是一次性的~~ —— **分類寫在類別編號裡**，105 筆一筆都不用判。缺的是 `FUN_222f_0a90` 那道觸發閘門 | 已接：`internal/game/eventgate.go` ＋ `R) Read descr.`。類別 1 一次性、類別 2 可重讀，兩種都實跑驗過 |
 | ~~A10~~ | ~~地城道具字串沒中文化~~ | — | **翻完了**：`dwstrings dungeonitems` 抽出 **112 條**（300 條裡只有這些能翻 —— `+3` 座標、`+4` 查表鍵、`*` 佔位、`T`/`P`/`S` 參數都不能動，判準在 `cmd/dwstrings/dungeonitems.go`），三個 subagent 分批譯、主迴圈逐條把關，`DUNGEONITEM` 已納入 `check` 的完整五道檢查。譯名對齊 `docs/walkthrough/` 既有用字（布袋／玉製火炬／蛇形石柱／寒冰神殿…），新增 `glossary.md` 第 23 節 | — |

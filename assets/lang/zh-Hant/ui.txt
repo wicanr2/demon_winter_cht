@@ -2914,3 +2914,7 @@ Esc：下來
 ## viewland.who
 :: zh
 誰爬上去看？
+
+## world.edge
+:: zh
+船員拒絕再往前航行了……

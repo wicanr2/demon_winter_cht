@@ -25,6 +25,9 @@
 //	dwroute -map 34 -from 55,8 -to 46,7            # SUM.MAP 的段
 //	dwroute -map 34 -list-sites                    # 列出這張圖上的地點格
 //	dwroute -map MAP1.MAP -from 9,32 -reachable-exits
+//	dwroute -world -from 34:28,50 -to 55:47,22     # 跨子地圖（會自己換圖）
+//	dwroute -world-reach -from 34:28,50            # 走得到哪幾張子地圖
+//	dwroute -world-reach -from 34:28,50 -sailing   # 有船的話到得了哪裡
 package main
 
 import (
@@ -54,7 +57,28 @@ func main() {
 	to := flag.String("to", "", "終點 X,Y")
 	listSites := flag.Bool("list-sites", false, "列出這張圖上的城鎮／神殿／學院／出口格")
 	reachExits := flag.Bool("reachable-exits", false, "列出從起點走得到的出口，依步數排序")
+	worldMode := flag.Bool("world", false,
+		"跨子地圖找路。-from／-to 改成 地圖:X,Y（例如 34:28,50）")
+	worldReach := flag.Bool("world-reach", false,
+		"列出從 -from（地圖:X,Y）走得到的所有子地圖")
+	sailing := flag.Bool("sailing", false,
+		"跨圖模式：海面也算路（假設全程在船上，是上界不是可行路線）")
 	flag.Parse()
+
+	// -world／-world-reach 不先載單一張圖 —— 它們自己按需載，
+	// 而 -map 在這兩個模式下沒有意義（起點的地圖編號寫在 -from 裡）。
+	if *worldMode || *worldReach {
+		tables, err := gamedata.LoadTables(filepath.Join(*dataDir, "FILES.DAT"))
+		if err != nil {
+			fatal(fmt.Errorf("讀 FILES.DAT：%w", err))
+		}
+		if *worldReach {
+			runWorldReach(worldDataDir(*dataDir), tables, *from, *sailing)
+			return
+		}
+		runWorldRoute(worldDataDir(*dataDir), tables, *from, *to, *sailing)
+		return
+	}
 
 	m, err := loadMap(*dataDir, *mapArg)
 	if err != nil {

@@ -431,6 +431,9 @@ func (a *app) update() error {
 			return nil
 		}
 
+		// 移動前的座標 —— 走到子地圖邊界又被擋住時要退回去
+		// （原版從全域 `0x50f0`／`0x50ee` 還原，見 crossSubMapEdge）。
+		prevX, prevY := a.party.X(), a.party.Y()
 		res, tile, advanced := a.world.Walk(a.party, a.clock)
 		// **腳下那一格**，不是 Walk 的回傳值 —— 撞牆時那個值是擋路的
 		// 那一格，狀態列會印錯，`R` 也會查錯格子。
@@ -467,6 +470,11 @@ func (a *app) update() error {
 			// 「離開這張圖」，原地的事件與遭遇都不該再跑
 			// （`docs/re/05` §3：出口那條路徑不經過事件表）。
 			if a.checkExit(tile) {
+				return nil
+			}
+			// 子地圖邊界排在出口之後 —— 原版的回傳碼順序就是
+			// `0x14`（出口）在 `0x15`（跨子地圖）之前（`docs/re/58` §2）。
+			if a.crossSubMapEdge(prevX, prevY) {
 				return nil
 			}
 			a.checkEvent(tile)
