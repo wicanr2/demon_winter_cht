@@ -70,13 +70,20 @@ type MixedFont struct {
 // 忠實度那一側選原版字模，一致性那一側選全形。
 func (m *MixedFont) UseFullWidthASCII(on bool) { m.fullWidthASCII = on }
 
-// fullWidthOf 把半形英數換成全形（`!` → `！`，ASCII 0x21–0x7E 差 0xFEE0）。
-// 空白換成全形空白 U+3000。表外的字回傳 0。
+// fullWidthOf 把半形英數換成全形（`A` → `Ａ`，差 0xFEE0）。表外的字回傳 0。
+//
+// **只換字母與數字，標點不換。** 全形標點在倚天裡是照中文排版設計的，
+// 位置與字面都不一樣：`．` 是**置中的點**不是基線句點，所以
+// `DEMON.SHE` 會變成 `DEMON・SHE`（實跑抓到）。`，` 同理偏高。
+// 標點筆畫細、面積小，維持原版字模看不太出來重量差；
+// 字母數字面積大、出現頻繁，那才是「一粗一細」的來源。
+//
+// 空白也不換 —— 兩邊都是空的，換了沒有差別。
 func fullWidthOf(ch rune) rune {
 	switch {
-	case ch == ' ':
-		return '\u3000'
-	case ch >= '!' && ch <= '~':
+	case ch >= '0' && ch <= '9',
+		ch >= 'A' && ch <= 'Z',
+		ch >= 'a' && ch <= 'z':
 		return ch + 0xFEE0
 	}
 	return 0
