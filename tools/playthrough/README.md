@@ -22,7 +22,7 @@ regression 只有重跑同一段才比得出來。
 就會走到世界地圖上，然後撞到隨機遭遇，而截圖看不出是哪一步錯的。
 
 驗收用 `PARTY.DAT` 直讀（金幣、陣型、背包型別、裝備格），比判讀截圖確定 ——
-指令在 `docs/HANDOFF.md` §3。
+指令在 `demon_winter-handoff-20260728.md` §3。
 
 移動段落是 `dwroute -world` 產生的，不是手打的：
 

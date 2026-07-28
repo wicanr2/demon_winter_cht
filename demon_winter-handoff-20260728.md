@@ -1,7 +1,10 @@
 # 交接：2026-07-28（A6 全程試玩開場已跑通）
 
-接手的第一件事是讀 [`CONTEXT.md`](../CONTEXT.md) —— 狀態的單一真相來源在那裡，
+接手的第一件事是讀 [`CONTEXT.md`](CONTEXT.md) —— 狀態的單一真相來源在那裡，
 這份只補「上一輪做了什麼、哪裡踩過坑、下一步從哪個指令開始」。
+
+交接檔按日期各存一份（`demon_winter-handoff-<YYYYMMDD>.md`），不覆蓋舊的 ——
+坑與指令會隨版本漂，看得出「這是哪一天的說法」才判斷得出還適不適用。
 
 `main` 的最後一個 commit 是 `b5a5d23`。工作樹乾淨、下面四道檢查全綠。
 
@@ -39,9 +42,9 @@ fallback**，畫面一模一樣，只是那一條永遠不走目錄 —— 它�
 那一類缺口**不會出現在任何待辦清單上**（清單是照「解了沒」列的），
 而且只有實跑抓得到，還要**看狀態數字不是看畫面** —— 三次都是靠
 「金幣／血量／座標／地圖編號不動」露出來的。詳見
-[`docs/playtest/10`](playtest/10-world-edge-was-never-wired.md)、
-[`11`](playtest/11-a6-leg1-and-the-silent-zero-sp.md)、
-[`12`](playtest/12-empty-battles-and-the-ship-you-already-own.md)。
+[`docs/playtest/10`](docs/playtest/10-world-edge-was-never-wired.md)、
+[`11`](docs/playtest/11-a6-leg1-and-the-silent-zero-sp.md)、
+[`12`](docs/playtest/12-empty-battles-and-the-ship-you-already-own.md)。
 
 ---
 

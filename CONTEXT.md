@@ -3,7 +3,9 @@
 > **這份是全專案的單一入口。** 對話被壓縮、或換一個新 session 接手時，先讀這份，
 > 就能重建完整全局，再依索引跳到需要的文件。
 >
-> 換 session 接手時再讀一份 [`docs/HANDOFF.md`](docs/HANDOFF.md)：那裡有
+> 換 session 接手時再讀一份**最新的交接檔**（repo 根目錄的
+> `demon_winter-handoff-<日期>.md`，目前是
+> [`demon_winter-handoff-20260728.md`](demon_winter-handoff-20260728.md)）：那裡有
 > 上一輪的進度、可重跑的指令、以及**已經踩過的坑**（腳本、規劃工具、背景作業）。
 >
 > 最後更新：2026-07-28
