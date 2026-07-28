@@ -187,15 +187,41 @@ func (c *CharacterCreation) Finish(name string, class gamedata.Class) Character 
 	return out
 }
 
+// initialSPNoneAbove 是「建角拿不到法力」的職業索引上界。
+//
+// 原版是 `cmpw $0x2, -0x2(%bp) / jle 跳過`（`0x14f40`）—— 索引 **≤ 2**
+// 的三個職業（遊俠 0／聖騎士 1／蠻族 2）整段跳過，法力三欄一個都不寫。
+const initialSPNoneAbove = 2
+
 // initialSP 回傳初始法力值。
 //
-// **只有巫師與遊俠有實測依據**（docs/spec/05-character.md）。其餘職業未測，
-// 給 0 —— 猜一個公式會讓「這個值哪來的」變成日後查不出來的謎。
+// **職業索引 > 2 的一律等於智力，不是只有巫師。**
+//
+// ~~原本只認巫師，其餘給 0（註解寫「未測，不猜」）。~~ 那個保守做法把
+// 主線擋住了：全程試玩要 120 點法力（解咒 ×3 各 50、禁錮 100），
+// 而一支隊伍只有巫師那一個人有法力的話，怎麼練都湊不到。
+// 這是「保險把機制刪掉」的一個實例 —— 缺口不會報錯，只會讓某條路走不完。
+//
+// 建角尾段（`0x14f00`–`0x14f88`）逐指令：
+//
+//	14f25  [+0xfc] = [+0xfa]      ; 生命上限（含加成）← 耐力
+//	14f3b  [+0xfd] = [+0xfa]      ; 目前生命      ← 耐力
+//	14f40  cmpw $0x2,-0x2(%bp)
+//	14f44  jle  14f88             ; 職業 ≤ 2 → 法力三欄都不寫
+//	14f57  [+0xfe] = [+0xf9]      ; 法力上限（含加成）← 智力
+//	14f6d  [+0xff] = [+0xf9]      ; 目前法力      ← 智力
+//	14f83  [+0xea] = [+0xf9]      ; 法力上限（天生）← 智力
+//
+// `-0x2(%bp)` 是職業：它是上面那個選單迴圈的回傳值減 1（`0x14efb` 的
+// `decw`），而 `0x14f0f` 把同一個值寫進 `+0xf6`（職業欄）。
+// `+0xf9` ＝ 智力、`+0xfa` ＝ 耐力兩個對照獨立於本篇（`docs/re/89`
+// 與 `docs/spec/05-character.md` §升級公式）。
+//
+// 順帶落定一件反直覺的事：**盜賊（索引 5）也有法力**。
+// 條件是單一個 `> 2` 的比較，沒有逐職業的白名單。
 func initialSP(class gamedata.Class, intellect int) int {
-	switch class {
-	case gamedata.Wizard:
-		return intellect
-	default:
+	if int(class) <= initialSPNoneAbove {
 		return 0
 	}
+	return intellect
 }

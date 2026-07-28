@@ -63,6 +63,16 @@ type mapCache struct {
 	// 所以規劃時也要照著走，否則排出來的路線會「從出口上面走過去」，
 	// 實跑時隊伍在那一格就被送走了。
 	exits *world.ExitTable
+
+	// avoidSites 為真時繞開城鎮／神殿／學院／廢墟格。
+	//
+	// **為什麼要繞。** 踩上去會開啟模態畫面，而腳本後面那些方向鍵
+	// 會全部落到城鎮選單裡 —— 隊伍留在原地，路線靜默歪掉，
+	// 而且**完全沒有錯誤訊息**（`tools/playthrough.sh` 開頭記的第一個坑）。
+	// 玩家自己走的時候也會繞，除非那裡就是目的地。
+	avoidSites bool
+	// goal 是終點：終點本身是城鎮格時當然要踩上去。
+	goal wpoint
 }
 
 func newMapCache(dataDir string, tables *gamedata.Tables, sailing bool) *mapCache {
@@ -124,6 +134,26 @@ func (c *mapCache) passable(m *world.Map, p point) bool {
 	return game.IsOcean(tile & 0x7f)
 }
 
+// isSite 回報那一格踩上去會開啟模態畫面。
+//
+// tile 值與引擎 `game.SiteFor` 那一組相同（`docs/re/74` §1 的四筆分派 ＋ 廢墟）。
+// **這裡不查廢墟旗標**：規劃時寧可多繞一格，也不要排出一條會被城鎮吃掉的路。
+func (c *mapCache) isSite(p wpoint) bool {
+	m := c.get(p.mapID)
+	if m == nil {
+		return false
+	}
+	tile, err := m.TileAt(p.x, p.y)
+	if err != nil {
+		return false
+	}
+	switch tile & 0x7f {
+	case tileTemple, tileCollege, tileTownA, tileTownB, 0x5b:
+		return true
+	}
+	return false
+}
+
 // get 回傳那張子地圖；不存在（7×7 裡沒存檔的那 28 格）回 nil。
 func (c *mapCache) get(id int) *world.Map {
 	if m, ok := c.maps[id]; ok {
@@ -161,6 +191,9 @@ func (c *mapCache) step(cur wpoint, dx, dy int) (wpoint, bool) {
 	if res.Crossed && c.get(next.mapID) == nil {
 		// 換到一張不存在的子地圖 —— 那格在 7×7 網格裡沒有存檔。
 		// 原版會載出垃圾；規劃時當成走不過去。
+		return cur, false
+	}
+	if c.avoidSites && next != c.goal && c.isSite(next) {
 		return cur, false
 	}
 	// 出口排在邊界換圖**之前**判 —— 引擎的順序就是這樣
@@ -291,6 +324,7 @@ func runWorldRoute(dataDir string, tables *gamedata.Tables, fromArg, toArg strin
 		fatal(fmt.Errorf("-to：%w", err))
 	}
 	c := newMapCache(dataDir, tables, sailing)
+	c.avoidSites, c.goal = true, goal
 	path := c.findWorldPath(start, goal)
 	if path == nil {
 		fatal(fmt.Errorf("%s 走不到 %s（%s）", start, goal, routeMode(sailing)))

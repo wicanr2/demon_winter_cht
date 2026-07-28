@@ -3157,6 +3157,7 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`07-character-creation-and-ten-daggers.md`](docs/playtest/07-character-creation-and-ten-daggers.md) | 建角流程、強制建滿五人 |
 | [`08-battle-had-no-consequences.md`](docs/playtest/08-battle-had-no-consequences.md) | 戰鬥傷害沒寫回、全隊死亡 |
 | [`09-traps-wired.md`](docs/playtest/09-traps-wired.md) | 陷阱七種傷害實機驗收 |
+| [`11-a6-leg1-and-the-silent-zero-sp.md`](docs/playtest/11-a6-leg1-and-the-silent-zero-sp.md) | **A6 第一段**：建角 ＋ 陸路 101 步到新格里昂（買船的城鎮）。挖出「施法職業初始法力永遠是 0」—— 保守的預設值把 120 點法力那條路擋住了，原版的規則是單一個 `職業 > 2` 的比較（連盜賊都有法力）|
 | [`10-world-edge-was-never-wired.md`](docs/playtest/10-world-edge-was-never-wired.md) | **世界只有一格**：`CrossEdge` 解完沒有呼叫端。加上跨圖規劃器之後量出「沒有船主線走不完」（陸路 4 張 vs 含航海 23 張）、破關在 220 步外、41／51／52 進不去（未解）|
 
 ### 研究與計畫
@@ -3294,6 +3295,10 @@ CGA sprite 32×16 vs 16×32、`.SHE` 16×56 vs 32×28、
 而不是再加一條自己驗自己的測試。
 
 ### 已被推翻的斷言（不要重蹈）
+
+| 斷言 | 實際 |
+|---|---|
+| `docs/spec/05-character.md`：「初始 SP 依職業而異，只實測了巫師（＝智力）與遊俠（＝0），其餘 8 個職業未測」＋ 實作把未測的一律給 0 | **原版是單一個 `cmpw $0x2 / jle`**（`0x14f40`）：職業索引 0–2 沒有法力，3–9 全部等於智力，**連盜賊都有**。舊註解推測「依是否天生具備符文／吟唱魔法決定」會把盜賊排除。<br>更重要的是**那個保守值把主線擋住了**：破關要 120 點法力，一支隊伍只有巫師有法力怎麼練都湊不到。「未測就給 0」不會報錯，只會讓某條路走不完（`docs/playtest/11`）|
 
 | 曾經寫過 | 真相 |
 |---|---|

@@ -186,19 +186,38 @@ func TestCreation_Finish(t *testing.T) {
 	}
 }
 
-// 沒有實測依據的職業給 0，不猜公式。
-func TestCreation_UntestedClassesGetZeroSP(t *testing.T) {
+// 建角初始法力：職業索引 > 2 的一律等於智力，≤ 2 的三個沒有。
+//
+// 原版 `0x14f40` 的 `cmpw $0x2 / jle` 是**單一個比較**，不是逐職業的白名單
+// —— 所以盜賊也有法力。~~原本只認巫師、其餘給 0~~ 那個保守做法把主線擋住了
+// （120 點法力湊不到，見 initialSP 的說明）。
+func TestCreation_InitialSPByClass(t *testing.T) {
 	c := newCreation(t, gamedata.Human)
 	c.Traits[gamedata.Intellect] = 14
 
-	for _, class := range []gamedata.Class{
-		gamedata.Ranger, gamedata.Paladin, gamedata.Barbarian, gamedata.Monk,
-		gamedata.Cleric, gamedata.Thief, gamedata.Sorcerer,
-		gamedata.Visionary, gamedata.Scholar,
-	} {
-		if sp := c.Finish("X", class).MaxSP; sp != 0 {
-			t.Errorf("職業 %d 的初始 SP = %d，未實測的職業應給 0 而不是猜一個值",
-				class, sp)
+	none := []gamedata.Class{gamedata.Ranger, gamedata.Paladin, gamedata.Barbarian}
+	full := []gamedata.Class{
+		gamedata.Monk, gamedata.Cleric, gamedata.Thief, gamedata.Wizard,
+		gamedata.Sorcerer, gamedata.Visionary, gamedata.Scholar,
+	}
+	for _, class := range none {
+		ch := c.Finish("X", class)
+		if ch.MaxSP != 0 || ch.CurrentSP != 0 {
+			t.Errorf("職業 %d 的初始法力 = %d/%d，預期 0（原版整段跳過）",
+				class, ch.CurrentSP, ch.MaxSP)
+		}
+	}
+	for _, class := range full {
+		ch := c.Finish("X", class)
+		if ch.MaxSP != 14 || ch.CurrentSP != 14 {
+			t.Errorf("職業 %d 的初始法力 = %d/%d，預期等於智力 14",
+				class, ch.CurrentSP, ch.MaxSP)
+		}
+		// 三個欄位都要寫到 —— 原版寫 +0xfe／+0xff／+0xea，
+		// 少寫「含加成」那一欄的話戰鬥裡投得出去的法力是 0。
+		if ch.TraitsWithBonus.MaxSP != 14 {
+			t.Errorf("職業 %d 的法力上限（含加成）= %d，預期 14",
+				class, ch.TraitsWithBonus.MaxSP)
 		}
 	}
 }
