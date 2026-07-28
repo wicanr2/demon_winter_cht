@@ -423,17 +423,15 @@ func slotIndexByte(i int) byte {
 
 // 裝備換算成戰鬥數值。
 //
-// 兩張表都不在 `ITEMS.DAT` 裡：
-//   - 武器骰表內嵌在 `DEMON.INT`（`31f0:1785`），索引是 `ITEMS.DAT 索引 + 1`
+// 兩張表都不在 `ITEMS.DAT` 裡，內嵌在 `DEMON.INT` 的資料段：
+//   - 武器骰表在 `31f0:1785`，索引是 `ITEMS.DAT 索引 + 1`
 //     （戰鬥碼直接這樣用，見 docs/formats/game-data-tables.md §1.3）
-//   - 護甲防護值是手冊記載的 1–5，對應 `ITEMS.DAT` 索引 8–12 的五件護甲
-//     （布甲 1 … 板甲 5），所以防護值 = 索引 − 7
+//   - 護甲防護值在 `31f0:16c5`，**是查表不是等差**，見 `armor.go`
 const (
 	// armorFirstIndex／armorLastIndex 是五件護甲在 ITEMS.DAT 的索引範圍。
+	// 換裝那一段就是拿這兩個值擋的（`1000:2820`／`1000:2825`）。
 	armorFirstIndex = 8
 	armorLastIndex  = 12
-	// armorRatingBase 讓「索引 − base」等於防護值。
-	armorRatingBase = armorFirstIndex - 1
 )
 
 // WeaponDieIndex 回傳角色目前武器在傷害骰表裡的索引。
@@ -448,13 +446,34 @@ func (c *Character) WeaponDieIndex() int {
 	return int(w.Type) + 1
 }
 
-// ArmorRating 回傳角色目前的護甲防護值。沒穿護甲回 0。
+// BarkskinArmor 是硬化皮膚（技能 30）加的防護（`17c5:0bf2`：
+// `if (角色[+0xe6] != 0) 護甲 += 2`）。
+//
+// `+0xe6` 就是技能旗標陣列的第 30 格（`0xc8 + 30`），而 30 是最後一格。
+// 先前有兩份筆記把它讀成裝備／盾牌旗標——`docs/re/06` 行 433 的
+// 「再視盾牌旗標 +2」、`docs/re/57` §4.2 的「逐件裝備累加」——**都是誤讀**：
+// 位移對得上技能 30，而且那個檢查只跑一次，不在任何迴圈裡。
+// 這遊戲的 `ITEMS.DAT` 也根本沒有盾牌。
+//
+// 值 2 對得上手冊：「硬化皮膚……在原本穿著的護甲之外，額外提供
+// 皮甲等級的防護」（`docs/manual/part-2.md`），而皮甲在防護表裡正好是 2。
+const BarkskinArmor = 2
+
+// ArmorRating 回傳角色目前的護甲防護值。
+//
+// **沒穿護甲不代表 0** —— 硬化皮膚是加在護甲之上的，赤手空拳也算。
+// 原版的順序也是先算裝備、再無條件檢查那個技能旗標（`17c5:0bf2`
+// 在護甲那一段之後，而且不在任何「有穿護甲」的分支裡）。
 func (c *Character) ArmorRating() int {
+	rating := 0
 	a := c.Armor()
-	if a.Empty() || int(a.Type) < armorFirstIndex || int(a.Type) > armorLastIndex {
-		return 0
+	if int(a.Type) >= armorFirstIndex && int(a.Type) <= armorLastIndex {
+		rating = ArmorPoints(a)
 	}
-	return int(a.Type) - armorRatingBase
+	if c.Skills[gamedata.SkillBarkskin] {
+		rating += BarkskinArmor
+	}
+	return rating
 }
 
 // CombatUnit 依角色目前的狀態與裝備建一個戰鬥單位。

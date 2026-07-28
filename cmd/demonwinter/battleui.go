@@ -149,9 +149,19 @@ type spellEntry struct {
 // 但完全藏起來又看不到目標，所以列出全部、把付不起的標灰。
 func (a *app) openSpellMenu(u *game.Unit) {
 	m := &spellMenu{caster: u}
+	caster := a.characterFor(u)
 	for i := 0; i < a.tables.NumSpells(); i++ {
 		sp, err := a.tables.Spell(i)
 		if err != nil || sp.Empty() {
+			continue
+		}
+		// **只列他學過的那幾系**（手冊 `part-3.md`：「角色學會的符文與
+		// 吟唱法術會顯示在畫面底部」）。原本 43 筆全列，於是五系符文
+		// 與三個吟唱（幻術／附身／召喚）學不學都一樣。
+		// caster 為 nil 代表這不是隊員（召喚／幻術生物，槽位 12–14）——
+		// 牠們沒有角色記錄也就沒有技能旗標，**不套這道閘門**。
+		// 手冊說召喚物「擁有其真實同類一半的法力值，因此能夠施放法術」。
+		if caster != nil && !game.CanCast(caster, i, sp) {
 			continue
 		}
 		name, err := a.strings.SpellName(i)
@@ -165,6 +175,21 @@ func (a *app) openSpellMenu(u *game.Unit) {
 		})
 	}
 	a.spells = m
+}
+
+// characterFor 回傳這個戰鬥單位對應的隊伍成員，不是隊員就回 nil。
+//
+// 配對方式與 `game.WriteBackParty` 同一條：`成員索引 = 槽位 − PlayerSlotStart`。
+// 召喚／幻術生物（槽位 12–14）沒有角色記錄，回 nil。
+func (a *app) characterFor(u *game.Unit) *game.Character {
+	if u == nil || u.Slot < game.PlayerSlotStart || u.Slot >= game.PlayerSlotEnd {
+		return nil
+	}
+	i := u.Slot - game.PlayerSlotStart
+	if i < 0 || i >= len(a.members) {
+		return nil
+	}
+	return &a.members[i]
 }
 
 // spellSourceFile 是法術名稱翻譯目錄的 key，與 dwstrings 產生時一致。
@@ -1338,7 +1363,13 @@ func (a *app) awardDrops() {
 			continue
 		}
 		a.members[member].Inventory[idx] = slot
-		a.logf("%s 撿到%s", a.members[member].Name, a.itemLabel(slot))
+		// 察覺靈光（精靈天生能力）：有機率在戰利品後面標一句
+		// 「偵測到靈光」。**擲點在看道具之前**，見 game.DetectAura。
+		aura := ""
+		if game.DetectAura(a.rng, a.members, slot) {
+			aura = "　" + a.tr.UI("battle.aura", "（偵測到靈光）")
+		}
+		a.logf("%s 撿到%s%s", a.members[member].Name, a.itemLabel(slot), aura)
 	}
 }
 

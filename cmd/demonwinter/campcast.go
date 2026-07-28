@@ -174,9 +174,26 @@ func (a *app) openCampCast() {
 		return
 	}
 	c := &castScreen{}
+	a.rebuildCampSpells(c)
+	a.camp.message = ""
+	a.camp.cast = c
+}
+
+// rebuildCampSpells 依**目前選中的施法者**重列法術。
+//
+// 手冊：「角色學會的符文與吟唱法術會顯示在畫面底部」（`part-3.md`）——
+// 所以清單是跟著人變的，換人要重列。原本是在開選單時列一次、
+// 而且不看人，等於五系符文與三個吟唱學不學都一樣。
+func (a *app) rebuildCampSpells(c *castScreen) {
+	c.entries = nil
+	c.spell = 0
+	var caster *game.Character
+	if c.caster >= 0 && c.caster < len(a.members) {
+		caster = &a.members[c.caster]
+	}
 	for _, i := range game.CampCastCandidates(a.tables) {
 		sp, err := a.tables.Spell(i)
-		if err != nil {
+		if err != nil || !game.CanCast(caster, i, sp) {
 			continue
 		}
 		name, err := a.strings.SpellName(i)
@@ -188,12 +205,6 @@ func (a *app) openCampCast() {
 		})
 	}
 	c.entries = append(c.entries, a.plotCastEntries()...)
-	if len(c.entries) == 0 {
-		a.camp.message = "沒有能在營地放的法術"
-		return
-	}
-	a.camp.message = ""
-	a.camp.cast = c
 }
 
 func (a *app) updateCampCast() error {
@@ -209,6 +220,13 @@ func (a *app) updateCampCast() error {
 		case inpututil.IsKeyJustPressed(ebiten.KeyUp):
 			c.caster = (c.caster - 1 + len(a.members)) % len(a.members)
 		case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
+			a.rebuildCampSpells(c)
+			if len(c.entries) == 0 {
+				a.camp.message = fmt.Sprintf("%s 沒有能在營地放的法術",
+					a.members[c.caster].Name)
+				return nil
+			}
+			a.camp.message = ""
 			c.step = castPickSpell
 		}
 

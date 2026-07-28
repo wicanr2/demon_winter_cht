@@ -122,6 +122,11 @@ func (c *Character) Equip(slot int) (bool, string) {
 		c.EquippedWeapon = slot
 		return true, ""
 	case CanEquipAsArmor(it):
+		// 型別過了還要過職業（`1000:283d`）。原版的訊息是
+		// `You're the wrong class.`（`ds:0x044a`）。
+		if !ClassCanWear(c.Class, it) {
+			return false, "你的職業穿不了這麼重的護甲"
+		}
 		c.EquippedArmor = slot
 		return true, ""
 	}

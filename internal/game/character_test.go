@@ -373,7 +373,7 @@ func TestCharacter_EquipmentToCombatUnit(t *testing.T) {
 
 	// 第 0 格闊劍（ITEMS.DAT 索引 5），附魔 +2、特效 +3。
 	c.Inventory[0] = scenario.InventorySlot{Type: 5, Enchant: 2, WeaponEffect: 3}
-	// 第 1 格鎖子甲（索引 10 → 防護 3）。
+	// 第 1 格鎖子甲（索引 10 → 防護 4，見 armor.go 的防護點數表）。
 	c.Inventory[1] = scenario.InventorySlot{Type: 10}
 	c.EquippedWeapon = 0
 	c.EquippedArmor = 1
@@ -383,8 +383,8 @@ func TestCharacter_EquipmentToCombatUnit(t *testing.T) {
 	if u.WeaponIndex != 6 {
 		t.Errorf("武器骰索引 = %d，預期 ITEMS.DAT 索引 5 + 1 = 6", u.WeaponIndex)
 	}
-	if u.Armor != 3 {
-		t.Errorf("護甲 = %d，預期鎖子甲的 3", u.Armor)
+	if u.Armor != 4 {
+		t.Errorf("護甲 = %d，預期鎖子甲的 4", u.Armor)
 	}
 	if u.EnchantBonus != 2 || u.WeaponEffect != 3 {
 		t.Errorf("附魔／特效 = %d／%d，預期 2／3", u.EnchantBonus, u.WeaponEffect)
@@ -413,15 +413,17 @@ func TestCharacter_UnarmedDefaults(t *testing.T) {
 	}
 }
 
-// 五件護甲的防護值 1–5，對應 ITEMS.DAT 索引 8–12。
+// 五件護甲的防護值 **1／2／4／5／6**，對應 ITEMS.DAT 索引 8–12。
+//
+// 不是等差 —— 值來自 `31f0:16c5` 那張 7 byte 的表（見 armor.go）。
 func TestCharacter_ArmorRatingRange(t *testing.T) {
+	want := map[int]int{8: 1, 9: 2, 10: 4, 11: 5, 12: 6}
 	for typ := armorFirstIndex; typ <= armorLastIndex; typ++ {
 		var c Character
 		c.Inventory[0] = scenario.InventorySlot{Type: byte(typ)}
 		c.EquippedArmor = 0
-		want := typ - armorRatingBase
-		if got := c.ArmorRating(); got != want {
-			t.Errorf("索引 %d 的護甲防護 = %d，預期 %d", typ, got, want)
+		if got := c.ArmorRating(); got != want[typ] {
+			t.Errorf("索引 %d 的護甲防護 = %d，預期 %d", typ, got, want[typ])
 		}
 	}
 	// 武器不該被當成護甲。
@@ -430,6 +432,27 @@ func TestCharacter_ArmorRatingRange(t *testing.T) {
 	c.EquippedArmor = 0
 	if got := c.ArmorRating(); got != 0 {
 		t.Errorf("把武器當護甲時防護 = %d，預期 0", got)
+	}
+}
+
+// 硬化皮膚（技能 30）在護甲之上再加 2，**沒穿護甲也算**。
+//
+// 原版 `0x0c442` 的 `if (角色[+0xe6] != 0) 護甲 += 2` 不在任何
+// 「有穿護甲」的分支裡；攻略也說「理論上能在原本護甲之外再加 2 點防護」。
+func TestCharacter_BarkskinAddsArmor(t *testing.T) {
+	var bare Character
+	bare.Skills[gamedata.SkillBarkskin] = true
+	if got := bare.ArmorRating(); got != BarkskinArmor {
+		t.Errorf("赤手空拳 + 硬化皮膚 = %d，預期 %d", got, BarkskinArmor)
+	}
+
+	var armored Character
+	armored.Inventory[0] = scenario.InventorySlot{Type: armorFirstIndex}
+	armored.EquippedArmor = 0
+	base := armored.ArmorRating()
+	armored.Skills[gamedata.SkillBarkskin] = true
+	if got := armored.ArmorRating(); got != base+BarkskinArmor {
+		t.Errorf("布甲 + 硬化皮膚 = %d，預期 %d", got, base+BarkskinArmor)
 	}
 }
 

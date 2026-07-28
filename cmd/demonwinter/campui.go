@@ -157,8 +157,10 @@ func (a *app) updateEquipPicker() error {
 		c.equipSlot = -1
 	case inpututil.IsKeyJustPressed(ebiten.KeyDown):
 		c.equipSlot = (c.equipSlot + 1) % game.InventorySlots
+		c.message = "" // 換一格就把上一格的理由收掉
 	case inpututil.IsKeyJustPressed(ebiten.KeyUp):
 		c.equipSlot = (c.equipSlot - 1 + game.InventorySlots) % game.InventorySlots
+		c.message = ""
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 		m := &a.members[c.equipMember]
 		ok, why := m.Equip(c.equipSlot)
@@ -398,10 +400,19 @@ func (a *app) drawEquipPicker(line func(string)) {
 				note = "（護甲）"
 			case !game.CanEquipAsWeapon(it) && !game.CanEquipAsArmor(it):
 				note = "（不能裝備）"
+			// 型別上是護甲、但這個職業穿不上（原版：You're the wrong class.）。
+			case game.CanEquipAsArmor(it) && !game.ClassCanWear(m.Class, it):
+				note = "（太重）"
 			}
 		}
 		line(fmt.Sprintf("%s%s%s", mark, textlayout.PadCells(name, 12), note))
 	}
 	line("")
 	line("↑↓：選擇　Enter：換上　Esc：返回")
+	// 換不上時的理由要在這裡印 —— 原本只寫進 c.message，而這一層
+	// 沒有印它，玩家按下去只會看到「什麼都沒發生」。
+	if c.message != "" {
+		line("")
+		line(c.message)
+	}
 }
