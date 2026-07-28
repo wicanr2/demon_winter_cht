@@ -1,0 +1,80 @@
+# A6 第二段：把匕首分給其他四個人。從 leg1 的存檔接續（不要帶 -newgame）。
+#
+# 紮營 → T 交出，三段：選持有人 → 選道具欄 → 選收方。
+#   收方游標預設指向「下一個人」，所以給第二個人是 0 次 Down。
+#   交出之後那一格會變空、剩下的不往前補，所以第 k 次要選第 k 格。
+
+# ⚠ **每一段都要先關掉標題畫面。** 從存檔接續一樣會先進標題，
+# 第一個按鍵會被它吃掉 —— 第一版的 `key c` 就這樣消失了，
+# 後面的 `t`／Return／Down 全部落到世界地圖上（軌跡：「這裡沒有東西」
+# 然後隊伍往南走了三步）。
+key Return
+wait 1
+shot 20-start
+key c
+wait 0.8
+
+# 第 1 把匕首（第 0 格）給 b
+key t
+wait 0.4
+key Return
+wait 0.2
+key Return
+wait 0.2
+key Return
+wait 0.4
+shot 21-gave-b
+
+# 第 2 把匕首（第 1 格）給 c
+key t
+wait 0.4
+key Return
+wait 0.2
+key Down
+key Return
+wait 0.2
+key Down
+key Return
+wait 0.4
+shot 21-gave-c
+
+# 第 3 把匕首（第 2 格）給 d
+key t
+wait 0.4
+key Return
+wait 0.2
+key Down
+key Down
+key Return
+wait 0.2
+key Down
+key Down
+key Return
+wait 0.4
+shot 21-gave-d
+
+# 第 4 把匕首（第 3 格）給 e
+key t
+wait 0.4
+key Return
+wait 0.2
+key Down
+key Down
+key Down
+key Return
+wait 0.2
+key Down
+key Down
+key Down
+key Return
+wait 0.4
+shot 21-gave-e
+
+# 退回紮營選單再離開，然後存檔。
+key Escape
+wait 0.3
+key Escape
+wait 0.5
+key s
+wait 0.5
+shot 22-done

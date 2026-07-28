@@ -1,0 +1,94 @@
+# A6 第三段：把匕首與布甲裝上。從 leg2 的存檔接續（不要帶 -newgame）。
+#
+# ⚠ 兩個坑，都在 `docs/playtest/12` §5：
+#   1. **每一段都要先關掉標題畫面** —— 從存檔接續一樣會先進標題。
+#   2. **裝上成功之後畫面會自己關回紮營選單**（`c.equipMember, c.equipSlot = -1, -1`），
+#      **不要再送 Escape** —— 多送的 Escape 會把紮營收掉，接下來的方向鍵
+#      直接走到世界地圖上，而 `key s` 在紮營選單裡是「睡覺」不是存檔。
+#      第一版就是這樣：截圖看到「a 換上匕首」，存檔裡卻什麼都沒裝上。
+#
+# 所以每個人一次 `e`：選人 → 選背包格 → Enter，就結束。
+# a 的匕首在第 4 格、布甲在第 5 格；b–e 各自的在第 0 格。
+
+key Return
+wait 1
+key c
+wait 0.8
+
+# a 的匕首（第 4 格）
+key e
+wait 0.4
+key Return
+wait 0.2
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.4
+
+# a 的布甲（第 5 格）
+key e
+wait 0.4
+key Return
+wait 0.2
+key Down
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.4
+
+# b 的匕首（第 0 格）
+key e
+wait 0.4
+key Down
+key Return
+wait 0.2
+key Return
+wait 0.4
+
+# c 的匕首（第 0 格）
+key e
+wait 0.4
+key Down
+key Down
+key Return
+wait 0.2
+key Return
+wait 0.4
+
+# d 的匕首（第 0 格）
+key e
+wait 0.4
+key Down
+key Down
+key Down
+key Return
+wait 0.2
+key Return
+wait 0.4
+
+# e 的匕首（第 0 格）
+key e
+wait 0.4
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.2
+key Return
+wait 0.4
+
+shot 30-equipped
+
+# 收帳篷再存檔 —— `s` 在紮營選單裡是睡覺。
+key Escape
+wait 0.5
+key s
+wait 0.5
+key p
+wait 0.5
+shot 31-roster
