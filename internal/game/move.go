@@ -184,6 +184,15 @@ func (w *World) TileAhead(p *Party) (byte, bool) {
 	return w.tileAt(p.x+dx, p.y+dy)
 }
 
+// TileUnder 回傳隊伍**腳下**那一格的 tile（已遮罩 `&0x7f`）。
+//
+// 給「不是剛走過來、但要看現在站在什麼上面」的規則用 —— 目前是
+// `R) Read descr.`。**不要拿 `Walk` 的回傳值代替**：撞牆時那個值是
+// 擋路的那一格，不是腳下這一格。
+func (w *World) TileUnder(p *Party) (byte, bool) {
+	return w.tileAt(p.x, p.y)
+}
+
 // Walk 讓隊伍沿目前面向前進一格，並回報結果與這一步是否推進了小時。
 //
 // 呼叫順序對應 docs/spec/04-movement.md「一步移動的完整順序」的第 6–9 步。

@@ -92,7 +92,11 @@ type app struct {
 	// 照抄「畫完就清」會讓標記閃 1/60 秒等於看不見 —— 所以改成
 	// 跟著「下一步」清，玩家看到的行為與原版相同。
 	inspectSpots []game.InspectSpot
-	party        *game.Party
+	// reread 是「重讀倒數」，原版 `ds:0x4e2e` 在移動／事件那條路上的用法
+	// （`internal/game/eventgate.go`）。腳下有一格看過的類別 2 事件時
+	// 會被武裝成 1，按 `R` 才讀得回來。
+	reread int
+	party  *game.Party
 	clock        *game.Clock
 	tiles        *world.Map
 
@@ -424,7 +428,15 @@ func (a *app) update() error {
 		}
 
 		res, tile, advanced := a.world.Walk(a.party, a.clock)
-		a.lastTile = tile
+		// **腳下那一格**，不是 Walk 的回傳值 —— 撞牆時那個值是擋路的
+		// 那一格，狀態列會印錯，`R` 也會查錯格子。
+		if under, ok := a.world.TileUnder(a.party); ok {
+			a.lastTile = under
+		}
+		// 重讀倒數的遞減排在事件檢查之前 —— 原版 `222f:0c0c` 就在
+		// tile 檢查（`0c17`）的上一步。順序反過來的話，剛武裝的那一格
+		// 會在同一輪被清掉，`R` 永遠讀不到。
+		a.reread = game.TickReread(a.reread)
 		a.trapSpots = nil    // 白框只屬於上一次掃描
 		a.inspectSpots = nil // 探查標記同理（原版走一步就重畫並清旗標）
 
@@ -456,6 +468,12 @@ func (a *app) update() error {
 			a.checkEvent(tile)
 			a.checkMerchantEncounter()
 			a.checkRandomEncounter(tile)
+		} else {
+			// 沒走成（撞牆／走出子地圖）也要跑一次武裝 ——
+			// 原版每一次指令都會重查腳下這一格（`222f:0c17` 在
+			// 移動處理之前），所以站著轉向或撞牆都能把「重讀」備好。
+			// **這裡只武裝、不觸發**，見 `armReread`。
+			a.armReread()
 		}
 	}
 
@@ -536,6 +554,12 @@ func (a *app) update() error {
 	// L：查看陷阱（手冊「地底 → 偵測與解除陷阱」，原版動作 0x07）。
 	if inpututil.IsKeyJustPressed(ebiten.KeyL) {
 		a.lookForTraps()
+	}
+	// R：重讀腳下這一格的敘述（原版主選單 `R) Read descr.`，
+	// 移動迴圈 switch case 6 ＝ `222f:1282`）。**只有看過的類別 2
+	// 事件讀得回來** —— 類別 1 是一次性的，看過就沒了。
+	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+		a.readDescription()
 	}
 	// I：探查周圍（手冊「物品 → 探查周圍」）。**它不回傳動作碼** ——
 	// 原版走主選單 switch 的 case 5，就地設 `ds:0x5c66 = 0x80`，
@@ -1034,6 +1058,15 @@ func (a *app) checkEvent(tile byte) {
 		if hit.Tile.Dead() {
 			return
 		}
+		// 觸發閘門（原版 `FUN_222f_0a90`）。**類別 1 與類別 2 的差別
+		// 全在這裡** —— 在此之前引擎兩者都是「踩到就播」，
+		// 所以一次性事件會一播再播（`internal/game/eventgate.go`）。
+		act, counter := game.EventGate(int(hit.Tile.Class()),
+			int(hit.Tile.Value()), a.reread)
+		a.reread = counter
+		if act == game.EventNone {
+			return
+		}
 		if hit.Teleport {
 			a.party.TeleportTo(int(hit.Dest.X), int(hit.Dest.Y))
 			a.message = fmt.Sprintf("被傳送到 (%d,%d)", hit.Dest.X, hit.Dest.Y)
@@ -1281,7 +1314,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		"M 推開家具 U 使用解謎",
 		// `M 推開家具 U 使用解謎` 那行剛好用滿 21 格，`I` 插不進去，
 		// 所以另起一行。加行之前數過縱向：目前 13 行，離畫布底還有餘裕。
-		"I 探查周圍",
+		"I 探查周圍 R 重讀",
 		"L 陷阱 V 觀室 X 鑑物",
 		"P 名冊 C 紮營 S 存檔",
 		"空白鍵翻頁　F2 手札",
