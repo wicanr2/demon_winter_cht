@@ -92,6 +92,10 @@ type app struct {
 	// 照抄「畫完就清」會讓標記閃 1/60 秒等於看不見 —— 所以改成
 	// 跟著「下一步」清，玩家看到的行為與原版相同。
 	inspectSpots []game.InspectSpot
+	// debugHUD 開著時，狀態欄多印偵錯欄位（座標、地形、圖塊…）。
+	// **預設關閉** —— 那些對玩家沒有意義，卻佔著版面最上面、字最大的位置。
+	// `F12` 切換，與 F1–F4 同一組「一看就不在原版裡」的鍵。
+	debugHUD bool
 	// reread 是「重讀倒數」，原版 `ds:0x4e2e` 在移動／事件那條路上的用法
 	// （`internal/game/eventgate.go`）。腳下有一格看過的類別 2 事件時
 	// 會被武裝成 1，按 `R` 才讀得回來。
@@ -524,6 +528,10 @@ func (a *app) update() error {
 	// 因為舊註解寫「原版用哪個鍵沒查」。
 	if inpututil.IsKeyJustPressed(ebiten.KeyC) {
 		a.openCamp()
+	}
+	// F12：偵錯疊層。狀態欄多印座標／地形／圖塊那幾行。
+	if inpututil.IsKeyJustPressed(ebiten.KeyF12) {
+		a.debugHUD = !a.debugHUD
 	}
 	// F2：手札。原版沒有這個畫面（那些資料印在紙本手冊上），見 manualui.go。
 	if inpututil.IsKeyJustPressed(ebiten.KeyF2) {
@@ -1282,18 +1290,42 @@ func (a *app) monthName() string {
 	return a.tr.Event(monthSourceFile, m, names[m])
 }
 
+// 常駐狀態欄的鍵位提示。**釘在畫面下緣**（文字視窗上方），不跟著
+// 訊息長度浮動 —— 訊息一長就把提示擠出畫面，而那是溢出型的錯誤，
+// 測試看不到（`rulebook` 的「排版溢出」那一類）。
+var statusKeyHints = []string{
+	// **21 格寬，一行放兩到三個。** 一鍵一行的版本在接上地城道具的
+	// 六個指令之後就溢出畫面了 —— `F10：離開遊戲` 被切掉一半，
+	// 而畫面上看起來只是「最後一行怪怪的」。
+	"方向鍵移動　Tab 季節",
+	"T 拿取 D 丟棄 E 檢視",
+	"M 推開家具 U 使用解謎",
+	"I 探查周圍 R 重讀",
+	"L 陷阱 V 觀室 X 鑑物",
+	"P 名冊 C 紮營 S 存檔",
+	"空白翻頁 F2 手札 F10 離開",
+}
+
+// drawStatus 畫右側常駐狀態欄。
+//
+// 版面由上而下：金幣與糧食 → 日期時辰 → 隊伍表 → 訊息 → （下緣）鍵位提示。
+//
+// **金幣、糧食、五個人的生命與法力是這一欄存在的理由。** 這是一款會餓死人、
+// 會沒錢住店、會在野外被打殘的遊戲，玩家的決策（要不要紮營、要不要回城、
+// 還能不能再打一場）全靠這幾個數字。在這之前它們一個都不在畫面上 ——
+// 要按 `P` 才看得到，而 `P` 會把整個右欄換掉，等於用「看不到別的」
+// 換「看得到血量」。原版把這些放在最顯眼的兩塊（第 0 列的 `Gold/Pro`
+// 與右上角的五人表），我們沒有。
+//
+// 偵錯欄位（步數／內縮／座標／地形／圖塊）收進 `F12` 疊層。
 func (a *app) drawStatus(dst *ebiten.Image) {
 	lines := []string{
+		fmt.Sprintf("金幣 %d　糧食 %d", a.gold(), a.save.Rations),
 		fmt.Sprintf("%2d時 %2d日 %s月", a.clock.Hour(), a.clock.Day(), a.monthName()),
-		// **標「內縮」不標「光照」。** 印的是視窗四邊各縮掉幾格
-		// （原版 `ds:0x4c86`），那是 `4 − 光照`，方向相反 ——
-		// 標成「光照」的話「光照 3」看起來像很亮，其實是只剩中央 3×3。
-		fmt.Sprintf("步數 %2d  內縮 %d", a.clock.Steps(), a.viewInset()),
-		fmt.Sprintf("座標 %2d,%-2d 面向%s", a.party.X(), a.party.Y(), facingName[a.party.Facing()]),
-		fmt.Sprintf("地形 %3d  深度 %d", a.lastTile, a.party.Depth()),
-		fmt.Sprintf("圖塊 %s", a.tileset().Name()),
-		"",
 	}
+	lines = append(lines, a.partyStatusLines()...)
+	lines = append(lines, "")
+
 	// **訊息要斷行，不能截斷。** 其餘幾行是固定格式、寬度可控，
 	// 截斷只會掉尾巴的空白；訊息是變動長度的句子，截斷會把後半句吃掉。
 	//
@@ -1304,23 +1336,29 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 	if a.message != "" {
 		lines = append(lines, textlayout.WrapMixed(a.message, layout.StatusPixels)...)
 	}
-	lines = append(lines, []string{
-		"",
-		// **21 格寬，一行放兩到三個。** 一鍵一行的版本在接上地城道具的
-		// 六個指令之後就溢出畫面了 —— `F10：離開遊戲` 被切掉一半，
-		// 而畫面上看起來只是「最後一行怪怪的」。
-		"方向鍵移動　Tab 季節",
-		"T 拿取 D 丟棄 E 檢視",
-		"M 推開家具 U 使用解謎",
-		// `M 推開家具 U 使用解謎` 那行剛好用滿 21 格，`I` 插不進去，
-		// 所以另起一行。加行之前數過縱向：目前 13 行，離畫布底還有餘裕。
-		"I 探查周圍 R 重讀",
-		"L 陷阱 V 觀室 X 鑑物",
-		"P 名冊 C 紮營 S 存檔",
-		"空白鍵翻頁　F2 手札",
-		"偵錯 B F1 F3 F4",
-		"F10：離開遊戲",
-	}...)
+
+	// 下緣那一塊：平常是鍵位提示，`F12` 時換成偵錯欄位。
+	//
+	// **是「換掉」不是「疊加」** —— 上面那一塊已經用掉大半高度，
+	// 再往上塞就會被下面的 clamp 吃掉（第一版就是這樣，按了 F12
+	// 什麼都沒出現，log 卻顯示旗標有翻）。而且要看座標的時候
+	// 本來就不需要同時看鍵位表。
+	bottom := statusKeyHints
+	if a.debugHUD {
+		bottom = a.debugStatusLines()
+	}
+
+	// 下緣那一塊釘住，中間留給訊息。訊息真的長到撞上它時**砍訊息**，
+	// 不要砍提示 —— 訊息在文字視窗那邊還看得到，提示沒有第二個出處。
+	hintTop := layout.TextBoxTop - len(bottom)*ui.LineHeight - ui.LineHeight/2
+	maxLines := (hintTop - layout.StatusY) / ui.LineHeight
+	if maxLines < 0 {
+		maxLines = 0
+	}
+	if len(lines) > maxLines {
+		lines = lines[:maxLines]
+	}
+
 	// 溢出欄寬的字會畫到畫布外被裁掉 —— 看起來像訊息被砍一半，
 	// 而不是「這行太長」。存檔路徑就踩過這個。
 	// 訊息已經在上面斷過行，這裡的截斷只會碰到固定格式那幾行。
@@ -1328,6 +1366,65 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 		lines[i] = textlayout.TruncateCells(s, layout.StatusCells)
 	}
 	a.font.DrawLines(dst, lines, layout.StatusX, layout.StatusY)
+	a.font.DrawLines(dst, bottom, layout.StatusX, hintTop)
+}
+
+// 常駐隊伍表的欄寬（排版格）。表頭與資料列**共用這組常數** ——
+// 兩邊各寫一份格式字串是欄位歪掉最常見的成因，而歪掉之後看起來
+// 只是「有點不齊」，不像壞掉。
+//
+// 合計 2＋1＋8＋1＋3＋1＋3 ＝ 19 格，`layout.StatusCells` 是 21 ——
+// 刻意留兩格餘裕，貼齊右緣看起來像溢出。
+const (
+	partyColIndex = 2
+	partyColName  = 8
+	partyColHP    = 3
+	partyColSP    = 3
+)
+
+// partyStatusLines 是常駐隊伍表：一人一列，欄位照原版
+// （`#  NAME  HP  SP`，`workplace/dosbox/shots/03-ega-ingame.png` 量得）。
+//
+// **只印目前值不印上限**，與原版一致 —— 21 格的欄寬也放不下
+// `24/24 29/29` 那種寫法（名字 8 ＋ 兩組 7 格就 24 格了）。
+// 要看上限按 `P`。
+//
+// 名字欄先截後補：`nameFieldLen` 是 12，玩家取得出 11 個字的名字，
+// 不截的話整列會往右擠出畫面。
+func (a *app) partyStatusLines() []string {
+	row := func(idx, name, hp, sp string) string {
+		return textlayout.PadCellsLeft(idx, partyColIndex) + " " +
+			textlayout.PadCells(textlayout.TruncateCells(name, partyColName), partyColName) + " " +
+			textlayout.PadCellsLeft(hp, partyColHP) + " " +
+			textlayout.PadCellsLeft(sp, partyColSP)
+	}
+	out := []string{"", row("#", "名字", "生命", "法力")}
+	for i := range a.members {
+		c := &a.members[i]
+		out = append(out, row(
+			strconv.Itoa(i+1), c.Name,
+			strconv.Itoa(c.CurrentHP), strconv.Itoa(c.CurrentSP)))
+	}
+	return out
+}
+
+// debugStatusLines 是 `F12` 才顯示的偵錯欄位。
+//
+// 這幾行原本常駐在狀態欄最上面、字最大的位置，而 `圖塊 DEMON.SHE`
+// 對玩家沒有任何意義 —— 它們讓畫面看起來像工具而不像遊戲。
+func (a *app) debugStatusLines() []string {
+	return []string{
+		"── 偵錯　F12 收起",
+		// **標「內縮」不標「光照」。** 印的是視窗四邊各縮掉幾格
+		// （原版 `ds:0x4c86`），那是 `4 − 光照`，方向相反 ——
+		// 標成「光照」的話「光照 3」看起來像很亮，其實是只剩中央 3×3。
+		fmt.Sprintf("步數 %2d  內縮 %d", a.clock.Steps(), a.viewInset()),
+		fmt.Sprintf("座標 %2d,%-2d 面向%s", a.party.X(), a.party.Y(), facingName[a.party.Facing()]),
+		fmt.Sprintf("地形 %3d  深度 %d", a.lastTile, a.party.Depth()),
+		fmt.Sprintf("圖塊 %s", a.tileset().Name()),
+		"B 開打 F1 建角 F3 進城",
+		"F4 商隊",
+	}
 }
 
 var raceName = []string{"人類", "精靈", "矮人", "黑暗精靈", "巨魔"}

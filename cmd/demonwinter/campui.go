@@ -359,7 +359,9 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 		}
 		line("")
 	}
-	line("※ 原版紮營選單的 14 項已全部接上（見 docs/re/33）")
+	// ⚠ 這裡原本有一行「※ 原版紮營選單的 14 項已全部接上（見 docs/re/33）」。
+	// 那是寫給自己看的進度註記，不是給玩家的資訊 —— 已移除。
+	// 進度狀態的單一真相來源是 `CONTEXT.md` §7，不是遊戲畫面。
 }
 
 func (a *app) drawEquipPicker(line func(string)) {
