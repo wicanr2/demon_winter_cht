@@ -1430,6 +1430,11 @@ func main() {
 		"測試戰鬥要放哪幾隻怪（MONSTER.DAT 索引，逗號分隔）。留空用預設那組")
 	// 起始存檔裡每一件裝備的效果索引與強度都是 0，照原版規則在 Use 選單裡
 	// 一件都選不到 —— 沒有這個旗標就沒辦法驗「用道具真的會生效」。
+	// 英數的字模來源。`eten` 是預設，因為原版兩套 ASCII 字模都是粗筆畫的
+	// 顯示體，與倚天漢字的細筆畫放在同一行會一粗一細（使用者實際回報過）。
+	// `ega`／`cga` 保留原版字形，給「要對照原版長相」時用。
+	asciiMode := flag.String("ascii", "eten",
+		"英數字模：`eten`（倚天全形）／ega（ASC.FNE）／cga（ASC.FNT ×2）")
 	giveItem := flag.String("give-item", "",
 		"偵錯：塞一件有效果的道具給第一名隊員，格式 `type,effect,power,次數`")
 	// 起始隊伍沒有人會觀地、也沒有人會學識 —— 那幾個紮營選項在
@@ -1634,9 +1639,27 @@ func main() {
 		}
 		return ui.NewTileset(ts)
 	}
-	// ASCII 走原版 CGA 字型（8×8），中文走倚天點陣（16×15）。
-	// 兩者放進同一套排版格後同高，可以混排。
-	ascii, err := ui.LoadCGAFont(filepath.Join(*dataDir, "ASC.FNT"))
+	// ASCII 的字模來源三選一，見 -ascii。預設 `eten`：英數走倚天全形，
+	// 與漢字同一套設計、同一個筆畫重量。
+	//
+	// 底下這一支不論哪個模式都要載入 —— `eten` 模式在 Big5 全形區
+	// 查不到字時會掉回它。
+	//
+	// ASCII 走原版 **EGA** 字型 `ASC.FNE`（16×14），中文走倚天點陣（16×15）。
+	// 兩者都是 1×1 像素、都排進 16×16 的格子，密度一致。
+	//
+	// ⚠ 這裡原本讀 CGA 的 `ASC.FNT`（8×8）再放大兩倍。寬度一樣是 16、
+	// 版面沒問題，但英文的像素變成 2×2 而中文是 1×1 —— 同一行字一粗一細。
+	// `ASC.FNE` 是原版在 EGA 模式下實際使用的那一套，換過來同時解掉
+	// 密度不一致與「用錯了原版的哪一套字」兩件事，而且**格寬不變**，
+	// 所有 `PadCells` 系列的欄位對齊都不用動。
+	var ascii *ui.Font
+	if *asciiMode == "cga" {
+		ascii, err = ui.LoadCGAFont(filepath.Join(*dataDir, "ASC.FNT"))
+	} else {
+		ascii, err = ui.LoadEGAFont(filepath.Join(*dataDir, "ASC.FNE"),
+			textColor, color.RGBA{})
+	}
 	if err != nil {
 		log.Fatalf("載入原版字型：%v", err)
 	}
@@ -1651,6 +1674,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("建立混排字型：%v", err)
 	}
+	font.UseFullWidthASCII(*asciiMode == "eten")
 
 	// 座標預設跟著存檔走 —— 存了位置卻從固定點開場，等於沒存。
 	// 旗標給非負值時才覆蓋，那是偵錯用的傳送。

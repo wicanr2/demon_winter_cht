@@ -11,8 +11,21 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/ui/textlayout"
 )
 
-// asciiScale 是英文字模的放大倍率。CGA 字型是 8×8，放大兩倍後與中文同高。
-const asciiScale = 2
+// ASCII 字模的放大倍率，依來源決定：
+//
+//	CGA `ASC.FNT`  8×14  → ×2（放大兩倍才與中文同高）
+//	EGA `ASC.FNE` 16×14  → ×1
+//
+// **兩者的前進量都是 16**（`textlayout.CellWidthASC`），所以換字型不動版面。
+//
+// ⚠ ×2 那條路會讓英文的像素是 2×2、中文是 1×1，同一行字兩種密度，
+// 看起來一粗一細。EGA 那套是原版在 EGA 模式下**實際使用**的字模，
+// 1×1，與倚天字模同密度 —— 這是預設路徑。CGA 那條留著是因為
+// `-video cga` 還在，而且它是原版 CGA 模式的真實樣子。
+const (
+	asciiScaleCGA = 2
+	asciiScaleEGA = 1
+)
 
 // LineHeight 是混排文字的行高，等於中文格高。
 const LineHeight = textlayout.CellHeight
@@ -24,6 +37,10 @@ const LineHeight = textlayout.CellHeight
 type MixedFont struct {
 	cjk   *cjk.Font
 	ascii *Font
+	// asciiScale 由字模尺寸決定，見上面的常數。
+	asciiScale int
+	// asciiOffsetY 讓字模在 16 高的格子裡垂直置中。
+	asciiOffsetY int
 
 	// cache 存已上傳成材質的中文字模，避免每幀重建。
 	cache map[rune]*ebiten.Image
@@ -32,20 +49,69 @@ type MixedFont struct {
 
 	// missing 記錄取不到字模的字，供品質檢查。
 	missing map[rune]bool
+
+	// fullWidthASCII 開著時，英數改走**倚天的全形英數**（Big5 A2AF 起）
+	// 而不是原版的點陣字模。見 UseFullWidthASCII。
+	fullWidthASCII bool
 }
 
-// NewMixedFont 建立混排字型。ascii 必須是 CGA 8×8 那一套。
+// UseFullWidthASCII 切換英數要用倚天的全形字還是原版的字模。
+//
+// **為什麼需要這個選項。** 原版的 ASCII 字模（CGA `ASC.FNT` 與 EGA
+// `ASC.FNE`）都是粗筆畫的顯示體：`ASC.FNE` 的 `A` 直筆有 4 px 寬，
+// 而倚天漢字的筆畫是 1–2 px。兩者放在同一行，英文看起來又黑又重、
+// 中文看起來很細，是**筆畫重量**的差異，不只是像素密度。
+//
+// 倚天自己的全形英數（`Ａ` = Big5 `A2CF`）是 2 px 筆畫、16×15，
+// 與漢字同一套設計、同一個尺寸 —— 開起來混排就一致了，
+// **而且前進量仍是 16，版面完全不動**。
+//
+// 代價是英數不再是原版的字形。這是一個取捨不是修正：
+// 忠實度那一側選原版字模，一致性那一側選全形。
+func (m *MixedFont) UseFullWidthASCII(on bool) { m.fullWidthASCII = on }
+
+// fullWidthOf 把半形英數換成全形（`!` → `！`，ASCII 0x21–0x7E 差 0xFEE0）。
+// 空白換成全形空白 U+3000。表外的字回傳 0。
+func fullWidthOf(ch rune) rune {
+	switch {
+	case ch == ' ':
+		return '\u3000'
+	case ch >= '!' && ch <= '~':
+		return ch + 0xFEE0
+	}
+	return 0
+}
+
+// NewMixedFont 建立混排字型。
+//
+// ascii 收 CGA 8×8（放大兩倍）或 EGA 16×14（原尺寸）兩種；
+// 判準是**放大後的寬度必須等於 `CellWidthASC`**，不合就報錯 ——
+// 排版格寬是全專案的共用前提，讓一個尺寸不合的字模靜默通過，
+// 症狀會變成十幾個畫面「有點不齊」而不是一個看得見的錯誤。
 func NewMixedFont(c *cjk.Font, ascii *Font, fg color.RGBA) (*MixedFont, error) {
-	if ascii.Width() != CGAGlyphWidth || ascii.Height() != CGAGlyphHeight {
-		return nil, fmt.Errorf("ui: 混排需要 CGA 8x8 字型，得到 %dx%d",
+	var scale int
+	switch {
+	case ascii.Width() == CGAGlyphWidth && ascii.Height() == CGAGlyphHeight:
+		scale = asciiScaleCGA
+	case ascii.Width() == EGAGlyphWidth && ascii.Height() == EGAGlyphHeight:
+		scale = asciiScaleEGA
+	default:
+		return nil, fmt.Errorf("ui: 混排認得 CGA %dx%d 與 EGA %dx%d，得到 %dx%d",
+			CGAGlyphWidth, CGAGlyphHeight, EGAGlyphWidth, EGAGlyphHeight,
 			ascii.Width(), ascii.Height())
 	}
+	if w := ascii.Width() * scale; w != textlayout.CellWidthASC {
+		return nil, fmt.Errorf("ui: 字模放大後寬 %d，排版格寬是 %d",
+			w, textlayout.CellWidthASC)
+	}
 	return &MixedFont{
-		cjk:     c,
-		ascii:   ascii,
-		cache:   map[rune]*ebiten.Image{},
-		fg:      fg,
-		missing: map[rune]bool{},
+		cjk:          c,
+		ascii:        ascii,
+		asciiScale:   scale,
+		asciiOffsetY: (textlayout.CellHeight - ascii.Height()*scale) / 2,
+		cache:        map[rune]*ebiten.Image{},
+		fg:           fg,
+		missing:      map[rune]bool{},
 	}, nil
 }
 
@@ -77,14 +143,32 @@ func (m *MixedFont) glyph(ch rune) *ebiten.Image {
 
 // Draw 在 (x, y) 畫一行中英混排文字，回傳排完後的 x 座標。
 //
-// 中文字模 16×15 在 16×16 格內垂直置中；ASCII 8×8 放大兩倍後填滿 8×16。
+// 中文字模 16×15 在 16×16 格內垂直置中；ASCII 同理（EGA 16×14 上下各留 1）。
 // 取不到字模的字畫成空格並記進 missing，不中斷渲染。
 func (m *MixedFont) Draw(dst *ebiten.Image, s string, x, y int) int {
 	for _, ch := range s {
 		if ch < 0x80 {
+			// 全形英數走中文那條路。取不到字模就掉回原版字模 ——
+			// Big5 的全形區沒有涵蓋每一個 ASCII，靜默畫成空白比較糟。
+			if m.fullWidthASCII {
+				if w := fullWidthOf(ch); w != 0 {
+					if g := m.glyph(w); g != nil {
+						op := &ebiten.DrawImageOptions{}
+						ox := (textlayout.CellWidthCJK - cjk.GlyphWidth) / 2
+						oy := (textlayout.CellHeight - cjk.GlyphHeight) / 2
+						op.GeoM.Translate(float64(x+ox), float64(y+oy))
+						dst.DrawImage(g, op)
+						x += textlayout.CellWidthASC
+						continue
+					}
+					// 掉回原版字模時把它從 missing 移掉，
+					// 否則品質檢查會被一整批英數洗版。
+					delete(m.missing, w)
+				}
+			}
 			op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
-			op.GeoM.Scale(asciiScale, asciiScale)
-			op.GeoM.Translate(float64(x), float64(y))
+			op.GeoM.Scale(float64(m.asciiScale), float64(m.asciiScale))
+			op.GeoM.Translate(float64(x), float64(y+m.asciiOffsetY))
 			if g := m.ascii.glyphFor(ch); g != nil {
 				dst.DrawImage(g, op)
 			}
