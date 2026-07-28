@@ -887,3 +887,399 @@ Y：是　N／Esc：否
 ## workshop.wrongtype
 :: zh
 只有武器與護甲能附魔。
+
+## battle.cmd.attack
+:: zh
+A 攻擊
+
+## battle.cmd.cast
+:: zh
+C 施法
+
+## battle.cmd.dodge
+:: zh
+D 閃避
+
+## battle.cmd.endturn
+:: zh
+Esc 結束回合
+
+## battle.cmd.leech
+:: zh
+L 汲取法力
+
+## battle.cmd.pray
+:: zh
+P 祈禱
+
+## battle.cmd.sound
+:: zh
+S 音效開關
+
+## battle.cmd.turnundead
+:: zh
+T 驅散不死
+
+## battle.cmd.useitem
+:: zh
+U 使用道具
+
+## battle.aim.area
+:: zh
+選 5×5 的中心
+
+## battle.aim.area.note
+:: zh
+※ 範圍內敵我都會被波及，Esc 可以反悔
+
+## battle.aim.keys
+:: zh
+%s：%s　方向鍵：移動　Enter：施放　Esc：取消
+
+## battle.aim.single
+:: zh
+選目標
+
+## battle.aim.single.note
+:: zh
+※ 指到誰就對誰施放，Esc 可以反悔
+
+## battle.cast.cancelled
+:: zh
+取消施法
+
+## battle.cast.casts
+:: zh
+%s 施放%s
+
+## battle.cast.columns
+:: zh
+   法術            最低法力
+
+## battle.cast.header
+:: zh
+%s 施法　法力 %d
+
+## battle.cast.keys
+:: zh
+↑↓：選擇　Enter：施放　Esc：取消
+
+## battle.cast.nosp
+:: zh
+%s 的法力不足以施放%s（需要 %d 點）
+
+## battle.cast.nosp.mark
+:: zh
+  法力不足
+
+## battle.cast.note
+:: zh
+※ 選好按 Enter 再決定投入多少法力
+
+## battle.drop.exp
+:: zh
+每人獲得 %d 點經驗
+
+## battle.drop.gold
+:: zh
+撿到 %d 枚金幣
+
+## battle.drop.noroom
+:: zh
+撿到%s，但沒有人放得下了
+
+## battle.drop.picked
+:: zh
+%s 撿到%s%s
+
+## battle.field.monster
+:: zh
+怪
+
+## battle.field.party
+:: zh
+我
+
+## battle.header.actor
+:: zh
+%s 行動　%d 點
+
+## battle.header.round
+:: zh
+戰鬥　第 %d 回合
+
+## battle.hit.critical
+:: zh
+重擊
+
+## battle.hit.normal
+:: zh
+命中
+
+## battle.item.charges
+:: zh
+（剩 %d 次）
+
+## battle.item.effect
+:: zh
+效果 %d
+
+## battle.item.header
+:: zh
+%s 使用道具
+
+## battle.item.itemnum
+:: zh
+道具 %d
+
+## battle.item.keys
+:: zh
+↑↓：選擇　Enter：使用　Esc：取消
+
+## battle.item.noeffectrecord
+:: zh
+%s 使用 %s，但效果 %d 查不到記錄
+
+## battle.item.note1
+:: zh
+※ 只列得出已裝備的武器／護甲與消耗品，而且要還有次數
+
+## battle.item.note2
+:: zh
+　 原版的 Use 就是拿來觸發已裝備裝備的特殊能力
+
+## battle.item.unidentified
+:: zh
+（未鑑定）
+
+## battle.item.used
+:: zh
+%s 使用 %s
+
+## battle.log.round
+:: zh
+── 第 %d 回合 ──
+
+## battle.monster.keys
+:: zh
+空白鍵：讓對方行動
+
+## battle.move.keys
+:: zh
+方向鍵：轉向／前進　Enter：前進　? 檢視
+
+## battle.msg.alreadybound
+:: zh
+%s 已經被束縛住了
+
+## battle.msg.aoecast
+:: zh
+%s 施放%s（波及 %d 人）
+
+## battle.msg.aoenobody
+:: zh
+%s 的%s沒有波及任何人
+
+## battle.msg.blocked
+:: zh
+%s 前方過不去
+
+## battle.msg.bound
+:: zh
+%s 用%s束縛了 %s（%d 回合）
+
+## battle.msg.breath
+:: zh
+%s 噴出吐息（波及 %d 人）
+
+## battle.msg.breathdamage.indent
+:: zh
+　%s 受到 %d 點傷害
+
+## battle.msg.buff
+:: zh
+%s 的%s讓 %s 增加 %d
+
+## battle.msg.debuff
+:: zh
+%s 的%s讓 %s 減少 %d
+
+## battle.msg.decrease.indent
+:: zh
+　%s 減少 %d
+
+## battle.msg.dodging
+:: zh
+%s 進入閃避（命中率 %d）
+
+## battle.msg.effectunimpl
+:: zh
+%s 施放%s —— 這類效果尚未實作
+
+## battle.msg.emptycell
+:: zh
+那一格沒有人
+
+## battle.msg.endturn
+:: zh
+%s 結束回合
+
+## battle.msg.fell
+:: zh
+%s 倒下了
+
+## battle.msg.fell.indent
+:: zh
+　%s 倒下了
+
+## battle.msg.hit
+:: zh
+%s %s %s %d 點
+
+## battle.msg.immune.indent
+:: zh
+　%s 免疫
+
+## battle.msg.increase.indent
+:: zh
+　%s 增加 %d
+
+## battle.msg.killed
+:: zh
+%s 擊殺 %s（%d 點）
+
+## battle.msg.leeched
+:: zh
+%s 汲走 %s 的 %d 點法力
+
+## battle.msg.leechfailed
+:: zh
+%s 的汲取失敗
+
+## battle.msg.miss
+:: zh
+%s 落空
+
+## battle.msg.monstersdead
+:: zh
+怪物全滅
+
+## battle.msg.noap
+:: zh
+%s 行動點不足
+
+## battle.msg.noeffect
+:: zh
+%s 對 %s 無效
+
+## battle.msg.noenemyahead
+:: zh
+%s 正前方沒有敵人
+
+## battle.msg.noitem
+:: zh
+%s 沒有可用的道具
+
+## battle.msg.nonoticeable
+:: zh
+%s 的%s沒有明顯效果
+
+## battle.msg.nosp
+:: zh
+%s 沒有法力
+
+## battle.msg.notarget
+:: zh
+%s 正前方沒有目標
+
+## battle.msg.partydead
+:: zh
+隊伍全滅
+
+## battle.msg.possessed
+:: zh
+%s 的%s奪走了 %s 的心智
+
+## battle.msg.prayanswered
+:: zh
+%s 的祈禱得到回應
+
+## battle.msg.praynotanswered
+:: zh
+%s 的祈禱沒有回應
+
+## battle.msg.resisted
+:: zh
+%s 抵抗了%s
+
+## battle.msg.soundoff
+:: zh
+音效關閉
+
+## battle.msg.soundon
+:: zh
+音效開啟
+
+## battle.msg.spellkilled
+:: zh
+%s 的%s殺死了 %s
+
+## battle.msg.spellnoeffect
+:: zh
+%s 的%s沒有奏效
+
+## battle.msg.turned
+:: zh
+%s 驅散了 %s
+
+## battle.msg.turnfailed
+:: zh
+%s 的驅散無效
+
+## battle.msg.unbindweak
+:: zh
+%s 的力度不足以解開束縛
+
+## battle.msg.unbound
+:: zh
+%s 的束縛被%s解開
+
+## battle.msg.withered
+:: zh
+%s 的%s讓 %s 衰朽
+
+## battle.over.keys
+:: zh
+戰鬥結束　空白鍵：繼續
+
+## battle.sp.keys1
+:: zh
+數字鍵：輸入　↑↓：加減　Backspace：退格
+
+## battle.sp.keys2
+:: zh
+Enter：施放　Esc：取消
+
+## battle.sp.note
+:: zh
+※ 投入越多效果越強，法力用完就沒了
+
+## battle.sp.prompt
+:: zh
+投入多少法力？　%d
+
+## battle.sp.range
+:: zh
+可投入 %d–%d（目前法力 %d）
+
+## battle.spell.num
+:: zh
+法術 %d
+
+## battle.unit.dead
+:: zh
+ 陣亡
+
+## battle.unit.more
+:: zh
+ …另有 %d 個單位

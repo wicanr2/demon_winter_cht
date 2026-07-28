@@ -1250,6 +1250,21 @@ func (a *app) startBattle(ids []int) {
 	a.log = []string{fmt.Sprintf("第 %d 回合", a.battle.Round())}
 }
 
+// logLine 把一行**已經組好**的訊息推進戰鬥紀錄。
+//
+// 為什麼不共用 `logf`：走 `a.tr.UI(...)` 拿到的字串是變數，
+// 塞進 `logf` 會踩 `go vet` 的 non-constant format string ——
+// 而那個檢查是對的，譯文裡真的可能出現 `%`。
+func (a *app) logLine(s string) {
+	a.log = append(a.log, s)
+	if len(a.log) > battleLogLines {
+		a.log = a.log[len(a.log)-battleLogLines:]
+	}
+	if logToStderr {
+		fmt.Fprintln(os.Stderr, "[log] "+s)
+	}
+}
+
 // logf 把一行訊息推進戰鬥紀錄，只留最後幾行。
 func (a *app) logf(format string, args ...any) {
 	line := fmt.Sprintf(format, args...)

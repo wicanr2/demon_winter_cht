@@ -14,6 +14,8 @@ import (
 	"strings"
 	"unicode"
 
+	"golang.org/x/text/encoding/traditionalchinese"
+
 	"github.com/wicanr2/demon_winter_cht/internal/i18n"
 )
 
@@ -36,10 +38,21 @@ import (
 
 // uiSkipCallees 是「這一層呼叫裡的中文字串不算介面文案」的函式。
 // 偵錯輸出、旗標說明、錯誤訊息都不上畫面。
+// uiSkipFiles 是整檔不算介面文案的檔案。
+//
+// `trace.go` 產出的是**軌跡檔**不是畫面：那份檔案是開發用的驗收訊號，
+// 而且驗收流程會拿前後兩份 trace 做比對 —— 把它中文化（或讓它可換語言）
+// 等於讓一個內部訊號跟著介面語言漂。
+var uiSkipFiles = map[string]bool{
+	"trace.go": true,
+}
+
+// uiSkipCallees 裡再加軌跡的兩支輸出函式，因為它們散在各個畫面檔裡。
 var uiSkipCallees = map[string]bool{
 	"log.Printf": true, "log.Println": true, "log.Fatalf": true, "log.Fatal": true,
 	"fmt.Errorf": true, "errors.New": true, "panic": true,
 	"flag.String": true, "flag.Int": true, "flag.Bool": true, "flag.Float64": true,
+	"note": true, "state": true, // a.trace.note／a.trace.state
 }
 
 type uiCall struct {
@@ -122,6 +135,23 @@ func uiCheck(args []string) {
 				filepath.Base(c.pos.Filename), c.pos.Line, c.key, target, c.fallback)
 		}
 	}
+	// 非 Big5 字會變豆腐。倚天字型只有 Big5 的字，`。`／`—`／`…` 這些
+	// 全形標點在 Big5 裡有，但「𨑨」「腚」「啧」這類就沒有 ——
+	// 執行期 `MixedFont.Missing()` 抓得到，可是要有人去看；
+	// 靜態擋在這裡便宜得多（同 `retro-cht` 那份 skill 的教訓）。
+	enc := traditionalchinese.Big5.NewEncoder()
+	for _, c := range calls {
+		if bad := notBig5(enc, c.fallback); bad != "" {
+			report("%s:%d 的 %q 有 Big5 打不出來的字 %q —— 畫面上會是豆腐",
+				filepath.Base(c.pos.Filename), c.pos.Line, c.key, bad)
+		}
+	}
+	for name, target := range inCatalog {
+		if bad := notBig5(enc, target); bad != "" {
+			report("ui.txt 的 %q 有 Big5 打不出來的字 %q", name, bad)
+		}
+	}
+
 	dynamic := 0
 	var orphans []string
 	for name := range inCatalog {
@@ -191,7 +221,7 @@ func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 
 	for _, pkg := range pkgs {
 		for name, file := range pkg.Files {
-			if strings.HasSuffix(name, "_test.go") {
+			if strings.HasSuffix(name, "_test.go") || uiSkipFiles[filepath.Base(name)] {
 				continue
 			}
 			// 先收 UI 呼叫，並記下屬於它的字面值節點，之後掃硬編時跳過。
@@ -213,6 +243,24 @@ func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 				consumed[call.Args[0]] = true
 				consumed[call.Args[1]] = true
 				calls = append(calls, uiCall{k, f, fset.Position(call.Pos())})
+				return true
+			})
+
+			// 套件層的表（例如 playerCommands）不能在 init 時翻譯 ——
+			// 那時還沒有 translator。那種表的寫法是「key 與中文並列」，
+			// 翻譯發生在畫的時候。判準：**同一行有 key 形狀的字面值**
+			// 就算這一行的中文已經配好 key 了。
+			paired := map[int]string{}
+			ast.Inspect(file, func(n ast.Node) bool {
+				lit, ok := n.(*ast.BasicLit)
+				if !ok || lit.Kind != token.STRING {
+					return true
+				}
+				v, err := strconv.Unquote(lit.Value)
+				if err != nil || !uiKeyStem.MatchString(v) {
+					return true
+				}
+				paired[fset.Position(lit.Pos()).Line] = v
 				return true
 			})
 
@@ -245,7 +293,15 @@ func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 				if !hasCJK(s) {
 					return true
 				}
-				hard = append(hard, uiHardcoded{s, fset.Position(lit.Pos())})
+				pos := fset.Position(lit.Pos())
+				if k := paired[pos.Line]; k != "" {
+					// 「key 與中文並列」的表：當成一般的 UI 條目來檢查，
+					// 否則這一類永遠沒有人核實（key 與 fallback 都是變數，
+					// 靜態掃不到 `.UI(...)` 那個形式）。
+					calls = append(calls, uiCall{k, s, pos})
+					return true
+				}
+				hard = append(hard, uiHardcoded{s, pos})
 				return true
 			}
 			ast.Inspect(file, walk)
@@ -339,4 +395,19 @@ func uiAppendMissing(path string, calls []uiCall, inCatalog map[string]string) e
 	}
 	fmt.Printf("補了 %d 條進 %s\n", len(add), path)
 	return nil
+}
+
+
+// notBig5 回傳字串裡第一批 Big5 編不出來的字；全都編得出來時回空字串。
+func notBig5(enc interface{ String(string) (string, error) }, s string) string {
+	var bad []rune
+	for _, r := range s {
+		if r < 0x80 {
+			continue
+		}
+		if _, err := enc.String(string(r)); err != nil {
+			bad = append(bad, r)
+		}
+	}
+	return string(bad)
 }
