@@ -446,14 +446,14 @@ func (a *app) update() error {
 
 		switch res {
 		case game.MoveBlocked:
-			a.message = "前方無法通行"
+			a.message = a.tr.UI("world.blocked", "前方無法通行")
 		case game.MoveExitedSubmap:
-			a.message = "離開子地圖"
+			a.message = a.tr.UI("world.leftsubmap", "離開子地圖")
 		default:
 			a.message = ""
 		}
 		if advanced {
-			a.message = fmt.Sprintf("時間來到 %d 時", a.clock.Hour())
+			a.message = fmt.Sprintf(a.tr.UI("world.hour", "時間來到 %d 時"), a.clock.Hour())
 		}
 		if res == game.MoveOK {
 			a.stepBoat(tile)
@@ -948,7 +948,7 @@ func (a *app) checkRandomEncounter(tile byte) {
 	if len(mons) == 0 {
 		return
 	}
-	a.logf("在%s遭遇了敵人", terrain.Name())
+	a.logf(a.tr.UI("world.encounter", "在%s遭遇了敵人"), terrain.Name())
 	a.startBattle(mons)
 }
 
@@ -1077,7 +1077,7 @@ func (a *app) checkEvent(tile byte) {
 		}
 		if hit.Teleport {
 			a.party.TeleportTo(int(hit.Dest.X), int(hit.Dest.Y))
-			a.message = fmt.Sprintf("被傳送到 (%d,%d)", hit.Dest.X, hit.Dest.Y)
+			a.message = fmt.Sprintf(a.tr.UI("world.teleported", "被傳送到 (%d,%d)"), hit.Dest.X, hit.Dest.Y)
 			return
 		}
 		// 類別 5 走完全不同的一條：那張 16 格地點劇情表
@@ -1115,7 +1115,7 @@ func (a *app) checkEvent(tile byte) {
 func (a *app) showEvent(idx int) {
 	ev, err := a.events.ByIndex(idx)
 	if err != nil {
-		a.message = fmt.Sprintf("事件 %d 超出範圍", idx)
+		a.message = fmt.Sprintf(a.tr.UI("event.outofrange", "事件 %d 超出範圍"), idx)
 		return
 	}
 
@@ -1159,7 +1159,7 @@ var debugBattleMonsters = []int{2, 3, 4, 1}
 func (a *app) terrainForBattle() *game.BattleTerrain {
 	t, err := game.NewBattleTerrain(a.tiles, a.party.X(), a.party.Y())
 	if err != nil {
-		a.message = fmt.Sprintf("戰場地形切不出來：%v", err)
+		a.message = fmt.Sprintf(a.tr.UI("battle.terrainfailed", "戰場地形切不出來：%v"), err)
 		return nil
 	}
 	return t
@@ -1247,7 +1247,7 @@ func (a *app) startBattle(ids []int) {
 	if a.prayChance == 0 {
 		a.prayChance = game.PrayInitialChance
 	}
-	a.log = []string{fmt.Sprintf("第 %d 回合", a.battle.Round())}
+	a.log = []string{fmt.Sprintf(a.tr.UI("battle.log.roundfirst", "第 %d 回合"), a.battle.Round())}
 }
 
 // logLine 把一行**已經組好**的訊息推進戰鬥紀錄。
@@ -1284,7 +1284,26 @@ var logToStderr = os.Getenv("DW_LOG") != ""
 
 const battleLogLines = 8
 
-var facingName = []string{"北", "東", "南", "西"}
+// uiLabel 是「key ＋ 中文 fallback」的一組。套件層的表 init 時還沒有
+// translator，所以不能在那裡就翻好 —— 翻譯發生在用的時候。
+// `dwstrings uicheck` 認得這個形式（同一行有 key 形狀的字面值）。
+type uiLabel struct{ key, zh string }
+
+var facingName = []uiLabel{
+	{"facing.north", "北"},
+	{"facing.east", "東"},
+	{"facing.south", "南"},
+	{"facing.west", "西"},
+}
+
+// facingLabel 回傳面向的中文名。
+func (a *app) facingLabel(f game.Facing) string {
+	i := int(f)
+	if i < 0 || i >= len(facingName) {
+		return "?"
+	}
+	return a.tr.UI(facingName[i].key, facingName[i].zh)
+}
 
 // monthSourceFile 是月份名稱翻譯目錄的 key，與 dwstrings 產生時一致。
 const monthSourceFile = "MONTHS"
@@ -1308,17 +1327,32 @@ func (a *app) monthName() string {
 // 常駐狀態欄的鍵位提示。**釘在畫面下緣**（文字視窗上方），不跟著
 // 訊息長度浮動 —— 訊息一長就把提示擠出畫面，而那是溢出型的錯誤，
 // 測試看不到（`rulebook` 的「排版溢出」那一類）。
-var statusKeyHints = []string{
+var statusKeyHints = []uiLabel{
 	// **21 格寬，一行放兩到三個。** 一鍵一行的版本在接上地城道具的
 	// 六個指令之後就溢出畫面了 —— `F10：離開遊戲` 被切掉一半，
 	// 而畫面上看起來只是「最後一行怪怪的」。
-	"方向鍵移動　Tab 季節",
-	"T 拿取 D 丟棄 E 檢視",
-	"M 推開家具 U 使用解謎",
-	"I 探查周圍 R 重讀",
-	"L 陷阱 V 觀室 X 鑑物",
-	"P 名冊 C 紮營 S 存檔",
-	"空白翻頁 F2 手札 F10 離開",
+	{"status.keys.move", "方向鍵移動　Tab 季節"},
+	{"status.keys.items1", "T 拿取 D 丟棄 E 檢視"},
+	{"status.keys.items2", "M 推開家具 U 使用解謎"},
+	{"status.keys.items3", "I 探查周圍 R 重讀"},
+	{"status.keys.psychic", "L 陷阱 V 觀室 X 鑑物"},
+	{"status.keys.party", "P 名冊 C 紮營 S 存檔"},
+	{"status.keys.meta", "空白翻頁 F2 手札 F10 離開"},
+}
+
+var statusDebugKeys = []uiLabel{
+	{"status.debug.header", "── 偵錯　F12 收起"},
+	{"status.debug.keys1", "B 開打 F1 建角 F3 進城"},
+	{"status.debug.keys2", "F4 商隊"},
+}
+
+// hintLines 把一組 uiLabel 翻成可以直接畫的字串。
+func (a *app) hintLines(list []uiLabel) []string {
+	out := make([]string, len(list))
+	for i, l := range list {
+		out[i] = a.tr.UI(l.key, l.zh)
+	}
+	return out
 }
 
 // drawStatus 畫右側常駐狀態欄。
@@ -1335,8 +1369,8 @@ var statusKeyHints = []string{
 // 偵錯欄位（步數／內縮／座標／地形／圖塊）收進 `F12` 疊層。
 func (a *app) drawStatus(dst *ebiten.Image) {
 	lines := []string{
-		fmt.Sprintf("金幣 %d　糧食 %d", a.gold(), a.save.Rations),
-		fmt.Sprintf("%2d時 %2d日 %s月", a.clock.Hour(), a.clock.Day(), a.monthName()),
+		fmt.Sprintf(a.tr.UI("status.goldfood", "金幣 %d　糧食 %d"), a.gold(), a.save.Rations),
+		fmt.Sprintf(a.tr.UI("status.datetime", "%2d時 %2d日 %s月"), a.clock.Hour(), a.clock.Day(), a.monthName()),
 	}
 	lines = append(lines, a.partyStatusLines()...)
 	lines = append(lines, "")
@@ -1358,7 +1392,7 @@ func (a *app) drawStatus(dst *ebiten.Image) {
 	// 再往上塞就會被下面的 clamp 吃掉（第一版就是這樣，按了 F12
 	// 什麼都沒出現，log 卻顯示旗標有翻）。而且要看座標的時候
 	// 本來就不需要同時看鍵位表。
-	bottom := statusKeyHints
+	bottom := a.hintLines(statusKeyHints)
 	if a.debugHUD {
 		bottom = a.debugStatusLines()
 	}
@@ -1413,7 +1447,7 @@ func (a *app) partyStatusLines() []string {
 			textlayout.PadCellsLeft(hp, partyColHP) + " " +
 			textlayout.PadCellsLeft(sp, partyColSP)
 	}
-	out := []string{"", row("#", "名字", "生命", "法力")}
+	out := []string{"", row("#", a.tr.UI("status.col.name", "名字"), a.tr.UI("status.col.hp", "生命"), a.tr.UI("status.col.sp", "法力"))}
 	for i := range a.members {
 		c := &a.members[i]
 		out = append(out, row(
@@ -1428,32 +1462,50 @@ func (a *app) partyStatusLines() []string {
 // 這幾行原本常駐在狀態欄最上面、字最大的位置，而 `圖塊 DEMON.SHE`
 // 對玩家沒有任何意義 —— 它們讓畫面看起來像工具而不像遊戲。
 func (a *app) debugStatusLines() []string {
-	return []string{
-		"── 偵錯　F12 收起",
+	out := []string{a.tr.UI(statusDebugKeys[0].key, statusDebugKeys[0].zh)}
+	out = append(out,
 		// **標「內縮」不標「光照」。** 印的是視窗四邊各縮掉幾格
 		// （原版 `ds:0x4c86`），那是 `4 − 光照`，方向相反 ——
 		// 標成「光照」的話「光照 3」看起來像很亮，其實是只剩中央 3×3。
-		fmt.Sprintf("步數 %2d  內縮 %d", a.clock.Steps(), a.viewInset()),
-		fmt.Sprintf("座標 %2d,%-2d 面向%s", a.party.X(), a.party.Y(), facingName[a.party.Facing()]),
-		fmt.Sprintf("地形 %3d  深度 %d", a.lastTile, a.party.Depth()),
-		fmt.Sprintf("圖塊 %s", a.tileset().Name()),
-		"B 開打 F1 建角 F3 進城",
-		"F4 商隊",
-	}
+		fmt.Sprintf(a.tr.UI("status.debug.steps", "步數 %2d  內縮 %d"),
+			a.clock.Steps(), a.viewInset()),
+		fmt.Sprintf(a.tr.UI("status.debug.pos", "座標 %2d,%-2d 面向%s"),
+			a.party.X(), a.party.Y(), a.facingLabel(a.party.Facing())),
+		fmt.Sprintf(a.tr.UI("status.debug.tile", "地形 %3d  深度 %d"),
+			a.lastTile, a.party.Depth()),
+		fmt.Sprintf(a.tr.UI("status.debug.tileset", "圖塊 %s"), a.tileset().Name()),
+	)
+	return append(out, a.hintLines(statusDebugKeys[1:])...)
 }
 
-var raceName = []string{"人類", "精靈", "矮人", "黑暗精靈", "巨魔"}
-
-var className = []string{
-	"遊俠", "聖騎士", "蠻族", "武僧", "牧師",
-	"盜賊", "巫師", "術士", "靈視者", "學者",
+// raceName／className 的索引就是角色記錄的種族／職業值。
+var raceName = []uiLabel{
+	{"race.human", "人類"},
+	{"race.elf", "精靈"},
+	{"race.dwarf", "矮人"},
+	{"race.darkelf", "黑暗精靈"},
+	{"race.troll", "巨魔"},
 }
 
-func nameOf(list []string, i int) string {
+var className = []uiLabel{
+	{"class.ranger", "遊俠"},
+	{"class.paladin", "聖騎士"},
+	{"class.barbarian", "蠻族"},
+	{"class.monk", "武僧"},
+	{"class.cleric", "牧師"},
+	{"class.thief", "盜賊"},
+	{"class.wizard", "巫師"},
+	{"class.sorcerer", "術士"},
+	{"class.visionary", "靈視者"},
+	{"class.scholar", "學者"},
+}
+
+// label 從「key ＋ 中文」的表裡取一項，索引超界回 `?`。
+func (a *app) label(list []uiLabel, i int) string {
 	if i < 0 || i >= len(list) {
 		return "?"
 	}
-	return list[i]
+	return a.tr.UI(list[i].key, list[i].zh)
 }
 
 // drawRoster 顯示隊伍五人的基本資料。
@@ -1466,7 +1518,7 @@ func (a *app) drawRoster(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
-	line("隊伍名冊")
+	line(a.tr.UI("roster.header", "隊伍名冊"))
 	for _, c := range a.members {
 		pts, err := c.RemainingSkillPoints(a.tables)
 		if err != nil {
@@ -1474,16 +1526,16 @@ func (a *app) drawRoster(dst *ebiten.Image) {
 		}
 		// 種族名 2–4 格（人類／黑暗精靈）、武器名 2–3 格 —— 不補到固定寬度，
 		// 後面的「生命」「護甲」欄會跟著左右跳。
-		line(fmt.Sprintf("%s %d級 %s",
-			textlayout.PadCells(c.Name, 8), c.Level, nameOf(className, int(c.Class))))
-		line(fmt.Sprintf(" %s 生命 %3d/%3d",
-			textlayout.PadCells(nameOf(raceName, int(c.Race)), 4), c.CurrentHP, c.MaxHP))
-		line(fmt.Sprintf(" 法力 %3d/%3d 未用點數 %d", c.CurrentSP, c.MaxSP, pts))
-		line(fmt.Sprintf(" %s 護甲 %d",
+		line(fmt.Sprintf(a.tr.UI("roster.nameline", "%s %d級 %s"),
+			textlayout.PadCells(c.Name, 8), c.Level, a.label(className, int(c.Class))))
+		line(fmt.Sprintf(a.tr.UI("roster.hpline", " %s 生命 %3d/%3d"),
+			textlayout.PadCells(a.label(raceName, int(c.Race)), 4), c.CurrentHP, c.MaxHP))
+		line(fmt.Sprintf(a.tr.UI("roster.spline", " 法力 %3d/%3d 未用點數 %d"), c.CurrentSP, c.MaxSP, pts))
+		line(fmt.Sprintf(a.tr.UI("roster.armorline", " %s 護甲 %d"),
 			textlayout.PadCells(a.weaponLabel(c), 6), c.ArmorRating()))
 	}
 	line("")
-	line("P：返回")
+	line(a.tr.UI("roster.back", "P：返回"))
 }
 
 func (a *app) Layout(int, int) (int, int) {
@@ -1964,7 +2016,7 @@ func main() {
 	}
 
 	ebiten.SetWindowSize(layout.CanvasWidth*scale, layout.CanvasHeight*scale)
-	ebiten.SetWindowTitle("冬之魔 Demon's Winter")
+	ebiten.SetWindowTitle(a.tr.UI("window.title", "冬之魔 Demon's Winter"))
 
 	defer a.trace.close()
 	a.trace.note("啟動：地圖 %d，隊伍在 (%d,%d)，%d 人",
@@ -1978,7 +2030,7 @@ func main() {
 func (a *app) weaponLabel(c game.Character) string {
 	w := c.Weapon()
 	if w.Empty() {
-		return "徒手"
+		return a.tr.UI("item.weapon.none", "徒手")
 	}
 	return a.itemLabel(w)
 }
@@ -2061,9 +2113,9 @@ func (a *app) stepBoat(tile byte) {
 
 	switch res {
 	case game.BoardOn:
-		a.message = "登船"
+		a.message = a.tr.UI("world.boardon", "登船")
 	case game.BoardOff:
-		a.message = "上岸"
+		a.message = a.tr.UI("world.boardoff", "上岸")
 	}
 }
 

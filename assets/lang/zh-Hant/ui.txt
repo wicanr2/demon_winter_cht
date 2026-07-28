@@ -1283,3 +1283,531 @@ Enter：施放　Esc：取消
 ## battle.unit.more
 :: zh
  …另有 %d 個單位
+
+## class.barbarian
+:: zh
+蠻族
+
+## class.cleric
+:: zh
+牧師
+
+## class.monk
+:: zh
+武僧
+
+## class.paladin
+:: zh
+聖騎士
+
+## class.ranger
+:: zh
+遊俠
+
+## class.scholar
+:: zh
+學者
+
+## class.sorcerer
+:: zh
+術士
+
+## class.thief
+:: zh
+盜賊
+
+## class.visionary
+:: zh
+靈視者
+
+## class.wizard
+:: zh
+巫師
+
+## facing.east
+:: zh
+東
+
+## facing.north
+:: zh
+北
+
+## facing.south
+:: zh
+南
+
+## facing.west
+:: zh
+西
+
+## race.darkelf
+:: zh
+黑暗精靈
+
+## race.dwarf
+:: zh
+矮人
+
+## race.elf
+:: zh
+精靈
+
+## race.human
+:: zh
+人類
+
+## race.troll
+:: zh
+巨魔
+
+## status.debug.header
+:: zh
+── 偵錯　F12 收起
+
+## status.debug.keys1
+:: zh
+B 開打 F1 建角 F3 進城
+
+## status.debug.keys2
+:: zh
+F4 商隊
+
+## status.debug.pos
+:: zh
+座標 %2d,%-2d 面向%s
+
+## status.debug.steps
+:: zh
+步數 %2d  內縮 %d
+
+## status.debug.tile
+:: zh
+地形 %3d  深度 %d
+
+## status.debug.tileset
+:: zh
+圖塊 %s
+
+## status.keys.items1
+:: zh
+T 拿取 D 丟棄 E 檢視
+
+## status.keys.items2
+:: zh
+M 推開家具 U 使用解謎
+
+## status.keys.items3
+:: zh
+I 探查周圍 R 重讀
+
+## status.keys.meta
+:: zh
+空白翻頁 F2 手札 F10 離開
+
+## status.keys.move
+:: zh
+方向鍵移動　Tab 季節
+
+## status.keys.party
+:: zh
+P 名冊 C 紮營 S 存檔
+
+## status.keys.psychic
+:: zh
+L 陷阱 V 觀室 X 鑑物
+
+## battle.log.roundfirst
+:: zh
+第 %d 回合
+
+## battle.terrainfailed
+:: zh
+戰場地形切不出來：%v
+
+## event.outofrange
+:: zh
+事件 %d 超出範圍
+
+## item.weapon.none
+:: zh
+徒手
+
+## roster.armorline
+:: zh
+ %s 護甲 %d
+
+## roster.back
+:: zh
+P：返回
+
+## roster.header
+:: zh
+隊伍名冊
+
+## roster.hpline
+:: zh
+ %s 生命 %3d/%3d
+
+## roster.nameline
+:: zh
+%s %d級 %s
+
+## roster.spline
+:: zh
+ 法力 %3d/%3d 未用點數 %d
+
+## status.col.hp
+:: zh
+生命
+
+## status.col.name
+:: zh
+名字
+
+## status.col.sp
+:: zh
+法力
+
+## status.datetime
+:: zh
+%2d時 %2d日 %s月
+
+## status.goldfood
+:: zh
+金幣 %d　糧食 %d
+
+## window.title
+:: zh
+冬之魔 Demon's Winter
+
+## world.blocked
+:: zh
+前方無法通行
+
+## world.boardoff
+:: zh
+上岸
+
+## world.boardon
+:: zh
+登船
+
+## world.encounter
+:: zh
+在%s遭遇了敵人
+
+## world.hour
+:: zh
+時間來到 %d 時
+
+## world.leftsubmap
+:: zh
+離開子地圖
+
+## world.teleported
+:: zh
+被傳送到 (%d,%d)
+
+## site.college.gap
+:: zh
+(%d,%d) 是學院格，但不在 35 筆學院表裡
+
+## site.college.name
+:: zh
+%s學院
+
+## site.enter
+:: zh
+進入
+
+## site.temple.gap
+:: zh
+(%d,%d) 是神殿格，但不在 19 筆神殿表裡
+
+## site.temple.name
+:: zh
+%s的神殿
+
+## town.church.convert
+:: zh
+改宗要 %s 的智力點數，不收金幣
+
+## town.church.header
+:: zh
+供奉 %s　捐獻 1 金換 1 點經驗
+
+## town.church.keys
+:: zh
+↑↓：選擇隊員　P：祈禱　D：捐獻　V：改宗
+
+## town.church.member_row
+:: zh
+%s%s 信 %s　成功率 %d%%　祈禱 %d 金
+
+## town.docks.buy_price
+:: zh
+買船　%d 金
+
+## town.docks.keys
+:: zh
+B：買船　R：修船
+
+## town.docks.no_sale
+:: zh
+這座城鎮沒有船可買
+
+## town.docks.no_ship
+:: zh
+腳邊沒有船
+
+## town.docks.repair_price
+:: zh
+修船　每點船體 %d 金（滿值 %d）
+
+## town.docks.ship_here
+:: zh
+腳邊有一艘船，船體 %d／%d
+
+## town.enter.entered
+:: zh
+進入%s
+
+## town.enter.gap
+:: zh
+(%d,%d) 是城鎮格，但不在 25 筆城鎮座標表裡
+
+## town.enter.left
+:: zh
+離開%s
+
+## town.facility.back
+:: zh
+Esc：回到設施選單
+
+## town.facility.exit
+:: zh
+Esc：離開
+
+## town.guild.header
+:: zh
+升級　免費
+
+## town.guild.keys
+:: zh
+↑↓：選擇隊員　L：升級
+
+## town.guild.maxed
+:: zh
+已達頂級
+
+## town.guild.member_row
+:: zh
+%s%s %2d 級　經驗 %-8d %s
+
+## town.guild.ready
+:: zh
+可升級
+
+## town.guild.short
+:: zh
+還差 %d
+
+## town.healers.heal_rate
+:: zh
+治療　每點傷害 %d 金
+
+## town.healers.healthy
+:: zh
+%s%s 狀態良好
+
+## town.healers.keys
+:: zh
+↑↓：選擇隊員　H：接受治療
+
+## town.healers.quote
+:: zh
+%s%s %s %d 金
+
+## town.healers.resurrect_rate
+:: zh
+復活　每級 %d 金
+
+## town.healers.service_heal
+:: zh
+治療
+
+## town.healers.service_resurrect
+:: zh
+復活
+
+## town.healers.service_unbind
+:: zh
+解除束縛
+
+## town.healers.service_unpoison
+:: zh
+解毒
+
+## town.healers.unbind_rate
+:: zh
+解除束縛　每級 %d 金
+
+## town.healers.unpoison_rate
+:: zh
+解毒　%d 金
+
+## town.inn.cannot_sleep
+:: zh
+現在睡不著。
+
+## town.inn.died
+:: zh
+ 沒有醒來
+
+## town.inn.free_note
+:: zh
+※ 讀到的休息常式沒有扣金錢，所以這裡是免費的
+
+## town.inn.hour
+:: zh
+目前 %d 時（睡覺要在 15–24 時之間）
+
+## town.inn.restless
+:: zh
+現在睡不著（原版：You are restless）
+
+## town.inn.sleep_option
+:: zh
+R：睡一晚（HP +2、法力 +10）
+
+## town.inn.slept
+:: zh
+睡了 %d 個時辰，%d 日 %d 時醒來
+
+## town.market.bought
+:: zh
+%s 買下%s，付 %d 金（剩 %d）
+
+## town.market.cell_refused
+:: zh
+拒賣
+
+## town.market.col_buy
+:: zh
+買價
+
+## town.market.col_item
+:: zh
+   商品
+
+## town.market.col_sell
+:: zh
+賣價
+
+## town.market.empty
+:: zh
+隊伍是空的
+
+## town.market.haggle_offended
+:: zh
+你惹惱了商人，這件他不賣了
+
+## town.market.haggle_refused
+:: zh
+商人不肯再賣這件給你
+
+## town.market.haggle_success
+:: zh
+商人讓步了
+
+## town.market.haggle_unmoved
+:: zh
+商人不為所動（再談就會惹惱他）
+
+## town.market.identify
+:: zh
+鑑定　%d 金
+
+## town.market.keys
+:: zh
+↑↓：選商品　H：議價　B：買下　S：出售　（金幣 %d）
+
+## town.market.refused
+:: zh
+商人不肯賣這件給你
+
+## town.menu.header
+:: zh
+%s　物價指數 %d
+
+## town.menu.keys
+:: zh
+Esc：離開城鎮
+
+## town.menu.label_college
+:: zh
+L 學院
+
+## town.menu.label_docks
+:: zh
+D 碼頭
+
+## town.menu.label_guild
+:: zh
+G 城鎮公會
+
+## town.menu.label_healers
+:: zh
+H 治療所
+
+## town.menu.label_inn
+:: zh
+I 旅店
+
+## town.menu.label_market
+:: zh
+M 市集
+
+## town.menu.label_pub
+:: zh
+B 酒館
+
+## town.menu.label_temple
+:: zh
+C 神殿
+
+## town.menu.no_ship
+:: zh
+（這裡沒有船）
+
+## town.picker.docks_mark
+:: zh
+　碼頭
+
+## town.picker.header
+:: zh
+進入哪座城鎮？
+
+## town.picker.keys
+:: zh
+↑↓：選擇　Enter：進城　Esc：取消
+
+## town.picker.note
+:: zh
+（偵錯用。正常玩法是走到城鎮格自動進城）
+
+## town.picker.row
+:: zh
+%s%s 物價 %2d%s
+
+## town.pub.keys
+:: zh
+B：買糧
+
+## town.pub.price
+:: zh
+糧食　每份 %d 金（一次可買 %d–%d 份）
+
+## town.pub.stock
+:: zh
+隊伍目前 %d 份

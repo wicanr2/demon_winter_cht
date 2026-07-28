@@ -246,8 +246,8 @@ func (a *app) drawCreate(dst *ebiten.Image) {
 		line("↑↓：選擇　Enter：確定　Esc：回上一步")
 
 	case stageName:
-		line(fmt.Sprintf("%s %s", nameOf(raceName, int(c.create.Race)),
-			nameOf(className, int(c.class))))
+		line(fmt.Sprintf("%s %s", a.label(raceName, int(c.create.Race)),
+			a.label(className, int(c.class))))
 		line("")
 		line(fmt.Sprintf("姓名：%s_", string(c.name)))
 		line("")
@@ -265,7 +265,7 @@ func (a *app) drawCreate(dst *ebiten.Image) {
 				mark = " > "
 			}
 			line(fmt.Sprintf("%s%d  %-10s %d 級 %s", mark, i+1, m.Name, m.Level,
-				nameOf(className, int(m.Class))))
+				a.label(className, int(m.Class))))
 		}
 		line("")
 		line("↑↓：選擇　Enter：確定　Esc：回上一步")
@@ -279,7 +279,7 @@ func (a *app) drawCreate(dst *ebiten.Image) {
 
 func (a *app) drawTraitStage(c *createScreen, line func(string)) {
 	line(fmt.Sprintf("種族：%s　剩餘重擲 %d 次",
-		nameOf(raceName, int(c.create.Race)), c.create.RerollsLeft()))
+		a.label(raceName, int(c.create.Race)), c.create.RerollsLeft()))
 	line("")
 	// 表頭與資料列用同一組欄寬產生 —— 手動數空格對齊，改一次格式就歪一次。
 	// 混排字型每個字元都是一格，所以 Go 的 %-4s（按 rune 計）剛好等於 4 格。

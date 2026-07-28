@@ -84,11 +84,11 @@ func (a *app) openTownPicker() {
 func (a *app) enterTownAt(x, y int) {
 	town, ok := a.towns.TownAt(x, y)
 	if !ok {
-		a.message = fmt.Sprintf("(%d,%d) 是城鎮格，但不在 25 筆城鎮座標表裡", x, y)
+		a.message = fmt.Sprintf(a.tr.UI("town.enter.gap", "(%d,%d) 是城鎮格，但不在 25 筆城鎮座標表裡"), x, y)
 		return
 	}
 	a.town = &townScreen{visit: game.EnterTown(town, a.members)}
-	a.message = fmt.Sprintf("進入%s", a.townName(town))
+	a.message = fmt.Sprintf(a.tr.UI("town.enter.entered", "進入%s"), a.townName(town))
 }
 
 func (a *app) updateTown() error {
@@ -103,7 +103,7 @@ func (a *app) updateTown() error {
 
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		a.town = nil
-		a.message = fmt.Sprintf("離開%s", a.townName(t.visit.Town))
+		a.message = fmt.Sprintf(a.tr.UI("town.enter.left", "離開%s"), a.townName(t.visit.Town))
 		return nil
 	}
 	for i, key := range facilityKeys {
@@ -160,7 +160,7 @@ func (a *app) updateFacility(t *townScreen) error {
 		if t.worldSite {
 			// 地圖上的設施只有一項，直接離開。
 			a.town = nil
-			a.message = fmt.Sprintf("離開%s", t.visit.Town.Name)
+			a.message = fmt.Sprintf(a.tr.UI("town.enter.left", "離開%s"), t.visit.Town.Name)
 			return nil
 		}
 		t.facility = nil
@@ -224,7 +224,7 @@ func (a *app) updateFacility(t *townScreen) error {
 		}
 		if inpututil.IsKeyJustPressed(ebiten.KeyS) {
 			if len(a.members) == 0 {
-				t.message = "隊伍是空的"
+				t.message = a.tr.UI("town.market.empty", "隊伍是空的")
 				return nil
 			}
 			t.sell = &sellPicker{slot: -1}
@@ -249,7 +249,7 @@ func (a *app) buyCurrent(t *townScreen) {
 		return
 	}
 	if t.visit.HaggleState(t.cursor).Refused() {
-		t.message = "商人不肯賣這件給你"
+		t.message = a.tr.UI("town.market.refused", "商人不肯賣這件給你")
 		return
 	}
 	price := t.visit.Price(t.cursor, item.Price)
@@ -259,7 +259,7 @@ func (a *app) buyCurrent(t *townScreen) {
 		return
 	}
 	a.setGold(res.Gold)
-	t.message = fmt.Sprintf("%s 買下%s，付 %d 金（剩 %d）",
+	t.message = fmt.Sprintf(a.tr.UI("town.market.bought", "%s 買下%s，付 %d 金（剩 %d）"),
 		a.members[res.Member].Name,
 		a.tr.Event(itemSourceFile, t.cursor, item.Name), price, res.Gold)
 }
@@ -268,7 +268,7 @@ func (a *app) buyCurrent(t *townScreen) {
 func (a *app) haggleCurrent(t *townScreen) {
 	s := t.visit.HaggleState(t.cursor)
 	if s.Refused() {
-		t.message = "商人不肯再賣這件給你"
+		t.message = a.tr.UI("town.market.haggle_refused", "商人不肯再賣這件給你")
 		return
 	}
 
@@ -276,12 +276,12 @@ func (a *app) haggleCurrent(t *townScreen) {
 	t.visit.SetHaggleState(t.cursor, next)
 	switch out {
 	case game.HaggleSuccess:
-		t.message = "商人讓步了"
+		t.message = a.tr.UI("town.market.haggle_success", "商人讓步了")
 	case game.HaggleUnmoved:
 		// 這一步是死路：s 之後 >= 100，下次議價必定觸怒對方。
-		t.message = "商人不為所動（再談就會惹惱他）"
+		t.message = a.tr.UI("town.market.haggle_unmoved", "商人不為所動（再談就會惹惱他）")
 	case game.HaggleOffended:
-		t.message = "你惹惱了商人，這件他不賣了"
+		t.message = a.tr.UI("town.market.haggle_offended", "你惹惱了商人，這件他不賣了")
 	}
 }
 
@@ -305,8 +305,8 @@ func (a *app) drawTown(dst *ebiten.Image) {
 
 func (a *app) drawTownPicker(dst *ebiten.Image, line func(string)) {
 	t := a.town
-	line("進入哪座城鎮？")
-	line("（偵錯用。正常玩法是走到城鎮格自動進城）")
+	line(a.tr.UI("town.picker.header", "進入哪座城鎮？"))
+	line(a.tr.UI("town.picker.note", "（偵錯用。正常玩法是走到城鎮格自動進城）"))
 	line("")
 
 	// 一次只列游標附近幾座，畫布放不下 25 座。
@@ -329,24 +329,24 @@ func (a *app) drawTownPicker(dst *ebiten.Image, line func(string)) {
 		}
 		docks := ""
 		if town.SellsShips() {
-			docks = "　碼頭"
+			docks = a.tr.UI("town.picker.docks_mark", "　碼頭")
 		}
-		line(fmt.Sprintf("%s%s 物價 %2d%s", mark,
+		line(fmt.Sprintf(a.tr.UI("town.picker.row", "%s%s 物價 %2d%s"), mark,
 			textlayout.PadCells(a.townName(town), 16), town.Economy, docks))
 	}
 	line("")
-	line("↑↓：選擇　Enter：進城　Esc：取消")
+	line(a.tr.UI("town.picker.keys", "↑↓：選擇　Enter：進城　Esc：取消"))
 }
 
 func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 	v := a.town.visit
-	line(fmt.Sprintf("%s　物價指數 %d", a.townName(v.Town), v.Economy.E))
+	line(fmt.Sprintf(a.tr.UI("town.menu.header", "%s　物價指數 %d"), a.townName(v.Town), v.Economy.E))
 	line("")
 
 	// 這張表要與 game.AllFacilities 等長 —— 加了設施卻忘了加標籤，
 	// 下面那行 labels[i] 會直接 panic（加學院時踩過一次）。
-	labels := []string{"M 市集", "H 治療所", "I 旅店", "G 城鎮公會",
-		"C 神殿", "D 碼頭", "B 酒館", "L 學院"}
+	labels := []string{a.tr.UI("town.menu.label_market", "M 市集"), a.tr.UI("town.menu.label_healers", "H 治療所"), a.tr.UI("town.menu.label_inn", "I 旅店"), a.tr.UI("town.menu.label_guild", "G 城鎮公會"),
+		a.tr.UI("town.menu.label_temple", "C 神殿"), a.tr.UI("town.menu.label_docks", "D 碼頭"), a.tr.UI("town.menu.label_pub", "B 酒館"), a.tr.UI("town.menu.label_college", "L 學院")}
 	for i, f := range game.AllFacilities {
 		if i >= len(labels) {
 			break
@@ -356,12 +356,12 @@ func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 		}
 		note := ""
 		if f == game.FacilityDocks && !v.HasDocks() {
-			note = "（這裡沒有船）"
+			note = a.tr.UI("town.menu.no_ship", "（這裡沒有船）")
 		}
 		line("  " + labels[i] + note)
 	}
 	line("")
-	line("Esc：離開城鎮")
+	line(a.tr.UI("town.menu.keys", "Esc：離開城鎮"))
 }
 
 // restAtInn 在旅店睡一晚。
@@ -370,7 +370,7 @@ func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 // 而且**讀到的常式沒有扣金錢**，所以這裡不收費。
 func (a *app) restAtInn() {
 	if !a.clock.CanSleep() {
-		a.town.message = "現在睡不著（原版：You are restless）"
+		a.town.message = a.tr.UI("town.inn.restless", "現在睡不著（原版：You are restless）")
 		return
 	}
 	res := game.Rest(a.rng, game.RestInn, a.members, a.clock, nil)
@@ -381,14 +381,14 @@ func (a *app) restAtInn() {
 	game.ResetPsychicUses(a.save)
 	a.save.ViewedLandToday = false
 
-	msg := fmt.Sprintf("睡了 %d 個時辰，%d 日 %d 時醒來",
+	msg := fmt.Sprintf(a.tr.UI("town.inn.slept", "睡了 %d 個時辰，%d 日 %d 時醒來"),
 		res.Hours, a.clock.Day(), a.clock.Hour())
 	if len(res.Died) > 0 {
 		names := make([]string, 0, len(res.Died))
 		for _, i := range res.Died {
 			names = append(names, a.members[i].Name)
 		}
-		msg += "　" + strings.Join(names, "、") + " 沒有醒來"
+		msg += "　" + strings.Join(names, "、") + a.tr.UI("town.inn.died", " 沒有醒來")
 	}
 	a.town.message = msg
 }
@@ -416,97 +416,97 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		a.drawMarket(t, line)
 
 	case game.FacilityHealers:
-		line(fmt.Sprintf("治療　每點傷害 %d 金", e.HealRate()))
-		line(fmt.Sprintf("解毒　%d 金", e.UnpoisonRate()))
-		line(fmt.Sprintf("解除束縛　每級 %d 金", e.UnbindRate()))
-		line(fmt.Sprintf("復活　每級 %d 金", e.ResurrectRate()))
+		line(fmt.Sprintf(a.tr.UI("town.healers.heal_rate", "治療　每點傷害 %d 金"), e.HealRate()))
+		line(fmt.Sprintf(a.tr.UI("town.healers.unpoison_rate", "解毒　%d 金"), e.UnpoisonRate()))
+		line(fmt.Sprintf(a.tr.UI("town.healers.unbind_rate", "解除束縛　每級 %d 金"), e.UnbindRate()))
+		line(fmt.Sprintf(a.tr.UI("town.healers.resurrect_rate", "復活　每級 %d 金"), e.ResurrectRate()))
 		line("")
 		for i, c := range a.members {
 			mark := memberMark(t.member, i)
 			svc, cost := e.HealerQuote(game.UnitStatus(c.Status), c.Level,
 				c.BindLevel, c.MaxHP-c.CurrentHP)
 			if svc == game.HealerNone {
-				line(fmt.Sprintf("%s%s 狀態良好", mark, textlayout.PadCells(c.Name, 8)))
+				line(fmt.Sprintf(a.tr.UI("town.healers.healthy", "%s%s 狀態良好"), mark, textlayout.PadCells(c.Name, 8)))
 				continue
 			}
-			line(fmt.Sprintf("%s%s %s %d 金", mark,
-				textlayout.PadCells(c.Name, 8), healerServiceName(svc), cost))
+			line(fmt.Sprintf(a.tr.UI("town.healers.quote", "%s%s %s %d 金"), mark,
+				textlayout.PadCells(c.Name, 8), a.healerServiceName(svc), cost))
 		}
 		line("")
-		line("↑↓：選擇隊員　H：接受治療")
+		line(a.tr.UI("town.healers.keys", "↑↓：選擇隊員　H：接受治療"))
 
 	case game.FacilityPub:
-		line(fmt.Sprintf("糧食　每份 %d 金（一次可買 %d–%d 份）",
+		line(fmt.Sprintf(a.tr.UI("town.pub.price", "糧食　每份 %d 金（一次可買 %d–%d 份）"),
 			e.RationUnitPrice(), game.MinRations, game.MaxRations))
-		line(fmt.Sprintf("隊伍目前 %d 份", a.save.Rations))
+		line(fmt.Sprintf(a.tr.UI("town.pub.stock", "隊伍目前 %d 份"), a.save.Rations))
 		line("")
-		line("B：買糧")
+		line(a.tr.UI("town.pub.keys", "B：買糧"))
 
 	case game.FacilityDocks:
 		if v.HasDocks() {
-			line(fmt.Sprintf("買船　%d 金", e.ShipPrice()))
+			line(fmt.Sprintf(a.tr.UI("town.docks.buy_price", "買船　%d 金"), e.ShipPrice()))
 		} else {
-			line("這座城鎮沒有船可買")
+			line(a.tr.UI("town.docks.no_sale", "這座城鎮沒有船可買"))
 		}
-		line(fmt.Sprintf("修船　每點船體 %d 金（滿值 %d）",
+		line(fmt.Sprintf(a.tr.UI("town.docks.repair_price", "修船　每點船體 %d 金（滿值 %d）"),
 			e.RepairPrice(game.ShipMaxHull-1), game.ShipMaxHull))
 		line("")
 		if i := game.FindShipNear(&a.save.Ships, a.party.X(), a.party.Y()); i >= 0 {
-			line(fmt.Sprintf("腳邊有一艘船，船體 %d／%d",
+			line(fmt.Sprintf(a.tr.UI("town.docks.ship_here", "腳邊有一艘船，船體 %d／%d"),
 				a.save.Ships[i].Hull, game.ShipMaxHull))
 		} else {
-			line("腳邊沒有船")
+			line(a.tr.UI("town.docks.no_ship", "腳邊沒有船"))
 		}
 		line("")
-		line("B：買船　R：修船")
+		line(a.tr.UI("town.docks.keys", "B：買船　R：修船"))
 
 	case game.FacilityChurch:
-		line(fmt.Sprintf("供奉 %s　捐獻 1 金換 1 點經驗",
+		line(fmt.Sprintf(a.tr.UI("town.church.header", "供奉 %s　捐獻 1 金換 1 點經驗"),
 			a.deityName(v.Town.Facilities.Church)))
 		line("")
 		for i, c := range a.members {
-			line(fmt.Sprintf("%s%s 信 %s　成功率 %d%%　祈禱 %d 金",
+			line(fmt.Sprintf(a.tr.UI("town.church.member_row", "%s%s 信 %s　成功率 %d%%　祈禱 %d 金"),
 				memberMark(t.member, i), textlayout.PadCells(c.Name, 8),
 				textlayout.PadCells(a.deityName(c.Deity), 8),
 				c.PrayChance, game.PrayCost(c.Level)))
 		}
 		line("")
-		line(fmt.Sprintf("改宗要 %s 的智力點數，不收金幣",
+		line(fmt.Sprintf(a.tr.UI("town.church.convert", "改宗要 %s 的智力點數，不收金幣"),
 			a.skillName(game.DeityOrder(v.Town.Facilities.Church))))
-		line("↑↓：選擇隊員　P：祈禱　D：捐獻　V：改宗")
+		line(a.tr.UI("town.church.keys", "↑↓：選擇隊員　P：祈禱　D：捐獻　V：改宗"))
 
 	case game.FacilityGuild:
-		line("升級　免費")
+		line(a.tr.UI("town.guild.header", "升級　免費"))
 		line("")
 		for i, c := range a.members {
 			need := ""
 			if ok, short := c.CanLevelUp(); ok {
-				need = "可升級"
+				need = a.tr.UI("town.guild.ready", "可升級")
 			} else if short > 0 {
-				need = fmt.Sprintf("還差 %d", short)
+				need = fmt.Sprintf(a.tr.UI("town.guild.short", "還差 %d"), short)
 			} else {
-				need = "已達頂級"
+				need = a.tr.UI("town.guild.maxed", "已達頂級")
 			}
-			line(fmt.Sprintf("%s%s %2d 級　經驗 %-8d %s",
+			line(fmt.Sprintf(a.tr.UI("town.guild.member_row", "%s%s %2d 級　經驗 %-8d %s"),
 				memberMark(t.member, i), textlayout.PadCells(c.Name, 8),
 				c.Level, c.Experience, need))
 		}
 		line("")
-		line("↑↓：選擇隊員　L：升級")
+		line(a.tr.UI("town.guild.keys", "↑↓：選擇隊員　L：升級"))
 
 	case game.FacilityCollege:
 		a.drawCollege(t, line)
 
 	case game.FacilityInn:
-		line(fmt.Sprintf("目前 %d 時（睡覺要在 15–24 時之間）", a.clock.Hour()))
+		line(fmt.Sprintf(a.tr.UI("town.inn.hour", "目前 %d 時（睡覺要在 15–24 時之間）"), a.clock.Hour()))
 		line("")
 		if a.clock.CanSleep() {
-			line("R：睡一晚（HP +2、法力 +10）")
+			line(a.tr.UI("town.inn.sleep_option", "R：睡一晚（HP +2、法力 +10）"))
 		} else {
-			line("現在睡不著。")
+			line(a.tr.UI("town.inn.cannot_sleep", "現在睡不著。"))
 		}
 		line("")
-		line("※ 讀到的休息常式沒有扣金錢，所以這裡是免費的")
+		line(a.tr.UI("town.inn.free_note", "※ 讀到的休息常式沒有扣金錢，所以這裡是免費的"))
 	}
 
 	line("")
@@ -518,14 +518,14 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 		line("")
 	}
 	if t.worldSite {
-		line("Esc：離開")
+		line(a.tr.UI("town.facility.exit", "Esc：離開"))
 	} else {
-		line("Esc：回到設施選單")
+		line(a.tr.UI("town.facility.back", "Esc：回到設施選單"))
 	}
 }
 
 func (a *app) drawMarket(t *townScreen, line func(string)) {
-	line(fmt.Sprintf("鑑定　%d 金", t.visit.Economy.IdentifyPrice()))
+	line(fmt.Sprintf(a.tr.UI("town.market.identify", "鑑定　%d 金"), t.visit.Economy.IdentifyPrice()))
 	line("")
 
 	// 欄名放表頭，不要每列重複。
@@ -536,9 +536,9 @@ func (a *app) drawMarket(t *townScreen, line func(string)) {
 	// 只要品名欄寬一改就會歪掉。
 	// 兩個價格欄的數值是**右靠齊**的，欄名也要右靠齊 —— 欄名用 PadCells
 	// （左靠齊）就會比數字往左偏 3 格，看起來像兩欄各自對不上自己的標題。
-	line(textlayout.PadCells("   商品", marketNameCells) +
-		textlayout.PadCellsLeft("買價", marketPriceCells) +
-		textlayout.PadCellsLeft("賣價", marketPriceCells))
+	line(textlayout.PadCells(a.tr.UI("town.market.col_item", "   商品"), marketNameCells) +
+		textlayout.PadCellsLeft(a.tr.UI("town.market.col_buy", "買價"), marketPriceCells) +
+		textlayout.PadCellsLeft(a.tr.UI("town.market.col_sell", "賣價"), marketPriceCells))
 
 	const window = 8
 	start := t.cursor - window/2
@@ -564,26 +564,27 @@ func (a *app) drawMarket(t *townScreen, line func(string)) {
 		sell := textlayout.PadCellsLeft(
 			strconv.Itoa(t.visit.Economy.SellPrice(item.Price)), marketPriceCells)
 		if t.visit.HaggleState(i).Refused() {
-			line(row + textlayout.PadCellsLeft("拒賣", marketPriceCells) + sell)
+			line(row + textlayout.PadCellsLeft(a.tr.UI("town.market.cell_refused", "拒賣"), marketPriceCells) + sell)
 			continue
 		}
 		line(row + textlayout.PadCellsLeft(
 			strconv.Itoa(t.visit.Price(i, item.Price)), marketPriceCells) + sell)
 	}
 	line("")
-	line(fmt.Sprintf("↑↓：選商品　H：議價　B：買下　S：出售　（金幣 %d）", a.gold()))
+	line(fmt.Sprintf(a.tr.UI("town.market.keys", "↑↓：選商品　H：議價　B：買下　S：出售　（金幣 %d）"), a.gold()))
 }
 
-func healerServiceName(s game.HealerService) string {
+// 加上 *app 接收者才拿得到 translator。
+func (a *app) healerServiceName(s game.HealerService) string {
 	switch s {
 	case game.HealerHeal:
-		return "治療"
+		return a.tr.UI("town.healers.service_heal", "治療")
 	case game.HealerUnpoison:
-		return "解毒"
+		return a.tr.UI("town.healers.service_unpoison", "解毒")
 	case game.HealerUnbind:
-		return "解除束縛"
+		return a.tr.UI("town.healers.service_unbind", "解除束縛")
 	case game.HealerResurrect:
-		return "復活"
+		return a.tr.UI("town.healers.service_resurrect", "復活")
 	}
 	return ""
 }

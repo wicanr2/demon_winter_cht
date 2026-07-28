@@ -26,25 +26,25 @@ func (a *app) openWorldTemple(x, y int) {
 	if deity == 0 {
 		// tile 是神殿但表裡沒有這一格 —— 說清楚，不要靜默。
 		// （原版此時 `+0xa8` 留在 `0xff`，後續行為未追。）
-		a.message = fmt.Sprintf("(%d,%d) 是神殿格，但不在 19 筆神殿表裡", x, y)
+		a.message = fmt.Sprintf(a.tr.UI("site.temple.gap", "(%d,%d) 是神殿格，但不在 19 筆神殿表裡"), x, y)
 		return
 	}
-	name := fmt.Sprintf("%s的神殿", a.deityName(deity))
+	name := fmt.Sprintf(a.tr.UI("site.temple.name", "%s的神殿"), a.deityName(deity))
 	a.openWorldSite(name, game.FacilityChurch, gamedata.TownFacilities{Church: deity})
-	a.message = "進入" + name
+	a.message = a.tr.UI("site.enter", "進入") + name
 }
 
 // openWorldCollege 開世界地圖上的學院。
 func (a *app) openWorldCollege(x, y int) {
 	skill, ok := game.CollegeSkillAt(x, y)
 	if !ok {
-		a.message = fmt.Sprintf("(%d,%d) 是學院格，但不在 35 筆學院表裡", x, y)
+		a.message = fmt.Sprintf(a.tr.UI("site.college.gap", "(%d,%d) 是學院格，但不在 35 筆學院表裡"), x, y)
 		return
 	}
-	name := fmt.Sprintf("%s學院", a.skillName(skill))
+	name := fmt.Sprintf(a.tr.UI("site.college.name", "%s學院"), a.skillName(skill))
 	a.openWorldSite(name, game.FacilityCollege,
 		gamedata.TownFacilities{Colleges: []int{int(skill)}})
-	a.message = "進入" + name
+	a.message = a.tr.UI("site.enter", "進入") + name
 }
 
 // openWorldSite 用一份臨時的城鎮記錄開單一設施。

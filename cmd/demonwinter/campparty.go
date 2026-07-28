@@ -79,7 +79,7 @@ func (a *app) drawPartySheet(p *partyScreen, line func(string)) {
 
 	c := a.members[p.showing]
 	line(fmt.Sprintf("%s　%s　%s　%d 級",
-		c.Name, nameOf(raceName, int(c.Race)), nameOf(className, int(c.Class)), c.Level))
+		c.Name, a.label(raceName, int(c.Race)), a.label(className, int(c.Class)), c.Level))
 	line("")
 
 	// 五項屬性排成一行 —— 逐項換行會把技能清單擠出畫面。

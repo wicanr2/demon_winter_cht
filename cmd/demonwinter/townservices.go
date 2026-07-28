@@ -143,7 +143,7 @@ func (a *app) healCurrent(t *townScreen) {
 	if !res.OK {
 		if res.Cost > 0 {
 			t.message = fmt.Sprintf("%s（%s 要 %d 金）",
-				res.Reason, healerServiceName(svc), res.Cost)
+				res.Reason, a.healerServiceName(svc), res.Cost)
 			return
 		}
 		t.message = res.Reason
@@ -151,7 +151,7 @@ func (a *app) healCurrent(t *townScreen) {
 	}
 	a.setGold(res.Gold)
 	t.message = fmt.Sprintf("%s %s，付 %d 金（剩 %d）",
-		c.Name, healerServiceName(svc), res.Cost, res.Gold)
+		c.Name, a.healerServiceName(svc), res.Cost, res.Gold)
 }
 
 // --- 酒館 ---
@@ -510,7 +510,7 @@ func (a *app) drawCollege(t *townScreen, line func(string)) {
 		return
 	}
 	line(fmt.Sprintf("學生：%s（%s）　剩餘智力點數 %d",
-		c.Name, nameOf(className, int(c.Class)), remaining))
+		c.Name, a.label(className, int(c.Class)), remaining))
 	line("")
 
 	for i, id := range colleges {

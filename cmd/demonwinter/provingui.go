@@ -34,7 +34,7 @@ func (a *app) enterProvingRoom() {
 	room := game.ProvingRooms[idx]
 
 	entry, fighters := game.EnterProvingRoom(idx, a.members)
-	classLabel := nameOf(className, int(room.Class))
+	classLabel := a.label(className, int(room.Class))
 
 	// 開場敘述：房間名 ＋ 顏色的光 ＋ 那個聲音。三段都是原版的字串。
 	intro := fmt.Sprintf(a.tr.UI("proving.room", "%s的試煉室。"), classLabel) + "\n" +
@@ -130,7 +130,7 @@ func (a *app) finishProvingRoom() {
 	a.passProvingRoom(idx)
 	if idx >= 0 && idx < len(game.ProvingRooms) {
 		a.trace.note("試煉室 %d（%s）：戰勝過關",
-			idx, nameOf(className, int(game.ProvingRooms[idx].Class)))
+			idx, a.label(className, int(game.ProvingRooms[idx].Class)))
 	}
 }
 

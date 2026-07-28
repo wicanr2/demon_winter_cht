@@ -51,7 +51,9 @@ var uiSkipFiles = map[string]bool{
 var uiSkipCallees = map[string]bool{
 	"log.Printf": true, "log.Println": true, "log.Fatalf": true, "log.Fatal": true,
 	"fmt.Errorf": true, "errors.New": true, "panic": true,
-	"flag.String": true, "flag.Int": true, "flag.Bool": true, "flag.Float64": true,
+	"flag.String": true, "flag.Int": true, "flag.Int64": true, "flag.Uint": true,
+	"flag.Uint64": true, "flag.Bool": true, "flag.Float64": true, "flag.Duration": true,
+	"log.Print": true, "log.Fatalln": true,
 	"note": true, "state": true, // a.trace.note／a.trace.state
 }
 
