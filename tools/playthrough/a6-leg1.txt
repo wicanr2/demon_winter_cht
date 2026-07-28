@@ -79,41 +79,169 @@ key Return
 key Return
 wait 1
 
-# 建完存檔 —— 後面幾段從存檔接著跑，不必每次重建隊伍。
+# 建完存檔（後面幾段從這裡接續）
 key s
 wait 0.5
-shot 01-party-created
-key p
+
+# ============ 海濱鎮買裝備 ============
+# 攻略第一句：「往北走到海濱鎮，先把裝備買齊。我會建議每個人先買一把匕首，
+# 再買一件布甲給其中一名角色。」（`docs/walkthrough/part-4.md` §3.1）
+#
+# ⚠ 踏進城鎮那一步一定要用 `key` 不能用 `rep`：`rep` 每步之後都 settle，
+# 而 settle 對「城鎮」畫面送 Escape（白名單只有野外），一進城就被踢出來。
+rep 5 Up
+rep 2 Right
+key Right
+wait 1
+shot 10-town
+
+# 市集：游標開在第 0 項（匕首，2 金）。五把匕首全部進第一個人的背包
+# （`game.Buy` 找第一個有空格的成員），等下再用紮營的「交出」分給大家。
+key m
+wait 0.8
+key b
+key b
+key b
+key b
+key b
 wait 0.5
-shot 02-roster
+shot 11-daggers
+
+# 布甲是道具表第 8 項（0–7 是八種武器，見 `tools/parse_items.py`），5 金。
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+key Down
+wait 0.3
+key b
+wait 0.5
+shot 12-armour
+key Escape
+wait 0.3
 key Escape
 wait 0.5
-# 34:28,50 → 44:34,11：101 步，跨圖 1 次
-rep 4 Up
-rep 4 Right
-rep 1 Up
-rep 1 Right
-rep 3 Up
-rep 9 Right
-rep 3 Up
-rep 4 Right
-rep 2 Up
-rep 6 Right
-rep 4 Up
-rep 3 Right
-rep 14 Up
-rep 1 Right
-rep 1 Up
-rep 2 Right
-rep 2 Up
-rep 1 Right
-rep 4 Up
-rep 1 Right
-# → 子地圖 44 的 (4,12)
-rep 1 Up
-rep 30 Right
-# 結束前一定要存檔 —— 不然下一段從舊位置開始跑，而**角色是對的**，
-# 所以那個錯很容易被當成「腳本沒問題」（第一版就漏了這一行）。
+
+# ============ 分裝備 ============
+# 紮營 → T 交出。三段：選持有人 → 選道具欄 → 選收方。
+#
+# ⚠ 兩個一開始算錯的索引：
+#   1. **收方游標預設指向「下一個人」**（`p.target = (p.member+1) % len`），
+#      不是第一個人 —— 給 b 要 0 次 Down，不是 1 次。
+#   2. **交出之後那一格會變空**，剩下的匕首不會往前補。所以第 k 次要選
+#      第 k 格（0,1,2,3），一直選第 0 格的話第二次就撞到「這一格是空的」。
+key c
+wait 0.8
+# 第 1 把匕首（第 0 格）給 b
+key t
+wait 0.4
+key Return
+key Return
+key Return
+wait 0.4
+# 第 2 把匕首（第 1 格）給 c
+key t
+wait 0.4
+key Return
+key Down
+key Return
+key Down
+key Return
+wait 0.4
+# 第 3 把匕首（第 2 格）給 d
+key t
+wait 0.4
+key Return
+key Down
+key Down
+key Return
+key Down
+key Down
+key Return
+wait 0.4
+# 第 4 把匕首（第 3 格）給 e
+key t
+wait 0.4
+key Return
+key Down
+key Down
+key Down
+key Return
+key Down
+key Down
+key Down
+key Return
+wait 0.4
+shot 13-shared
+
+# ============ 裝備 ============
+# E 裝備：選人 → 選背包格 → Enter 裝上。
+# a 的匕首在第 4 格（前四把給出去了），布甲在第 5 格；b–e 各自的在第 0 格。
+key e
+wait 0.4
+key Return
+key Down
+key Down
+key Down
+key Down
+key Return
+wait 0.3
+key Down
+key Return
+wait 0.3
+key Escape
+key Escape
+wait 0.4
+key e
+wait 0.4
+key Down
+key Return
+key Return
+wait 0.3
+key Escape
+key Escape
+wait 0.4
+key e
+wait 0.4
+key Down
+key Down
+key Return
+key Return
+wait 0.3
+key Escape
+key Escape
+wait 0.4
+key e
+wait 0.4
+key Down
+key Down
+key Down
+key Return
+key Return
+wait 0.3
+key Escape
+key Escape
+wait 0.4
+key e
+wait 0.4
+key Down
+key Down
+key Down
+key Down
+key Return
+key Return
+wait 0.3
+key Escape
+key Escape
+wait 0.4
+shot 14-equipped
+key Escape
+wait 0.5
 key s
 wait 0.5
-shot 03-arrived
+key p
+wait 0.5
+shot 15-roster

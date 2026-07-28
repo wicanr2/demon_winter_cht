@@ -84,7 +84,24 @@ WID=$(DISPLAY=:99 xdotool search --sync --onlyvisible --name "冬之魔" | head 
 DISPLAY=:99 xdotool windowactivate --sync $WID 2>/dev/null || true
 sleep 1
 
-send() { DISPLAY=:99 xdotool key --window $WID --clearmodifiers "$1"; sleep 0.18; }
+# **按住再放，不要用 `xdotool key`。**
+#
+# `xdotool key` 的 press 與 release 是連著送的。ebiten 的
+# `inpututil.IsKeyJustPressed` 要那個鍵在**某一幀的邊界上是按下的**才算數 ——
+# press／release 落在同兩幀之間的話這一下就完全消失。
+#
+# 症狀是**偶爾漏一個鍵，而且不會報錯**：建角段漏掉一個 Return，
+# 後面的按鍵整串錯位一格，於是角色的名字變成種族鍵的數字
+# （軌跡裡真的出現過「1 已加入隊伍第 2 位」）。
+# 這種錯不會停下來，它會一路跑完然後給你一支看起來正常的隊伍。
+#
+# keydown → sleep → keyup 把鍵按住三幀以上（60 fps），就落得到邊界上。
+send() {
+    DISPLAY=:99 xdotool keydown --window $WID --clearmodifiers "$1"
+    sleep 0.06
+    DISPLAY=:99 xdotool keyup --window $WID --clearmodifiers "$1"
+    sleep 0.14
+}
 
 # 目前狀態 = 軌跡檔的最後一行（軌跡只在狀態改變時寫，所以末行就是現況）。
 now() { tail -1 /out/trace.txt 2>/dev/null || true; }
