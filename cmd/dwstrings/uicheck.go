@@ -55,6 +55,8 @@ var uiSkipCallees = map[string]bool{
 	"flag.Uint64": true, "flag.Bool": true, "flag.Float64": true, "flag.Duration": true,
 	"log.Print": true, "log.Fatalln": true,
 	"note": true, "state": true, // a.trace.note／a.trace.state
+	// 這兩支只把傳進來的 `what` 交給 a.trace.note，不上畫面。
+	"openUnderfootPicker": true, "openCarriedPicker": true,
 }
 
 type uiCall struct {
@@ -141,6 +143,16 @@ func uiCheck(args []string) {
 	// 全形標點在 Big5 裡有，但「𨑨」「腚」「啧」這類就沒有 ——
 	// 執行期 `MixedFont.Missing()` 抓得到，可是要有人去看；
 	// 靜態擋在這裡便宜得多（同 `retro-cht` 那份 skill 的教訓）。
+	// **fallback 不能含換行。** `ui.txt` 是行導向的格式，譯文裡的 `\n`
+	// 存不回去（寫進去會被當成條目結束，讀回來只剩第一行）。
+	// 換行是排版不是文案，寫在字串外面：`"\n" + tr.UI(...)`。
+	for _, c := range calls {
+		if strings.ContainsAny(c.fallback, "\n\r") {
+			report("%s:%d 的 %q 含換行 —— ui.txt 存不回去，把 `\\n` 移到字串外面",
+				filepath.Base(c.pos.Filename), c.pos.Line, c.key)
+		}
+	}
+
 	enc := traditionalchinese.Big5.NewEncoder()
 	for _, c := range calls {
 		if bad := notBig5(enc, c.fallback); bad != "" {
@@ -197,7 +209,13 @@ func uiCheck(args []string) {
 		for _, n := range names {
 			fmt.Printf("\n--- %s（%d）\n", n, len(byFile[n]))
 			for _, h := range byFile[n] {
-				fmt.Printf("%d\t%s\n", h.pos.Line, h.text)
+				// **一定要 escape**。字串裡有 `\n` 的話（`"\n　　屬性成長："`
+				// 這種）直接印出來會把一筆撐成兩行，下游照行號配 key 就整批
+				// 錯位 —— 而且錯得很安靜。
+				//
+				// 不用 `strconv.Quote`：它會把全形空白轉成 `\u3000`，
+				// 印出來的形式就與原始碼不一致，下游拿它去比對字面值會找不到。
+				fmt.Printf("%d\t%s\n", h.pos.Line, uiQuote(h.text))
 			}
 		}
 	}
@@ -212,7 +230,7 @@ func uiCheck(args []string) {
 // scanUIStrings 掃一個目錄下所有 .go，回傳 `tr.UI` 呼叫與仍硬編的中文字串。
 func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 	fset := token.NewFileSet()
-	pkgs, err := parser.ParseDir(fset, dir, nil, 0)
+	pkgs, err := parser.ParseDir(fset, dir, nil, parser.ParseComments)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -238,15 +256,38 @@ func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 					return true
 				}
 				k, ok1 := stringLit(call.Args[0])
-				f, ok2 := stringLit(call.Args[1])
+				f, ok2 := foldString(call.Args[1], consumed)
 				if !ok1 || !ok2 {
 					return true
 				}
 				consumed[call.Args[0]] = true
-				consumed[call.Args[1]] = true
 				calls = append(calls, uiCall{k, f, fset.Position(call.Pos())})
 				return true
 			})
+
+			// `//ui:dynamic <前綴>` 標記的宣告：裡面的中文是**動態 key**
+			// 查表時的 fallback（`tr.UI(trapNameKey(c), trapNameZH[c])`
+			// 這種），已經走翻譯層了，只是 key 算出來的、靜態看不到配對。
+			//
+			// 為什麼要有這個標記而不是寫死一份清單在這裡：清單會漂，
+			// 標記跟著程式碼走。而且它同時是給讀程式的人的說明。
+			dynSkip := map[int]bool{}
+			for _, d := range file.Decls {
+				var doc *ast.CommentGroup
+				switch v := d.(type) {
+				case *ast.GenDecl:
+					doc = v.Doc
+				case *ast.FuncDecl:
+					doc = v.Doc
+				}
+				if doc == nil || !strings.Contains(doc.Text(), "ui:dynamic") {
+					continue
+				}
+				lo, hi := fset.Position(d.Pos()).Line, fset.Position(d.End()).Line
+				for l := lo; l <= hi; l++ {
+					dynSkip[l] = true
+				}
+			}
 
 			// 套件層的表（例如 playerCommands）不能在 init 時翻譯 ——
 			// 那時還沒有 translator。那種表的寫法是「key 與中文並列」，
@@ -273,7 +314,7 @@ func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 				if n == nil {
 					return false
 				}
-				if call, ok := n.(*ast.CallExpr); ok && uiSkipCallees[calleeName(call.Fun)] {
+				if call, ok := n.(*ast.CallExpr); ok && uiSkipped(call.Fun) {
 					skip++
 					for _, a := range call.Args {
 						ast.Inspect(a, walk)
@@ -296,6 +337,9 @@ func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 					return true
 				}
 				pos := fset.Position(lit.Pos())
+				if dynSkip[pos.Line] {
+					return true
+				}
 				if k := paired[pos.Line]; k != "" {
 					// 「key 與中文並列」的表：當成一般的 UI 條目來檢查，
 					// 否則這一類永遠沒有人核實（key 與 fallback 都是變數，
@@ -336,6 +380,20 @@ func stringLit(e ast.Expr) (string, bool) {
 		return "", false
 	}
 	return s, true
+}
+
+// uiSkipped 查兩種寫法：點記法（`log.Printf`）與方法名本身
+// （`a.openUnderfootPicker` 的 `openUnderfootPicker`）。
+// 只查點記法會漏掉所有帶 receiver 的自家函式 —— `calleeName` 會把它拼成
+// `a.openUnderfootPicker`，而清單裡不可能去列 receiver 叫什麼。
+func uiSkipped(fun ast.Expr) bool {
+	if uiSkipCallees[calleeName(fun)] {
+		return true
+	}
+	if sel, ok := fun.(*ast.SelectorExpr); ok {
+		return uiSkipCallees[sel.Sel.Name]
+	}
+	return false
 }
 
 // calleeName 把 `log.Printf` 這種呼叫還原成點記法，給 uiSkipCallees 查表。
@@ -412,4 +470,65 @@ func notBig5(enc interface{ String(string) (string, error) }, s string) string {
 		}
 	}
 	return string(bad)
+}
+
+
+// uiQuote 把字串印成**與原始碼一致**的 Go 字面值。
+//
+// 只 escape 非得 escape 的（反斜線、雙引號、換行、tab、CR），
+// 其餘一律原樣輸出 —— 特別是全形空白 `　`，`strconv.Quote` 會把它
+// 轉成 `\u3000`，那樣下游就對不回原始碼裡的字面值了。
+func uiQuote(s string) string {
+	var b strings.Builder
+	b.WriteByte('"')
+	for _, r := range s {
+		switch r {
+		case '\\':
+			b.WriteString(`\\`)
+		case '"':
+			b.WriteString(`\"`)
+		case '\n':
+			b.WriteString(`\n`)
+		case '\t':
+			b.WriteString(`\t`)
+		case '\r':
+			b.WriteString(`\r`)
+		default:
+			b.WriteRune(r)
+		}
+	}
+	b.WriteByte('"')
+	return b.String()
+}
+
+
+// foldString 把 `"a" + "b" + "c"` 這種**跨行折行的字面值**摺成一個字串，
+// 並把每一段都記進 consumed。
+//
+// 為什麼需要：長句子在 Go 原始碼裡常寫成加號串接，`tr.UI(key, "上半"+"下半")`
+// 的第二個參數就不是單一 BasicLit。不摺的話那兩段會被當成「還沒遷」——
+// 而它們其實早就在 `tr.UI` 裡面了（`blacksmith.scene`、`armory.scene` 就是
+// 這樣被誤報的）。
+func foldString(e ast.Expr, consumed map[ast.Node]bool) (string, bool) {
+	switch v := e.(type) {
+	case *ast.BasicLit:
+		s, ok := stringLit(v)
+		if ok {
+			consumed[e] = true
+		}
+		return s, ok
+	case *ast.ParenExpr:
+		return foldString(v.X, consumed)
+	case *ast.BinaryExpr:
+		if v.Op != token.ADD {
+			return "", false
+		}
+		l, ok1 := foldString(v.X, consumed)
+		r, ok2 := foldString(v.Y, consumed)
+		if !ok1 || !ok2 {
+			return "", false
+		}
+		return l + r, true
+	}
+	return "", false
 }

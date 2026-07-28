@@ -15,7 +15,7 @@ import (
 func (a *app) shiftTombstones() {
 	m, err := world.LoadByID(a.saveDir(), a.dataDir, a.mapID)
 	if err != nil {
-		a.message = fmt.Sprintf("重載地圖失敗：%v", err)
+		a.message = fmt.Sprintf(a.tr.UI("tombstone.reload_failed", "重載地圖失敗：%v"), err)
 		return
 	}
 	a.tiles = m

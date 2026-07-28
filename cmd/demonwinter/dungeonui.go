@@ -73,6 +73,7 @@ type dungeonScreen struct {
 
 // useTargets 是「用在哪」那三個選項（原版 ds:0x2334 的 `Character`／
 // `Room`／`Quit`，熱鍵 `CRQ`）。
+// ui:dynamic dungeon.use.target. —— label 由 `"dungeon.use.target."+t.key` 查表。
 var useTargets = []struct {
 	key   string
 	label string
@@ -338,7 +339,7 @@ func (a *app) useDungeonItem(target int, targetName string, onCharacter bool) {
 		a.teleportTo(res.X, res.Y, int(res.MapID))
 	case game.DungeonUsePassage:
 		if err := a.writeTile(res.X, res.Y, res.Tile); err != nil {
-			a.message = fmt.Sprintf("改寫地圖失敗：%v", err)
+			a.message = fmt.Sprintf(a.tr.UI("dungeon.map.writefailed", "改寫地圖失敗：%v"), err)
 			return
 		}
 		a.message = a.tr.UI("dungeon.something", "發生了什麼事……")
@@ -474,7 +475,7 @@ func (a *app) moveDungeonItem(spot game.DungeonSpot) {
 		a.trace.note("移動 %s：什麼也沒發生", spot.Item.Name)
 	case game.MoveChanged:
 		if err := a.writeTile(res.X, res.Y, res.Tile); err != nil {
-			a.message = fmt.Sprintf("改寫地圖失敗：%v", err)
+			a.message = fmt.Sprintf(a.tr.UI("dungeon.map.writefailed", "改寫地圖失敗：%v"), err)
 			a.trace.note("移動 %s 失敗：%v", spot.Item.Name, err)
 			return
 		}
@@ -625,7 +626,7 @@ func (a *app) drawDungeon(dst *ebiten.Image) {
 		line("")
 		for i := range a.members {
 			c := &a.members[i]
-			line(fmt.Sprintf("%s%s　空 %d 格",
+			line(fmt.Sprintf(a.tr.UI("dungeon.member.freeslots", "%s%s　空 %d 格"),
 				memberMark(d.cursor, i), c.Name, freeSlots(c)))
 		}
 	default:

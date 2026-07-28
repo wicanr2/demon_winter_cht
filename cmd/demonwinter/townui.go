@@ -403,7 +403,7 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 
 	// 疊在設施上的子畫面自己畫完就結束，不要把價目表也一起畫出來。
 	if t.amount != nil {
-		t.amount.draw(line)
+		t.amount.draw(a, line)
 		return
 	}
 	if t.sell != nil {

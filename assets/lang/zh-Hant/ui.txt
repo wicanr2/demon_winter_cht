@@ -1811,3 +1811,1106 @@ B：買糧
 ## town.pub.stock
 :: zh
 隊伍目前 %d 份
+
+# 試煉場十個房間的顏色。key 是算出來的（`"proving.colour."+c`），
+# 程式碼那一側的表標了 `ui:dynamic` —— 加一色時兩邊都要動。
+
+## proving.colour.green
+:: en
+green
+:: zh
+綠色
+
+## proving.colour.silver
+:: en
+silver
+:: zh
+銀色
+
+## proving.colour.brown
+:: en
+brown
+:: zh
+棕色
+
+## proving.colour.violet
+:: en
+violet
+:: zh
+紫色
+
+## proving.colour.white
+:: en
+white
+:: zh
+白色
+
+## proving.colour.grey
+:: en
+grey
+:: zh
+灰色
+
+## proving.colour.crimson
+:: en
+crimson
+:: zh
+緋紅
+
+## proving.colour.black
+:: en
+black
+:: zh
+黑色
+
+## proving.colour.blue
+:: en
+blue
+:: zh
+藍色
+
+## proving.colour.beige
+:: en
+beige
+:: zh
+米色
+
+## armory.scene
+:: zh
+你走進一間兵器庫，裡頭堆滿了陳舊的武器與甲冑。房間中央的台座上放著一件特別的東西：
+
+## camp.cmd.drop
+:: zh
+  D 丟棄　T 交給隊友
+
+## camp.cmd.equip
+:: zh
+  E 換裝
+
+## camp.cmd.hunt
+:: zh
+  H 打獵
+
+## camp.cmd.party
+:: zh
+  P 角色卡　X 驅邪　C 施法　W 敬拜
+
+## camp.cmd.quit
+:: zh
+Esc：收帳篷
+
+## camp.cmd.reorder
+:: zh
+  R 排列陣型　I 鑑定道具　V 觀地　U 使用
+
+## camp.cmd.sleep
+:: zh
+  S 睡覺
+
+## camp.cmd.sleep_off
+:: zh
+  S 睡覺（現在睡不著，要 15–24 時）
+
+## camp.empty
+:: zh
+隊伍是空的
+
+## camp.equip.armor
+:: zh
+（護甲）
+
+## camp.equip.cannot
+:: zh
+（不能裝備）
+
+## camp.equip.done
+:: zh
+%s 換上%s
+
+## camp.equip.empty
+:: zh
+（空）
+
+## camp.equip.heavy
+:: zh
+（太重）
+
+## camp.equip.keys1
+:: zh
+↑↓：選擇　Enter：確定　Esc：取消
+
+## camp.equip.keys2
+:: zh
+↑↓：選擇　Enter：換上　Esc：返回
+
+## camp.equip.row
+:: zh
+%s%s%s　護甲 %d
+
+## camp.equip.weapon
+:: zh
+（武器）
+
+## camp.equip.which
+:: zh
+%s 要換上哪一件？
+
+## camp.equip.who
+:: zh
+誰要換裝？
+
+## camp.header
+:: zh
+紮營　%s月 %d 日 %d 時　糧食 %d 份
+
+## camp.hunt.cannot
+:: zh
+（不會狩獵）
+
+## camp.hunt.empty
+:: zh
+這趟打獵一無所獲
+
+## camp.hunt.gained
+:: zh
+打到 %d 份糧食（共 %d 份）
+
+## camp.hunt.keys
+:: zh
+↑↓：選擇　Enter：出發　Esc：取消
+
+## camp.hunt.who
+:: zh
+誰去打獵？
+
+## camp.sleep.ate
+:: zh
+　吃掉一份糧食（剩 %d）
+
+## camp.sleep.blocked
+:: zh
+現在睡不著（原版：You are restless）
+
+## camp.sleep.died
+:: zh
+ 沒有醒來
+
+## camp.sleep.result
+:: zh
+睡了 %d 個時辰，%d 日 %d 時醒來
+
+## camp.sleep.starved
+:: zh
+　沒有糧食，全隊受餓
+
+## campcast.cast.cast
+:: zh
+%s 對 %s 施放%s
+
+## campcast.cast.damage
+:: zh
+　造成 %d
+
+## campcast.cast.died
+:: zh
+ 倒下了
+
+## campcast.cast.entry
+:: zh
+%s%s最低 %d 點
+
+## campcast.cast.heal
+:: zh
+　回復 %d
+
+## campcast.cast.hpsp
+:: zh
+生命 %d/%d　法力 %d/%d
+
+## campcast.cast.keys1
+:: zh
+↑↓：選擇　Enter：確定　Esc：取消
+
+## campcast.cast.keys2
+:: zh
+↑↓：加減　Enter：確定　Esc：返回
+
+## campcast.cast.keys3
+:: zh
+↑↓：選擇　Enter：施放　Esc：返回
+
+## campcast.cast.noeffect
+:: zh
+　沒有明顯的變化
+
+## campcast.cast.nospell
+:: zh
+%s 沒有能在營地放的法術
+
+## campcast.cast.power
+:: zh
+　%d（最低 %d，最多 %d）
+
+## campcast.cast.power_ask
+:: zh
+%s：投入多少法力？
+
+## campcast.cast.sp
+:: zh
+法力 %d/%d
+
+## campcast.cast.target
+:: zh
+%s 的%s要放在誰身上？
+
+## campcast.cast.which
+:: zh
+%s 要放什麼？
+
+## campcast.cast.who
+:: zh
+誰來施法？
+
+## campcast.pray.chancedrop
+:: zh
+祈禱成功率降為 %d%%
+
+## campcast.worship.answered
+:: zh
+%s 聽見了 %s 的祈求，降下%s
+
+## campcast.worship.damage
+:: zh
+　%s 受到 %d
+
+## campcast.worship.empty
+:: zh
+隊伍是空的
+
+## campcast.worship.heal
+:: zh
+　%s 回復 %d
+
+## campcast.worship.hp
+:: zh
+生命 %d/%d
+
+## campcast.worship.keys1
+:: zh
+↑↓：選擇　Enter：祈求　Esc：取消
+
+## campcast.worship.keys2
+:: zh
+↑↓：選擇　Enter：確定　Esc：返回
+
+## campcast.worship.noanswer
+:: zh
+%s 的祈求沒有回應（成功率 %d%%）
+
+## campcast.worship.released
+:: zh
+　束縛解開了
+
+## campcast.worship.spellname
+:: zh
+法術 %d
+
+## campcast.worship.target
+:: zh
+%s 的祈求要落在誰身上？
+
+## campcast.worship.who
+:: zh
+誰來祈求？
+
+## campcast.worship.withered
+:: zh
+　枯萎生效
+
+## campitem.exorcise.no_skill
+:: zh
+（不會驅邪）
+
+## campitem.exorcise.used_today
+:: zh
+（今天驅過了）
+
+## campitem.exorcise.who
+:: zh
+誰來驅邪？
+
+## campitem.keys.confirm_back
+:: zh
+↑↓：選擇　Enter：確定　Esc：返回
+
+## campitem.keys.confirm_cancel
+:: zh
+↑↓：選擇　Enter：確定　Esc：取消
+
+## campitem.keys.confirm_give
+:: zh
+↑↓：選擇　Enter：交出　Esc：返回
+
+## campitem.msg.dropped
+:: zh
+%s 丟掉了%s
+
+## campitem.msg.exorcise_failed
+:: zh
+%s 驅不動%s（成功率 %d%%）
+
+## campitem.msg.exorcised
+:: zh
+%s 解開了%s的詛咒（成功率 %d%%）
+
+## campitem.msg.given
+:: zh
+%s 把%s交給 %s
+
+## campitem.msg.identified
+:: zh
+%s 看懂了%s（成功率 %d%%）
+
+## campitem.msg.identify_failed
+:: zh
+%s 研究了一整天也看不出名堂（成功率 %d%%）
+
+## campitem.msg.lit
+:: zh
+%s 點起了%s（光源 %d）
+
+## campitem.msg.no_party
+:: zh
+隊伍是空的
+
+## campitem.msg.skills_freed
+:: zh
+　%s 找回 %d 項技能
+
+## campitem.owner.who_prefix
+:: zh
+誰要
+
+## campitem.slot.armor
+:: zh
+（護甲）
+
+## campitem.slot.armor_exorcisable
+:: zh
+（護甲，可驅）
+
+## campitem.slot.battle_only
+:: zh
+（戰鬥中才能用）
+
+## campitem.slot.dungeon_item
+:: zh
+（地城道具）
+
+## campitem.slot.empty
+:: zh
+（空）
+
+## campitem.slot.head_drop
+:: zh
+要丟掉哪一件？
+
+## campitem.slot.head_exorcise
+:: zh
+要驅哪一件？
+
+## campitem.slot.head_identify
+:: zh
+要研究哪一件？
+
+## campitem.slot.head_trade
+:: zh
+要交出哪一件？
+
+## campitem.slot.head_use
+:: zh
+要用哪一件？
+
+## campitem.slot.identified
+:: zh
+（已鑑定）
+
+## campitem.slot.light_source
+:: zh
+（點起來，光源 %d）
+
+## campitem.slot.not_worn
+:: zh
+（沒穿在身上）
+
+## campitem.slot.unidentified
+:: zh
+（未鑑定）
+
+## campitem.slot.unreadable
+:: zh
+（看不懂）
+
+## campitem.slot.unusable
+:: zh
+（用不了）
+
+## campitem.slot.weapon
+:: zh
+（武器）
+
+## campitem.slot.weapon_exorcisable
+:: zh
+（武器，可驅）
+
+## campitem.target.full
+:: zh
+（道具欄滿了）
+
+## campitem.target.self
+:: zh
+（本人）
+
+## campitem.target.who
+:: zh
+%s 的%s要給誰？
+
+## campitem.trade.equipped
+:: zh
+那件裝備還在身上
+
+## campitem.trade.self
+:: zh
+不能給自己
+
+## campitem.trade.slot_empty
+:: zh
+這一格是空的
+
+## campitem.verb.drop
+:: zh
+丟東西
+
+## campitem.verb.exorcise
+:: zh
+被驅邪
+
+## campitem.verb.identify
+:: zh
+研究道具
+
+## campitem.verb.trade
+:: zh
+交出東西
+
+## campitem.verb.use
+:: zh
+用東西
+
+## create.class.header
+:: zh
+選擇職業：
+
+## create.done
+:: zh
+隊伍組好了。按 S 存檔。
+
+## create.forced.remaining
+:: zh
+開新遊戲要建滿 %d 個角色（還剩 %d 個）
+
+## create.header
+:: zh
+建立角色
+
+## create.name.keys
+:: zh
+Enter：確定　Backspace：刪除　Esc：回上一步
+
+## create.name.note1
+:: zh
+※ 姓名只收英數字：存檔的姓名欄是 12 bytes，
+
+## create.name.note2
+:: zh
+　 中文塞不下，原版也讀不回來
+
+## create.name.prompt
+:: zh
+姓名：%s_
+
+## create.nav.keys
+:: zh
+↑↓：選擇　Enter：確定　Esc：回上一步
+
+## create.race.header
+:: zh
+選擇種族：
+
+## create.race.keys
+:: zh
+數字鍵：選擇　Esc：取消
+
+## create.race.rollfail
+:: zh
+擲點失敗：%v
+
+## create.slot.added
+:: zh
+%s 已加入隊伍第 %d 位（按 S 存檔才會留下）
+
+## create.slot.header
+:: zh
+放進隊伍第幾位？（會覆蓋原本的角色）
+
+## create.slot.row
+:: zh
+%s%d  %-10s %d 級 %s
+
+## create.trait.advice
+:: zh
+  ← 建議重擲
+
+## create.trait.col_avg
+:: zh
+該種族平均
+
+## create.trait.col_name
+:: zh
+屬性
+
+## create.trait.col_rolled
+:: zh
+擲出
+
+## create.trait.header
+:: zh
+種族：%s　剩餘重擲 %d 次
+
+## create.trait.intelligence
+:: zh
+智力
+
+## create.trait.keys
+:: zh
+數字鍵：勾選要重擲的屬性（可複選）
+
+## create.trait.keys2
+:: zh
+R：重擲勾選的項目　Enter：接受並選職業
+
+## create.trait.note1
+:: zh
+※ 原版是選好按 ESC 重擲；本作 ESC 一律是「退回上一步」，
+
+## create.trait.note2
+:: zh
+　 所以改用 R，免得按錯就退出建角
+
+## create.trait.pick_first
+:: zh
+先用數字鍵勾選要重擲的屬性
+
+## create.trait.stamina
+:: zh
+耐力
+
+## dungeon.map.writefailed
+:: zh
+改寫地圖失敗：%v
+
+## dungeon.member.freeslots
+:: zh
+%s%s　空 %d 格
+
+## ending.credits.more
+:: zh
+（按任意鍵繼續）
+
+## ending.fallback.cleared
+:: zh
+你通關了《冬之魔》。
+
+## ending.fallback.congrats
+:: zh
+恭喜！
+
+## ending.fallback.exit
+:: zh
+按任意鍵離開
+
+## ending.fallback.sealed
+:: zh
+惡魔已被禁錮，漫長的冬天終於要過去了。
+
+## ending.fallback.thanks
+:: zh
+希望這趟旅程沒有辜負你的時間。
+
+## ending.offer.choice
+:: zh
+　按 1 接受，按 2 婉拒
+
+## ending.press
+:: zh
+（按任意鍵）
+
+## eregore.choice.three
+:: zh
+　按 1、2 或 3
+
+## eregore.choice.two
+:: zh
+　按 1 或 2
+
+## eregore.plot.unhandled
+:: zh
+（地點劇情 %d 還沒接，見 docs/re/65）
+
+## manual.reading.back
+:: zh
+Esc 回目錄
+
+## manual.reading.header
+:: zh
+手札　%s
+
+## manual.reading.scroll
+:: zh
+第 %d–%d 行／共 %d　空白鍵翻頁　Esc 回目錄
+
+## manual.title
+:: zh
+手札
+
+## manual.toc.keys
+:: zh
+↑↓ 選擇　Enter 翻開　Esc 收起
+
+## manual.unavailable
+:: zh
+手札讀不到（assets/manual/）
+
+## mapchange.entered
+:: zh
+進入地圖 %d 的 (%d,%d)
+
+## mapchange.error
+:: zh
+換地圖 %d 失敗：%v
+
+## merchant.buy.done
+:: zh
+買下%s，%s 收著（剩 %d 金幣）
+
+## merchant.greet.hail
+:: zh
+  G 打招呼
+
+## merchant.greet.ignore
+:: zh
+  I 無視他們
+
+## merchant.greet.leave
+:: zh
+Esc：走開
+
+## merchant.haggle.offended
+:: zh
+你冒犯了商人，%s 他不賣了
+
+## merchant.haggle.refused
+:: zh
+這件沒得談了
+
+## merchant.haggle.success
+:: zh
+殺價成功，%s 降到 %d 金幣
+
+## merchant.haggle.unmoved
+:: zh
+商人不為所動
+
+## merchant.intro
+:: zh
+你看到一群%s的商人
+
+## merchant.keys
+:: zh
+↑↓：選擇　Enter：買下　H：殺價　V：讀心　I：檢視隊員　Esc：走開
+
+## merchant.mind.lies
+:: zh
+你看穿了 %d 件貨的假話
+
+## merchant.mind.nothing
+:: zh
+你讀不出什麼
+
+## merchant.mind.once
+:: zh
+只能用一次
+
+## merchant.wares.header
+:: zh
+他們把貨攤開來看　金幣 %d
+
+## merchant.wares.lied
+:: zh
+謊報
+
+## merchant.wares.refused
+:: zh
+不賣
+
+## merchant.wares.sold
+:: zh
+已售出
+
+## partysheet.bind
+:: zh
+　束縛 %d 級
+
+## partysheet.equip
+:: zh
+　武器 %s　護甲 %d
+
+## partysheet.exp
+:: zh
+　經驗 %s
+
+## partysheet.exp_max
+:: zh
+已達上限
+
+## partysheet.faith
+:: zh
+%s　祈禱 %d%%
+
+## partysheet.faith_label
+:: zh
+　信仰 
+
+## partysheet.faith_none
+:: zh
+無信仰
+
+## partysheet.header
+:: zh
+%s　%s　%s　%d 級
+
+## partysheet.hpsp
+:: zh
+　生命 %3d/%3d　法力 %3d/%3d
+
+## partysheet.keys
+:: zh
+↑↓：選擇　Enter：攤開　Esc：取消
+
+## partysheet.keys2
+:: zh
+↑↓：換人　Enter／Esc：收起
+
+## partysheet.skills_label
+:: zh
+　技能
+
+## partysheet.skills_none
+:: zh
+　　（無）
+
+## partysheet.who
+:: zh
+要看誰？
+
+## reorder.done
+:: zh
+全員就位。Enter：收工
+
+## reorder.header
+:: zh
+排列陣型
+
+## reorder.kept
+:: zh
+維持原本的陣型
+
+## reorder.keys
+:: zh
+Esc：取消，維持原本的陣型
+
+## reorder.occupied
+:: zh
+%s 格已經有人了
+
+## reorder.prompt
+:: zh
+%s 站哪一格？（A–I）
+
+## reorder.updated
+:: zh
+陣型已更新
+
+## riddle.door.error
+:: zh
+開牆失敗：%v
+
+## save.done
+:: zh
+已存檔
+
+## save.error
+:: zh
+存檔失敗：%v
+
+## save.error_stay
+:: zh
+存檔失敗，沒有離開：%v
+
+## save.quit.cancel
+:: zh
+Esc：繼續玩
+
+## save.quit.header
+:: zh
+要離開遊戲嗎？
+
+## save.quit.no
+:: zh
+N：不存檔直接離開
+
+## save.quit.yes
+:: zh
+Y：存檔後離開
+
+## title.name
+:: zh
+冬之魔
+
+## title.press
+:: zh
+按任意鍵開始
+
+## tombstone.reload_failed
+:: zh
+重載地圖失敗：%v
+
+## townsvc.amount.keys
+:: zh
+數字鍵輸入　Backspace：刪除　Enter：確定　Esc：取消
+
+## townsvc.college.cost_note
+:: zh
+（學費 %d 金）
+
+## townsvc.college.cost_points
+:: zh
+%d 點　%d 金
+
+## townsvc.college.header
+:: zh
+學生：%s（%s）　剩餘智力點數 %d
+
+## townsvc.college.keys
+:: zh
+↑↓：選學院　Tab：換學生　L：學下去
+
+## townsvc.college.learn_done
+:: zh
+%s 學會了%s，付 %d 金（剩 %d）
+
+## townsvc.college.learn_error
+:: zh
+學院出錯：%v
+
+## townsvc.college.learned
+:: zh
+已學會
+
+## townsvc.college.none
+:: zh
+這座城鎮沒有學院
+
+## townsvc.college.points_error
+:: zh
+算不出剩餘點數：%v
+
+## townsvc.dock.buy_cost_note
+:: zh
+%s（船價 %d 金）
+
+## townsvc.dock.buy_done
+:: zh
+船與船員都備妥了，付 %d 金（剩 %d）
+
+## townsvc.dock.no_ship
+:: zh
+這座城鎮沒有船可買
+
+## townsvc.dock.repair_cost_note
+:: zh
+%s（修好要 %d 金）
+
+## townsvc.dock.repair_done
+:: zh
+修好了，付 %d 金（剩 %d）
+
+## townsvc.guild.levelup_done
+:: zh
+%s 升到 %d 級　生命 +%d　法力 +%d
+
+## townsvc.guild.levelup_error
+:: zh
+升級失敗：%v
+
+## townsvc.guild.max_level
+:: zh
+%s 已經是最高等級
+
+## townsvc.guild.need_exp
+:: zh
+公會認為 %s 還需要 %d 點經驗才能升級
+
+## townsvc.guild.trait_capped
+:: zh
+　（屬性已達種族上限）
+
+## townsvc.guild.traitgains
+:: zh
+　　屬性成長：
+
+## townsvc.heal.cost_note
+:: zh
+%s（%s 要 %d 金）
+
+## townsvc.heal.done
+:: zh
+%s %s，付 %d 金（剩 %d）
+
+## townsvc.sell.armor_locked
+:: zh
+（護甲，不能賣）
+
+## townsvc.sell.done
+:: zh
+%s 賣掉%s，得 %d 金（共 %d）
+
+## townsvc.sell.item_empty
+:: zh
+（空）
+
+## townsvc.sell.keys_confirm
+:: zh
+↑↓：選擇　Enter：確定　Esc：取消
+
+## townsvc.sell.keys_sell
+:: zh
+↑↓：選擇　Enter：賣出　Esc：返回
+
+## townsvc.sell.price_note
+:: zh
+%d 金
+
+## townsvc.sell.slot_empty
+:: zh
+那一格是空的
+
+## townsvc.sell.slot_prompt
+:: zh
+%s 要賣哪一件？（售價是底價的一半）
+
+## townsvc.sell.unknown_item
+:: zh
+認不出這件道具
+
+## townsvc.sell.weapon_locked
+:: zh
+（武器，不能賣）
+
+## townsvc.sell.who
+:: zh
+誰要賣東西？
+
+## townsvc.skill.fallback
+:: zh
+技能 %d
+
+## townsvc.tavern.done
+:: zh
+買了 %d 份糧食，付 %d 金（共 %d 份，剩 %d 金）
+
+## townsvc.tavern.prompt
+:: zh
+要買幾份糧食？（每份 %d 金，最多 %d 份）
+
+## townsvc.temple.convert_done
+:: zh
+%s 改信 %s，學會了%s（花 %d 點智力）
+
+## townsvc.temple.convert_error
+:: zh
+改宗出錯：%v
+
+## townsvc.temple.deity_fallback
+:: zh
+神祇 %d
+
+## townsvc.temple.donate_done
+:: zh
+%s 捐了 %d 金，經驗值來到 %d
+
+## townsvc.temple.donate_prompt
+:: zh
+%s 要捐多少金幣？（1 金換 1 點經驗，身上 %d 金）
+
+## townsvc.temple.no_deity
+:: zh
+（無）
+
+## townsvc.temple.pray_cost_note
+:: zh
+%s（要 %d 金）
+
+## townsvc.temple.pray_done
+:: zh
+%s 祈禱完畢，付 %d 金，呼喚成功率回到 %d%%
+
+## trap.member.default
+:: zh
+隊員
+
+## viewland.climbed
+:: zh
+%s 爬上高處張望
+
+## viewland.coord
+:: zh
+座標 %d,%d
+
+## viewland.header
+:: zh
+觀地
+
+## viewland.keys
+:: zh
+↑↓：選擇　Enter：確定　Esc：取消
+
+## viewland.keys_down
+:: zh
+Esc：下來
+
+## viewland.keys_look
+:: zh
+方向鍵：張望
+
+## viewland.mapid
+:: zh
+子地圖 %d
+
+## viewland.no_skill
+:: zh
+（不會觀地）
+
+## viewland.who
+:: zh
+誰爬上去看？

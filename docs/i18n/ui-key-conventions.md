@@ -71,6 +71,31 @@ label := a.tr.UI(c.uikey, c.label)
 
 `dwstrings uicheck` 認得這個形式（同一行有 key 形狀的字面值就當成已配好）。
 
+**第三種：key 是算出來的。** 索引即語意的表（陷阱九格、狀態值、房間顏色）不寫死
+key，而是由函式或字串拼接產生：
+
+```go
+func trapNameKey(c game.TrapCase) string { return fmt.Sprintf("trap.name%d", int(c)) }
+
+out = append(out, a.tr.UI(trapNameKey(c), trapNameZH[c]))
+
+// ui:dynamic trap.name —— 由 trapNameKey(c) 查表。
+var trapNameZH = [9]string{ "有什麼東西你看不見", ... }
+```
+
+這種寫法**靜態看不出「這個中文是那個 key 的 fallback」**，`uicheck` 會把它當成
+還沒遷。宣告上方加一行 `ui:dynamic <key 前綴>` 告訴它：這個宣告裡的中文是動態 key
+的 fallback，已經走翻譯層了。
+
+標記而不是在 `uicheck` 裡寫死一份清單，是因為清單會漂 —— 標記跟著程式碼走，
+而且它同時是給讀程式的人的說明。目前四處：`trap.name`（`trapui.go`）、
+`proving.colour.`（`provingui.go`）、`dungeon.use.target.`（`dungeonui.go`）、
+`examine.status`（`battleexamine.go`）。
+
+⚠ **這是唯一沒有自動檢查的縫**：動態 key 的目錄條目缺了，`uicheck` 不會叫
+（它不知道會產生哪些 key），畫面靜默退回 fallback。**加一項時兩邊都要動**：
+程式碼的表 ＋ `ui.txt`。
+
 ## 不算介面文案的
 
 這些**不要**遷，`uicheck` 也已經排除：

@@ -157,6 +157,7 @@ func provingColour(tr *i18n.Translator, c string) string {
 	return c
 }
 
+// ui:dynamic proving.colour. —— 由上面那一支用 `"proving.colour."+c` 查表。
 var provingColourNames = map[string]string{
 	"green": "綠色", "silver": "銀色", "brown": "棕色", "violet": "紫色",
 	"white": "白色", "grey": "灰色", "crimson": "緋紅", "black": "黑色",

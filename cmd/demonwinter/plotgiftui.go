@@ -190,7 +190,7 @@ func (a *app) drawPlotGift(dst *ebiten.Image) {
 	line("")
 	for i := range a.members {
 		c := &a.members[i]
-		line(fmt.Sprintf("%s%s　空 %d 格",
+		line(fmt.Sprintf(a.tr.UI("dungeon.member.freeslots", "%s%s　空 %d 格"),
 			memberMark(g.cursor, i), c.Name, freeSlots(c)))
 	}
 	line("")

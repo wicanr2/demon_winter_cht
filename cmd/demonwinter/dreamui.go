@@ -41,5 +41,5 @@ func (a *app) drawDream(dst *ebiten.Image) {
 		line(l)
 	}
 	line("　")
-	line("（按任意鍵）")
+	line(a.tr.UI("ending.press", "（按任意鍵）"))
 }

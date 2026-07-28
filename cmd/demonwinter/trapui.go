@@ -69,7 +69,7 @@ func (a *app) trapLines(c game.TrapCase, noticed bool, res game.TrapResult) []st
 
 // trapHitLine 是一下的敘述。四種陷阱落空時說法各不相同，照原版分開。
 func (a *app) trapHitLine(c game.TrapCase, h game.TrapHit) string {
-	name := "隊員"
+	name := a.tr.UI("trap.member.default", "隊員")
 	if h.Member >= 0 && h.Member < len(a.members) {
 		name = a.members[h.Member].Name
 	}
@@ -107,6 +107,7 @@ func trapNameKey(c game.TrapCase) string {
 //
 // `Bungei` 不譯 —— 出處在攻略與譯名表裡都查不到，
 // **不憑音譯造一個專有名詞**（`docs/re/68` §5）。
+// ui:dynamic trap.name —— 由 trapNameKey(c) 查表。
 var trapNameZH = [9]string{
 	"有什麼東西你看不見",
 	"毒針射中了",

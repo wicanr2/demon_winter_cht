@@ -110,7 +110,7 @@ func (a *app) answerRiddle(s *riddleScreen) {
 		// 而畫面上看不出原因。
 		d := game.SpectralPriestDoor
 		if err := a.writeTile(d.X, d.Y, game.SpectralPriestDoorOpen); err != nil {
-			a.message = fmt.Sprintf("開牆失敗：%v", err)
+			a.message = fmt.Sprintf(a.tr.UI("riddle.door.error", "開牆失敗：%v"), err)
 		}
 	case game.RiddleCaseTempleName:
 		s.result = []string{a.tr.UI(k+".right", s.riddle.Right[0])}
@@ -136,7 +136,7 @@ func (a *app) drawRiddle(dst *ebiten.Image) {
 			line(t)
 		}
 		line("　")
-		line("（按任意鍵）")
+		line(a.tr.UI("ending.press", "（按任意鍵）"))
 		return
 	}
 

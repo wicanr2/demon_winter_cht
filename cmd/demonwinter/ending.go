@@ -141,9 +141,9 @@ func (a *app) drawEnding(dst *ebiten.Image) {
 		}
 		line("　")
 		if e.creditTop+endingLinesPerPage < len(all) {
-			line("（按任意鍵繼續）")
+			line(a.tr.UI("ending.credits.more", "（按任意鍵繼續）"))
 		} else {
-			line("（按任意鍵）")
+			line(a.tr.UI("ending.press", "（按任意鍵）"))
 		}
 		return
 	case e != nil && e.done && e.page == endingPageAccept:
@@ -161,7 +161,7 @@ func (a *app) drawEnding(dst *ebiten.Image) {
 	a.drawEndingPage(line, page)
 	if page == endingPageOffer {
 		line("　")
-		line("　按 1 接受，按 2 婉拒")
+		line(a.tr.UI("ending.offer.choice", "　按 1 接受，按 2 婉拒"))
 	}
 }
 
@@ -272,15 +272,15 @@ func storyLines(src []string) []string {
 // 原版是寫死在 `ds:0x066a` 的英文字串，這裡用中文 ——
 // 它不在 `WIN.TXT` 裡（`docs/re/61` §2），所以本來就要自己給。
 func (a *app) drawEndingFallback(line func(string)) {
-	line("恭喜！")
+	line(a.tr.UI("ending.fallback.congrats", "恭喜！"))
 	line("　")
-	line("你通關了《冬之魔》。")
+	line(a.tr.UI("ending.fallback.cleared", "你通關了《冬之魔》。"))
 	line("　")
-	line("惡魔已被禁錮，漫長的冬天終於要過去了。")
-	line("希望這趟旅程沒有辜負你的時間。")
+	line(a.tr.UI("ending.fallback.sealed", "惡魔已被禁錮，漫長的冬天終於要過去了。"))
+	line(a.tr.UI("ending.fallback.thanks", "希望這趟旅程沒有辜負你的時間。"))
 	line("　")
 	line("　")
-	line("按任意鍵離開")
+	line(a.tr.UI("ending.fallback.exit", "按任意鍵離開"))
 }
 
 // loadWinText 讀結局文字。讀不到不算錯 —— 退回精簡祝賀就好。

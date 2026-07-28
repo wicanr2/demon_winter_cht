@@ -116,6 +116,7 @@ func examineStatusKey(s game.UnitStatus) string {
 }
 
 // examineStatusZH 是六種狀態的中文。索引就是原版的狀態值。
+// ui:dynamic examine.status —— 由 examineStatusKey(s) 查表。
 func examineStatusZH(s game.UnitStatus) string {
 	switch s {
 	case game.StatusPoison:

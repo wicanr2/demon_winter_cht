@@ -27,7 +27,7 @@ type viewLandScreen struct {
 
 func (a *app) openViewLand() {
 	if len(a.members) == 0 {
-		a.camp.message = "隊伍是空的"
+		a.camp.message = a.tr.UI("camp.empty", "隊伍是空的")
 		return
 	}
 	a.camp.message = ""
@@ -55,7 +55,7 @@ func (a *app) updateViewLand() error {
 			a.save.ViewedLandToday = true
 			v.x, v.y = game.ViewLandOrigin(a.party.X(), a.party.Y())
 			v.member = -1
-			a.camp.message = fmt.Sprintf("%s 爬上高處張望", c.Name)
+			a.camp.message = fmt.Sprintf(a.tr.UI("viewland.climbed", "%s 爬上高處張望"), c.Name)
 		}
 		return nil
 	}
@@ -76,16 +76,16 @@ func (a *app) drawViewLand(dst *ebiten.Image, line func(string)) {
 	v := a.camp.viewLand
 
 	if v.member >= 0 {
-		line("誰爬上去看？")
+		line(a.tr.UI("viewland.who", "誰爬上去看？"))
 		line("")
 		a.drawMemberList(line, v.member, func(i int) string {
 			if !a.members[i].HasSkill(game.SkillViewLand) {
-				return "（不會觀地）"
+				return a.tr.UI("viewland.no_skill", "（不會觀地）")
 			}
 			return ""
 		})
 		line("")
-		line("↑↓：選擇　Enter：確定　Esc：取消")
+		line(a.tr.UI("viewland.keys", "↑↓：選擇　Enter：確定　Esc：取消"))
 		if a.camp.message != "" {
 			line("")
 			line(a.camp.message)
@@ -103,13 +103,13 @@ func (a *app) drawViewLand(dst *ebiten.Image, line func(string)) {
 			layout.StatusX, y)
 		y += ui.LineHeight
 	}
-	right("觀地")
+	right(a.tr.UI("viewland.header", "觀地"))
 	right("")
-	right(fmt.Sprintf("座標 %d,%d", v.x, v.y))
-	right(fmt.Sprintf("子地圖 %d", a.mapID))
+	right(fmt.Sprintf(a.tr.UI("viewland.coord", "座標 %d,%d"), v.x, v.y))
+	right(fmt.Sprintf(a.tr.UI("viewland.mapid", "子地圖 %d"), a.mapID))
 	right("")
-	right("方向鍵：張望")
-	right("Esc：下來")
+	right(a.tr.UI("viewland.keys_look", "方向鍵：張望"))
+	right(a.tr.UI("viewland.keys_down", "Esc：下來"))
 }
 
 // drawMapWindow 以 (cx, cy) 為中心把世界地圖畫進地圖視窗，中心標一個框。

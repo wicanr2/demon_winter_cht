@@ -26,7 +26,7 @@ type worshipScreen struct {
 
 func (a *app) openWorship() {
 	if len(a.members) == 0 {
-		a.camp.message = "隊伍是空的"
+		a.camp.message = a.tr.UI("campcast.worship.empty", "隊伍是空的")
 		return
 	}
 	a.camp.message = ""
@@ -73,31 +73,31 @@ func (a *app) doWorship(w *worshipScreen) {
 		return
 	}
 	if !res.Answered {
-		a.camp.message = fmt.Sprintf("%s 的祈求沒有回應（成功率 %d%%）",
+		a.camp.message = fmt.Sprintf(a.tr.UI("campcast.worship.noanswer", "%s 的祈求沒有回應（成功率 %d%%）"),
 			caster.Name, res.Chance)
 		a.camp.worship = nil
 		return
 	}
 
-	name := fmt.Sprintf("法術 %d", res.SpellID)
+	name := fmt.Sprintf(a.tr.UI("campcast.worship.spellname", "法術 %d"), res.SpellID)
 	if n, err := a.strings.SpellName(res.SpellID); err == nil {
 		name = a.tr.Event(spellSourceFile, res.SpellID, n)
 	}
-	msg := fmt.Sprintf("%s 聽見了 %s 的祈求，降下%s\n",
+	msg := fmt.Sprintf(a.tr.UI("campcast.worship.answered", "%s 聽見了 %s 的祈求，降下%s")+"\n",
 		a.deityName(caster.Deity), caster.Name, name)
 	switch {
 	case !res.Cast.OK:
 		msg += "　" + res.Cast.Reason
 	case res.Cast.Delta > 0:
-		msg += fmt.Sprintf("　%s 回復 %d", target.Name, res.Cast.Delta)
+		msg += fmt.Sprintf(a.tr.UI("campcast.worship.heal", "　%s 回復 %d"), target.Name, res.Cast.Delta)
 	case res.Cast.Delta < 0:
-		msg += fmt.Sprintf("　%s 受到 %d", target.Name, -res.Cast.Delta)
+		msg += fmt.Sprintf(a.tr.UI("campcast.worship.damage", "　%s 受到 %d"), target.Name, -res.Cast.Delta)
 	case res.Cast.Released:
-		msg += "　束縛解開了"
+		msg += a.tr.UI("campcast.worship.released", "　束縛解開了")
 	case res.Cast.Withered:
-		msg += "　枯萎生效"
+		msg += a.tr.UI("campcast.worship.withered", "　枯萎生效")
 	}
-	a.camp.message = msg + fmt.Sprintf("\n祈禱成功率降為 %d%%", caster.PrayChance)
+	a.camp.message = msg + fmt.Sprintf("\n"+a.tr.UI("campcast.pray.chancedrop", "祈禱成功率降為 %d%%"), caster.PrayChance)
 	a.camp.worship = nil
 }
 
@@ -105,7 +105,7 @@ func (a *app) drawWorship(line func(string)) {
 	w := a.camp.worship
 
 	if !w.picked {
-		line("誰來祈求？")
+		line(a.tr.UI("campcast.worship.who", "誰來祈求？"))
 		line("")
 		a.drawMemberList(line, w.caster, func(i int) string {
 			c := a.members[i]
@@ -115,16 +115,16 @@ func (a *app) drawWorship(line func(string)) {
 			return fmt.Sprintf("%s　%d%%", a.deityName(c.Deity), c.PrayChance)
 		})
 		line("")
-		line("↑↓：選擇　Enter：祈求　Esc：取消")
+		line(a.tr.UI("campcast.worship.keys1", "↑↓：選擇　Enter：祈求　Esc：取消"))
 	} else {
-		line(fmt.Sprintf("%s 的祈求要落在誰身上？", a.members[w.caster].Name))
+		line(fmt.Sprintf(a.tr.UI("campcast.worship.target", "%s 的祈求要落在誰身上？"), a.members[w.caster].Name))
 		line("")
 		a.drawMemberList(line, w.target, func(i int) string {
 			m := a.members[i]
-			return fmt.Sprintf("生命 %d/%d", m.CurrentHP, m.MaxHP)
+			return fmt.Sprintf(a.tr.UI("campcast.worship.hp", "生命 %d/%d"), m.CurrentHP, m.MaxHP)
 		})
 		line("")
-		line("↑↓：選擇　Enter：確定　Esc：返回")
+		line(a.tr.UI("campcast.worship.keys2", "↑↓：選擇　Enter：確定　Esc：返回"))
 	}
 
 	if a.camp.message != "" {
@@ -170,7 +170,7 @@ const (
 
 func (a *app) openCampCast() {
 	if len(a.members) == 0 {
-		a.camp.message = "隊伍是空的"
+		a.camp.message = a.tr.UI("campcast.worship.empty", "隊伍是空的")
 		return
 	}
 	c := &castScreen{}
@@ -222,7 +222,7 @@ func (a *app) updateCampCast() error {
 		case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 			a.rebuildCampSpells(c)
 			if len(c.entries) == 0 {
-				a.camp.message = fmt.Sprintf("%s 沒有能在營地放的法術",
+				a.camp.message = fmt.Sprintf(a.tr.UI("campcast.cast.nospell", "%s 沒有能在營地放的法術"),
 					a.members[c.caster].Name)
 				return nil
 			}
@@ -295,21 +295,21 @@ func (a *app) doCampCast(c *castScreen) {
 		a.camp.message = res.Reason
 		return
 	}
-	msg := fmt.Sprintf("%s 對 %s 施放%s", caster.Name, target.Name, e.name)
+	msg := fmt.Sprintf(a.tr.UI("campcast.cast.cast", "%s 對 %s 施放%s"), caster.Name, target.Name, e.name)
 	switch {
 	case res.Delta > 0:
-		msg += fmt.Sprintf("　回復 %d", res.Delta)
+		msg += fmt.Sprintf(a.tr.UI("campcast.cast.heal", "　回復 %d"), res.Delta)
 	case res.Delta < 0:
-		msg += fmt.Sprintf("　造成 %d", -res.Delta)
+		msg += fmt.Sprintf(a.tr.UI("campcast.cast.damage", "　造成 %d"), -res.Delta)
 	case res.Released:
-		msg += "　束縛解開了"
+		msg += a.tr.UI("campcast.worship.released", "　束縛解開了")
 	case res.Withered:
-		msg += "　枯萎生效"
+		msg += a.tr.UI("campcast.worship.withered", "　枯萎生效")
 	default:
-		msg += "　沒有明顯的變化"
+		msg += a.tr.UI("campcast.cast.noeffect", "　沒有明顯的變化")
 	}
 	if res.Died {
-		msg += "　" + target.Name + " 倒下了"
+		msg += "　" + target.Name + a.tr.UI("campcast.cast.died", " 倒下了")
 	}
 	a.camp.message = msg
 	a.camp.cast = nil
@@ -320,16 +320,16 @@ func (a *app) drawCampCast(line func(string)) {
 
 	switch c.step {
 	case castPickCaster:
-		line("誰來施法？")
+		line(a.tr.UI("campcast.cast.who", "誰來施法？"))
 		line("")
 		a.drawMemberList(line, c.caster, func(i int) string {
-			return fmt.Sprintf("法力 %d/%d", a.members[i].CurrentSP, a.members[i].MaxSP)
+			return fmt.Sprintf(a.tr.UI("campcast.cast.sp", "法力 %d/%d"), a.members[i].CurrentSP, a.members[i].MaxSP)
 		})
 		line("")
-		line("↑↓：選擇　Enter：確定　Esc：取消")
+		line(a.tr.UI("campcast.cast.keys1", "↑↓：選擇　Enter：確定　Esc：取消"))
 
 	case castPickSpell:
-		line(fmt.Sprintf("%s 要放什麼？", a.members[c.caster].Name))
+		line(fmt.Sprintf(a.tr.UI("campcast.cast.which", "%s 要放什麼？"), a.members[c.caster].Name))
 		line("")
 		for i, e := range c.entries {
 			mark := "   "
@@ -341,32 +341,32 @@ func (a *app) drawCampCast(line func(string)) {
 				// 主線動作是固定花費，不走法術表的最低法力
 				cost = plotCost(e.plot)
 			}
-			line(fmt.Sprintf("%s%s最低 %d 點",
+			line(fmt.Sprintf(a.tr.UI("campcast.cast.entry", "%s%s最低 %d 點"),
 				mark, textlayout.PadCells(e.name, 14), cost))
 		}
 		line("")
-		line("↑↓：選擇　Enter：確定　Esc：返回")
+		line(a.tr.UI("campcast.worship.keys2", "↑↓：選擇　Enter：確定　Esc：返回"))
 
 	case castPickPower:
 		e := c.entries[c.spell]
-		line(fmt.Sprintf("%s：投入多少法力？", e.name))
+		line(fmt.Sprintf(a.tr.UI("campcast.cast.power_ask", "%s：投入多少法力？"), e.name))
 		line("")
-		line(fmt.Sprintf("　%d（最低 %d，最多 %d）",
+		line(fmt.Sprintf(a.tr.UI("campcast.cast.power", "　%d（最低 %d，最多 %d）"),
 			c.power, e.spell.M, a.members[c.caster].CurrentSP))
 		line("")
-		line("↑↓：加減　Enter：確定　Esc：返回")
+		line(a.tr.UI("campcast.cast.keys2", "↑↓：加減　Enter：確定　Esc：返回"))
 
 	default:
-		line(fmt.Sprintf("%s 的%s要放在誰身上？",
+		line(fmt.Sprintf(a.tr.UI("campcast.cast.target", "%s 的%s要放在誰身上？"),
 			a.members[c.caster].Name, c.entries[c.spell].name))
 		line("")
 		a.drawMemberList(line, c.target, func(i int) string {
 			m := a.members[i]
-			return fmt.Sprintf("生命 %d/%d　法力 %d/%d",
+			return fmt.Sprintf(a.tr.UI("campcast.cast.hpsp", "生命 %d/%d　法力 %d/%d"),
 				m.CurrentHP, m.MaxHP, m.CurrentSP, m.MaxSP)
 		})
 		line("")
-		line("↑↓：選擇　Enter：施放　Esc：返回")
+		line(a.tr.UI("campcast.cast.keys3", "↑↓：選擇　Enter：施放　Esc：返回"))
 	}
 
 	if a.camp.message != "" {

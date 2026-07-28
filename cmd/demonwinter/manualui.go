@@ -38,7 +38,7 @@ type manualScreen struct {
 // openManual 打開手札。
 func (a *app) openManual() {
 	if a.manual.Len() == 0 {
-		a.message = "手札讀不到（assets/manual/）"
+		a.message = a.tr.UI("manual.unavailable", "手札讀不到（assets/manual/）")
 		return
 	}
 	a.manualUI = &manualScreen{}
@@ -107,7 +107,7 @@ func (a *app) drawManual(dst *ebiten.Image) {
 	}
 
 	if !m.reading {
-		line("手札")
+		line(a.tr.UI("manual.title", "手札"))
 		line("")
 		for i, t := range a.manual.Titles() {
 			mark := "　"
@@ -117,12 +117,12 @@ func (a *app) drawManual(dst *ebiten.Image) {
 			line(mark + t)
 		}
 		line("")
-		line("↑↓ 選擇　Enter 翻開　Esc 收起")
+		line(a.tr.UI("manual.toc.keys", "↑↓ 選擇　Enter 翻開　Esc 收起"))
 		return
 	}
 
 	sec := a.manual.At(m.section)
-	line(fmt.Sprintf("手札　%s", sec.Title))
+	line(fmt.Sprintf(a.tr.UI("manual.reading.header", "手札　%s"), sec.Title))
 	line("")
 	for i := m.top; i < len(sec.Lines) && i < m.top+manualLinesPerPage; i++ {
 		line(sec.Lines[i])
@@ -131,10 +131,10 @@ func (a *app) drawManual(dst *ebiten.Image) {
 	// 捲動提示畫在固定位置，不跟著內文長度跑 —— 不然短的章節提示會浮在中間。
 	y = layout.CanvasHeight - ui.LineHeight*2
 	if len(sec.Lines) > manualLinesPerPage {
-		line(fmt.Sprintf("第 %d–%d 行／共 %d　空白鍵翻頁　Esc 回目錄",
+		line(fmt.Sprintf(a.tr.UI("manual.reading.scroll", "第 %d–%d 行／共 %d　空白鍵翻頁　Esc 回目錄"),
 			m.top+1, min(m.top+manualLinesPerPage, len(sec.Lines)), len(sec.Lines)))
 	} else {
-		line("Esc 回目錄")
+		line(a.tr.UI("manual.reading.back", "Esc 回目錄"))
 	}
 }
 

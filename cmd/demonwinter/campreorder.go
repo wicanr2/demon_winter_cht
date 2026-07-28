@@ -30,7 +30,7 @@ type reorderScreen struct {
 
 func (a *app) openReorder() {
 	if len(a.members) == 0 {
-		a.camp.message = "隊伍是空的"
+		a.camp.message = a.tr.UI("camp.empty", "隊伍是空的")
 		return
 	}
 	r := &reorderScreen{before: a.save.Formation, grid: a.save.Formation}
@@ -45,7 +45,7 @@ func (a *app) updateReorder() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		a.save.Formation = r.before
 		a.camp.reorder = nil
-		a.camp.message = "維持原本的陣型"
+		a.camp.message = a.tr.UI("reorder.kept", "維持原本的陣型")
 		return nil
 	}
 	if r.next >= len(a.members) {
@@ -54,7 +54,7 @@ func (a *app) updateReorder() error {
 			inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 			a.save.Formation = r.grid
 			a.camp.reorder = nil
-			a.camp.message = "陣型已更新"
+			a.camp.message = a.tr.UI("reorder.updated", "陣型已更新")
 		}
 		return nil
 	}
@@ -65,7 +65,7 @@ func (a *app) updateReorder() error {
 			continue
 		}
 		if !r.grid.Place(cell, r.next) {
-			r.message = fmt.Sprintf("%s 格已經有人了", game.CellLabel(cell))
+			r.message = fmt.Sprintf(a.tr.UI("reorder.occupied", "%s 格已經有人了"), game.CellLabel(cell))
 			return nil
 		}
 		r.message = ""
@@ -83,21 +83,21 @@ func (a *app) updateReorder() error {
 func (a *app) drawReorder(line func(string)) {
 	r := a.camp.reorder
 
-	line("排列陣型")
+	line(a.tr.UI("reorder.header", "排列陣型"))
 	line("")
 	a.drawFormationGrid(line, r.grid)
 	line("")
 
 	if r.next < len(a.members) {
-		line(fmt.Sprintf("%s 站哪一格？（A–I）", a.members[r.next].Name))
+		line(fmt.Sprintf(a.tr.UI("reorder.prompt", "%s 站哪一格？（A–I）"), a.members[r.next].Name))
 	} else {
-		line("全員就位。Enter：收工")
+		line(a.tr.UI("reorder.done", "全員就位。Enter：收工"))
 	}
 	if r.message != "" {
 		line(r.message)
 	}
 	line("")
-	line("Esc：取消，維持原本的陣型")
+	line(a.tr.UI("reorder.keys", "Esc：取消，維持原本的陣型"))
 }
 
 // drawFormationGrid 把九格畫成 3×3，每一格顯示站在那裡的隊員名字。
