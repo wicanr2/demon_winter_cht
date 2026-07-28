@@ -195,6 +195,21 @@ func (a *app) updateCreate() error {
 			c.cursor = (c.cursor - 1 + len(a.members)) % len(a.members)
 		case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 			a.members[c.cursor] = c.create.Finish(string(c.name), c.class)
+			// **入隊要占一格陣型。** 原版建角在人數 +1 的前一步就做了
+			// （`0x15089` 的迴圈：找第一個 `0xff` 填進新人的索引，`docs/re/34` §3）。
+			//
+			// 少了這一步的症狀不是報錯，是**戰鬥時一個隊員都不上場**：
+			// `startBattle` 照陣型佈陣（`DeployPartyAt`），而新遊戲把九格
+			// 全寫成 `0xff`（`ApplyNewGame`），於是每一場隨機遭遇都只有怪物、
+			// 一回合就結束、沒有傷害也沒有金幣。實跑 300 步、四場仗，
+			// 血量法力糧食金幣**四個數字一個都沒動**（`docs/playtest/12`）。
+			//
+			// 判斷「已經在陣型裡就不再加」是為了 `F1`：那條路是覆寫既有槽位，
+			// 每次都加會把同一個人塞進好幾格。
+			if f := game.Formation(a.save.Formation); f.CellOf(c.cursor) < 0 {
+				f.AddMember(c.cursor)
+				a.save.Formation = f
+			}
 			a.message = fmt.Sprintf(a.tr.UI("create.slot.added", "%s 已加入隊伍第 %d 位（按 S 存檔才會留下）"),
 				string(c.name), c.cursor+1)
 			a.create = nil

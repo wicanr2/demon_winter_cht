@@ -1,0 +1,40 @@
+# A6 第二段（觀測用）：從第一段的存檔接續，在新格里昂西邊來回走 190 步吃遭遇。
+#
+# 目的有兩個：
+#   1. 驗「存檔接續」—— 不帶 -newgame，直接吃 <輸出目錄>/PARTY.DAT。
+#   2. 量遭遇的產出（金幣／經驗）—— 第一段 101 步只遇兩場，而且金幣沒變。
+#
+# 先往西離開城鎮格再來回走：站在城鎮格旁邊來回會反覆進城。
+
+shot 00-start
+rep 10 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+rep 8 Right
+rep 8 Left
+shot 01-after
+key s
+wait 0.5
+key p
+wait 0.5
+shot 02-roster

@@ -3157,6 +3157,7 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`07-character-creation-and-ten-daggers.md`](docs/playtest/07-character-creation-and-ten-daggers.md) | 建角流程、強制建滿五人 |
 | [`08-battle-had-no-consequences.md`](docs/playtest/08-battle-had-no-consequences.md) | 戰鬥傷害沒寫回、全隊死亡 |
 | [`09-traps-wired.md`](docs/playtest/09-traps-wired.md) | 陷阱七種傷害實機驗收 |
+| [`12-empty-battles-and-the-ship-you-already-own.md`](docs/playtest/12-empty-battles-and-the-ship-you-already-own.md) | **每一場遭遇都是空的**：建角沒把人放進陣型（`Formation.AddMember` 是本輪第二個零呼叫端），所以新遊戲的隊伍永遠打不了仗 —— 四場仗、四個數字一個都沒動。順帶查出**新遊戲就有一艘船**（地圖 1 的 (13,51)，36 步走得到），買船是備案不是必經 |
 | [`11-a6-leg1-and-the-silent-zero-sp.md`](docs/playtest/11-a6-leg1-and-the-silent-zero-sp.md) | **A6 第一段**：建角 ＋ 陸路 101 步到新格里昂（買船的城鎮）。挖出「施法職業初始法力永遠是 0」—— 保守的預設值把 120 點法力那條路擋住了，原版的規則是單一個 `職業 > 2` 的比較（連盜賊都有法力）|
 | [`10-world-edge-was-never-wired.md`](docs/playtest/10-world-edge-was-never-wired.md) | **世界只有一格**：`CrossEdge` 解完沒有呼叫端。加上跨圖規劃器之後量出「沒有船主線走不完」（陸路 4 張 vs 含航海 23 張）、破關在 220 步外、41／51／52 進不去（未解）|
 
@@ -3298,6 +3299,8 @@ CGA sprite 32×16 vs 16×32、`.SHE` 16×56 vs 32×28、
 
 | 斷言 | 實際 |
 |---|---|
+| `startBattle` 的註解：「入隊會找第一個空格、**建角與新遊戲都會把人放進陣型**，所以『不在陣型裡』只會是刻意的」| **建角完全沒碰陣型。** `ApplyNewGame` 把九格寫成 `0xff`（照原版），而建角那一側沒有對應的 `AddMember` —— 結果是新遊戲的隊伍**每一場遭遇都只有怪物**，一回合結束、沒傷害沒金幣，畫面與軌跡都正常（`docs/playtest/12`）|
+| `docs/playtest/10` §5.1：「買船不是選配，是主線必經」| 量測沒錯（陸路只到 4 張子地圖），但**新遊戲就給了一艘船**（`0x14956`–`0x1497a`：地圖 1 的 (13,51)，船體 67）。從起點 36 步走得到。買船（570–680 金）是備案 |
 | `docs/spec/05-character.md`：「初始 SP 依職業而異，只實測了巫師（＝智力）與遊俠（＝0），其餘 8 個職業未測」＋ 實作把未測的一律給 0 | **原版是單一個 `cmpw $0x2 / jle`**（`0x14f40`）：職業索引 0–2 沒有法力，3–9 全部等於智力，**連盜賊都有**。舊註解推測「依是否天生具備符文／吟唱魔法決定」會把盜賊排除。<br>更重要的是**那個保守值把主線擋住了**：破關要 120 點法力，一支隊伍只有巫師有法力怎麼練都湊不到。「未測就給 0」不會報錯，只會讓某條路走不完（`docs/playtest/11`）|
 
 | 曾經寫過 | 真相 |
