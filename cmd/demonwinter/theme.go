@@ -71,7 +71,7 @@ func themeName(id themeID) string {
 		return "CGA"
 	}
 	if id == themeModern {
-		return "Modern EGA"
+		return "Modern Icon"
 	}
 	return "EGA"
 }
@@ -87,7 +87,7 @@ func nextThemeID(id themeID) themeID {
 	}
 }
 
-// toggleVideoTheme 在原版 EGA（.SHE）與 CGA（.SHP）素材間即時切換。
+// toggleVideoTheme 在原版 EGA、CGA 與 Modern Icon 素材間即時切換。
 //
 // 兩套 theme 已在啟動時完整預載，這裡只交換指標；因此不會出現 atlas
 // 上傳中的半幀。倚天 16×15 字型刻意不切換：F8 是美術 theme，不應讓

@@ -3591,7 +3591,16 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 幻象從戰場移除、紀錄顯示「測試幻象　消散了」，接著正常輪到 Stumpy，
 > 見 `docs/playtest/19`。
 >
-> **Modern EGA 沒有停在「等審稿」。** 新增低紋理、大形優先的 B 方向與
+> **2026-07-29 Modern Icon 新基線（取代下方舊 Modern EGA 生產路線）。**
+> 使用者已把第三主題正式改名為 Modern Icon，核准
+> `modern-ega-concept.png` 作主要延伸方向、`modern-ega-m0-terrain-study-b.png`
+> 作輔助；明確否決 M1-B runtime trial、32×28 runtime proof 與 direct-downscale
+> failed 三圖。remake 不再受像素美術或 32×28 生產尺寸限制，也不得把概念圖
+> downscale。新架構須保留邏輯索引、格位、anchor、碰撞及劇情狀態，改在最終
+> 1280×800 畫布的高解析呈現層重畫。首張非像素延伸稿 v1 因浮島圓盤不利拼接
+> 自行退回；正投影方格 v2 收在 `docs/design/img/modern-icon-direction-v2.png`。
+>
+> **以下為被新基線取代的舊 Modern EGA 研究紀錄。** 新增低紋理、大形優先的 B 方向與
 > 強制 32×28 原生資訊量證明，建議 B 作 M1 runtime 基準；同時完成 PNG atlas
 > loader／manifest 契約，會嚴格擋錯尺寸、錯格數、半透明與逃出 theme 目錄的
 > 路徑。`-modern-theme-dir` 可裝候選 atlas，留空仍走安全的完整調色預覽。

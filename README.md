@@ -15,8 +15,8 @@ SSI《Demon's Winter》（1988, DOS）的引擎逆向與繁體中文化專案。
 引擎已經可以從原版資料載入並實際遊玩 —— 走地圖、打仗、進城、紮營、觸發劇情、存檔，
 畫面與介面全部中文化。素材預設走原版的 **EGA 十六色**（`.SHE` ＋ 原版自己設進調色盤
 暫存器的那 16 個值），CGA 四色版可用 `-video cga` 啟動；第三套可選
-Modern EGA 可用 `-video modern` 啟動。遊戲中按 `F8` 可即時輪替
-EGA → CGA → Modern EGA，不改遊戲規則或存檔。
+Modern Icon 可用 `-video modern` 啟動。遊戲中按 `F8` 可即時輪替
+EGA → CGA → Modern Icon，不改遊戲規則或存檔。
 以下都是 `tools/screenshot.sh` 在 headless 環境實跑截下來的。
 
 | | |
@@ -44,7 +44,7 @@ DOSBox 中的 1988 原版；中、右圖是 remake 在同一個戶外測試位�
 
 | 面向 | 原版 | 現在的 remake |
 |---|---|---|
-| 美術資料 | EGA 或 CGA 版本各自啟動 | 三套 terrain、combat、monster、ship atlas 都預載；`F8` 依 EGA → CGA → Modern EGA 輪替，切換不改存檔與戰鬥狀態 |
+| 美術資料 | EGA 或 CGA 版本各自啟動 | `F8` 依 EGA → CGA → Modern Icon 輪替；Modern Icon 是另行重繪的可選現代主題，切換不改存檔與戰鬥狀態 |
 | 還原尺度 | EGA 640×350、CGA 320×200 | EGA tile 還原為 32×28；CGA 16×16 以 nearest-neighbor 放到 32×32，不假裝兩者原始比例相同 |
 | 字型與語言 | 英文 `ASC/GOT` 點陣 | 中文與全形英數使用倚天 16×15 預設粗體；哥德章節字仍取原版 `GOT.FNE` |
 | 版面 | 右側固定紅底指令列，80×25 字元式資訊密度 | 保留地圖、隊伍表與紅底選單的骨架，擴成 640×400 以容納可讀中文、訊息與遊戲內手札 |
@@ -52,69 +52,42 @@ DOSBox 中的 1988 原版；中、右圖是 remake 在同一個戶外測試位�
 | 海戰操作 | 相對轉舵與直行分開，轉向耗點 | 刻意保留原規則，不套用探索的絕對方向簡化 |
 | 噴吐特效 | race 選 terrain tile 6／7／8，沿錐形逐格繪製 | 已由 IDA 9.4 追到同一 draw call 並照接，不再使用暫代橘色方塊（[`docs/re/106`](docs/re/106-breath-tile-source.md)） |
 
-#### Modern EGA（可玩預覽）
+#### Modern Icon（高解析重繪方向已核准）
 
-第三套主題不是「原版還原」，而是以 EGA 構圖、剪影與功能色為根的可選現代像素
-美化。現在已有完整可玩的第一版：由原版 EGA 的 102+102 地形、combat、monster、
-ship 全 atlas 做固定 16 色現代調色，frame 數、尺寸、索引與黑底語意完全不變，
-所以不會因美化洩漏密門或改掉碰撞。這一版刻意稱為「調色預覽」而非完成重畫；
-設計師方向稿供後續逐格手繪時保持同一套材質與輪廓語言。
+第三套主題不是「原版還原」，也不再稱為 Modern EGA。它是 remake 專用的
+**Modern Icon**：保留原版 tile index、位置、碰撞、角色朝向與規則語意，但美術
+不受 32×28 像素格或復古點陣風格限制，改由高解析呈現層繪製重新設計的圖示。
+原有調色預覽暫時只作 F8 與全流程相容底稿，不代表正式 Modern Icon 美術。
 
-| 初期方向稿 | 生產美術方向表 |
+| 核准的主要概念方向 | 新的 Modern Icon 延伸方向 |
 |---|---|
-| [![Modern EGA 初期方向稿](docs/design/img/modern-ega-concept.png)](docs/design/modern-ega-theme.md) | [![Modern EGA 生產方向表](docs/design/img/modern-ega-production-direction.png)](docs/design/modern-ega-theme.md) |
+| [![Modern Icon 主要概念方向](docs/design/img/modern-ega-concept.png)](docs/design/modern-ega-theme.md) | [![Modern Icon 高解析延伸方向](docs/design/img/modern-icon-direction-v2.png)](docs/design/modern-ega-theme.md) |
 
-![Modern EGA M0 常態／冬季地形試片](docs/design/img/modern-ega-m0-terrain-study.png)
+輔助參考 `modern-ega-m0-terrain-study-b.png` 亦已核准。先前的
+`modern-ega-m1-b-runtime-trial.png`、`modern-ega-m0-terrain-study-b-runtime-proof.png`
+及 `modern-ega-b-direct-downscale-failed.png` 已由使用者明確否決；它們只保留為
+歷史研究證據，不會延伸、量產或進入正式素材。
 
-M0 試片把深水、岸線、平原、森林、山、城鎮與隊伍圖示作常態／冬季上下配對，
-用來審核季節語意和剪影；它是放大方向稿，不能直接縮成 32×28 atlas。山、城鎮
-與多方向岸線仍須依原版每個索引逐格手工像素化。
-
-為了讓審稿不是只看大張漂亮圖，另做一套紋理更少、以大形為主的 B 方向，並把
-每格強制壓到真正的 32×28 再最近鄰放大檢查：
-
-| B：低紋理大形方向 | B：32×28 原生資訊量證明 |
-|---|---|
-| [![Modern EGA B 方向](docs/design/img/modern-ega-m0-terrain-study-b.png)](docs/design/modern-ega-theme.md) | [![Modern EGA B 原生尺寸證明](docs/design/img/modern-ega-m0-terrain-study-b-runtime-proof.png)](docs/design/modern-ega-theme.md) |
-
-B 在水岸、森林、山、城與角色剪影上較穩，建議作 M1 runtime 基準；兩張仍是
-候選審稿材料，不是可以直接切進遊戲的 atlas。
-
-並已真的把 B 強制縮圖裝進遊戲測過；結果出現海岸接縫、規律平原噪音與角色
-過小，因此那條路已明確否決。失敗畫面與逐項裁決收在
-[`Modern EGA 規格 §1.1`](docs/design/modern-ega-theme.md#11-直接縮圖的-runtime-反證)；
-後續只接受依原版索引逐格手工像素化的試片。
-
-第一批真正原生 32×28 的 M1-B 試片也已進正式 loader 實跑：平原、深水兩相位、
-森林、城鎮與北向隊伍兩步動畫共七個已證 index。低頻平鋪與角色 anchor 通過，
-但未替換索引仍會與新圖形成風格跳接，因此它是**可供過目的 bounded trial**，
-不是完成的 Modern EGA。詳見 [`docs/playtest/17`](docs/playtest/17-modern-ega-m1-b-bounded-runtime.md)。
-
-![Modern EGA M1-B 七索引實機試片](docs/design/img/modern-ega-m1-b-runtime-trial.png)
-
-![Modern EGA 可玩調色預覽實機畫面](docs/images/09-remake-modern-world.png)
-
-詳見 [`Modern EGA 美術與整合規格`](docs/design/modern-ega-theme.md)。跨作品引擎則已完成
+詳見 [`Modern Icon 美術與整合規格`](docs/design/modern-ega-theme.md)。跨作品引擎則已完成
 第一輪抽離評估：建議先在 monorepo 抽 gfx、runtime、storage、grid 與可重播 RNG，
 取得第二款真實遊戲的格式證據後才發布通用 module，避免把單一作品的硬編碼誤稱為
 SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）。
 
-##### Modern EGA 規劃索引（尚待使用者過目）
+##### Modern Icon 規劃索引
 
-目前狀態必須明確分開：
+目前方向已核准，但全套重繪及實機驗收尚未完成：
 
 | 階段 | 狀態 | 內容與驗收 |
 |---|---|---|
-| P0 完整可玩調色預覽 | **已實作，未視為美術定稿** | 五套 EGA atlas 全量映到現代色盤；保留 frame 數、尺寸與索引，用來先驗證 F8、完整流程及不影響規則 |
-| P1 視覺方向審查 | **已有 A/B 與原生壓縮證明，等待使用者核准** | 檢視初期方向稿、生產方向表、A/B 地形試片、B 的 32×28 壓縮證明與實機預覽；建議 B 作 runtime 基準 |
-| P2 代表素材試片 | **loader／manifest 契約已完成；逐格 runtime 試片待 P1 核准** | PNG loader 會擋尺寸、格數、alpha 與非法路徑；下一步須依核准方向手工像素化同索引 32×28 terrain，並補隊員、怪物、船與 UI frame |
-| P3 全 atlas 量產 | 待試片核准 | 補齊 102+102 terrain、44 combat、240 monster、32 ship frames；自動檢查數量、尺寸、方向與索引 |
+| P0 相容調色預覽 | **已實作，僅作底稿** | 驗證 F8、完整流程及主題切換不影響規則 |
+| P1 視覺方向審查 | **已核准** | 以 `modern-ega-concept.png` 為主、M0-B 為輔；主題定名 Modern Icon，否決縮圖與像素化路線 |
+| P2 高解析代表素材與呈現層 | **進行中** | 以同一邏輯索引與格位，於放大後畫布繪出高解析 terrain、角色、怪物與船樣本 |
+| P3 全素材量產 | 待代表畫面核准 | 補齊常態／冬季、戰鬥、怪物、船及必要 UI 圖示，逐索引檢查語意與方向 |
 | P4 最終視覺驗收 | 待量產 | 世界、冬季、地城、戰鬥、海戰同狀態三主題截圖；密門、陷阱、黑色地形與色弱辨識抽樣 |
 
-完整 palette、像素密度、manifest、素材分批與驗收門檻，以
+完整呈現架構、素材分批與驗收門檻，以
 [`docs/design/modern-ega-theme.md`](docs/design/modern-ega-theme.md) 為單一設計規格。
-在 P1/P2 經使用者確認前，README 與發行說明只能稱目前版本為
-「Modern EGA 可玩調色預覽」，不能稱完成重畫。
+在 P2–P4 完成前，README 與發行說明不得把 Modern Icon 稱為完成重畫。
 
 驗收採「前期完整垂直切片＋後期高風險串接抽樣」：新遊戲建角、購物與換裝，
 正常戰鬥／死亡／治療、狗頭人營地、升級、跨圖抵達加穆爾神殿均由可重播腳本實際跑通；

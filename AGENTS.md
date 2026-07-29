@@ -36,16 +36,20 @@ changes. It complements `CONTEXT.md`; it does not replace evidence in `docs/re/`
   `PARTY.DAT`, `nSS.DAT`, `ITEMLOCB.DAT`, or maps.
 - Release packages must pass the deny-list scan in `tools/package-release.sh`.
 
-## Modern EGA status
+## Modern Icon status
 
 - EGA and CGA are preserved original themes.
-- Modern EGA is a third optional remake theme. The current runtime implementation is a complete,
-  index-preserving palette preview, not user-approved frame-by-frame replacement art.
-- Do not call Modern EGA “final”, “approved”, or “completed redraw” until the user has reviewed
-  the direction and representative in-game screenshots.
+- Modern Icon is the third optional remake theme. It is not pixel art and must not be produced by
+  downscaling concept sheets into the original 32×28 frames. It may use a high-resolution
+  presentation layer while retaining the original logical tile indices, anchors, and hitboxes.
+- The user approved `modern-ega-concept.png` as the primary direction and
+  `modern-ega-m0-terrain-study-b.png` as supporting reference. The runtime-trial, runtime-proof,
+  and direct-downscale-failed images are rejected and must not be used as production art.
+- Do not call Modern Icon “final” or “completed redraw” until representative in-game screenshots
+  and the full production atlas have passed review.
 - Art gate: user reviews direction → representative terrain/combat/monster/ship samples →
   contact-sheet/index checks → full atlas production → same-state screenshot acceptance.
-- F8 order is EGA → CGA → Modern EGA → EGA. Theme changes must not mutate save, RNG, collision,
+- F8 order is EGA → CGA → Modern Icon → EGA. Theme changes must not mutate save, RNG, collision,
   secret-door visibility, combat, or story state.
 - The Eten 16×15 bold font remains shared by all themes.
 
@@ -88,6 +92,6 @@ changes. It complements `CONTEXT.md`; it does not replace evidence in `docs/re/`
 - `CONTEXT.md` §7 is the internal worklist source of truth.
 - Every release statement must distinguish:
   1. original EGA/CGA restoration,
-  2. optional Modern EGA remake preview,
+  2. optional Modern Icon remake theme,
   3. generated concept/direction art that is not a runtime atlas.
 - Packaging is last: rules, visuals, tests, and A6 sampling precede the release archive.
