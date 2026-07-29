@@ -19,7 +19,7 @@
 - 解壓後 `-list-scenes` smoke test 通過。
 - 發行 staging 的禁入掃描通過：沒有原版
   `.DAT/.DTT/.SHE/.SHP/.PIE/.PIC` 或倚天字型檔。
-- 最終包含 426 張 Modern Icon PNG、836 條 UI key，共 447 個檔案。
+- 最終包含 442 張 Modern Icon PNG、836 條 UI key，共 463 個檔案。
 - `package-release.sh` 的建置、staging、禁入掃描、壓縮與雜湊現在全部位於
   同一個無網路、具資源限制的 Docker 容器；checksum 只記錄檔名，可在任意
   解壓目錄直接驗證。
@@ -27,12 +27,13 @@
 最終 SHA-256：
 
 ```text
-5d75408d2fd06d08ebdec04c9ad1a62dbdd9d399bbce221f39ca5a3cecaa5fe2  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
+99d4d81972e36f6011de45bf9974f7a65477eebedd11db63c0e24f53c6ce9bc0  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
 ```
 
 2026-07-30 最後收斂吐息地形規則、怪物繞障、Modern Icon 地城 namespace、
 JSON 文字與 README 索引後重新打包；`sha256sum -c`、Xvfb 下直接執行包內
-`demonwinter -list-scenes`、426 張 Modern Icon PNG、447 檔及禁入掃描均再次通過。
+`demonwinter -list-scenes`、442 張 Modern Icon PNG、463 檔及禁入掃描均再次通過。
+新增的 16 張是 `0x5a` 正常／冬季各八個凍土變體；母稿與開發文件不進玩家包。
 
 | Modern Icon 與現代命令卡 | 復古紅色命令列 | F1 手札 |
 |---|---|---|

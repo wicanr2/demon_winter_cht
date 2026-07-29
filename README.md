@@ -95,6 +95,26 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 完整呈現架構、素材分批與驗收門檻，以
 [`docs/design/modern-ega-theme.md`](docs/design/modern-ega-theme.md) 為單一設計規格。
 在 P2–P4 完成前，README 與發行說明不得把 Modern Icon 稱為完成重畫。
+地城量產的客觀基線是 MAP1–MAP5 實際使用 **59 個索引**，不是方向稿中的
+12 個概念物件；頻率、逐地圖分布、通行值與完成度命令見
+[`Modern Icon 地城量產規格`](docs/design/modern-icon-dungeon-production.md)及
+[`dungeon-inventory.json`](artwork/modern-icon/m1/dungeon-inventory.json)。
+
+| 地城材質與物件方向稿（待審） | 目前安全相容底稿實機 |
+|---|---|
+| [![Modern Icon 地城方向稿](docs/design/img/modern-icon-dungeon-direction-v1.png)](docs/design/modern-icon-dungeon-production.md) | [![Modern Icon 地城安全底稿](docs/design/img/modern-icon-dungeon-fallback-runtime.png)](docs/playtest/49-modern-icon-dungeon-namespace.md) |
+
+全域檢查也修正了早期世界盤點的範圍漏洞：map 21 的 `0x5a` 凍土先前不在
+33–64 掃描範圍內。現已補成正常／冬季各八變體，全部 SUM.MAP 世界段的
+正常與冬季缺格皆為 `none`：
+
+| 正常凍土 | 冬季凍土 |
+|---|---|
+| ![Modern Icon 正常凍土](docs/design/img/modern-icon-tundra-normal-runtime.png) | ![Modern Icon 冬季凍土](docs/design/img/modern-icon-tundra-winter-runtime.png) |
+
+盤點勘誤、生成方式與固定場景證據見
+[`docs/playtest/51`](docs/playtest/51-modern-icon-tundra-and-dungeon-inventory.md)。
+
 高解析 loader 與第一張實機架構證據見
 [`docs/playtest/20`](docs/playtest/20-modern-icon-high-resolution-layer.md)：它已證明
 64×56 最終畫布覆寫可行；實際索引盤點後，首批平原與深海也已進入同一固定場景。

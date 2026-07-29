@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
@@ -26,6 +27,7 @@ func main() {
 	y := flag.Int("y", 50, "中心 Y")
 	find := flag.String("find-tiles", "", "掃描所有地圖，找含指定十六進位 tile 的視窗")
 	inventory := flag.Bool("inventory", false, "列出所有地圖實際使用的 tile、總數與第一個座標")
+	inventoryJSON := flag.String("inventory-json", "", "把 inventory 另存為 JSON（空字串表示不輸出）")
 	theme := flag.String("theme", "", "搭配 inventory 檢查 Modern Icon theme.json 正常／冬季覆寫")
 	minMap := flag.Int("min-map", 0, "掃描時只納入此編號以上的地圖（0 表示不限制）")
 	maxMap := flag.Int("max-map", 0, "掃描時只納入此編號以下的地圖（0 表示不限制）")
@@ -33,7 +35,7 @@ func main() {
 	flag.Parse()
 
 	if *inventory {
-		if err := printInventory(*data, *theme, *minMap, *maxMap); err != nil {
+		if err := printInventory(*data, *theme, *inventoryJSON, *minMap, *maxMap); err != nil {
 			panic(err)
 		}
 		return
@@ -89,9 +91,10 @@ func main() {
 type tileUse struct {
 	count       int
 	mapID, x, y int
+	byMap       map[int]int
 }
 
-func printInventory(dataDir, themePath string, minMap, maxMap int) error {
+func printInventory(dataDir, themePath, jsonPath string, minMap, maxMap int) error {
 	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
 	if err != nil {
 		return err
@@ -99,10 +102,14 @@ func printInventory(dataDir, themePath string, minMap, maxMap int) error {
 	ids := append([]int{1, 3, 5}, sm.IDs()...)
 	sort.Ints(ids)
 	uses := map[byte]tileUse{}
+	worldUses := map[byte]bool{}
+	dungeonUses := map[byte]bool{}
+	var scannedIDs []int
 	for _, id := range ids {
 		if !mapInRange(id, minMap, maxMap) {
 			continue
 		}
+		scannedIDs = append(scannedIDs, id)
 		m, err := world.LoadByID("", dataDir, id)
 		if err != nil {
 			return err
@@ -114,11 +121,20 @@ func printInventory(dataDir, themePath string, minMap, maxMap int) error {
 					return err
 				}
 				t &= 0x7f
+				if world.IsWorldSubMap(id) {
+					worldUses[t] = true
+				} else if id >= 1 && id <= 5 {
+					dungeonUses[t] = true
+				}
 				u := uses[t]
 				if u.count == 0 {
 					u.mapID, u.x, u.y = id, x, y
 				}
+				if u.byMap == nil {
+					u.byMap = map[int]int{}
+				}
 				u.count++
+				u.byMap[id]++
 				uses[t] = u
 			}
 		}
@@ -133,33 +149,136 @@ func printInventory(dataDir, themePath string, minMap, maxMap int) error {
 		fmt.Printf("%02x count=%-7d first=map%-2d (%2d,%2d)\n",
 			key, u.count, u.mapID, u.x, u.y)
 	}
-	if themePath != "" {
-		normal, winter, err := loadThemeCoverage(themePath)
+	if jsonPath != "" {
+		tables, err := gamedata.LoadTables(filepath.Join(dataDir, "FILES.DAT"))
 		if err != nil {
 			return err
 		}
-		var missingNormal, missingWinter []int
+		passability := make(map[byte]byte, len(keys))
 		for _, key := range keys {
-			if !normal[byte(key)] {
-				missingNormal = append(missingNormal, key)
-			}
-			if !winter[byte(key)] {
-				missingWinter = append(missingWinter, key)
-			}
+			passability[byte(key)] = tables.Passability(byte(key)).Raw()
 		}
-		fmt.Printf("theme normal missing:%s\n", formatTileList(missingNormal))
-		fmt.Printf("theme winter missing:%s\n", formatTileList(missingWinter))
-		if len(missingNormal)+len(missingWinter) != 0 {
-			return fmt.Errorf("Modern Icon 世界索引尚未覆寫完整")
+		if err := writeInventoryJSON(jsonPath, scannedIDs, keys, uses, passability); err != nil {
+			return err
+		}
+	}
+	if themePath != "" {
+		normal, winter, dungeon, err := loadThemeCoverage(themePath)
+		if err != nil {
+			return err
+		}
+		missingNormal := missingThemeCoverage(keys, worldUses, normal)
+		missingWinter := missingThemeCoverage(keys, worldUses, winter)
+		missingDungeon := missingThemeCoverage(keys, dungeonUses, dungeon)
+		if len(worldUses) != 0 {
+			fmt.Printf("theme normal missing:%s\n", formatTileList(missingNormal))
+			fmt.Printf("theme winter missing:%s\n", formatTileList(missingWinter))
+		}
+		if len(dungeonUses) != 0 {
+			fmt.Printf("theme dungeon missing:%s\n", formatTileList(missingDungeon))
+		}
+		if len(missingNormal)+len(missingWinter)+len(missingDungeon) != 0 {
+			return fmt.Errorf("Modern Icon 索引尚未覆寫完整")
 		}
 	}
 	return nil
 }
 
-func loadThemeCoverage(path string) (map[byte]bool, map[byte]bool, error) {
+func missingThemeCoverage(keys []int, used, covered map[byte]bool) []int {
+	var missing []int
+	for _, key := range keys {
+		index := byte(key)
+		if used[index] && !covered[index] {
+			missing = append(missing, key)
+		}
+	}
+	return missing
+}
+
+type inventoryJSONFile struct {
+	Schema    int                 `json:"schema"`
+	Namespace string              `json:"namespace"`
+	Maps      []int               `json:"maps"`
+	Tiles     []inventoryJSONTile `json:"tiles"`
+}
+
+type inventoryJSONTile struct {
+	Index          string             `json:"index"`
+	Count          int                `json:"count"`
+	First          inventoryJSONFirst `json:"first"`
+	ByMap          map[string]int     `json:"byMap"`
+	PassabilityRaw string             `json:"passabilityRaw"`
+	Behavior       string             `json:"behavior"`
+}
+
+type inventoryJSONFirst struct {
+	Map int `json:"map"`
+	X   int `json:"x"`
+	Y   int `json:"y"`
+}
+
+func writeInventoryJSON(path string, ids, keys []int, uses map[byte]tileUse,
+	passability map[byte]byte) error {
+	namespace := "mixed"
+	allWorld, allDungeon := len(ids) > 0, len(ids) > 0
+	for _, id := range ids {
+		allWorld = allWorld && world.IsWorldSubMap(id)
+		allDungeon = allDungeon && id >= 1 && id <= 5
+	}
+	switch {
+	case allWorld:
+		namespace = "world"
+	case allDungeon:
+		namespace = "dungeon"
+	}
+	out := inventoryJSONFile{Schema: 1, Namespace: namespace, Maps: ids}
+	for _, key := range keys {
+		u := uses[byte(key)]
+		byMap := make(map[string]int, len(u.byMap))
+		for mapID, count := range u.byMap {
+			byMap[strconv.Itoa(mapID)] = count
+		}
+		rawPassability := passability[byte(key)]
+		out.Tiles = append(out.Tiles, inventoryJSONTile{
+			Index:          fmt.Sprintf("0x%02x", key),
+			Count:          u.count,
+			First:          inventoryJSONFirst{Map: u.mapID, X: u.x, Y: u.y},
+			ByMap:          byMap,
+			PassabilityRaw: fmt.Sprintf("0x%02x", rawPassability),
+			Behavior:       inventoryBehavior(byte(key), rawPassability),
+		})
+	}
+	raw, err := json.MarshalIndent(out, "", "  ")
+	if err != nil {
+		return err
+	}
+	raw = append(raw, '\n')
+	if err := os.WriteFile(path, raw, 0o644); err != nil {
+		return fmt.Errorf("寫入 inventory JSON：%w", err)
+	}
+	fmt.Printf("inventory JSON: %s\n", path)
+	return nil
+}
+
+func inventoryBehavior(index, passability byte) string {
+	switch {
+	case passability == 0xfd:
+		return "exit"
+	case passability == 0xff && (index == 0x14 || index == 0x62):
+		return "submap-floor"
+	case passability == 0xff:
+		return "blocked"
+	case passability <= 7:
+		return fmt.Sprintf("terrain-%d", passability)
+	default:
+		return "special"
+	}
+}
+
+func loadThemeCoverage(path string) (map[byte]bool, map[byte]bool, map[byte]bool, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	var manifest struct {
 		Tiles struct {
@@ -170,9 +289,10 @@ func loadThemeCoverage(path string) (map[byte]bool, map[byte]bool, error) {
 			Normal map[string][]string `json:"normal"`
 			Winter map[string][]string `json:"winter"`
 		} `json:"tileVariants"`
+		DungeonTiles map[string]string `json:"dungeonTiles"`
 	}
 	if err := json.Unmarshal(raw, &manifest); err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	decode := func(single map[string]string, variants map[string][]string) (map[byte]bool, error) {
 		out := map[byte]bool{}
@@ -198,13 +318,17 @@ func loadThemeCoverage(path string) (map[byte]bool, map[byte]bool, error) {
 	}
 	normal, err := decode(manifest.Tiles.Normal, manifest.TileVariants.Normal)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	winter, err := decode(manifest.Tiles.Winter, manifest.TileVariants.Winter)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
-	return normal, winter, nil
+	dungeon, err := decode(manifest.DungeonTiles, nil)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return normal, winter, dungeon, nil
 }
 
 func formatTileList(keys []int) string {

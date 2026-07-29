@@ -41,6 +41,13 @@
 它是審稿圖，不是 atlas。使用者核准後仍須建立地城逐 index 語意表、64×56
 正式素材、邊界／密牆檢查與同狀態實機畫面。完整程式邊界與抽樣見
 [`docs/playtest/49`](../playtest/49-modern-icon-dungeon-namespace.md)。
+逐索引資料、行為分群、量產批次及完成度命令另見
+[`Modern Icon 地城量產規格`](modern-icon-dungeon-production.md)。
+
+2026-07-30 全部 SUM.MAP 段的 namespace 稽核另補出 map 21 的 `0x5a` 凍土；
+正常／冬季各八變體已進 runtime。這也修正了早期只掃 map 33–64 卻宣稱
+「世界完整」的範圍錯誤，見
+[`docs/playtest/51`](../playtest/51-modern-icon-tundra-and-dungeon-inventory.md)。
 
 ### 0.1 高解析 runtime 契約
 

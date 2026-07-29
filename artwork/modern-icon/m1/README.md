@@ -105,6 +105,11 @@ docker run --rm --network none --memory 512m --cpus 1 --pids-limit 128 \
 
 五者均有構圖配對的正常／冬季版本，不能互換或以一張「城鎮」圖概括。
 
+`0x5a` 凍土是全域盤點補出的最後一格世界地形：map 21 有多個完整 9×9
+純凍土視窗。正常版是暗色凍土、苔原與薄霜，冬季版是風壓積雪；兩季各八個
+無接縫變體，由 `rebuild-tundra.sh` 重建。先前只掃 map 33–64 的清單漏掉
+map 21，現已改以所有 SUM.MAP 世界段作完成度閘門。
+
 先前工作表所稱的「碼頭地形」是誤標：碼頭是城鎮資料內的設施，世界圖塊集中
 沒有獨立碼頭索引。海上可見的對應素材是 `0x3f–0x42` 四向船隻 glyph，應列在
 隊伍／船隻圖示批次，不得憑空新增一個地形索引。
@@ -131,3 +136,34 @@ downscale；若輸出仍看得到階梯邊，contact-sheet 閘門就不接受。
 冒充 Modern Icon，而是保留底下的相容預覽，直到每個索引真正重畫並通過同場景
 審核。後續仍須依實際 atlas 索引分別重畫其餘岸線方向、城鎮、特殊地標及隊伍
 方向，不能把同一張圖掛到不同語意。
+
+## 地城素材資料契約
+
+MAP1–MAP5 與世界地圖共用原版 102 格 atlas，但 Modern Icon 使用獨立
+`dungeonTiles` namespace，避免同號索引在不同場景被不經審查地共用。客觀清單
+由真實地圖及 `FILES.DAT` 生成，不手寫在 loader：
+
+```bash
+go run ./tools/mapwindow \
+  -data workplace/orig/demwin/DEM_DATA \
+  -inventory -min-map 1 -max-map 5 \
+  -inventory-json artwork/modern-icon/m1/dungeon-inventory.json
+```
+
+目前共 59 個實際索引。每筆包含總頻率、逐地圖頻率、第一個座標、原始通行值
+及 `blocked`／`exit`／`submap-floor`／`terrain-*`／`special` 行為分類。
+這些分類只描述規則，不能直接當成視覺名稱；例如七種出口與十七種阻擋格的
+外觀彼此不同，不能各用一張「樓梯」或「牆」複製填滿。
+
+完整度閘門：
+
+```bash
+go run ./tools/mapwindow \
+  -data workplace/orig/demwin/DEM_DATA \
+  -inventory -min-map 1 -max-map 5 \
+  -theme artwork/modern-icon/m1/trial/theme.json
+```
+
+在 `dungeonTiles` 逐格完成前，此命令必須失敗並列出缺格；不得改查世界
+`tiles.normal/winter` 來製造假通過。方向、分批及審稿門檻見
+[`docs/design/modern-icon-dungeon-production.md`](../../../docs/design/modern-icon-dungeon-production.md)。

@@ -2,6 +2,11 @@
 
 日期：2026-07-30
 
+> **2026-07-30 勘誤與補完：**本篇原先只掃 map 33–64，因此漏掉 map 21
+> 大量使用的凍土 `0x5a`。全域 namespace 檢查抓出後，已新增正常／冬季各
+> 八變體及固定場景實跑；現在改用全部 SUM.MAP 世界段驗收。完整證據見
+> [`docs/playtest/51`](51-modern-icon-tundra-and-dungeon-inventory.md)。
+
 ## 盤點方法
 
 `tools/mapwindow -inventory -min-map 33 -max-map 64` 盤點世界子地圖實際

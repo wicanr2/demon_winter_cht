@@ -154,6 +154,16 @@
         "normal-volcanic-33-v1.png",
         "normal-volcanic-33-v2.png",
         "normal-volcanic-33-v3.png"
+      ],
+      "0x5a": [
+        "normal-tundra-5a-v0.png",
+        "normal-tundra-5a-v1.png",
+        "normal-tundra-5a-v2.png",
+        "normal-tundra-5a-v3.png",
+        "normal-tundra-5a-v4.png",
+        "normal-tundra-5a-v5.png",
+        "normal-tundra-5a-v6.png",
+        "normal-tundra-5a-v7.png"
       ]
     },
     "winter": {
@@ -192,6 +202,16 @@
         "winter-volcanic-33-v1.png",
         "winter-volcanic-33-v2.png",
         "winter-volcanic-33-v3.png"
+      ],
+      "0x5a": [
+        "winter-tundra-5a-v0.png",
+        "winter-tundra-5a-v1.png",
+        "winter-tundra-5a-v2.png",
+        "winter-tundra-5a-v3.png",
+        "winter-tundra-5a-v4.png",
+        "winter-tundra-5a-v5.png",
+        "winter-tundra-5a-v6.png",
+        "winter-tundra-5a-v7.png"
       ]
     }
   },
