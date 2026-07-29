@@ -10,6 +10,7 @@ workplace/
 
 # Go
 bin/
+dist/
 *.exe
 *.test
 

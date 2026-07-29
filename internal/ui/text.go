@@ -145,6 +145,9 @@ func (t *Tileset) FrameSize() (int, int) { return t.src.FrameSize() }
 // Mode 回傳這一套是 EGA 還是 CGA 素材。
 func (t *Tileset) Mode() gfx.VideoMode { return t.src.Mode() }
 
+// Source 提供純 image.RGBA 的 atlas 給主題建置階段轉換。呼叫端不得改寫來源。
+func (t *Tileset) Source() *gfx.Tileset { return t.src }
+
 // Tile 以 tile 值取材質，超出範圍回傳 nil。
 func (t *Tileset) Tile(v byte) *ebiten.Image {
 	if int(v) >= len(t.tiles) {

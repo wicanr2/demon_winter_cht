@@ -22,6 +22,21 @@ Modern EGA 必須保留：
 
 ![Modern EGA 視覺方向稿](img/modern-ega-concept.png)
 
+第二張是 2026-07-29 的生產方向表，集中校準雪地、地城、隊員、冰魔、船與
+紅黑面板的材質語言。它仍是設計參考，不是可直接切片的 runtime atlas：
+
+![Modern EGA 生產美術方向表](img/modern-ega-production-direction.png)
+
+## 0.1 目前已上線的可玩預覽
+
+第一個可玩版本不假裝 AI contact sheet 能精確取代 476 個既有 frame。引擎在啟動時
+把完整原版 EGA atlas 映到受限的 Modern EGA 色盤，保留所有 frame 數、32×28 尺寸、
+索引、黑底與覆寫語意，再作為第三套 atlas 預載。`ThemeID` 已與檔案解碼用的
+`VideoMode` 分離，`F8` 固定輪替 EGA → CGA → Modern EGA。
+
+這使第三套主題現在可從頭玩到尾，也讓 A6 能先驗證「theme 切換不碰規則」；
+真正逐格重畫仍按 M1/M2 門檻進行。README 一律稱它「完整調色預覽」，不稱完成重畫。
+
 這張方向稿由內建影像生成工具依 `DEMON.SHE` atlas 作為內容／風格參考產生。
 正式素材仍須依本文的固定索引、32×28 尺寸與逐格驗收流程重畫，不能把方向稿
 直接切格後放進遊戲。
@@ -233,7 +248,7 @@ assets/themes/modern-ega/
    收入 `UITheme`。
 3. 實作 PNG manifest loader 與 frame 數／尺寸驗證。
 4. 啟動時預載第三套 atlas，F8 用固定 order 輪替；切換訊息顯示三個清楚名稱。
-5. 增加 `-theme modern` 與 theme 輪替單元測試。
+5. 增加 `-video modern` 與 theme 輪替單元測試。
 6. 先接 M0 試片，截圖批准後才量產素材。
 
 README 最終應展示同一場景的三欄比較（原版 EGA、原版 CGA、Modern EGA），並明確

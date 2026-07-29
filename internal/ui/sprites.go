@@ -35,6 +35,9 @@ func NewSpriteSheet(src *gfx.SpriteSheet) *SpriteSheet {
 
 func (s *SpriteSheet) Mode() gfx.VideoMode { return s.src.Mode() }
 
+// Source 提供純 image.RGBA 的 atlas 給主題建置階段轉換。呼叫端不得改寫來源。
+func (s *SpriteSheet) Source() *gfx.SpriteSheet { return s.src }
+
 func (s *SpriteSheet) Frame(i int) *ebiten.Image {
 	if s == nil || i < 0 || i >= s.src.Len() {
 		return nil

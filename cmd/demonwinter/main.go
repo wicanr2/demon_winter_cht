@@ -128,7 +128,8 @@ type app struct {
 	monsterSprites *ui.SpriteSheet
 	shipSprites    *ui.SpriteSheet
 	videoMode      gfx.VideoMode
-	videoThemes    map[gfx.VideoMode]*videoTheme
+	themeID        themeID
+	videoThemes    map[themeID]*videoTheme
 	font           *ui.MixedFont
 	gotFont        *ui.Font
 
@@ -1705,9 +1706,13 @@ func main() {
 	// 原版同時出貨 EGA 與 CGA 兩套美術。**預設 EGA** —— 那是絕大多數玩家
 	// 當年看到的畫面；CGA 保留（完整性原則，`rulebook/83`），不是畫質選項。
 	videoMode := flag.String("video", "ega",
-		"素材版本：ega（16 色 .SHE，一格 32×28）或 cga（4 色 .SHP，一格 16×16）")
+		"素材版本：ega（原版 16 色）、cga（原版 4 色）或 modern（現代 EGA 調色）")
 	startX := flag.Int("x", -1, "起始 X。負值代表用存檔裡的座標")
 	startY := flag.Int("y", -1, "起始 Y。負值代表用存檔裡的座標")
+	sceneFlag := flag.String("scene", "",
+		"偵錯：以名稱跳到代表場景（不自動解謎）；用 -list-scenes 查看清單")
+	listScenesFlag := flag.Bool("list-scenes", false,
+		"列出 -scene 可用的場景名稱後離開（不需要原版資料）")
 	// B 鍵那條偵錯路徑在 headless 截圖底下不好按（xdotool 送的鍵不一定
 	// 進得了 ebiten 的輸入佇列）。開一個旗標走同一條路，讓截圖驗收可重跑。
 	startBattle := flag.Bool("battle", false, "啟動後直接開一場測試戰鬥（偵錯）")
@@ -1799,6 +1804,11 @@ func main() {
 		"偵錯：用掉寶生成器發道具給第一名隊員，格式 `type,等級[,件數]`")
 	flag.Parse()
 
+	if *listScenesFlag {
+		fmt.Print(debugSceneList())
+		return
+	}
+
 	if _, err := os.Stat(*dataDir); err != nil {
 		log.Fatalf("找不到原版資料目錄 %s：%v\n"+
 			"本專案不散布原版資料，請用 -data 指向你自己的合法副本。", *dataDir, err)
@@ -1846,6 +1856,20 @@ func main() {
 		fresh = true // nSS.DAT 一定要從 ALL_SS.DAT 重建
 		log.Printf("新遊戲：地圖 %d 的 (%d,%d)，%d 金、%d 份糧食",
 			save.MapID, save.PositionX, save.PositionY, save.Gold, save.Rations)
+	}
+
+	// 具名場景在存檔／-newgame 套用後、載入地圖前覆寫位置。底層的
+	// -map/-x/-y 仍保留，且顯式座標最後套用，所以逆向實驗仍能做單格調整。
+	if *sceneFlag != "" {
+		scene, sceneErr := findDebugScene(*sceneFlag)
+		if sceneErr != nil {
+			log.Fatalf("-scene：%v", sceneErr)
+		}
+		save.MapID = byte(scene.MapID)
+		save.PositionX = byte(scene.X)
+		save.PositionY = byte(scene.Y)
+		log.Printf("偵錯場景 %s：地圖 %d (%d,%d) — %s",
+			*sceneFlag, scene.MapID, scene.X, scene.Y, scene.Note)
 	}
 
 	// **地圖要在存檔（含 -newgame）決定之後才載。**
@@ -1939,25 +1963,29 @@ func main() {
 			"重跑 `dwstrings events` 更新翻譯檔。", len(bad))
 	}
 
-	mode := gfx.ModeEGA
+	mode, selectedTheme := gfx.ModeEGA, themeEGA
 	switch strings.ToLower(*videoMode) {
 	case "ega":
 	case "cga":
 		mode = gfx.ModeCGA
+		selectedTheme = themeCGA
+	case "modern":
+		selectedTheme = themeModern
 	default:
-		log.Fatalf("-video 只接受 ega 或 cga，收到 %q", *videoMode)
+		log.Fatalf("-video 只接受 ega、cga 或 modern，收到 %q", *videoMode)
 	}
 	// 兩套原版素材都在啟動時建立 atlas。F8 若臨時解碼、上傳五張 atlas，
 	// 第一個 frame 會只畫出一半；預載後切換只是五個指標的交換。
-	videoThemes := make(map[gfx.VideoMode]*videoTheme, 2)
-	for _, m := range []gfx.VideoMode{gfx.ModeEGA, gfx.ModeCGA} {
+	videoThemes := make(map[themeID]*videoTheme, 3)
+	for id, m := range map[themeID]gfx.VideoMode{themeEGA: gfx.ModeEGA, themeCGA: gfx.ModeCGA} {
 		theme, loadErr := loadVideoTheme(*dataDir, m)
 		if loadErr != nil {
-			log.Fatalf("載入 %s 顯示主題：%v", videoModeName(m), loadErr)
+			log.Fatalf("載入 %s 顯示主題：%v", themeName(id), loadErr)
 		}
-		videoThemes[m] = theme
+		videoThemes[id] = theme
 	}
-	initialTheme := videoThemes[mode]
+	videoThemes[themeModern] = modernVideoTheme(videoThemes[themeEGA])
+	initialTheme := videoThemes[selectedTheme]
 	// ASCII 的字模來源三選一，見 -ascii。預設 `eten`：英數走倚天全形，
 	// 與漢字同一套設計、同一個筆畫重量。
 	//
@@ -2046,6 +2074,7 @@ func main() {
 		monsterSprites: initialTheme.monsters,
 		shipSprites:    initialTheme.ships,
 		videoMode:      mode,
+		themeID:        selectedTheme,
 		videoThemes:    videoThemes,
 		font:           font,
 		gotFont:        gotFont,

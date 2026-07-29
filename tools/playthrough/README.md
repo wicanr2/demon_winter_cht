@@ -24,6 +24,7 @@ regression 只有重跑同一段才比得出來。
 | `a6-return-heal-elbarat.txt` | 升級後返回艾巴拉特，把提高後的生命上限補滿 | A6 長途主線整備 |
 | `a6-arrive-gamur.txt` | 從厄加德穿過骸骨廳連接段，抵達北方加穆爾神殿 | A6 第二段主線 |
 | `a6-leg2-observe.txt` | 來回走 190 步吃遭遇，量金幣／傷害的產出 | `docs/playtest/12` §1 |
+| `a6-secret-door-smoke.txt` | 從鐵籠房間穿過外觀為牆的密門到西側走廊 | 最後 A6 高風險抽樣；搭配 `-scene cage-secret` |
 
 **每一段結尾存檔、下一段從存檔接續**（`-newgame` 只有第一段要帶）。
 跨模態選單的長腳本不要一次寫完 —— Escape 的層數脫拍一次，後面的方向鍵

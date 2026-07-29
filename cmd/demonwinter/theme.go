@@ -13,6 +13,14 @@ type videoTheme struct {
 	ships            *ui.SpriteSheet
 }
 
+type themeID string
+
+const (
+	themeEGA    themeID = "ega"
+	themeCGA    themeID = "cga"
+	themeModern themeID = "modern"
+)
+
 func loadVideoTheme(dataDir string, mode gfx.VideoMode) (*videoTheme, error) {
 	loadTiles := func(set gfx.TerrainSet) (*ui.Tileset, error) {
 		src, err := gfx.LoadTilesetMode(dataDir, set, mode)
@@ -48,11 +56,35 @@ func loadVideoTheme(dataDir string, mode gfx.VideoMode) (*videoTheme, error) {
 	return t, nil
 }
 
-func videoModeName(mode gfx.VideoMode) string {
-	if mode == gfx.ModeCGA {
+func modernVideoTheme(src *videoTheme) *videoTheme {
+	return &videoTheme{
+		normal:   ui.NewTileset(gfx.ModernizeTileset(src.normal.Source())),
+		winter:   ui.NewTileset(gfx.ModernizeTileset(src.winter.Source())),
+		combat:   ui.NewSpriteSheet(gfx.ModernizeSpriteSheet(src.combat.Source())),
+		monsters: ui.NewSpriteSheet(gfx.ModernizeSpriteSheet(src.monsters.Source())),
+		ships:    ui.NewSpriteSheet(gfx.ModernizeSpriteSheet(src.ships.Source())),
+	}
+}
+
+func themeName(id themeID) string {
+	if id == themeCGA {
 		return "CGA"
 	}
+	if id == themeModern {
+		return "Modern EGA"
+	}
 	return "EGA"
+}
+
+func nextThemeID(id themeID) themeID {
+	switch id {
+	case themeEGA:
+		return themeCGA
+	case themeCGA:
+		return themeModern
+	default:
+		return themeEGA
+	}
 }
 
 // toggleVideoTheme 在原版 EGA（.SHE）與 CGA（.SHP）素材間即時切換。
@@ -61,20 +93,18 @@ func videoModeName(mode gfx.VideoMode) string {
 // 上傳中的半幀。倚天 16×15 字型刻意不切換：F8 是美術 theme，不應讓
 // 中文可讀性跟著改變。
 func (a *app) toggleVideoTheme() error {
-	next := gfx.ModeCGA
-	if a.videoMode == gfx.ModeCGA {
-		next = gfx.ModeEGA
-	}
+	next := nextThemeID(a.themeID)
 
 	t := a.videoThemes[next]
 	if t == nil {
-		return fmt.Errorf("%s theme 尚未載入", videoModeName(next))
+		return fmt.Errorf("%s theme 尚未載入", themeName(next))
 	}
 
 	a.normal, a.winter = t.normal, t.winter
 	a.combatSprites, a.monsterSprites, a.shipSprites = t.combat, t.monsters, t.ships
-	a.videoMode = next
-	name := videoModeName(next)
+	a.videoMode = t.normal.Mode()
+	a.themeID = next
+	name := themeName(next)
 	a.message = a.tr.UI("theme.changed", "顯示主題：") + name
 	a.logf("F8 → %s theme", name)
 	return nil

@@ -14,8 +14,9 @@ SSI《Demon's Winter》（1988, DOS）的引擎逆向與繁體中文化專案。
 
 引擎已經可以從原版資料載入並實際遊玩 —— 走地圖、打仗、進城、紮營、觸發劇情、存檔，
 畫面與介面全部中文化。素材預設走原版的 **EGA 十六色**（`.SHE` ＋ 原版自己設進調色盤
-暫存器的那 16 個值），CGA 四色版可用 `-video cga` 啟動；遊戲中按 `F8`
-可即時切換 EGA／CGA theme。
+暫存器的那 16 個值），CGA 四色版可用 `-video cga` 啟動；第三套可選
+Modern EGA 可用 `-video modern` 啟動。遊戲中按 `F8` 可即時輪替
+EGA → CGA → Modern EGA，不改遊戲規則或存檔。
 以下都是 `tools/screenshot.sh` 在 headless 環境實跑截下來的。
 
 | | |
@@ -43,7 +44,7 @@ DOSBox 中的 1988 原版；中、右圖是 remake 在同一個戶外測試位�
 
 | 面向 | 原版 | 現在的 remake |
 |---|---|---|
-| 美術資料 | EGA 或 CGA 版本各自啟動 | 兩套原版 terrain、combat、monster、ship atlas 都預載；`F8` 隨時 EGA ↔ CGA，切換不改存檔與戰鬥狀態 |
+| 美術資料 | EGA 或 CGA 版本各自啟動 | 三套 terrain、combat、monster、ship atlas 都預載；`F8` 依 EGA → CGA → Modern EGA 輪替，切換不改存檔與戰鬥狀態 |
 | 還原尺度 | EGA 640×350、CGA 320×200 | EGA tile 還原為 32×28；CGA 16×16 以 nearest-neighbor 放到 32×32，不假裝兩者原始比例相同 |
 | 字型與語言 | 英文 `ASC/GOT` 點陣 | 中文與全形英數使用倚天 16×15 預設粗體；哥德章節字仍取原版 `GOT.FNE` |
 | 版面 | 右側固定紅底指令列，80×25 字元式資訊密度 | 保留地圖、隊伍表與紅底選單的骨架，擴成 640×400 以容納可讀中文、訊息與遊戲內手札 |
@@ -51,24 +52,72 @@ DOSBox 中的 1988 原版；中、右圖是 remake 在同一個戶外測試位�
 | 海戰操作 | 相對轉舵與直行分開，轉向耗點 | 刻意保留原規則，不套用探索的絕對方向簡化 |
 | 噴吐特效 | race 選 terrain tile 6／7／8，沿錐形逐格繪製 | 已由 IDA 9.4 追到同一 draw call 並照接，不再使用暫代橘色方塊（[`docs/re/106`](docs/re/106-breath-tile-source.md)） |
 
-#### Modern EGA（製作中）
+#### Modern EGA（可玩預覽）
 
 第三套主題不是「原版還原」，而是以 EGA 構圖、剪影與功能色為根的可選現代像素
-重繪。設計師已完成 102+102 地形、combat、monster、ship 的同索引素材規格，以及
-F8 固定輪替 **EGA → CGA → Modern EGA** 的整合方案。完整 atlas 尚在 M0 試片階段；
-在逐格索引與辨識度驗收通過前，不會用概念稿冒充可玩素材。
+美化。現在已有完整可玩的第一版：由原版 EGA 的 102+102 地形、combat、monster、
+ship 全 atlas 做固定 16 色現代調色，frame 數、尺寸、索引與黑底語意完全不變，
+所以不會因美化洩漏密門或改掉碰撞。這一版刻意稱為「調色預覽」而非完成重畫；
+設計師方向稿供後續逐格手繪時保持同一套材質與輪廓語言。
 
-[![Modern EGA 視覺方向稿](docs/design/img/modern-ega-concept.png)](docs/design/modern-ega-theme.md)
+| 初期方向稿 | 生產美術方向表 |
+|---|---|
+| [![Modern EGA 初期方向稿](docs/design/img/modern-ega-concept.png)](docs/design/modern-ega-theme.md) | [![Modern EGA 生產方向表](docs/design/img/modern-ega-production-direction.png)](docs/design/modern-ega-theme.md) |
+
+![Modern EGA 可玩調色預覽實機畫面](docs/images/09-remake-modern-world.png)
 
 詳見 [`Modern EGA 美術與整合規格`](docs/design/modern-ega-theme.md)。跨作品引擎則已完成
 第一輪抽離評估：建議先在 monorepo 抽 gfx、runtime、storage、grid 與可重播 RNG，
 取得第二款真實遊戲的格式證據後才發布通用 module，避免把單一作品的硬編碼誤稱為
 SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）。
 
+##### Modern EGA 規劃索引（尚待使用者過目）
+
+目前狀態必須明確分開：
+
+| 階段 | 狀態 | 內容與驗收 |
+|---|---|---|
+| P0 完整可玩調色預覽 | **已實作，未視為美術定稿** | 五套 EGA atlas 全量映到現代色盤；保留 frame 數、尺寸與索引，用來先驗證 F8、完整流程及不影響規則 |
+| P1 視覺方向審查 | **等待使用者過目** | 檢視[初期方向稿](docs/design/img/modern-ega-concept.png)、[生產方向表](docs/design/img/modern-ega-production-direction.png)與[實機預覽](docs/images/09-remake-modern-world.png)，決定材質、色盤與細節密度 |
+| P2 代表素材試片 | 待 P1 核准 | 各做常態／冬季 terrain、隊員、怪物、船與 UI frame；在遊戲內同場景比較，不用概念圖代替 runtime 驗收 |
+| P3 全 atlas 量產 | 待試片核准 | 補齊 102+102 terrain、44 combat、240 monster、32 ship frames；自動檢查數量、尺寸、方向與索引 |
+| P4 最終視覺驗收 | 待量產 | 世界、冬季、地城、戰鬥、海戰同狀態三主題截圖；密門、陷阱、黑色地形與色弱辨識抽樣 |
+
+完整 palette、像素密度、manifest、素材分批與驗收門檻，以
+[`docs/design/modern-ega-theme.md`](docs/design/modern-ega-theme.md) 為單一設計規格。
+在 P1/P2 經使用者確認前，README 與發行說明只能稱目前版本為
+「Modern EGA 可玩調色預覽」，不能稱完成重畫。
+
 驗收採「前期完整垂直切片＋後期高風險串接抽樣」：新遊戲建角、購物與換裝，
 正常戰鬥／死亡／治療、狗頭人營地、升級、跨圖抵達加穆爾神殿均由可重播腳本實際跑通；
 後期另抽驗購船、密語輸入、三符印、頭目與結局序列。重複房間不逐格人工踏查，
 規則層則由全套單元測試覆蓋。三場夢、艾瑞戈爾與結局序列都已接上且完成中文化。
+
+### 開發者場景書籤
+
+remake 不必像原版一樣每次走完整座地城才能重現一個 bug。`-scene` 提供具名、
+可重播的開發者書籤，而且**不會偷偷解掉劇情條件**；例如：
+
+```bash
+tools/go.sh run ./cmd/demonwinter -list-scenes
+tools/go.sh run ./cmd/demonwinter -scene armory -seed 11
+tools/go.sh run ./cmd/demonwinter -scene circle-light -glyphs -seed 11
+```
+
+清單涵蓋附魔工坊、恆世寶珠、惡魔水晶、兵器庫、活動牆、艾瑞戈爾、墓園、
+夜鐘、旅人的床、兩道密語與光之環。`-map/-x/-y/-event` 等底層旗標仍保留，
+供逐 byte 的逆向邊界實驗使用；正常玩家不需要任何這些旗標。
+
+### 發行包
+
+A6 抽樣與完整測試通過後，可建立不含原版資料／倚天字型的 Linux amd64 包：
+
+```bash
+tools/package-release.sh 2026.07.29
+```
+
+產物與 SHA-256 放在 `dist/`。玩家解壓後依 `開始遊戲.txt` 指向自己的合法
+`DEM_DATA` 與倚天 16×15 字型目錄；翻譯、遊戲內手札與三主題引擎已包含在包內。
 
 ---
 
@@ -81,7 +130,7 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 |---|---|
 | 官方手冊繁中版 | 完成（全 28 頁 + 附錄），並已搬進遊戲內手札 |
 | 社群攻略繁中版 | 完成（1,914 行）|
-| 反組譯筆記 | 106 篇；主線、海戰與噴吐素材繪製路徑均有位址證據 |
+| 反組譯筆記 | 107 篇；主線、海戰、時間進位、arena 與噴吐素材繪製路徑均有位址證據 |
 | 資料格式 | 地圖、事件、道具、怪物、存檔、字型、圖形、音效皆已解 |
 | Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、音效 |
 | 遊戲內文字中文化 | **500/500（100%）** 資料字串，另有 **716 條**中文介面文案 |
