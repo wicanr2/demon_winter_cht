@@ -18,6 +18,7 @@ cleanup() { rm -rf "$STAGE"; }
 trap cleanup EXIT
 
 mkdir -p "$STAGE/$NAME/assets/lang/zh-Hant" "$STAGE/$NAME/assets/manual/zh-Hant"
+mkdir -p "$STAGE/$NAME/artwork/modern-icon/m1/trial"
 
 "$REPO_ROOT/tools/go.sh" build -trimpath -ldflags="-s -w" \
     -o "$STAGE_REL/$NAME/demonwinter" ./cmd/demonwinter
@@ -30,6 +31,10 @@ cp "$REPO_ROOT/README.md" "$STAGE/$NAME/README.md"
 cp "$REPO_ROOT/packaging/README-zh-Hant.txt" "$STAGE/$NAME/開始遊戲.txt"
 cp "$REPO_ROOT/assets/lang/zh-Hant/"* "$STAGE/$NAME/assets/lang/zh-Hant/"
 cp "$REPO_ROOT/assets/manual/zh-Hant/"* "$STAGE/$NAME/assets/manual/zh-Hant/"
+# Modern Icon 是本專案自製的第三主題，不含原版素材；保留與開發樹相同的
+# 相對路徑，讓執行檔不加參數也能載入，F8 才不是只切到舊調色預覽。
+cp "$REPO_ROOT/artwork/modern-icon/m1/trial/"* \
+    "$STAGE/$NAME/artwork/modern-icon/m1/trial/"
 
 # 授權邊界是發行契約，不能只靠「大家應該知道」。若 staging 意外出現
 # 原版副檔名或倚天檔名，直接拒絕打包。

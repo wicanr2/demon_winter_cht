@@ -12,7 +12,8 @@ SPCFONT.15 的倚天字型目錄：
   ./demonwinter -data /path/to/DEM_DATA -eten /path/to/etan_font
 
 可用 -video ega、-video cga 或 -video modern 選開場主題；遊戲中 F8
-依序切換三套主題。F2 開手札，F10 離開並詢問是否存檔。
+依序切換三套主題。Modern Icon 自製素材已隨包附上，無須另外指定目錄。
+F1 開說明，F6 切換復古／現代操作，F10 離開並詢問是否存檔。
 
 開發者可用：
 

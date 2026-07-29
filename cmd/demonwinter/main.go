@@ -1769,8 +1769,8 @@ func main() {
 		"探索操作：modern（方向鍵朝絕對方向前進）或 retro（左右轉向、上／Enter 前進、下轉身）")
 	modernThemeDir := flag.String("modern-theme-dir", "",
 		"Modern Icon PNG theme 目錄；留空使用舊版相容調色預覽")
-	modernIconDir := flag.String("modern-icon-dir", "",
-		"Modern Icon 高解析 terrain 目錄（64×56 frame）；不接受概念稿縮圖")
+	modernIconDir := flag.String("modern-icon-dir", "artwork/modern-icon/m1/trial",
+		"Modern Icon 高解析素材目錄；空字串停用高解析覆寫")
 	startX := flag.Int("x", -1, "起始 X。負值代表用存檔裡的座標")
 	startY := flag.Int("y", -1, "起始 Y。負值代表用存檔裡的座標")
 	sceneFlag := flag.String("scene", "",

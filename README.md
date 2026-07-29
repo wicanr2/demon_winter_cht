@@ -290,11 +290,12 @@ tools/go.sh run ./cmd/demonwinter -battle -battle-illusion-fixture -seed 11
 A6 抽樣與完整測試通過後，可建立不含原版資料／倚天字型的 Linux amd64 包：
 
 ```bash
-tools/package-release.sh 2026.07.29
+tools/package-release.sh 2026.07.30
 ```
 
 產物與 SHA-256 放在 `dist/`。玩家解壓後依 `開始遊戲.txt` 指向自己的合法
-`DEM_DATA` 與倚天 16×15 字型目錄；翻譯、遊戲內手札與三主題引擎已包含在包內。
+`DEM_DATA` 與倚天 16×15 字型目錄；翻譯、遊戲內手札、三主題引擎與本專案
+自製的 Modern Icon 素材已包含在包內。
 
 ---
 
