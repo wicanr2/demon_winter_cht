@@ -41,6 +41,7 @@
       "0x52": "normal-coast-52.png",
       "0x5b": "normal-ruins-5b.png",
       "0x62": "normal-ocean-62.png",
+      "0x63": "normal-glyph-63.png",
       "0x64": "normal-asaht-64.png"
     },
     "winter": {
@@ -80,6 +81,7 @@
       "0x52": "winter-coast-52.png",
       "0x5b": "winter-ruins-5b.png",
       "0x62": "winter-ocean-62.png",
+      "0x63": "winter-glyph-63.png",
       "0x64": "winter-asaht-64.png"
     }
   },

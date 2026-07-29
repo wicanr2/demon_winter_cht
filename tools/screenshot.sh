@@ -36,6 +36,10 @@ mkdir -p "$(dirname "$OUT")"
 OUT_ABS="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"
 
 docker run --rm \
+    --network none \
+    --memory 2g \
+    --cpus 2 \
+    --pids-limit 256 \
     -v "$REPO_ROOT:/src" \
     -v "$(dirname "$OUT_ABS"):/out" \
     -v "$CACHE_VOL:/gomod" \

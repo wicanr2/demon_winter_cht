@@ -116,7 +116,10 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 
 `0x25` 神殿、`0x26` 學院、`0x2e` 一般城鎮與唯一的 `0x64` Asaht 已分別
 重畫並通過固定地圖正常／冬季實機抽樣（[`docs/playtest/27`](docs/playtest/27-modern-icon-world-sites.md)）。
-碼頭、其他特殊地標與隊伍方向仍待重畫。
+三處主線緋紅符印 `0x63` 也已完成季節配對與實機抽樣
+（[`docs/playtest/29`](docs/playtest/29-modern-icon-crimson-glyph-63.md)）。先前工作表所稱
+「碼頭地形」並不存在：碼頭是城鎮設施；待重畫的是海上的四向船隻
+`0x3f–0x42`、隊伍其餘方向及其他特殊索引。
 
 ### 玩家操作與安全存檔
 
@@ -138,7 +141,8 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 
 完整固定場景與裁決見
 [`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)。沙地／森林岸線、
-城鎮、其他特殊格、隊伍方向及其他索引尚未重畫，因此仍不能稱為完整主題。
+城鎮與緋紅符印已在後續批次完成；隊伍其餘方向、船隻及其他索引尚未重畫，
+因此仍不能稱為完整主題。
 
 劇情會把神殿替換成的 `0x5b` 毀壞廢墟也已完成正常／冬季配對：
 

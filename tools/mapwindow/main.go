@@ -23,9 +23,16 @@ func main() {
 	x := flag.Int("x", 28, "中心 X")
 	y := flag.Int("y", 50, "中心 Y")
 	find := flag.String("find-tiles", "", "掃描所有地圖，找含指定十六進位 tile 的視窗")
+	inventory := flag.Bool("inventory", false, "列出所有地圖實際使用的 tile、總數與第一個座標")
 	limit := flag.Int("limit", 12, "find-tiles 最多列出幾個視窗")
 	flag.Parse()
 
+	if *inventory {
+		if err := printInventory(*data); err != nil {
+			panic(err)
+		}
+		return
+	}
 	if *find != "" {
 		targets, err := parseTileSet(*find)
 		if err != nil {
@@ -72,6 +79,53 @@ func main() {
 		fmt.Printf(" %02x=%d", k, counts[byte(k)])
 	}
 	fmt.Println()
+}
+
+type tileUse struct {
+	count       int
+	mapID, x, y int
+}
+
+func printInventory(dataDir string) error {
+	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
+	if err != nil {
+		return err
+	}
+	ids := append([]int{1, 3, 5}, sm.IDs()...)
+	sort.Ints(ids)
+	uses := map[byte]tileUse{}
+	for _, id := range ids {
+		m, err := world.LoadByID("", dataDir, id)
+		if err != nil {
+			return err
+		}
+		for y := 0; y < game.MapHeight; y++ {
+			for x := 0; x < game.MapWidth; x++ {
+				t, err := m.TileAt(x, y)
+				if err != nil {
+					return err
+				}
+				t &= 0x7f
+				u := uses[t]
+				if u.count == 0 {
+					u.mapID, u.x, u.y = id, x, y
+				}
+				u.count++
+				uses[t] = u
+			}
+		}
+	}
+	keys := make([]int, 0, len(uses))
+	for key := range uses {
+		keys = append(keys, int(key))
+	}
+	sort.Ints(keys)
+	for _, key := range keys {
+		u := uses[byte(key)]
+		fmt.Printf("%02x count=%-7d first=map%-2d (%2d,%2d)\n",
+			key, u.count, u.mapID, u.x, u.y)
+	}
+	return nil
 }
 
 type windowHit struct {
