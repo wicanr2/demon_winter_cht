@@ -567,3 +567,16 @@ func TestCastAOE_Kills(t *testing.T) {
 		t.Errorf("已陣亡的單位不該再被波及，得到 %d 個", len(again))
 	}
 }
+
+func TestBattleCastableExcludesCampOnlyEffects(t *testing.T) {
+	for _, effect := range []int{EffectResurrect, EffectLight, EffectWindWalk} {
+		if BattleCastable(effect) {
+			t.Errorf("effect %d 是營地限定，卻出現在戰鬥選單", effect)
+		}
+	}
+	for _, effect := range []int{EffectHP, EffectPoison, EffectSummon, EffectPossession} {
+		if !BattleCastable(effect) {
+			t.Errorf("effect %d 應可在戰鬥施放", effect)
+		}
+	}
+}

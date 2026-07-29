@@ -177,6 +177,8 @@ type app struct {
 	spells *spellMenu
 	// spInput 非 nil 時「投入多少法力」的輸入框開著，疊在施法選單上。
 	spInput *spPrompt
+	// summon 非 nil 時正在挑召喚／幻化的生物。
+	summon *summonMenu
 	// useMenu 非 nil 時戰鬥中的使用道具選單開著。
 	useMenu *itemMenu
 	// aoe 非 nil 時正在選範圍法術的中心點，aoeX/aoeY 是游標位置。
@@ -730,6 +732,13 @@ func (a *app) Draw(screen *ebiten.Image) {
 		a.drawSeaBattle(a.canvas)
 	case a.battle != nil && a.spInput != nil:
 		a.drawSPPrompt(a.canvas)
+	case a.battle != nil && a.summon != nil && a.summon.placing:
+		a.drawBattlefield(a.canvas)
+		a.drawTopBar(a.canvas, true)
+		a.drawLogPanel(a.canvas, a.log)
+		a.drawBattle(a.canvas)
+	case a.battle != nil && a.summon != nil:
+		a.drawSummonMenu(a.canvas)
 	case a.battle != nil && a.spells != nil:
 		a.drawSpellMenu(a.canvas)
 	case a.battle != nil && a.useMenu != nil:

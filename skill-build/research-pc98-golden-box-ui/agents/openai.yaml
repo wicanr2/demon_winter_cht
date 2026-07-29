@@ -1,0 +1,4 @@
+interface:
+  display_name: "PC-98 Golden Box UI Research"
+  short_description: "研究 PC-98 Golden Box 的 CJK 點陣介面與版面"
+  default_prompt: "Use $research-pc98-golden-box-ui to compare a retro CRPG interface with PC-98 Golden Box localization patterns."

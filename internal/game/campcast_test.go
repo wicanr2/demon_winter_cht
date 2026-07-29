@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
+	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
 )
 
@@ -118,5 +119,72 @@ func TestCampCast_BindRelease(t *testing.T) {
 	}
 	if res.Released && target.Status != 0 {
 		t.Errorf("解開之後狀態是 %d，預期 0", target.Status)
+	}
+}
+
+func TestCampCast_CuresPoison(t *testing.T) {
+	caster := woundedChar(10)
+	caster.CurrentSP = 30
+	target := woundedChar(10)
+	target.Status = scenario.StatusPoison
+	s := gamedata.Spell{Effect: EffectPoison, K: 60, M: 9}
+
+	res := CampCast(rng.NewWithSeed(1), caster, target, s, 15)
+	if !res.OK || !res.Cured || target.Status != scenario.StatusNormal {
+		t.Fatalf("解毒結果 = %+v，目標狀態 = %d", res, target.Status)
+	}
+	if caster.CurrentSP != 15 {
+		t.Errorf("施法後法力 = %d，預期 15", caster.CurrentSP)
+	}
+}
+
+func TestCampCast_ResurrectsWithOneHP(t *testing.T) {
+	caster := woundedChar(10)
+	caster.CurrentSP = 120
+	target := woundedChar(10)
+	target.CurrentHP = 0
+	target.Status = scenario.StatusDead
+	target.BindLevel = 4
+	s := gamedata.Spell{Effect: EffectResurrect, K: 25, M: 25}
+
+	res := CampCast(rng.NewWithSeed(1), caster, target, s, 100)
+	if !res.OK || !res.Resurrected {
+		t.Fatalf("復活結果 = %+v", res)
+	}
+	if target.CurrentHP != 1 || target.Status != scenario.StatusNormal || target.BindLevel != 0 {
+		t.Errorf("復活後 = HP %d、狀態 %d、束縛 %d", target.CurrentHP, target.Status, target.BindLevel)
+	}
+}
+
+func TestCampCast_LightAndWindWalk(t *testing.T) {
+	caster := woundedChar(10)
+	caster.CurrentSP = 30
+	target := woundedChar(10)
+
+	light := CampCast(rng.NewWithSeed(1), caster, target,
+		gamedata.Spell{Effect: EffectLight, K: 2, M: 2}, 4)
+	if !light.OK || light.Light != int(MaxLightLevel) {
+		t.Errorf("光源結果 = %+v，預期鉗在 %d", light, MaxLightLevel)
+	}
+
+	wind := CampCast(rng.NewWithSeed(1), caster, target,
+		gamedata.Spell{Effect: EffectWindWalk, K: 1, M: 10}, 10)
+	if !wind.OK || !wind.WindWalk {
+		t.Errorf("御風而行結果 = %+v", wind)
+	}
+}
+
+func TestCampItemCast_UsesPowerWithoutSpendingCharacterSP(t *testing.T) {
+	caster := casterChar(0)
+	target := woundedChar(20)
+	target.CurrentHP = 1
+	spell := gamedata.Spell{Effect: EffectHP, K: 3, M: 1}
+
+	res := CampItemCast(rng.NewWithSeed(1), caster, target, spell, 5)
+	if !res.OK || res.Delta <= 0 {
+		t.Fatalf("魔法物品應以 Power 施放：%+v", res)
+	}
+	if caster.CurrentSP != 0 {
+		t.Fatalf("魔法物品不應扣角色 SP，得到 %d", caster.CurrentSP)
 	}
 }

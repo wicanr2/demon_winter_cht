@@ -196,6 +196,33 @@ func TestBattle_FreeSummonSlot(t *testing.T) {
 	}
 }
 
+func TestBattle_SummonPositionAvoidsOccupiedCells(t *testing.T) {
+	caster := mkUnit(PlayerSlotStart, true, 10, 10)
+	caster.X, caster.Y = 8, 8
+	north := mkUnit(MonsterSlotStart, false, 10, 10)
+	north.X, north.Y = 8, 7
+	b := NewBattle(rng.NewWithSeed(1), []*Unit{caster, north})
+
+	x, y, ok := b.SummonPosition(caster)
+	if !ok || x != 9 || y != 8 {
+		t.Errorf("召喚位置 = (%d,%d,%v)，預期避開北側後取東側 (9,8)", x, y, ok)
+	}
+}
+
+func TestBattle_CanSummonAtUsesChosenOpenCell(t *testing.T) {
+	b := NewBattle(rng.NewWithSeed(1), nil)
+	if !b.CanSummonAt(20, 10) {
+		t.Fatal("場內空格應可作召喚落點")
+	}
+	b.units[0] = &Unit{Slot: 0, X: 20, Y: 10, HP: 1}
+	if b.CanSummonAt(20, 10) {
+		t.Fatal("已有單位的格子不可作召喚落點")
+	}
+	if b.CanSummonAt(-1, 0) {
+		t.Fatal("場外不可作召喚落點")
+	}
+}
+
 // 幻術把法力歸零，召喚保留 —— 這是幻化生物不能施法的原因。
 func TestBattle_IllusionZeroesSP(t *testing.T) {
 	tb := loadTables(t)
@@ -221,6 +248,12 @@ func TestBattle_IllusionZeroesSP(t *testing.T) {
 	summoned := b.PlaceSummon(12, e, KindSummon, 3, 3)
 	if summoned.MaxSP == 0 {
 		t.Fatal("召喚版應保留表值法力")
+	}
+	if summoned.WeaponIndex != int(e.Word(4)) ||
+		summoned.SpriteIndex != int(e.Word(5)) ||
+		summoned.RaceOrElement != int(e.Word(10)) {
+		t.Errorf("召喚欄位搬移錯誤：武器 %d、sprite %d、元素 %d",
+			summoned.WeaponIndex, summoned.SpriteIndex, summoned.RaceOrElement)
 	}
 
 	illusion := b.PlaceSummon(13, e, KindIllusion, 3, 3)

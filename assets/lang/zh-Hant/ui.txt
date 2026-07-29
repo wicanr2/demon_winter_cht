@@ -1080,6 +1080,42 @@ U 使用道具
 :: zh
 %s 用%s束縛了 %s（%d 回合）
 
+## battle.msg.cured
+:: zh
+%s 的%s解除了 %s 的中毒
+
+## battle.summon.badentry
+:: zh
+召喚資料錯誤：%v
+
+## battle.summon.done
+:: zh
+%s 召來了 %s
+
+## battle.summon.entry
+:: zh
+%s%s %3d 點
+
+## battle.summon.fallback
+:: zh
+生物 %d
+
+## battle.summon.full
+:: zh
+同時只能維持三隻召喚／幻化生物
+
+## battle.summon.keys
+:: zh
+↑↓：選擇　Enter：召喚　Esc：取消
+
+## battle.summon.nosp
+:: zh
+%s 的法力不足（需要 %d）
+
+## battle.summon.which
+:: zh
+%s 要召來哪種生物？
+
 ## battle.msg.breath
 :: zh
 %s 噴出吐息（波及 %d 人）
@@ -2063,6 +2099,10 @@ beige
 :: zh
  倒下了
 
+## campcast.cast.cured
+:: zh
+　毒素消退了
+
 ## campcast.cast.entry
 :: zh
 %s%s最低 %d 點
@@ -2090,6 +2130,18 @@ beige
 ## campcast.cast.noeffect
 :: zh
 　沒有明顯的變化
+
+## campcast.cast.light
+:: zh
+%s 施放%s　光源提升為 %d
+
+## campcast.cast.resurrected
+:: zh
+　死者恢復了呼吸與 1 點生命
+
+## campcast.cast.windwalk
+:: zh
+風托起整支隊伍，將眾人送到安全地點
 
 ## campcast.cast.nospell
 :: zh
@@ -2246,10 +2298,6 @@ beige
 ## campitem.slot.armor_exorcisable
 :: zh
 （護甲，可驅）
-
-## campitem.slot.battle_only
-:: zh
-（戰鬥中才能用）
 
 ## campitem.slot.dungeon_item
 :: zh
@@ -3074,3 +3122,83 @@ I/J/K/M 四向砲擊（3）
 ## sea.victory.dismiss
 :: zh
 敵方全滅（按空白鍵返回）
+
+## battle.summon.badplace
+:: zh
+那一格不能放置召喚生物
+
+## battle.summon.itemweak
+:: zh
+這件道具的力量不足（需要 %d，只有 %d）
+
+## battle.summon.place
+:: zh
+選擇召喚生物出現的位置
+
+## battle.summon.placekeys
+:: zh
+方向鍵：移動　Enter／Space：放置　Esc：返回
+
+## campitem.msg.bad_effect
+:: zh
+%s 的效果 %d 找不到
+
+## campitem.msg.cured
+:: zh
+　%s 的毒素消退了
+
+## campitem.msg.destroyed
+:: zh
+　道具隨之損毀
+
+## campitem.msg.gained
+:: zh
+　%s 回復 %d
+
+## campitem.msg.invoked
+:: zh
+%s 啟動了%s
+
+## campitem.msg.lost
+:: zh
+　%s 受到 %d
+
+## campitem.msg.magic_light
+:: zh
+（光源 %d）
+
+## campitem.msg.no_effect
+:: zh
+　沒有明顯效果
+
+## campitem.msg.released
+:: zh
+　%s 的束縛解開了
+
+## campitem.msg.resurrected
+:: zh
+　%s 恢復了呼吸與 1 點生命
+
+## campitem.msg.windwalk
+:: zh
+　風將整支隊伍送到安全地點
+
+## campitem.msg.withered
+:: zh
+　%s 被枯萎侵襲
+
+## campitem.slot.magic_item
+:: zh
+（魔法物品）
+
+## campitem.use.keys
+:: zh
+↑↓：選擇　Enter：使用　Esc：返回
+
+## campitem.use.target_status
+:: zh
+生命 %d/%d　狀態 %d
+
+## campitem.use.target_who
+:: zh
+%s 要對誰使用%s？

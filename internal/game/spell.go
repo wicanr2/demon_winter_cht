@@ -18,7 +18,28 @@ const (
 	EffectBindApply = 11
 	// EffectWither 枯萎。三屬性各自「以現值為上限重擲」，不是扣減。
 	EffectWither = 14
+	// EffectResurrect 復活。只能在營地對死亡角色施放。
+	EffectResurrect = 8
+	// EffectPoison 中毒／解毒的二元狀態效果；玩家法術表中的實例是解毒。
+	EffectPoison = 9
+	// EffectLight 是魔法火炬／晶光，改變隊伍地城光源。
+	EffectLight = 12
+	// EffectSummon 是召喚／幻術的生物選單入口。
+	EffectSummon = 15
+	// EffectWindWalk 將全隊送到安全地點。
+	EffectWindWalk = 17
 )
+
+// BattleCastable 回報法術是否能出現在戰鬥施法選單。
+// 手冊明列復活、魔法光源與御風而行只能在營地使用。
+func BattleCastable(effect int) bool {
+	switch effect {
+	case EffectResurrect, EffectLight, EffectWindWalk:
+		return false
+	default:
+		return true
+	}
+}
 
 // 走通式（Magnitude）的數值增減效果。K 的正負決定增益或傷害方向。
 //
@@ -262,6 +283,19 @@ func CastWither(r *rng.RNG, sp int, s gamedata.Spell, target *Unit) bool {
 	target.Speed = reroll(target.Speed)
 	target.Strength = reroll(target.Strength)
 	target.Skill = reroll(target.Skill)
+	return true
+}
+
+// CastCurePoison 套用 effect_type 9 的玩家法術（Cure Poison）。
+// 成功率與原版共用百分比判定：K×投入法力/M。
+func CastCurePoison(r *rng.RNG, sp int, s gamedata.Spell, target *Unit) bool {
+	if target == nil || target.Status != StatusPoison || s.M <= 0 {
+		return false
+	}
+	if sp*s.K/s.M < r.Roll(100) {
+		return false
+	}
+	target.Status = StatusNormal
 	return true
 }
 

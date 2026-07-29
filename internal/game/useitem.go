@@ -1,5 +1,7 @@
 package game
 
+import "github.com/wicanr2/demon_winter_cht/internal/rng"
+
 // 紮營選單的 Use（`1000:2262`，見 `docs/re/39`）。
 //
 // 選單裡的道具分成兩類，走的是完全不同的兩條路：
@@ -8,7 +10,7 @@ package game
 //   - **有效果的道具**：拿 `+0x07` 的效果索引與 `+0x08` 的強度去施法，
 //     道具留著、次數 +1
 //
-// 第二條路本專案還沒有 —— 施法目前只跑得起來在戰鬥裡（見 `CanUseInCamp`）。
+// 第二條路由呼叫端以 CampItemCast 套用；本檔負責共同的資格與次數消耗規則。
 
 // 兩種光源道具的型別。名稱來自 `ITEMS.DAT` 的型別名表：26 火把、27 提燈。
 const (
@@ -75,8 +77,7 @@ func CanUseInCamp(c *Character, slot int) (bool, string) {
 	case !it.Usable():
 		return false, "這件現在用不了"
 	}
-	// 有效果的道具走施法那條路 —— 本專案的施法還離不開戰鬥。
-	return false, "這件要在戰鬥中才用得出來"
+	return true, ""
 }
 
 // UseInCamp 在營地用掉一件道具。
@@ -96,6 +97,43 @@ func UseInCamp(c *Character, slot int) UseResult {
 	c.Inventory[slot].Type = itemSlotEmpty
 	c.unequipIfSlot(slot)
 	return UseResult{OK: true, Light: level, Consumed: true}
+}
+
+// UseItemCharge 套用原版 FUN_138d_1e72 的四種使用次數規則。
+//
+//   - Used == 255：永久充能，Total 每次減一，歸零時消失
+//   - Total < 100：每日次數，Used 每次加一，紮營過夜歸零
+//   - Total == 200：100% 易碎，使用一次就消失
+//   - 其餘 Total >= 100：以 Total-100 百分比判定損壞
+//
+// 回傳 true 表示道具已損毀／耗盡。原版在效果判定前呼叫這支函式，
+// 因此法術沒有奏效仍會耗掉一次。
+func UseItemCharge(r *rng.RNG, c *Character, slot int) bool {
+	if c == nil || slot < 0 || slot >= InventorySlots {
+		return false
+	}
+	it := &c.Inventory[slot]
+	if !it.Usable() {
+		return false
+	}
+
+	destroyed := false
+	switch {
+	case it.Used == 0xff:
+		it.Total--
+		destroyed = it.Total <= 0
+	case it.Total < 100:
+		it.Used++
+	case it.Total == 200:
+		destroyed = true
+	default:
+		destroyed = r != nil && r.Roll(100) <= it.Total-100
+	}
+	if destroyed {
+		it.Type = itemSlotEmpty
+		c.unequipIfSlot(slot)
+	}
+	return destroyed
 }
 
 // itemSlotEmpty 是空槽的型別值，與 scenario.SlotEmpty 相同。

@@ -64,6 +64,9 @@ func (a *app) updateBattle() error {
 	if a.aoe != nil {
 		return a.updateAOECursor()
 	}
+	if a.summon != nil {
+		return a.updateSummonMenu()
+	}
 
 	// 檢視面板不花移動點也不結束回合（原版成本 0），所以它擋在
 	// 回合派發之前，關掉之後輪到誰完全沒變。
@@ -159,6 +162,9 @@ func (a *app) openSpellMenu(u *game.Unit) {
 		if err != nil || sp.Empty() {
 			continue
 		}
+		if !game.BattleCastable(sp.Effect) {
+			continue
+		}
 		// **只列他學過的那幾系**（手冊 `part-3.md`：「角色學會的符文與
 		// 吟唱法術會顯示在畫面底部」）。原本 43 筆全列，於是五系符文
 		// 與三個吟唱（幻術／附身／召喚）學不學都一樣。
@@ -225,6 +231,15 @@ func (a *app) castSelected(u *game.Unit) {
 		a.logf(a.tr.UI("battle.cast.nosp", "%s 的法力不足以施放%s（需要 %d 點）"), u.Name, e.name, e.spell.M)
 		return
 	}
+	if e.spell.Effect == game.EffectSummon {
+		kind := game.KindSummon
+		if e.index == 25 {
+			kind = game.KindIllusion
+		}
+		a.summon = &summonMenu{caster: u, entry: e, kind: kind}
+		a.spells = nil
+		return
+	}
 	// 原版會問「How many S.P.」讓玩家決定投入多少 —— 投得多效果強，
 	// 但法力用完就沒了。先問，行動點等確認後才扣：在輸入框按 Esc 反悔
 	// 不該算掉一次行動。
@@ -232,6 +247,144 @@ func (a *app) castSelected(u *game.Unit) {
 		caster: u, entry: e,
 		input: game.NewSPInput(e.spell.M, u.CurrentSP),
 	}
+}
+
+type summonMenu struct {
+	caster  *game.Unit
+	entry   spellEntry
+	kind    game.SummonKind
+	item    *game.UsableItem
+	cursor  int
+	placing bool
+}
+
+func (a *app) updateSummonMenu() error {
+	m := a.summon
+	if m.placing {
+		for _, kf := range keyFacing {
+			if !inpututil.IsKeyJustPressed(kf.key) {
+				continue
+			}
+			dx, dy := kf.f.Delta()
+			nx, ny := a.aoeX+dx, a.aoeY+dy
+			if game.InField(nx, ny) {
+				a.aoeX, a.aoeY = nx, ny
+			}
+			return nil
+		}
+		if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
+			m.placing = false
+			return nil
+		}
+		if !inpututil.IsKeyJustPressed(ebiten.KeyEnter) &&
+			!inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+			return nil
+		}
+		if !a.battle.CanSummonAt(a.aoeX, a.aoeY) {
+			a.logLine(a.tr.UI("battle.summon.badplace", "那一格不能放置召喚生物"))
+			return nil
+		}
+		return a.commitSummon(m, a.aoeX, a.aoeY)
+	}
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeyEscape):
+		a.summon = nil
+	case inpututil.IsKeyJustPressed(ebiten.KeyDown):
+		m.cursor = (m.cursor + 1) % a.tables.NumSummons()
+	case inpututil.IsKeyJustPressed(ebiten.KeyUp):
+		m.cursor = (m.cursor - 1 + a.tables.NumSummons()) % a.tables.NumSummons()
+	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
+		e, err := a.tables.Summon(m.cursor)
+		if err != nil {
+			a.logf(a.tr.UI("battle.summon.badentry", "召喚資料錯誤：%v"), err)
+			return nil
+		}
+		cost := game.SummonCost(e, m.kind)
+		if m.item == nil && m.caster.CurrentSP < cost {
+			a.logf(a.tr.UI("battle.summon.nosp", "%s 的法力不足（需要 %d）"), m.caster.Name, cost)
+			return nil
+		}
+		if m.item != nil && m.item.Item.Power < cost {
+			a.logf(a.tr.UI("battle.summon.itemweak", "這件道具的力量不足（需要 %d，只有 %d）"),
+				cost, m.item.Item.Power)
+			return nil
+		}
+		if a.battle.FreeSummonSlot() < 0 {
+			a.logLine(a.tr.UI("battle.summon.full", "同時只能維持三隻召喚／幻化生物"))
+			return nil
+		}
+		// 原版先把游標交給玩家，並不限制在施法者旁邊。起點放在施法者
+		// 所在格（雖然該格本身不可確認），玩家再移到任一合法空格。
+		a.aoeX, a.aoeY = m.caster.X, m.caster.Y
+		m.placing = true
+	}
+	return nil
+}
+
+func (a *app) commitSummon(m *summonMenu, x, y int) error {
+	e, err := a.tables.Summon(m.cursor)
+	if err != nil {
+		a.logf(a.tr.UI("battle.summon.badentry", "召喚資料錯誤：%v"), err)
+		return nil
+	}
+	cost := game.SummonCost(e, m.kind)
+	slot := a.battle.FreeSummonSlot()
+	if slot < 0 {
+		a.logLine(a.tr.UI("battle.summon.full", "同時只能維持三隻召喚／幻化生物"))
+		return nil
+	}
+	action := game.ActionCast
+	if m.item != nil {
+		action = game.ActionUseItem
+	}
+	if _, ok := a.battle.Spend(action); !ok {
+		a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), m.caster.Name)
+		return nil
+	}
+	if m.item == nil {
+		m.caster.CurrentSP -= cost
+	} else if c := u2c(a.members, m.caster); c != nil {
+		game.UseItemCharge(a.rng, c, m.item.Slot)
+	}
+	u := a.battle.PlaceSummon(slot, e, m.kind, x, y)
+	names := a.strings.IllusionSummonNames()
+	u.Name = fmt.Sprintf(a.tr.UI("battle.summon.fallback", "生物 %d"), m.cursor+1)
+	if m.cursor < len(names) {
+		u.Name = a.tr.Event(spellSourceFile, 489+m.cursor, names[m.cursor])
+	}
+	a.logf(a.tr.UI("battle.summon.done", "%s 召來了 %s"), m.caster.Name, u.Name)
+	a.summon = nil
+	return nil
+}
+
+func (a *app) drawSummonMenu(dst *ebiten.Image) {
+	m := a.summon
+	y := layout.StatusY
+	line := func(s string) {
+		a.font.Draw(dst, s, layout.BoxPadX, y)
+		y += ui.LineHeight
+	}
+	line(fmt.Sprintf(a.tr.UI("battle.summon.which", "%s 要召來哪種生物？"), m.caster.Name))
+	line("")
+	names := a.strings.IllusionSummonNames()
+	for i := 0; i < a.tables.NumSummons(); i++ {
+		e, err := a.tables.Summon(i)
+		if err != nil {
+			continue
+		}
+		name := fmt.Sprintf(a.tr.UI("battle.summon.fallback", "生物 %d"), i+1)
+		if i < len(names) {
+			name = a.tr.Event(spellSourceFile, 489+i, names[i])
+		}
+		mark := "   "
+		if i == m.cursor {
+			mark = " > "
+		}
+		line(fmt.Sprintf(a.tr.UI("battle.summon.entry", "%s%s %3d 點"),
+			mark, textlayout.PadCells(name, 12), game.SummonCost(e, m.kind)))
+	}
+	line("")
+	line(a.tr.UI("battle.summon.keys", "↑↓：選擇　Enter：召喚　Esc：取消"))
 }
 
 // castWithSP 是玩家在輸入框確認投入點數之後進入選目標。
@@ -250,11 +403,20 @@ func (a *app) castWithSP(u *game.Unit, e spellEntry, sp int) {
 
 // commitSpell 扣行動點與法力並套用效果。游標確認之後才會走到這裡。
 func (a *app) commitSpell(c *aoeCursor, target *game.Unit) {
-	if _, ok := a.battle.Spend(game.ActionCast); !ok {
+	action := game.ActionCast
+	if c.item != nil {
+		action = game.ActionUseItem
+	}
+	if _, ok := a.battle.Spend(action); !ok {
 		a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), c.caster.Name)
 		return
 	}
-	c.caster.CurrentSP -= c.sp
+	if c.item == nil {
+		c.caster.CurrentSP -= c.sp
+	} else if member := u2c(a.members, c.caster); member != nil {
+		game.UseItemCharge(a.rng, member, c.item.Slot)
+		a.logf(a.tr.UI("battle.item.used", "%s 使用 %s"), c.caster.Name, a.itemLabel(c.item.Item))
+	}
 	a.applySpell(c.caster, target, c.entry, c.sp)
 }
 
@@ -393,6 +555,17 @@ func (a *app) applySpellAt(caster, target *game.Unit, e spellEntry, sp, areaX, a
 			a.logf(a.tr.UI("battle.msg.spellnoeffect", "%s 的%s沒有奏效"), caster.Name, e.name)
 		}
 
+	case game.EffectPoison:
+		if target == nil {
+			a.logf(a.tr.UI("battle.msg.notarget", "%s 正前方沒有目標"), caster.Name)
+			return
+		}
+		if game.CastCurePoison(a.rng, sp, e.spell, target) {
+			a.logf(a.tr.UI("battle.msg.cured", "%s 的%s解除了 %s 的中毒"), caster.Name, e.name, target.Name)
+		} else {
+			a.logf(a.tr.UI("battle.msg.spellnoeffect", "%s 的%s沒有奏效"), caster.Name, e.name)
+		}
+
 	case game.EffectPossession:
 		if target == nil {
 			a.logf(a.tr.UI("battle.msg.notarget", "%s 正前方沒有目標"), caster.Name)
@@ -511,6 +684,7 @@ type aoeCursor struct {
 	caster *game.Unit
 	entry  spellEntry
 	sp     int
+	item   *game.UsableItem
 
 	// area 為真代表這是範圍法術，游標選的是中心點；否則是選單一目標，
 	// 必須指到某個單位身上才成立。
@@ -564,16 +738,16 @@ type itemMenu struct {
 	cursor  int
 }
 
-// u2c 找出戰鬥單位對應的隊伍成員。
-//
-// 用姓名對 —— 戰鬥單位是從角色複製出來的，兩者之間沒有指標關聯。
+// u2c 以固定槽位找回隊伍成員。名字可以重複，不能拿名字當身分鍵。
 func u2c(members []game.Character, u *game.Unit) *game.Character {
-	for i := range members {
-		if members[i].Name == u.Name {
-			return &members[i]
-		}
+	if u == nil || u.Slot < game.PlayerSlotStart || u.Slot >= game.PlayerSlotEnd {
+		return nil
 	}
-	return &game.Character{}
+	i := u.Slot - game.PlayerSlotStart
+	if i < 0 || i >= len(members) {
+		return nil
+	}
+	return &members[i]
 }
 
 // updateItemMenu 處理使用道具選單的按鍵。
@@ -589,10 +763,6 @@ func (a *app) updateItemMenu(u *game.Unit) error {
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 		e := m.entries[m.cursor]
 		a.useMenu = nil
-		if _, ok := a.battle.Spend(game.ActionUseItem); !ok {
-			a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), u.Name)
-			return nil
-		}
 		a.useItem(u, e)
 	}
 	return nil
@@ -604,8 +774,8 @@ func (a *app) updateItemMenu(u *game.Unit) error {
 // 效果記錄與套用路徑（原版 `17c5:19dd`–`19f2` 呼叫的 `FUN_1000_114f`
 // 就是法術用的那個載入函式，見 scenario/inventory.go）。
 //
-// 目標暫時取正前方的敵人 —— 原版走的是與法術共用的目標挑選
-// （`FUN_138d_3fc9`，會跳游標），那一段還沒接到道具這條路上。
+// 原版與法術共用目標游標（FUN_138d_3fc9）；本實作也共用 aoeCursor，
+// 取消時不扣行動點、不消耗次數。
 func (a *app) useItem(u *game.Unit, e game.UsableItem) {
 	sp, err := a.tables.Spell(e.Item.Effect)
 	if err != nil {
@@ -622,13 +792,19 @@ func (a *app) useItem(u *game.Unit, e game.UsableItem) {
 		name:  a.tr.Event(spellSourceFile, e.Item.Effect, name),
 		spell: sp,
 	}
-	a.logf(a.tr.UI("battle.item.used", "%s 使用 %s"), u.Name, a.itemLabel(e.Item))
-	a.applySpell(u, a.battle.TargetInFront(u), entry, e.Item.Power)
-
-	// 用掉一次。次數用完之後這一格就不再出現在選單裡（InventorySlot.Usable）。
-	if c := u2c(a.members, u); c != nil {
-		c.Inventory[e.Slot].Used++
+	if sp.Effect == game.EffectSummon {
+		kind := game.KindSummon
+		if e.Item.Effect == 25 {
+			kind = game.KindIllusion
+		}
+		a.summon = &summonMenu{caster: u, entry: entry, kind: kind, item: &e}
+		return
 	}
+	a.aoe = &aoeCursor{
+		caster: u, entry: entry, sp: e.Item.Power, item: &e,
+		area: sp.Effect == game.EffectAOE,
+	}
+	a.aoeX, a.aoeY = u.X, u.Y
 }
 
 // itemSourceFile 是道具名稱翻譯目錄的 key，與 dwstrings 產生時一致。
@@ -684,6 +860,9 @@ func (a *app) drawItemMenu(dst *ebiten.Image) {
 
 // updatePlayerTurn 處理玩家單位的一次按鍵。
 func (a *app) updatePlayerTurn(u *game.Unit) error {
+	if a.summon != nil {
+		return a.updateSummonMenu()
+	}
 	if a.useMenu != nil {
 		return a.updateItemMenu(u)
 	}
@@ -1188,6 +1367,12 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 			layout.MapOriginY+(a.aoeY-camY)*cellH,
 			cellW, cellH, aoeColor)
 	}
+	if a.summon != nil && a.summon.placing {
+		ui.StrokeRect(dst,
+			layout.MapOriginX+(a.aoeX-camX)*cellW,
+			layout.MapOriginY+(a.aoeY-camY)*cellH,
+			cellW, cellH, aoeColor)
+	}
 
 	for _, u := range a.battle.Units() {
 		if !u.Alive() {
@@ -1269,6 +1454,12 @@ func (a *app) drawBattle(dst *ebiten.Image) {
 	// 檢視面板佔滿整個側欄 —— 原版也是把戰場資訊換掉，不是疊一個小框。
 	if a.examine != nil {
 		a.drawExamine(line)
+		return
+	}
+	if a.summon != nil && a.summon.placing {
+		line(a.tr.UI("battle.summon.place", "選擇召喚生物出現的位置"))
+		line("")
+		line(a.tr.UI("battle.summon.placekeys", "方向鍵：移動　Enter／Space：放置　Esc：返回"))
 		return
 	}
 

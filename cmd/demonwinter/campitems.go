@@ -17,7 +17,7 @@ import (
 //
 //	Drop     選人 → 選道具 → 丟掉
 //	Identify 選人 → 選道具 → 研究（每人每天一次）
-//	Use      選人 → 選道具 → 用掉（目前只走得通光源那一條）
+//	Use      選人 → 選道具 → 光源或魔法效果（需要時再選目標）→ 消耗充能
 //	Xorcise  選施術者 → 選對象 → 選身上的裝備 → 驅邪
 //	Trade    選人 → 選道具 → 選收方 → 交出去
 //
@@ -179,7 +179,11 @@ func (a *app) updateItemTarget(p *itemPicker) error {
 	case inpututil.IsKeyJustPressed(ebiten.KeyUp):
 		p.target = (p.target - 1 + len(a.members)) % len(a.members)
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
-		a.giveSelected(p)
+		if p.action == itemActionUse {
+			a.useMagicSelected(p)
+		} else {
+			a.giveSelected(p)
+		}
 	}
 	return nil
 }
@@ -216,15 +220,92 @@ func (a *app) identifySelected(p *itemPicker) {
 
 func (a *app) useSelected(p *itemPicker) {
 	m := &a.members[p.member]
-	label := a.itemLabel(m.Inventory[p.slot])
-	res := game.UseInCamp(m, p.slot)
+	it := m.Inventory[p.slot]
+	label := a.itemLabel(it)
+	if ok, why := game.CanUseInCamp(m, p.slot); !ok {
+		a.camp.message = why
+		return
+	}
+	if game.LightSourceLevel(it.Type) != 0 {
+		res := game.UseInCamp(m, p.slot)
+		if !res.OK {
+			a.camp.message = res.Reason
+			return
+		}
+		a.torch = byte(res.Light)
+		a.save.LightSource = byte(res.Light)
+		a.camp.message = fmt.Sprintf(a.tr.UI("campitem.msg.lit", "%s 點起了%s（光源 %d）"), m.Name, label, res.Light)
+		a.camp.items = nil
+		return
+	}
+
+	spell, err := a.tables.Spell(it.Effect)
+	if err != nil {
+		a.camp.message = fmt.Sprintf(a.tr.UI("campitem.msg.bad_effect", "%s 的效果 %d 找不到"), label, it.Effect)
+		return
+	}
+	if ok, why := game.CampCastable(spell.Effect); !ok {
+		a.camp.message = why
+		return
+	}
+	if game.CampEffectNeedsTarget(spell.Effect) {
+		p.target = p.member
+		return
+	}
+	p.target = p.member
+	a.useMagicSelected(p)
+}
+
+func (a *app) useMagicSelected(p *itemPicker) {
+	caster := &a.members[p.member]
+	target := &a.members[p.target]
+	it := caster.Inventory[p.slot]
+	label := a.itemLabel(it)
+	spell, err := a.tables.Spell(it.Effect)
+	if err != nil {
+		a.camp.message = fmt.Sprintf(a.tr.UI("campitem.msg.bad_effect", "%s 的效果 %d 找不到"), label, it.Effect)
+		return
+	}
+	res := game.CampItemCast(a.rng, caster, target, spell, it.Power)
 	if !res.OK {
 		a.camp.message = res.Reason
 		return
 	}
-	a.torch = byte(res.Light)
-	a.save.LightSource = byte(res.Light)
-	a.camp.message = fmt.Sprintf(a.tr.UI("campitem.msg.lit", "%s 點起了%s（光源 %d）"), m.Name, label, res.Light)
+	destroyed := game.UseItemCharge(a.rng, caster, p.slot)
+	msg := fmt.Sprintf(a.tr.UI("campitem.msg.invoked", "%s 啟動了%s"), caster.Name, label)
+	switch {
+	case res.Light > 0:
+		a.torch = byte(res.Light)
+		a.save.LightSource = byte(res.Light)
+		msg += fmt.Sprintf(a.tr.UI("campitem.msg.magic_light", "（光源 %d）"), res.Light)
+	case res.WindWalk:
+		if a.save.ShardShattered == 0 {
+			a.changeMap(34, 28, 50)
+		} else {
+			a.changeMap(43, 39, 35)
+		}
+		msg += a.tr.UI("campitem.msg.windwalk", "　風將整支隊伍送到安全地點")
+	case res.Resurrected:
+		msg += fmt.Sprintf(a.tr.UI("campitem.msg.resurrected", "　%s 恢復了呼吸與 1 點生命"), target.Name)
+	case res.Cured:
+		msg += fmt.Sprintf(a.tr.UI("campitem.msg.cured", "　%s 的毒素消退了"), target.Name)
+	case res.Released:
+		msg += fmt.Sprintf(a.tr.UI("campitem.msg.released", "　%s 的束縛解開了"), target.Name)
+	case res.Withered:
+		msg += fmt.Sprintf(a.tr.UI("campitem.msg.withered", "　%s 被枯萎侵襲"), target.Name)
+	case res.Delta > 0:
+		msg += fmt.Sprintf(a.tr.UI("campitem.msg.gained", "　%s 回復 %d"), target.Name, res.Delta)
+	case res.Delta < 0:
+		msg += fmt.Sprintf(a.tr.UI("campitem.msg.lost", "　%s 受到 %d"), target.Name, -res.Delta)
+	case res.Reason != "":
+		msg += "　" + res.Reason
+	default:
+		msg += a.tr.UI("campitem.msg.no_effect", "　沒有明顯效果")
+	}
+	if destroyed {
+		msg += a.tr.UI("campitem.msg.destroyed", "　道具隨之損毀")
+	}
+	a.camp.message = msg
 	a.camp.items = nil
 }
 
@@ -374,7 +455,7 @@ func (a *app) drawItemPicker(line func(string)) {
 					} else if !it.Usable() {
 						note = a.tr.UI("campitem.slot.unusable", "（用不了）")
 					} else {
-						note = a.tr.UI("campitem.slot.battle_only", "（戰鬥中才能用）")
+						note = a.tr.UI("campitem.slot.magic_item", "（魔法物品）")
 					}
 				}
 				if p.action == itemActionIdentify {
@@ -394,6 +475,19 @@ func (a *app) drawItemPicker(line func(string)) {
 		line(a.tr.UI("campitem.keys.confirm_back", "↑↓：選擇　Enter：確定　Esc：返回"))
 
 	default:
+		if p.action == itemActionUse {
+			line(fmt.Sprintf(a.tr.UI("campitem.use.target_who", "%s 要對誰使用%s？"), m.Name,
+				a.itemLabel(m.Inventory[p.slot])))
+			line("")
+			a.drawMemberList(line, p.target, func(i int) string {
+				target := a.members[i]
+				return fmt.Sprintf(a.tr.UI("campitem.use.target_status", "生命 %d/%d　狀態 %d"),
+					target.CurrentHP, target.MaxHP, target.Status)
+			})
+			line("")
+			line(a.tr.UI("campitem.use.keys", "↑↓：選擇　Enter：使用　Esc：返回"))
+			break
+		}
 		line(fmt.Sprintf(a.tr.UI("campitem.target.who", "%s 的%s要給誰？"), m.Name,
 			a.itemLabel(m.Inventory[p.slot])))
 		line("")

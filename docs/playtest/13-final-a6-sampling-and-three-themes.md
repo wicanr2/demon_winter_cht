@@ -44,8 +44,33 @@ C10 結案。
 
 - `go test ./...`：全綠（Ebiten 套件在 Xvfb 下執行）；
 - `dwstrings check`：500/500；
-- `dwstrings uicheck`：716/716，41 個動態 key，通過；
+- `dwstrings uicheck`：當時為 716/716，41 個動態 key，通過；
 - `git diff --check`：通過；
 - 所有抽樣都使用 `/tmp` 或唯讀副本，沒有改寫原版資料。
 
 結論：A6 的最後抽樣通過，可進最後打包階段。
+
+## 5. 2026-07-29 gameplay closure 後重跑
+
+營地／戰鬥魔法物品、召喚選點與命中修正接回正式 consumer 後再抽一次：
+
+- Xvfb 下 `go test ./...` 全綠；
+- `dwstrings check` 500/500；
+- `dwstrings uicheck` 748/748、41 個動態 key，通過；另列出的 16 條是只供
+  開發者 `-scene` 清單使用的描述；
+- 固定 seed 11 的正常遭遇仍在地圖 34 `(29,45)` 進場，第 7 回合怪物全滅，
+  每人 +13 EXP、18 金，Dodge 紀錄可見新命中修正路徑；
+- `-scene cage-secret` 由 `(13,26)` 走到 `(9,26)`，密門穿越 assertion 通過；
+- Modern EGA 海戰顯示 75/75 船體、6 移動點、海怪 20/20，框、sprite 與繁中
+  指令無溢出；
+- 由 `-video=cga` 啟動按 `F8`，畫面明示「顯示主題：Modern EGA」，主題切換
+  不改座標與隊伍狀態；
+- 全部抽樣輸出在 `/tmp/dw-a6-closure`，一擊 Docker 均由 `--rm` 清除。
+- 建立 `demonwinter-zh-Hant-2026.07.29-closure-linux-amd64.tar.gz`，SHA-256
+  `64bcf7613478171cad0ed5eb23814c1ccdfa3528e7f20606bcabcf438ba0413a`；
+  校驗通過，解壓內容不含原版資料／倚天字型，並在 Xvfb 下由解壓後 binary
+  實跑 `-list-scenes` 成功。
+
+新增玩法的精確邊界另由單元測試覆蓋：四種充能、營地道具不扣 SP、召喚合法格、
+背後／附魔／劍擊／狀態計數命中修正。幻術每回合消失機率仍是明列未解項，
+不影響上述已接路徑的驗收。

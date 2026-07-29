@@ -136,10 +136,10 @@ tools/package-release.sh 2026.07.29
 |---|---|
 | 官方手冊繁中版 | 完成（全 28 頁 + 附錄），並已搬進遊戲內手札 |
 | 社群攻略繁中版 | 完成（1,914 行）|
-| 反組譯筆記 | 107 篇；主線、海戰、時間進位、arena 與噴吐素材繪製路徑均有位址證據 |
+| 反組譯筆記 | 114 篇；主線、海戰、時間進位、arena、命中修正、營地法術與魔法物品充能均有位址證據 |
 | 資料格式 | 地圖、事件、道具、怪物、存檔、字型、圖形、音效皆已解 |
 | Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、音效 |
-| 遊戲內文字中文化 | **500/500（100%）** 資料字串，另有 **716 條**中文介面文案 |
+| 遊戲內文字中文化 | **500/500（100%）** 資料字串，另有 **748 條**中文介面文案 |
 | 試玩驗收 | **完成前期垂直切片與後期高風險抽樣**；可重播腳本與 trace 工具在 `tools/playthrough/` |
 
 ---
@@ -194,6 +194,7 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 | [`docs/ui/01-ui-assessment.md`](docs/ui/01-ui-assessment.md) | **現況 vs 原版的逐項量測**：原版座標全部從 DOSBox 截圖量出來（地圖視窗 288×252、紅底選單 176 px、停用列的網點比例），11 條問題依嚴重度排序 |
 | [`docs/ui/02-ui-plan.md`](docs/ui/02-ui-plan.md) | **改版計畫**：定案約束、四個老遊戲重製版的做法調查（Wasteland Remastered、冰城傳奇、Wizardry 2024、Gold Box Companion）、七個階段的實作順序 |
 | [`docs/ui/03-pc98-gold-box-layout-reference.md`](docs/ui/03-pc98-gold-box-layout-reference.md) | **PC-98 日文排版比對**：以《克萊恩英豪／Champions of Krynn》與《幽靈騎士／Death Knights of Krynn》為核心，再以 *Pool of Radiance*、*Curse of the Azure Bonds*、*Secret of the Silver Blades*、*Pools of Darkness* 交叉檢查 640×400、16×16 CJK 字格、38 格正文與探索／戰鬥資訊分區 |
+| [`skill-build/research-pc98-golden-box-ui/`](skill-build/research-pc98-golden-box-ui/) | **可共用的 Codex knowledge skill**：以 Golden Box、PC-98、Krynn、幽靈騎士等關鍵字觸發，詳細 corpus 與量測規則只從 reference link 按需載入 |
 
 原版 → 目前 → 建議，三張版面對照：
 
@@ -223,6 +224,7 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 | [`docs/ui/`](docs/ui/) | 畫面評估與改版計畫（見上一節） |
 | [`docs/design/retro-game-re-remake-lessons.md`](docs/design/retro-game-re-remake-lessons.md) | 從本作整理出的老遊戲反組譯、乾淨重寫、原版對拍與交接模板 |
 | [`docs/design/engine-extraction-study.md`](docs/design/engine-extraction-study.md) | 本作引擎可抽離範圍、第二款遊戲相容性門檻與分階段方案 |
+| [`skill-build/research-pc98-golden-box-ui/`](skill-build/research-pc98-golden-box-ui/) | PC-98 Golden Box CJK UI 共用 skill；同份已同步至 `~/.codex/skills` 與 `~/my_skill` |
 | `docs/formats/` | 資料格式規格書（建置中） |
 | `docs/re/` | 反組譯筆記與 Ghidra 環境說明（建置中） |
 

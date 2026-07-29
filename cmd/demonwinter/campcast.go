@@ -265,7 +265,12 @@ func (a *app) updateCampCast() error {
 			}
 		case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 			c.target = c.caster
-			c.step = castPickTarget
+			effect := c.entries[c.spell].spell.Effect
+			if effect == game.EffectLight || effect == game.EffectWindWalk {
+				a.doCampCast(c)
+			} else {
+				c.step = castPickTarget
+			}
 		}
 
 	case castPickTarget:
@@ -297,6 +302,24 @@ func (a *app) doCampCast(c *castScreen) {
 	}
 	msg := fmt.Sprintf(a.tr.UI("campcast.cast.cast", "%s 對 %s 施放%s"), caster.Name, target.Name, e.name)
 	switch {
+	case res.Light > 0:
+		a.torch = byte(res.Light)
+		a.save.LightSource = byte(res.Light)
+		msg = fmt.Sprintf(a.tr.UI("campcast.cast.light", "%s 施放%s　光源提升為 %d"),
+			caster.Name, e.name, res.Light)
+	case res.WindWalk:
+		if a.save.ShardShattered == 0 {
+			a.changeMap(34, 28, 50)
+		} else {
+			a.changeMap(43, 39, 35)
+		}
+		msg = a.tr.UI("campcast.cast.windwalk", "風托起整支隊伍，將眾人送到安全地點")
+	case res.Resurrected:
+		msg += a.tr.UI("campcast.cast.resurrected", "　死者恢復了呼吸與 1 點生命")
+	case res.Cured:
+		msg += a.tr.UI("campcast.cast.cured", "　毒素消退了")
+	case res.Reason != "":
+		msg += "　" + res.Reason
 	case res.Delta > 0:
 		msg += fmt.Sprintf(a.tr.UI("campcast.cast.heal", "　回復 %d"), res.Delta)
 	case res.Delta < 0:

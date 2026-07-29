@@ -34,6 +34,14 @@ type CampCastResult struct {
 	Released bool
 	// Withered 為 true 代表枯萎生效。
 	Withered bool
+	// Cured 為 true 代表解毒成功。
+	Cured bool
+	// Resurrected 為 true 代表死亡角色復活成功。
+	Resurrected bool
+	// Light > 0 代表魔法光源的新強度。
+	Light int
+	// WindWalk 代表法術已成功，呼叫端要依世界階段傳送全隊。
+	WindWalk bool
 	// Died 為 true 代表目標被自己人打死了（生命降到 0）。
 	Died bool
 }
@@ -44,7 +52,8 @@ const campCastStatusLimit = 2
 // CampCastable 回報這個效果在戰鬥外放不放得出來。
 func CampCastable(effect int) (bool, string) {
 	switch effect {
-	case EffectHP, EffectSPMod, EffectBindRelease, EffectWither:
+	case EffectHP, EffectSPMod, EffectBindRelease, EffectWither,
+		EffectResurrect, EffectPoison, EffectLight, EffectWindWalk:
 		return true, ""
 	case EffectSkillMod, EffectStrengthMod, EffectSpeedMod, EffectArmorMod:
 		return false, "這種增減只在戰鬥中有意義"
@@ -54,11 +63,28 @@ func CampCastable(effect int) (bool, string) {
 	return false, "這個法術還不能在營地施放"
 }
 
+// CampEffectNeedsTarget 回報營地效果是否需要從隊伍中選一名目標。
+// 光源與御風而行作用於整隊／世界狀態，其餘可用效果都作用於角色。
+func CampEffectNeedsTarget(effect int) bool {
+	return effect != EffectLight && effect != EffectWindWalk
+}
+
 // CampCast 在營地施放一個法術。
 //
 // sp 是投入的法力，與戰鬥中同一個意思（力度）。**法力先扣再判定** ——
 // 與戰鬥中一致，放空了也要付錢。
 func CampCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, sp int) CampCastResult {
+	return campCast(r, caster, target, s, sp, true)
+}
+
+// CampItemCast 是營地使用魔法物品時的同一套效果路徑。道具的 Power
+// 就是投入強度，但不會扣角色 SP（原版 FUN_1000_1902 的 item 分支改扣
+// 道具次數，並不碰角色 +0xff）。
+func CampItemCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, power int) CampCastResult {
+	return campCast(r, caster, target, s, power, false)
+}
+
+func campCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, sp int, spendSP bool) CampCastResult {
 	switch {
 	case caster == nil || target == nil:
 		return CampCastResult{Reason: "沒有這個人"}
@@ -66,14 +92,16 @@ func CampCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, sp int) C
 		return CampCastResult{Reason: "現在沒辦法施法"}
 	case sp <= 0:
 		return CampCastResult{Reason: "要投入法力才放得出來"}
-	case caster.CurrentSP < sp:
+	case spendSP && caster.CurrentSP < sp:
 		return CampCastResult{Reason: "法力不夠"}
 	}
 	if ok, why := CampCastable(s.Effect); !ok {
 		return CampCastResult{Reason: why}
 	}
 
-	caster.CurrentSP -= sp
+	if spendSP {
+		caster.CurrentSP -= sp
+	}
 
 	// 借一個戰鬥單位當計算載體 —— 效果函式都吃 *Unit，
 	// 而它們動到的欄位（HP／SP／狀態）在角色身上都有對應。
@@ -86,6 +114,45 @@ func CampCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, sp int) C
 		res.Released = CastBindRelease(sp, s, u)
 	case EffectWither:
 		res.Withered = CastWither(r, sp, s, u)
+	case EffectPoison:
+		if target.Status != scenario.StatusPoison {
+			res.Reason = "目標沒有中毒"
+			break
+		}
+		if spellPercent(sp, s) >= r.Roll(100) {
+			target.Status = scenario.StatusNormal
+			res.Cured = true
+		}
+		return res
+	case EffectResurrect:
+		if target.Status != scenario.StatusDead && target.CurrentHP > 0 {
+			res.Reason = "目標並未死亡"
+			break
+		}
+		// 原版復活擲兩次百分骰取較小值，再與 K×SP/M 比較。
+		roll := r.Roll(100)
+		if second := r.Roll(100); second < roll {
+			roll = second
+		}
+		if spellPercent(sp, s) >= roll {
+			target.Status = scenario.StatusNormal
+			target.CurrentHP = 1
+			target.BindLevel = 0
+			res.Resurrected = true
+		}
+		return res
+	case EffectLight:
+		res.Light = spellPercent(sp, s)
+		if res.Light < 1 {
+			res.Light = 1
+		}
+		if res.Light > int(MaxLightLevel) {
+			res.Light = int(MaxLightLevel)
+		}
+		return res
+	case EffectWindWalk:
+		res.WindWalk = true
+		return res
 	default:
 		res.Delta, _ = CastMagnitudeEffect(r, sp, s, u)
 	}
@@ -93,6 +160,13 @@ func CampCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, sp int) C
 	writeBackFromUnit(target, u)
 	res.Died = target.CurrentHP <= 0
 	return res
+}
+
+func spellPercent(sp int, s gamedata.Spell) int {
+	if s.M <= 0 {
+		return 0
+	}
+	return sp * s.K / s.M
 }
 
 // writeBackFromUnit 把戰鬥單位上會變動的持久欄位寫回角色。

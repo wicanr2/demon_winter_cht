@@ -160,6 +160,41 @@ func TestAttack_NoEffectSkipsEntireChain(t *testing.T) {
 	}
 }
 
+func TestAttackHitModifier_AllOriginalTerms(t *testing.T) {
+	atk := &Unit{
+		IsPlayer: true, Facing: int(East), EnchantBonus: 2, Style: StyleFencing,
+	}
+	tgt := &Unit{
+		Facing: int(East), Status: StatusNormal, StatusCount: 3,
+	}
+	// 背後 +12、附魔 2×3、劍擊 +10、Dodge 3×−4。
+	if got := AttackHitModifier(atk, tgt); got != 16 {
+		t.Errorf("完整命中修正 = %d，預期 16", got)
+	}
+
+	tgt.Facing = int(West)
+	tgt.StatusCount = -2
+	// 非背後 +0、附魔 +6、劍擊 +10、暈眩 −2×−4 = +8。
+	if got := AttackHitModifier(atk, tgt); got != 24 {
+		t.Errorf("暈眩目標命中修正 = %d，預期 24", got)
+	}
+
+	tgt.Status = StatusBindLow
+	if got := AttackHitModifier(atk, tgt); got != 16 {
+		t.Errorf("束縛目標不應套 StatusCount，得到 %d，預期 16", got)
+	}
+}
+
+func TestAttackHitModifier_MonsterDoesNotUsePlayerWeaponBonuses(t *testing.T) {
+	atk := &Unit{
+		Facing: int(North), EnchantBonus: 9, Style: StyleFencing,
+	}
+	tgt := &Unit{Facing: int(South)}
+	if got := AttackHitModifier(atk, tgt); got != 0 {
+		t.Errorf("怪物命中修正 = %d，不應套玩家附魔／劍擊加成", got)
+	}
+}
+
 // 爆擊門檻：一般 10%、狂暴 25%、狂暴 + 鬥劍再多 8%。
 func TestAttack_CriticalThresholds(t *testing.T) {
 	measure := func(u *Unit) float64 {

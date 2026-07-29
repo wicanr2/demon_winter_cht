@@ -185,7 +185,7 @@ func (b *Battle) Enemies(of *Unit) []int {
 
 // ResolveAttack 執行一次攻擊並處理死亡結算。
 func (b *Battle) ResolveAttack(attacker, target *Unit, hitModifier int) AttackResult {
-	res := Attack(b.rng, attacker, target, hitModifier)
+	res := Attack(b.rng, attacker, target, AttackHitModifier(attacker, target)+hitModifier)
 	if res.Killed {
 		b.Kill(target)
 	}
@@ -200,6 +200,38 @@ func (b *Battle) FreeSummonSlot() int {
 		}
 	}
 	return -1
+}
+
+// SummonPosition 找施法者周圍第一個可站的格子。原版把召喚物放入三個
+// 專用槽位；位置仍須避開牆與既有單位。
+func (b *Battle) SummonPosition(caster *Unit) (int, int, bool) {
+	if caster == nil {
+		return 0, 0, false
+	}
+	offsets := [...][2]int{
+		{0, -1}, {1, 0}, {0, 1}, {-1, 0},
+		{1, -1}, {1, 1}, {-1, 1}, {-1, -1},
+	}
+	for _, d := range offsets {
+		x, y := caster.X+d[0], caster.Y+d[1]
+		if !InField(x, y) || b.UnitAt(x, y) != nil {
+			continue
+		}
+		if b.Terrain != nil && !b.Terrain.Walkable(x, y) {
+			continue
+		}
+		return x, y, true
+	}
+	return 0, 0, false
+}
+
+// CanSummonAt 檢查玩家選定的召喚落點。原版讓玩家移動游標決定位置，
+// 所以不能把生物強制塞在施法者旁邊；只要求格子在場內、可走且無人。
+func (b *Battle) CanSummonAt(x, y int) bool {
+	if !InField(x, y) || b.UnitAt(x, y) != nil {
+		return false
+	}
+	return b.Terrain == nil || b.Terrain.Walkable(x, y)
 }
 
 // SummonKind 區分召喚與幻術。兩者共用同一套機制，只差成本倍率與是否保留法力。
@@ -239,8 +271,9 @@ func (b *Battle) PlaceSummon(slot int, e gamedata.SummonEntry, kind SummonKind, 
 		HP:            int(e.Word(3)),
 		MaxHP:         int(e.Word(3)),
 		Armor:         int(e.Word(6)),
-		WeaponIndex:   int(e.Word(5)),
-		RaceOrElement: int(e.Word(4)),
+		WeaponIndex:   int(e.Word(4)),
+		SpriteIndex:   int(e.Word(5)),
+		RaceOrElement: int(e.Word(10)),
 		IsPlayer:      true,
 		Side:          SideSummon,
 	}

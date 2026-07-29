@@ -213,9 +213,32 @@ type AttackResult struct {
 // 所以 90 對應 10%。
 const critThresholdBase = 90
 
+// AttackHitModifier 算出普通攻擊核心以外的全部原版命中修正。
+//
+// 相同朝向代表攻擊者站在目標背後；玩家武器附魔與劍擊風格另有加成。
+// StatusCount 不只表示 Dodge 的正值，也可能是暈眩的負值；原版直接乘 −4，
+// 因此暈眩中的目標會更容易命中。束縛（Status >= 2）不套用該欄。
+func AttackHitModifier(attacker, target *Unit) int {
+	modifier := 0
+	if attacker.Facing == target.Facing {
+		modifier += 12
+	}
+	if attacker.IsPlayer {
+		modifier += attacker.EnchantBonus * 3
+		if attacker.Style == StyleFencing {
+			modifier += 10
+		}
+	}
+	if target.Status < StatusBindLow {
+		modifier += target.StatusCount * -4
+	}
+	return modifier
+}
+
 // Attack 執行一次普通攻擊（動作 case 5）。
 //
-// hitModifier 是命中率的各項外部修正（例如目標閃避時傳 −4 × 閃避計數）。
+// hitModifier 是呼叫端算好的原版命中修正；一般戰鬥應使用
+// AttackHitModifier，額外參數只保留給可重用核心與測試。
 func Attack(r *rng.RNG, attacker, target *Unit, hitModifier int) AttackResult {
 	var res AttackResult
 
