@@ -165,6 +165,8 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 |---|---|
 | [`PLAN.md`](PLAN.md) | 專案計畫：偵查事實、待驗證假設、架構決策、階段分解、驗收準則、風險 |
 | [`docs/ui/`](docs/ui/) | 畫面評估與改版計畫（見上一節） |
+| [`docs/design/retro-game-re-remake-lessons.md`](docs/design/retro-game-re-remake-lessons.md) | 從本作整理出的老遊戲反組譯、乾淨重寫、原版對拍與交接模板 |
+| [`docs/design/engine-extraction-study.md`](docs/design/engine-extraction-study.md) | 本作引擎可抽離範圍、第二款遊戲相容性門檻與分階段方案 |
 | `docs/formats/` | 資料格式規格書（建置中） |
 | `docs/re/` | 反組譯筆記與 Ghidra 環境說明（建置中） |
 
