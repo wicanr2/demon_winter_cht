@@ -1,6 +1,6 @@
 ---
 name: research-pc98-golden-box-ui
-description: Research and apply PC-98 Japanese Golden Box interface patterns to retro CRPG remakes and CJK localizations. Use when comparing or designing 640x400 screens, 16x15 or 16x16 bitmap-font layouts, EGA/CGA/PC-98 themes, dialogue pagination, party/status panels, combat HUDs, or Traditional Chinese typography; also trigger for Golden Box, Gold Box, PC-9801, SSI, Champions of Krynn, 克萊恩英豪, Death Knights of Krynn, 幽靈騎士, Pool of Radiance, Curse of the Azure Bonds, Secret of the Silver Blades, or Pools of Darkness screenshot research.
+description: Research and apply PC-98 Japanese Golden Box interface patterns to retro CRPG remakes and CJK localizations. Use when comparing or designing 640x400 screens, 16x15 or 16x16 bitmap-font layouts, EGA/CGA/PC-98 themes, Japanese or Traditional Chinese text layout, dialogue pagination, party/status panels, or combat HUDs; also trigger for Golden Box, Gold Box, 黃金盒, 金盒, PC-98, PC98, PC-9801, SSI, Champions of Krynn, 克萊恩英豪, Death Knights of Krynn, 幽靈騎士, Pool of Radiance, Curse of the Azure Bonds, Secret of the Silver Blades, or Pools of Darkness screenshot research.
 ---
 
 # Research PC-98 Golden Box UI
@@ -8,6 +8,18 @@ description: Research and apply PC-98 Japanese Golden Box interface patterns to 
 Use PC-98 Golden Box ports as comparative evidence for fitting CJK text into Western
 party-based CRPG interfaces. Treat them as layout references, never as the behavioral
 oracle or a source of reusable copyrighted art.
+
+## Knowledge-base loading contract
+
+Keep this skill as the keyword-triggered entry point. Do not add its detailed research
+to global startup instructions or read the reference for unrelated sessions.
+
+- For a Golden Box or CJK layout task, load only the linked reference sections needed
+  for that screen type or measurement.
+- For a complete cross-screen audit, read the full reference once after this skill
+  triggers.
+- Keep project-specific findings in the project repository; promote only reusable,
+  cross-title evidence into this knowledge base.
 
 ## Workflow
 
