@@ -21,6 +21,12 @@ func validModernIconManifest() modernIconManifest {
 	m.Sprites = map[string]string{"0x1e": "party-north-a.png"}
 	m.BattleSprites.Combat = map[string]string{"0x14": "combat-14.png"}
 	m.BattleSprites.Monsters = map[string]string{"0xef": "monster-ef.png"}
+	m.BattleSprites.MonsterSets = map[string]modernIconDirections{
+		"0x03": {
+			South: "monster-03-south.png", West: "monster-03-west.png",
+			East: "monster-03-east.png", North: "monster-03-north.png",
+		},
+	}
 	m.BattleSprites.Ships = map[string]string{"0x1f": "ship-1f.png"}
 	return m
 }
@@ -43,6 +49,7 @@ func TestValidateModernIconManifest(t *testing.T) {
 			m.Sprites = nil
 			m.BattleSprites.Combat = nil
 			m.BattleSprites.Monsters = nil
+			m.BattleSprites.MonsterSets = nil
 			m.BattleSprites.Ships = nil
 		}},
 		{"index", func(m *modernIconManifest) {
@@ -72,6 +79,18 @@ func TestValidateModernIconManifest(t *testing.T) {
 		{"variant path", func(m *modernIconManifest) {
 			m.TileVariants.Normal = map[string][]string{
 				"0x0e": {"good.png", "../bad.png"},
+			}
+		}},
+		{"monster set index", func(m *modernIconManifest) {
+			m.BattleSprites.MonsterSets = map[string]modernIconDirections{
+				"0x1e": {
+					South: "s.png", West: "w.png", East: "e.png", North: "n.png",
+				},
+			}
+		}},
+		{"monster set missing direction", func(m *modernIconManifest) {
+			m.BattleSprites.MonsterSets = map[string]modernIconDirections{
+				"0x03": {South: "s.png", West: "w.png", East: "e.png"},
 			}
 		}},
 	}

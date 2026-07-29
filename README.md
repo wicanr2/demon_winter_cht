@@ -123,6 +123,15 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 （[`docs/playtest/30`](docs/playtest/30-modern-icon-party-and-sailing-directions.md)）；
 戰鬥隊員、Orc 怪物與海戰玩家船的逐 frame 高解析覆寫層也已通過代表場景實跑
 （[`docs/playtest/31`](docs/playtest/31-modern-icon-battle-overlay-layer.md)）。
+怪物量產第一波再完成八組四向外觀：戰士、法師、盜賊、狗頭人、巨魔、熊、狼、
+蛇；JSON `monsterSets` 依原版 pair 展開後，覆寫率由 1/224 提升為 65/224
+（[`docs/playtest/36`](docs/playtest/36-modern-icon-battle-wave1.md)）：
+
+![Modern Icon 怪物第一波四向聯絡表](docs/design/img/modern-icon-m1-battle-wave1-contact.png)
+
+第一波的同方向兩個步態目前共用視圖，方向與物種已完成，第二步動畫及其餘
+159 格仍待量產，不宣稱完整怪物 atlas。
+
 雙倍移動成本的丘陵 `0x0e/0x2b` 另以每索引四個正常／冬季變體完成無縫拼接，
 選圖只依座標、不碰遊戲 RNG（[`docs/playtest/32`](docs/playtest/32-modern-icon-hill-variants.md)）：
 

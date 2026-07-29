@@ -202,6 +202,56 @@
     "monsters": {
       "0x8d": "monster-orc-east-8d.png"
     },
+    "monsterSets": {
+      "0x00": {
+        "south": "monster-00-south.png",
+        "west": "monster-00-west.png",
+        "east": "monster-00-east.png",
+        "north": "monster-00-north.png"
+      },
+      "0x01": {
+        "south": "monster-01-south.png",
+        "west": "monster-01-west.png",
+        "east": "monster-01-east.png",
+        "north": "monster-01-north.png"
+      },
+      "0x02": {
+        "south": "monster-02-south.png",
+        "west": "monster-02-west.png",
+        "east": "monster-02-east.png",
+        "north": "monster-02-north.png"
+      },
+      "0x03": {
+        "south": "monster-03-south.png",
+        "west": "monster-03-west.png",
+        "east": "monster-03-east.png",
+        "north": "monster-03-north.png"
+      },
+      "0x04": {
+        "south": "monster-04-south.png",
+        "west": "monster-04-west.png",
+        "east": "monster-04-east.png",
+        "north": "monster-04-north.png"
+      },
+      "0x07": {
+        "south": "monster-07-south.png",
+        "west": "monster-07-west.png",
+        "east": "monster-07-east.png",
+        "north": "monster-07-north.png"
+      },
+      "0x08": {
+        "south": "monster-08-south.png",
+        "west": "monster-08-west.png",
+        "east": "monster-08-east.png",
+        "north": "monster-08-north.png"
+      },
+      "0x0c": {
+        "south": "monster-12-south.png",
+        "west": "monster-12-west.png",
+        "east": "monster-12-east.png",
+        "north": "monster-12-north.png"
+      }
+    },
     "ships": {
       "0x00": "ship-south.png",
       "0x01": "ship-south.png",

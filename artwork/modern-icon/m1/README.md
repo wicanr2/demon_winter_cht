@@ -37,6 +37,12 @@ F8 管線；它不是平原索引的正式美術。實際索引盤點完成後�
 未列出的 frame 保留相容底稿，不拿錯誤角色填滿清單。執行期會先重畫該格真實
 戰場地形／海面，再疊透明單位並重畫選取框，所以不會留下舊 sprite 的黑底。
 
+第一波怪物量產使用 `battleSprites.monsterSets`：每個外觀組在 JSON 列南／西／東／北
+四張圖，載入器依原版八幀 pair 展開；個別 `monsters` frame 可覆寫同方向第二步。
+`rebuild-battle-wave1.sh` 目前完成外觀 `00/01/02/03/04/07/08/0c`，共 64 幀：
+戰士、法師、盜賊、狗頭人／小惡魔、巨魔、熊、狼、蛇。第一波兩個步態暫共用
+同一視圖，方向與物種已完成，第二步動畫仍待後續 polish。
+
 高地批次先完成雙倍移動成本的丘陵 `0x0e/0x2b`：前者是西南—東北的三道窄脊，
 後者是反向的寬丘肩與草地鞍部。兩格各有構圖配對的正常／冬季版，每個索引再
 輸出四張共用邊界的變體，由 `rebuild-highlands.sh` 重建。執行期只依世界座標
@@ -56,7 +62,8 @@ F8 管線；它不是平原索引的正式美術。實際索引盤點完成後�
 後者是橙紅熔岩裂地。兩格正常／冬季各四變體，由 `rebuild-volcanic.sh`
 共同建立黑灰岩地邊界；冬季保留熔岩熱源，不把它誤畫成普通雪原。
 
-透明母圖使用共用 `remove_chroma_key.py`，所需 Pillow 已固定在本目錄 Dockerfile：
+透明角色圖集使用共用 `tools/chroma_spritesheet.py` 去背、等比例縮放及統一腳底
+錨點，所需 Pillow 已固定在本目錄 Dockerfile：
 
 ```bash
 docker build --memory 1g -t demonwinter-art:modern-icon artwork/modern-icon
