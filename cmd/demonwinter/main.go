@@ -1714,6 +1714,8 @@ func main() {
 	// 當年看到的畫面；CGA 保留（完整性原則，`rulebook/83`），不是畫質選項。
 	videoMode := flag.String("video", "ega",
 		"素材版本：ega（原版 16 色）、cga（原版 4 色）或 modern（現代 EGA 調色）")
+	modernThemeDir := flag.String("modern-theme-dir", "",
+		"Modern EGA 逐格 PNG theme 目錄；留空使用完整調色預覽")
 	startX := flag.Int("x", -1, "起始 X。負值代表用存檔裡的座標")
 	startY := flag.Int("y", -1, "起始 Y。負值代表用存檔裡的座標")
 	sceneFlag := flag.String("scene", "",
@@ -1992,6 +1994,14 @@ func main() {
 		videoThemes[id] = theme
 	}
 	videoThemes[themeModern] = modernVideoTheme(videoThemes[themeEGA])
+	if *modernThemeDir != "" {
+		theme, loadErr := loadModernPNGTheme(*modernThemeDir)
+		if loadErr != nil {
+			log.Fatalf("載入 Modern EGA PNG 顯示主題：%v", loadErr)
+		}
+		videoThemes[themeModern] = theme
+		log.Printf("Modern EGA：使用逐格 PNG theme %s", *modernThemeDir)
+	}
 	initialTheme := videoThemes[selectedTheme]
 	// ASCII 的字模來源三選一，見 -ascii。預設 `eten`：英數走倚天全形，
 	// 與漢字同一套設計、同一個筆畫重量。

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "id": "modern-ega",
+  "label": "Modern EGA",
+  "frameWidth": 32,
+  "frameHeight": 28,
+  "terrainFrames": 102,
+  "combatFrames": 44,
+  "monsterFrames": 240,
+  "shipFrames": 32,
+  "sheets": {
+    "normal": "terrain-demon.png",
+    "winter": "terrain-winter.png",
+    "combat": "combat.png",
+    "monsters": "monster.png",
+    "ships": "ship.png"
+  }
+}

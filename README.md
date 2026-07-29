@@ -70,6 +70,16 @@ M0 試片把深水、岸線、平原、森林、山、城鎮與隊伍圖示作�
 用來審核季節語意和剪影；它是放大方向稿，不能直接縮成 32×28 atlas。山、城鎮
 與多方向岸線仍須依原版每個索引逐格手工像素化。
 
+為了讓審稿不是只看大張漂亮圖，另做一套紋理更少、以大形為主的 B 方向，並把
+每格強制壓到真正的 32×28 再最近鄰放大檢查：
+
+| B：低紋理大形方向 | B：32×28 原生資訊量證明 |
+|---|---|
+| [![Modern EGA B 方向](docs/design/img/modern-ega-m0-terrain-study-b.png)](docs/design/modern-ega-theme.md) | [![Modern EGA B 原生尺寸證明](docs/design/img/modern-ega-m0-terrain-study-b-runtime-proof.png)](docs/design/modern-ega-theme.md) |
+
+B 在水岸、森林、山、城與角色剪影上較穩，建議作 M1 runtime 基準；兩張仍是
+候選審稿材料，不是可以直接切進遊戲的 atlas。
+
 ![Modern EGA 可玩調色預覽實機畫面](docs/images/09-remake-modern-world.png)
 
 詳見 [`Modern EGA 美術與整合規格`](docs/design/modern-ega-theme.md)。跨作品引擎則已完成
@@ -84,8 +94,8 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 | 階段 | 狀態 | 內容與驗收 |
 |---|---|---|
 | P0 完整可玩調色預覽 | **已實作，未視為美術定稿** | 五套 EGA atlas 全量映到現代色盤；保留 frame 數、尺寸與索引，用來先驗證 F8、完整流程及不影響規則 |
-| P1 視覺方向審查 | **已有三份審稿材料，等待使用者核准** | 檢視[初期方向稿](docs/design/img/modern-ega-concept.png)、[生產方向表](docs/design/img/modern-ega-production-direction.png)、[M0 地形試片](docs/design/img/modern-ega-m0-terrain-study.png)與[實機預覽](docs/images/09-remake-modern-world.png)，決定材質、色盤與細節密度 |
-| P2 代表素材試片 | **地形放大試片已出；runtime 試片待 P1 核准** | 已做常態／冬季七類地形配對；下一步須手工像素化為同索引 32×28 terrain，並補隊員、怪物、船與 UI frame，在遊戲內同場景比較 |
+| P1 視覺方向審查 | **已有 A/B 與原生壓縮證明，等待使用者核准** | 檢視初期方向稿、生產方向表、A/B 地形試片、B 的 32×28 壓縮證明與實機預覽；建議 B 作 runtime 基準 |
+| P2 代表素材試片 | **loader／manifest 契約已完成；逐格 runtime 試片待 P1 核准** | PNG loader 會擋尺寸、格數、alpha 與非法路徑；下一步須依核准方向手工像素化同索引 32×28 terrain，並補隊員、怪物、船與 UI frame |
 | P3 全 atlas 量產 | 待試片核准 | 補齊 102+102 terrain、44 combat、240 monster、32 ship frames；自動檢查數量、尺寸、方向與索引 |
 | P4 最終視覺驗收 | 待量產 | 世界、冬季、地城、戰鬥、海戰同狀態三主題截圖；密門、陷阱、黑色地形與色弱辨識抽樣 |
 

@@ -37,6 +37,25 @@ Modern EGA 必須保留：
 一團；岸線採單一大曲線，還不足以覆蓋原版多個方向／轉角索引。M1 必須逐格
 沿用 EGA 輪廓手工像素化，不能從這張展示圖自動縮放。
 
+第四張是 **B 方向**：把紋理密度再減半、加強大形與三階明暗，專門回答
+「縮到原生 32×28 還剩多少資訊」。它仍是 AI 審稿圖，不是 runtime 素材：
+
+![Modern EGA B 方向試片](img/modern-ega-m0-terrain-study-b.png)
+
+下面不是另一張美術稿，而是把 B 的每一格**先強制壓成 32×28，再以最近鄰放大
+八倍**的破壞性檢查。結果證明水岸、林、山、城與角色的大形仍可辨識，也同時
+證明原始直式構圖被壓扁，不能直接切 atlas；正式 M1 必須以原版 32×28 frame
+為底逐格重畫。
+
+![Modern EGA B 方向原生尺寸壓縮證明](img/modern-ega-m0-terrain-study-b-runtime-proof.png)
+
+目前給使用者的裁決應是 A/B 方向選擇，而不是問「要不要 Modern EGA」：
+
+| 方向 | 優點 | 風險 | 建議 |
+|---|---|---|---|
+| A：原 M0 | 材質較豐富、接近 16-bit JRPG 的華麗感 | 山、城、草紋在 32×28 易糊 | 適合作宣傳圖，不直接作 runtime 基準 |
+| B：低紋理大形 | 原生縮圖辨識較穩，較接近「記憶中的 EGA」 | 細節較克制，需要靠逐格輪廓增添個性 | **建議作 M1 runtime 基準** |
+
 ## 0.1 目前已上線的可玩預覽
 
 第一個可玩版本不假裝 AI contact sheet 能精確取代 476 個既有 frame。引擎在啟動時
@@ -190,7 +209,7 @@ assets/themes/modern-ega/
   ship.png
 ```
 
-每張 PNG 為固定欄數的 atlas，`theme.json` 至少記錄：
+每張 PNG 為固定欄數的 atlas，`theme.json` 記錄：
 
 ```json
 {
@@ -200,6 +219,9 @@ assets/themes/modern-ega/
   "frameWidth": 32,
   "frameHeight": 28,
   "terrainFrames": 102,
+  "combatFrames": 44,
+  "monsterFrames": 240,
+  "shipFrames": 32,
   "sheets": {
     "normal": "terrain-demon.png",
     "winter": "terrain-winter.png",
@@ -213,6 +235,13 @@ assets/themes/modern-ega/
 載入器必須驗證尺寸、frame 數與完全不透明；不合規時啟動即報出檔名及預期值，
 不要在遊戲中以空格靜默代替。美術來源檔（Aseprite／Krita）可另存
 `artwork/modern-ega/`，runtime 不讀取。
+
+**2026-07-29 前置整合已完成**：`internal/assets/gfx/pngatlas.go` 會逐格驗證
+PNG 幾何、格數與 alpha；`cmd/demonwinter/moderntheme.go` 驗證 schema、ID、
+32×28、102/44/240/32 格與同目錄檔名。用
+`-modern-theme-dir <dir>` 可載入候選 atlas；留空仍使用完整調色預覽。
+範本在 `assets/themes/modern-ega/theme.example.json`。這只完成載入契約，
+不代表逐格美術已完成或核准。
 
 ## 5. 製作批次
 
@@ -256,7 +285,7 @@ assets/themes/modern-ega/
 1. 新增 `ThemeID`，讓原始檔 `VideoMode` 專注表示解碼格式。
 2. 將 `frameColor`、`markerColor`、`partyColor`、`enemyColor`、選單色與海面底色
    收入 `UITheme`。
-3. 實作 PNG manifest loader 與 frame 數／尺寸驗證。
+3. ~~實作 PNG manifest loader 與 frame 數／尺寸驗證。~~ **已完成**，另驗完全不透明與路徑不得跳出 theme 目錄。
 4. 啟動時預載第三套 atlas，F8 用固定 order 輪替；切換訊息顯示三個清楚名稱。
 5. 增加 `-video modern` 與 theme 輪替單元測試。
 6. 先接 M0 試片，截圖批准後才量產素材。
