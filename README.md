@@ -94,7 +94,14 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 
 ![Modern Icon 平原／深海／0x17 海岸 M1 實機試片](docs/design/img/modern-icon-m1-coast-runtime.png)
 
-其餘方向岸線、樹木、城鎮、隊伍及其他索引尚未重畫，因此仍不能稱為完整主題。
+實際樹木索引 `0x04` 單株古樹、`0x07` 前後雙樹、`0x0b` 低矮林緣已各自重畫，
+並完成常態／冬季配對；它們不是共用一張森林圖：
+
+![Modern Icon 樹木索引常態／冬季實機對照](docs/design/img/modern-icon-m1-tree-indices-contact.png)
+
+完整固定場景與裁決見
+[`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)。其餘方向岸線、
+城鎮、特殊格、隊伍方向及其他索引尚未重畫，因此仍不能稱為完整主題。
 
 同一固定種子、座標與按鍵序列的三主題比較：
 
@@ -109,8 +116,8 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 
 ![Modern Icon 冬季 M1 實機試片](docs/design/img/modern-icon-m1-winter-runtime.png)
 
-雪原、冬季深海與 `0x17` 冬季岸線已實跑；尚未重畫的樹木、角色及其他岸線仍
-刻意顯示 WINTER.SHE 相容底稿。
+雪原、冬季深海、`0x17` 冬季岸線及 `0x04/07/0b` 冬季樹木已實跑；尚未重畫的
+角色方向、城鎮、特殊格及其他岸線仍刻意顯示 WINTER.SHE 相容底稿。
 
 北向隊伍也改為透明高解析 overlay，不再帶原版整格 glyph 的黑色方框：
 
