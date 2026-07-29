@@ -14,6 +14,31 @@ go run ./tools/moderncoast \
   -out artwork/modern-icon/m1/trial \
   -tiles 17,1a,1d,20,3b,3c,3d,3e
 
+for material in normal-desert-ground winter-desert-ground \
+  normal-forest-ground winter-forest-ground; do
+  convert "artwork/modern-icon/m1/masters/$material.png" \
+    -filter Lanczos -resize 64x56\! -alpha off \
+    "artwork/modern-icon/m1/trial/$material.png"
+done
+
+go run ./tools/moderncoast \
+  -orig workplace/orig/demwin/DEM_DATA \
+  -normal-land artwork/modern-icon/m1/trial/normal-desert-ground.png \
+  -normal-water artwork/modern-icon/m1/trial/normal-ocean.png \
+  -winter-land artwork/modern-icon/m1/trial/winter-desert-ground.png \
+  -winter-water artwork/modern-icon/m1/trial/winter-ocean.png \
+  -out artwork/modern-icon/m1/trial \
+  -tiles 43,44,45,46,47,48,49,4a
+
+go run ./tools/moderncoast \
+  -orig workplace/orig/demwin/DEM_DATA \
+  -normal-land artwork/modern-icon/m1/trial/normal-forest-ground.png \
+  -normal-water artwork/modern-icon/m1/trial/normal-ocean.png \
+  -winter-land artwork/modern-icon/m1/trial/winter-forest-ground.png \
+  -winter-water artwork/modern-icon/m1/trial/winter-ocean.png \
+  -out artwork/modern-icon/m1/trial \
+  -tiles 4b,4c,4d,4e,4f,50,51,52
+
 convert artwork/modern-icon/m1/masters/normal-ocean-62.png \
   -filter Lanczos -resize 64x56\! -alpha off /tmp/normal-ocean-62.png
 convert artwork/modern-icon/m1/masters/winter-ocean-62.png \

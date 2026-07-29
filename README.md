@@ -102,6 +102,15 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 固定場景與曲線化遮罩管線見
 [`docs/playtest/25`](docs/playtest/25-modern-icon-coast-set.md)。
 
+沙地 `0x43–4a` 與森林 `0x4b–52` 海岸也使用各自地表完成正常／冬季配對；
+純沙地 `0x28` 與森林島內陸 `0x27` 一併補齊：
+
+![Modern Icon 沙地／森林岸線 contact sheet](docs/design/img/modern-icon-m1-biome-coasts-contact.png)
+
+兩個不同地圖的實機證據與規則／視覺分類差異見
+[`docs/playtest/26`](docs/playtest/26-modern-icon-biome-coasts.md)。三組世界岸線已完成，
+但城鎮、碼頭、其他特殊地標與隊伍方向仍待重畫。
+
 實際樹木索引 `0x04` 單株古樹、`0x07` 前後雙樹、`0x0b` 低矮林緣已各自重畫，
 並完成常態／冬季配對；它們不是共用一張森林圖：
 
