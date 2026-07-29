@@ -147,6 +147,13 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 |---|---|
 | ![Modern Icon 正常密林](docs/design/img/modern-icon-m1-forest-suite-normal-runtime.png) | ![Modern Icon 冬季密林](docs/design/img/modern-icon-m1-forest-suite-winter-runtime.png) |
 
+火山區 `0x2a/0x33` 也已依原版輪廓拆成遮擋視線的黑岩峰與熔岩裂地，
+完成正常／冬季各四變體（[`docs/playtest/35`](docs/playtest/35-modern-icon-volcanic-tiles.md)）：
+
+| 正常火山區 | 冬季火山區 |
+|---|---|
+| ![Modern Icon 正常火山區](docs/design/img/modern-icon-m1-volcanic-normal-runtime.png) | ![Modern Icon 冬季火山區](docs/design/img/modern-icon-m1-volcanic-winter-runtime.png) |
+
 ### 玩家操作與安全存檔
 
 預設使用方便的新式絕對方向操作與兩欄分組命令區；按 `F6` 可即時切回復古

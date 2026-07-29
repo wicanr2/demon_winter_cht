@@ -3579,7 +3579,10 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 全套索引的 `map 64 / (22,37)` 實跑；原有 `04/07/0b` 單樹／雙樹／林緣
 > 保持獨立（[`docs/playtest/34`](docs/playtest/34-modern-icon-forest-suite.md)）。
 > `tools/mapwindow -min-map/-max-map` 現可分開盤點世界與地城，避免誤畫。
-> 下一批是 `0x2a/0x33` 大量世界地貌、少量特殊索引與戰鬥素材量產；
+> 火山區 `0x2a/0x33` 隨後完成正常／冬季各四變體：前者保留視線遮蔽語意的
+> 黑岩峰，後者是熔岩裂地，並在全視窗只含這兩格的 `map 56 / (54,17)` 驗收
+>（[`docs/playtest/35`](docs/playtest/35-modern-icon-volcanic-tiles.md)）。
+> 下一批是少量特殊索引與戰鬥素材量產；
 > 不新增原版不存在的碼頭地形。
 >
 > **操作體驗新增，已完成程式與固定場景抽樣、等待使用者畫面審查：** `F6`

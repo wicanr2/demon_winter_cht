@@ -123,11 +123,23 @@
         "normal-mountains-10-v2.png",
         "normal-mountains-10-v3.png"
       ],
+      "0x2a": [
+        "normal-volcanic-2a-v0.png",
+        "normal-volcanic-2a-v1.png",
+        "normal-volcanic-2a-v2.png",
+        "normal-volcanic-2a-v3.png"
+      ],
       "0x2b": [
         "normal-hills-2b-v0.png",
         "normal-hills-2b-v1.png",
         "normal-hills-2b-v2.png",
         "normal-hills-2b-v3.png"
+      ],
+      "0x33": [
+        "normal-volcanic-33-v0.png",
+        "normal-volcanic-33-v1.png",
+        "normal-volcanic-33-v2.png",
+        "normal-volcanic-33-v3.png"
       ]
     },
     "winter": {
@@ -149,11 +161,23 @@
         "winter-mountains-10-v2.png",
         "winter-mountains-10-v3.png"
       ],
+      "0x2a": [
+        "winter-volcanic-2a-v0.png",
+        "winter-volcanic-2a-v1.png",
+        "winter-volcanic-2a-v2.png",
+        "winter-volcanic-2a-v3.png"
+      ],
       "0x2b": [
         "winter-hills-2b-v0.png",
         "winter-hills-2b-v1.png",
         "winter-hills-2b-v2.png",
         "winter-hills-2b-v3.png"
+      ],
+      "0x33": [
+        "winter-volcanic-33-v0.png",
+        "winter-volcanic-33-v1.png",
+        "winter-volcanic-33-v2.png",
+        "winter-volcanic-33-v3.png"
       ]
     }
   },
