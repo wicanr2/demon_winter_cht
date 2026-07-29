@@ -4,10 +4,14 @@
 原版索引、碰撞與事件。loader 只接受逐索引列出的 `64×56` 不透明 PNG，並明確
 拒絕舊的 `32×28` runtime trial。
 
-`masters/normal-forest.png` 是依核准 concept 重新構圖的獨立森林母稿，不是從
-contact sheet 裁切。`trial/normal-forest.png` 是首次 runtime 構圖試驗；目前
-刻意掛在已知大量出現的 `0x23` 上，只為證明高解析覆寫位置、裁切與 F8 管線，
-**不是索引語意核准或正式森林 atlas**。
+`masters/` 保留依核准 concept 逐格重新構圖的母稿，不是從 contact sheet 裁切。
+第一張森林曾刻意掛在大量出現的 `0x23` 上，只為證明高解析覆寫位置、裁切與
+F8 管線；它不是平原索引的正式美術。實際索引盤點完成後，trial 已改為：
+
+- `0x14`：深海；
+- `0x23`：平原。
+
+森林母稿保留，但要等 `0x04/07/0b` 等實際樹木索引逐格裁決後才能加入 manifest。
 
 以 `-modern-icon-dir artwork/modern-icon/m1/trial` 載入。未列出的格不會被舊圖
 冒充 Modern Icon，而是保留底下的相容預覽，直到每個索引真正重畫並通過同場景

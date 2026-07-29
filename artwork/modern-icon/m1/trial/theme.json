@@ -5,7 +5,8 @@
   "frameHeight": 56,
   "tiles": {
     "normal": {
-      "0x23": "normal-forest.png"
+      "0x14": "normal-ocean.png",
+      "0x23": "normal-plain.png"
     },
     "winter": {}
   }
