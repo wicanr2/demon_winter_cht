@@ -94,14 +94,22 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 
 ![Modern Icon 平原／深海／0x17 海岸 M1 實機試片](docs/design/img/modern-icon-m1-coast-runtime.png)
 
+草原海岸 `0x17/1a/1d/20/3b/3c/3d/3e` 已完成正常／冬季成組重畫；第二海面
+`0x62` 亦有獨立浪紋，邊界錨定到 `0x14`，避免隨機混鋪形成棋盤接縫：
+
+![Modern Icon 岸線與第二海面正常／冬季 contact sheet](docs/design/img/modern-icon-m1-coasts-contact.png)
+
+固定場景與曲線化遮罩管線見
+[`docs/playtest/25`](docs/playtest/25-modern-icon-coast-set.md)。
+
 實際樹木索引 `0x04` 單株古樹、`0x07` 前後雙樹、`0x0b` 低矮林緣已各自重畫，
 並完成常態／冬季配對；它們不是共用一張森林圖：
 
 ![Modern Icon 樹木索引常態／冬季實機對照](docs/design/img/modern-icon-m1-tree-indices-contact.png)
 
 完整固定場景與裁決見
-[`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)。其餘方向岸線、
-城鎮、特殊格、隊伍方向及其他索引尚未重畫，因此仍不能稱為完整主題。
+[`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)。沙地／森林岸線、
+城鎮、其他特殊格、隊伍方向及其他索引尚未重畫，因此仍不能稱為完整主題。
 
 劇情會把神殿替換成的 `0x5b` 毀壞廢墟也已完成正常／冬季配對：
 
