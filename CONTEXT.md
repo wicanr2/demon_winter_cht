@@ -3612,6 +3612,9 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 固定 `map=34,x=28,y=50,seed=11,Return+Up` 的 EGA／CGA／Modern Icon 三圖
 > 也已重拍（`docs/playtest/21`）：金幣、糧食、日期時間、隊員數值與物件格位
 > 一致，證明高解析覆寫層未改規則狀態。
+> `0x14/17/23` 的冬季對應亦完成並以同場景 `Tab` 實跑：
+> `modern-icon-m1-winter-runtime.png` 的雪原、冬季深海與岸線語意通過；
+> 未重畫格仍明顯保留 WINTER.SHE 底稿，沒有偽裝成完整冬季主題。
 >
 > **以下為被新基線取代的舊 Modern EGA 研究紀錄。** 新增低紋理、大形優先的 B 方向與
 > 強制 32×28 原生資訊量證明，建議 B 作 M1 runtime 基準；同時完成 PNG atlas

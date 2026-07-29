@@ -105,6 +105,13 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 三圖的金幣、糧食、日期時間、隊伍數值與物件格位一致。重播方式與裁決見
 [`docs/playtest/21`](docs/playtest/21-three-theme-same-state-comparison.md)。
 
+同三個索引也已有冬季一一對應版本：
+
+![Modern Icon 冬季 M1 實機試片](docs/design/img/modern-icon-m1-winter-runtime.png)
+
+雪原、冬季深海與 `0x17` 冬季岸線已實跑；尚未重畫的樹木、角色及其他岸線仍
+刻意顯示 WINTER.SHE 相容底稿。
+
 驗收採「前期完整垂直切片＋後期高風險串接抽樣」：新遊戲建角、購物與換裝，
 正常戰鬥／死亡／治療、狗頭人營地、升級、跨圖抵達加穆爾神殿均由可重播腳本實際跑通；
 後期另抽驗購船、密語輸入、三符印、頭目與結局序列。重複房間不逐格人工踏查，

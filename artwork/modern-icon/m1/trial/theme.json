@@ -9,6 +9,10 @@
       "0x17": "normal-coast-17.png",
       "0x23": "normal-plain.png"
     },
-    "winter": {}
+    "winter": {
+      "0x14": "winter-ocean.png",
+      "0x17": "winter-coast-17.png",
+      "0x23": "winter-plain.png"
+    }
   }
 }
