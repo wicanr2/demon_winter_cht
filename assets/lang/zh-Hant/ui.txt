@@ -216,7 +216,7 @@ Poison needle hits
 :: en
 A Bungei pit!
 :: zh
-一個 Bungei 陷坑！
+竹籤陷阱！
 
 ## trap.name3
 :: en

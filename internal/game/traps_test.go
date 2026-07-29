@@ -55,7 +55,7 @@ func TestTrapDamageRanges(t *testing.T) {
 		// 手冊：「1-4 點傷害（護甲無效）」
 		{"毒針", TrapPoisonNeedle, 1, 4},
 		// 手冊：「50% 機率跌落，一旦跌落會受到 1-6 點傷害」
-		{"竹籤坑", TrapBungeiPit, 0, 6},
+		{"竹籤坑", TrapPunjiPit, 0, 6},
 		// 毒坑與竹籤坑數值完全相同（`docs/re/91` §3）
 		{"毒坑", TrapPoisonPit, 0, 6},
 		// 手冊：「長矛是飛鏢的加強版，造成 2-7 點傷害」，2–6 支
@@ -87,7 +87,7 @@ func TestTrapDamageRanges(t *testing.T) {
 // 長矛比飛鏢多擲一顆 4 面骰 —— 這是兩者**唯一**的差別（`0x19d52`）。
 //
 // 用同一個種子跑：長矛的單發傷害必定 >= 飛鏢，而且會出現 > 3 的值
-//（飛鏢的上限就是 3）。分開釘，因為「同一支函式帶不同參數」最容易
+// （飛鏢的上限就是 3）。分開釘，因為「同一支函式帶不同參數」最容易
 // 在重構時被合成一條而漏掉那顆骰子。
 func TestSpearIsDartPlusOneDie(t *testing.T) {
 	maxDart, maxSpear := 0, 0

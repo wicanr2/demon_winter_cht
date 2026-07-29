@@ -76,7 +76,7 @@ func (a *app) trapHitLine(c game.TrapCase, h game.TrapHit) string {
 
 	if h.Missed {
 		switch c {
-		case game.TrapBungeiPit, game.TrapPoisonPit:
+		case game.TrapPunjiPit, game.TrapPoisonPit:
 			// 原版 `: safe`
 			return name + a.tr.UI("trap.pit.safe", "：沒事")
 		case game.TrapPool, game.TrapAcidPool:
@@ -105,13 +105,13 @@ func trapNameKey(c game.TrapCase) string {
 
 // trapNameZH 是九格的中文宣告，索引即 case 編號。
 //
-// `Bungei` 不譯 —— 出處在攻略與譯名表裡都查不到，
-// **不憑音譯造一個專有名詞**（`docs/re/68` §5）。
+// 執行檔的 `Bungei` 是 `Punji` 誤拼；官方手冊對應條目與 case 2 的
+// 50% 跌落／1–6 傷害逐項相同（`docs/re/68` §5）。
 // ui:dynamic trap.name —— 由 trapNameKey(c) 查表。
 var trapNameZH = [9]string{
 	"有什麼東西你看不見",
 	"毒針射中了",
-	"一個 Bungei 陷坑！",
+	"竹籤陷阱！",
 	"毒坑！",
 	"長矛陷阱！",
 	"飛鏢從牆上的孔洞射出",

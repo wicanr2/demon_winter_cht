@@ -23,8 +23,9 @@ const (
 	TrapUnknown TrapCase = 0
 	// TrapPoisonNeedle 毒針：**唯一沒有命中判定**的陷阱。
 	TrapPoisonNeedle TrapCase = 1
-	// TrapBungeiPit 竹籤坑。`Bungei` 出處查不到，維持不譯（`docs/re/68` §5）。
-	TrapBungeiPit TrapCase = 2
+	// TrapPunjiPit 竹籤陷阱。執行檔字串誤拼成 `A Bungei pit!`；
+	// 官方手冊的 `Punji pit` 描述與此 case 的 50%／1–6 規則逐項相同。
+	TrapPunjiPit TrapCase = 2
 	// TrapPoisonPit 毒坑。**數值與竹籤坑完全相同** —— 那一段沒有任何
 	// `cmp ds:0x52f6`，只有宣告的字串不同（`docs/re/91` §3）。
 	TrapPoisonPit TrapCase = 3
@@ -128,7 +129,7 @@ func SpringTrap(r *rng.RNG, c TrapCase, noticed bool, party []Character) TrapRes
 		// 沒有命中判定 —— 這才是攻略特別點名它的原因（`docs/re/68` §1）。
 		res.strike(r, party, pickTrapVictim(r, party), r.Roll(TrapNeedleDamageDie))
 
-	case TrapBungeiPit, TrapPoisonPit:
+	case TrapPunjiPit, TrapPoisonPit:
 		who := pickTrapVictim(r, party)
 		if r.Roll(TrapPitSafeDie) == 1 {
 			res.Hits = append(res.Hits, TrapHit{Member: who, Missed: true})

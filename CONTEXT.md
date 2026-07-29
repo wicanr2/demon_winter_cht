@@ -3722,7 +3722,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 | D1 | ~~介面文案硬編在 Go~~ **✅ 完成（2026-07-28）** | `cmd/demonwinter/*.go` 的正式介面文字全部走 `i18n.Translator.UI`：**2026-07-29 實數 748 條**（`assets/lang/zh-Hant/ui.txt`，語意化 key）；檢查器另列出 18 條只供開發者 `-scene` 清單使用的描述／格式。這個數字會隨 debug 書籤一起長，不能沿用舊快照。<br>**守住它的是 `dwstrings uicheck`**（`cmd/dwstrings/uicheck.go`）：查 key 都在目錄裡、目錄沒孤兒、目錄譯文＝程式碼 fallback、還剩幾條硬編，另擋 Big5 打不出來的字與 fallback 裡的 `\n`。第一次跑就抓到 **51 條打錯 key 的靜默退回** —— 那種錯畫面一模一樣，只是永遠不走目錄，所以這個檢查不是可選的。<br>41 條 key 是**算出來的**（`trapNameKey(c)`、`"proving.colour."+c`…），靜態掃不到配對，程式碼那一側用 `ui:dynamic` 標記宣告（規約見 `docs/i18n/ui-key-conventions.md`）|
 | D2 | 密語提示 **定案不翻** | 符文是要玩家自己建對照表的解謎機制，答案要用英文輸入。施力點放在手冊與提示（`docs/re/72` §6）|
 | D3 | 標題花體 logo **定案不重繪** | 1988 年的美術與署名是歷史紀錄（`rulebook/83`／`93`）|
-| D4 | `Bungei` 待譯 | 出處查不到，**不憑音譯造字**（`docs/re/68` §5）|
+| D4 | ~~`Bungei` 待譯~~ **✅ 完成** | 官方英文手冊的 `Punji pit` 明列 50% 跌落、1–6 傷害，與 executable case 2 逐項相同；`A Bungei pit!` 是誤拼，不是專名。原文 key 保留，繁中依 glossary 譯「竹籤陷阱」（`docs/re/68` §5）|
 
 ---
 

@@ -148,11 +148,19 @@
 
 ---
 
-## 5. 待譯
+## 5. `Bungei` 是執行檔誤拼，手冊原詞為 `Punji`
 
-`Bungei pit` 的 `Bungei` 在 `translations/glossary.md` 與攻略裡都查不到 ——
-可能是專有名詞（地名或族名）。**新增譯名前需要先確認它的來源**，
-不要憑音譯造一個。
+官方英文手冊的陷阱章明列 **Punji pit**：坑底是削尖木樁，每名角色有
+50% 機率跌落，傷害 1–6；危險區域的木樁可能帶毒。這三項正好逐一對上：
+
+- case 2 的安全判定 `Roll(2) == 1`；
+- 失敗傷害 `Roll(6)`；
+- 相鄰 case 3 只把宣告換成 `Poison pit!`，共用相同數值段。
+
+因此 executable 的 `A Bungei pit!` 是 `Punji` 的拼寫錯誤，不是地名或族名。
+查表原文必須保持 executable bytes，繁中顯示採 glossary 與手冊既有譯名
+**「竹籤陷阱」**。手冊掃描：
+https://www.gamesdatabase.org/Media/SYSTEM/Microsoft_DOS/Manual/formated/Demons_Winter.pdf
 
 ---
 
@@ -161,4 +169,4 @@
 - **B10 解決**：五種陷阱的運算元全部追完
 - **B11 解決**：`25be:145c`（套用 HP／死亡／回傳全滅與否）、`25be:153a`（隨機選人）
 - **一條推測被推翻**：毒針不附帶中毒，它特別的地方是**沒有命中判定**
-- 新增待譯：`Bungei`
+- `Bungei` 已由官方手冊結案為誤拼 `Punji`，譯作「竹籤陷阱」
