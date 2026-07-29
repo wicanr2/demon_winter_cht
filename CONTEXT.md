@@ -3596,8 +3596,12 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 最終波再完成風元素、龍、惡魔／Xeres 與巨人；28 組實際怪物外觀的四向
 > 覆寫已達 224/224，固定頭目混合戰通過
 >（[`docs/playtest/39`](docs/playtest/39-modern-icon-monster-direction-complete.md)）。
-> 同方向兩個步態仍共用視圖，需後續動畫 polish。下一批是玩家職業、敵船與
-> 少量特殊世界索引；
+> **2026-07-30** 再補齊三組隊員職業輪廓與敵方海戰四方向：
+> `COMBAT.SHE` 隊員實際範圍 24/24、海戰 runtime 使用範圍 24/24；
+> 可重建切格管線、聯絡表與兩張實機圖見
+> [`docs/playtest/40`](docs/playtest/40-modern-icon-player-and-sea-directions.md)。
+> 同方向兩個步態仍共用視圖，需後續動畫 polish。下一批是少量特殊世界索引；
+> `SHIP.SHE 0x18–0x1f` 沒有現有規則呼叫端，不為填表虛構用途；
 > 不新增原版不存在的碼頭地形。
 >
 > **操作體驗新增，已完成程式與固定場景抽樣、等待使用者畫面審查：** `F6`
@@ -3842,7 +3846,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 
 | # | 項目 | 現況 |
 |---|---|---|
-| D1 | ~~介面文案硬編在 Go~~ **✅ JSON 資料分離完成（2026-07-29）** | 766 條玩家介面文案全部由 `assets/lang/zh-Hant/ui.json` 載入；`cmd/demonwinter` 的玩家可見硬編中文為 **0**。Go 只保留 key、格式參數、熱鍵與 action；`Translator.UI` 不再接受 fallback，缺 key 顯示 `⟦key⟧`。`dwstrings uicheck` 檢查缺 key、孤兒、重複／空白、換行、Big5 字形與硬編中文。動態 key 仍以 `ui:dynamic` 前綴宣告，規約見 `docs/i18n/ui-key-conventions.md`。|
+| D1 | ~~介面文案硬編在 Go~~ **✅ JSON 資料分離完成（2026-07-29；2026-07-30 升為持久驗收條件）** | 766 條玩家介面文案全部由 `assets/lang/zh-Hant/ui.json` 載入；`cmd/demonwinter` 的玩家可見硬編中文為 **0**。Go 只保留 key、格式參數、熱鍵與 action；`Translator.UI` 不再接受 fallback，缺 key 顯示 `⟦key⟧`。使用者再次明確要求引擎與資料分離：往後新增的玩家文字、Help、命令標籤與模式專用命令排版資料都必須進語系／資料 JSON，不得硬編在 Go。每批新增介面都要跑 `dwstrings uicheck`；它會檢查缺 key、孤兒、重複／空白、換行、Big5 字形與硬編中文。動態 key 仍以 `ui:dynamic` 前綴宣告，規約見 `docs/i18n/ui-key-conventions.md`。|
 | D2 | 密語提示 **定案不翻** | 符文是要玩家自己建對照表的解謎機制，答案要用英文輸入。施力點放在手冊與提示（`docs/re/72` §6）|
 | D3 | 標題花體 logo **定案不重繪** | 1988 年的美術與署名是歷史紀錄（`rulebook/83`／`93`）|
 | D4 | ~~`Bungei` 待譯~~ **✅ 完成** | 官方英文手冊的 `Punji pit` 明列 50% 跌落、1–6 傷害，與 executable case 2 逐項相同；`A Bungei pit!` 是誤拼，不是專名。原文 key 保留，繁中依 glossary 譯「竹籤陷阱」（`docs/re/68` §5）|

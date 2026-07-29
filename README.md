@@ -121,7 +121,7 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 「碼頭地形」並不存在：碼頭是城鎮設施。海上的四向船隻 `0x3f–0x42` 與隊伍
 四向兩步現已完成並通過固定場景實跑
 （[`docs/playtest/30`](docs/playtest/30-modern-icon-party-and-sailing-directions.md)）；
-戰鬥隊員、Orc 怪物與海戰玩家船的逐 frame 高解析覆寫層也已通過代表場景實跑
+戰鬥隊員、怪物與海戰單位的逐 frame 高解析覆寫層也已通過代表場景實跑
 （[`docs/playtest/31`](docs/playtest/31-modern-icon-battle-overlay-layer.md)）。
 怪物量產第一波再完成八組四向外觀：戰士、法師、盜賊、狗頭人、巨魔、熊、狼、
 蛇；JSON `monsterSets` 依原版 pair 展開後，覆寫率由 1/224 提升為 65/224
@@ -138,7 +138,7 @@ Bugem；兩波合計覆寫率達 129/224
 
 ![Modern Icon 怪物第二波四向聯絡表](docs/design/img/modern-icon-m1-battle-wave2-contact.png)
 
-仍欠 95 個怪物 frame、兩步動畫差異、玩家職業與敵船，不宣稱完整。
+此處是當時的第二波里程碑；後續四波已補齊怪物四方向。兩步動畫差異仍待收尾。
 
 第三波完成 Stalker、蟲群、鬼火、Orc 及四種元素，並以完整 Orc 四向組取代
 舊單格特例；怪物覆寫率現為 192/224
@@ -153,6 +153,13 @@ Bugem；兩波合計覆寫率達 129/224
 （[`docs/playtest/39`](docs/playtest/39-modern-icon-monster-direction-complete.md)）：
 
 ![Modern Icon 怪物最終四組](docs/design/img/modern-icon-m1-battle-wave4-contact.png)
+
+隊員三種原版職業輪廓分組與敵方海戰單位也完成四方向基礎素材
+（[`docs/playtest/40`](docs/playtest/40-modern-icon-player-and-sea-directions.md)）：
+隊員 `COMBAT.SHE` 實際範圍 24/24 幀，海戰 runtime 使用範圍 24/24 幀。
+同方向兩個動畫相位目前共用一張，仍不宣稱完整動態 atlas。
+
+![Modern Icon 隊員與敵方海戰四方向](docs/design/img/modern-icon-combat-sea-contact.png)
 
 這代表外觀與四向完整；同方向第二步仍共用視圖，動畫差異尚待 polish。
 

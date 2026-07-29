@@ -31,6 +31,10 @@ changes. It complements `CONTEXT.md`; it does not replace evidence in `docs/re/`
 
 - Treat `workplace/orig/`, original archives, executables, data, and user-provided fonts as
   read-only reference material.
+- Player-visible text, help copy, menu labels, and mode-specific command layouts belong in
+  language/data JSON, not Go source. Go may retain stable keys, actions, format arguments,
+  and layout behavior only. Every feature batch that adds UI must pass `dwstrings uicheck`
+  with zero hardcoded Traditional Chinese strings.
 - Never commit or package original `.DAT/.DTT/.SHE/.SHP/.PIC/.PIE` assets or Eten
   `STDFONT.15`/`SPCFONT.15`.
 - All test saves go to `/tmp` or an explicit test-output directory. Do not overwrite the original

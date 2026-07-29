@@ -197,7 +197,30 @@
   },
   "battleSprites": {
     "combat": {
-      "0x1a": "party-west-a.png"
+      "0x14": "combat-martial-north.png",
+      "0x15": "combat-martial-north.png",
+      "0x16": "combat-martial-east.png",
+      "0x17": "combat-martial-east.png",
+      "0x18": "combat-martial-south.png",
+      "0x19": "combat-martial-south.png",
+      "0x1a": "combat-martial-west.png",
+      "0x1b": "combat-martial-west.png",
+      "0x1c": "combat-arcane-north.png",
+      "0x1d": "combat-arcane-north.png",
+      "0x1e": "combat-arcane-east.png",
+      "0x1f": "combat-arcane-east.png",
+      "0x20": "combat-arcane-south.png",
+      "0x21": "combat-arcane-south.png",
+      "0x22": "combat-arcane-west.png",
+      "0x23": "combat-arcane-west.png",
+      "0x24": "combat-agile-north.png",
+      "0x25": "combat-agile-north.png",
+      "0x26": "combat-agile-east.png",
+      "0x27": "combat-agile-east.png",
+      "0x28": "combat-agile-south.png",
+      "0x29": "combat-agile-south.png",
+      "0x2a": "combat-agile-west.png",
+      "0x2b": "combat-agile-west.png"
     },
     "monsters": {},
     "monsterSets": {
@@ -378,7 +401,23 @@
       "0x04": "ship-east.png",
       "0x05": "ship-east.png",
       "0x06": "ship-north.png",
-      "0x07": "ship-north.png"
+      "0x07": "ship-north.png",
+      "0x08": "sea-pirate-south.png",
+      "0x09": "sea-pirate-south.png",
+      "0x0a": "sea-pirate-west.png",
+      "0x0b": "sea-pirate-west.png",
+      "0x0c": "sea-pirate-east.png",
+      "0x0d": "sea-pirate-east.png",
+      "0x0e": "sea-pirate-north.png",
+      "0x0f": "sea-pirate-north.png",
+      "0x10": "sea-monster-south.png",
+      "0x11": "sea-monster-south.png",
+      "0x12": "sea-monster-west.png",
+      "0x13": "sea-monster-west.png",
+      "0x14": "sea-monster-east.png",
+      "0x15": "sea-monster-east.png",
+      "0x16": "sea-monster-north.png",
+      "0x17": "sea-monster-north.png"
     }
   }
 }
