@@ -140,6 +140,14 @@ Bugem；兩波合計覆寫率達 129/224
 
 仍欠 95 個怪物 frame、兩步動畫差異、玩家職業與敵船，不宣稱完整。
 
+第三波完成 Stalker、蟲群、鬼火、Orc 及四種元素，並以完整 Orc 四向組取代
+舊單格特例；怪物覆寫率現為 192/224
+（[`docs/playtest/38`](docs/playtest/38-modern-icon-battle-wave3.md)）：
+
+![Modern Icon 怪物第三波四向聯絡表](docs/design/img/modern-icon-m1-battle-wave3-contact.png)
+
+剩餘怪物是風元素、龍、惡魔／Xeres 與巨人四組，共 32 frame。
+
 雙倍移動成本的丘陵 `0x0e/0x2b` 另以每索引四個正常／冬季變體完成無縫拼接，
 選圖只依座標、不碰遊戲 RNG（[`docs/playtest/32`](docs/playtest/32-modern-icon-hill-variants.md)）：
 

@@ -3590,6 +3590,9 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 第二波再完成不死戰士、骷髏法師、腐敗土丘、幽魂、蜘蛛、鼠、蝙蝠與
 > Bugem，兩波共 16 組，加上 Orc 個別格後覆寫率為 129/224；不死族與蟲獸
 > 兩場固定戰鬥均通過（[`docs/playtest/37`](docs/playtest/37-modern-icon-battle-wave2.md)）。
+> 第三波完成 Stalker、蟲群、鬼火、Orc 與火／金屬／冰／靈體元素；Orc 改為
+> 完整四向組並移除單格特例，目前 24 組、192/224
+>（[`docs/playtest/38`](docs/playtest/38-modern-icon-battle-wave3.md)）。
 > 下一批是其餘怪物外觀、玩家職業、敵船與少量特殊世界索引；
 > 不新增原版不存在的碼頭地形。
 >

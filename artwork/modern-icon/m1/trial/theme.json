@@ -199,9 +199,7 @@
     "combat": {
       "0x1a": "party-west-a.png"
     },
-    "monsters": {
-      "0x8d": "monster-orc-east-8d.png"
-    },
+    "monsters": {},
     "monsterSets": {
       "0x00": {
         "south": "monster-00-south.png",
@@ -233,6 +231,12 @@
         "east": "monster-04-east.png",
         "north": "monster-04-north.png"
       },
+      "0x06": {
+        "south": "monster-06-south.png",
+        "west": "monster-06-west.png",
+        "east": "monster-06-east.png",
+        "north": "monster-06-north.png"
+      },
       "0x07": {
         "south": "monster-07-south.png",
         "west": "monster-07-west.png",
@@ -244,6 +248,18 @@
         "west": "monster-08-west.png",
         "east": "monster-08-east.png",
         "north": "monster-08-north.png"
+      },
+      "0x09": {
+        "south": "monster-09-south.png",
+        "west": "monster-09-west.png",
+        "east": "monster-09-east.png",
+        "north": "monster-09-north.png"
+      },
+      "0x0a": {
+        "south": "monster-10-south.png",
+        "west": "monster-10-west.png",
+        "east": "monster-10-east.png",
+        "north": "monster-10-north.png"
       },
       "0x0c": {
         "south": "monster-12-south.png",
@@ -275,6 +291,12 @@
         "east": "monster-16-east.png",
         "north": "monster-16-north.png"
       },
+      "0x11": {
+        "south": "monster-17-south.png",
+        "west": "monster-17-west.png",
+        "east": "monster-17-east.png",
+        "north": "monster-17-north.png"
+      },
       "0x12": {
         "south": "monster-18-south.png",
         "west": "monster-18-west.png",
@@ -298,6 +320,30 @@
         "west": "monster-21-west.png",
         "east": "monster-21-east.png",
         "north": "monster-21-north.png"
+      },
+      "0x16": {
+        "south": "monster-22-south.png",
+        "west": "monster-22-west.png",
+        "east": "monster-22-east.png",
+        "north": "monster-22-north.png"
+      },
+      "0x17": {
+        "south": "monster-23-south.png",
+        "west": "monster-23-west.png",
+        "east": "monster-23-east.png",
+        "north": "monster-23-north.png"
+      },
+      "0x18": {
+        "south": "monster-24-south.png",
+        "west": "monster-24-west.png",
+        "east": "monster-24-east.png",
+        "north": "monster-24-north.png"
+      },
+      "0x19": {
+        "south": "monster-25-south.png",
+        "west": "monster-25-west.png",
+        "east": "monster-25-east.png",
+        "north": "monster-25-north.png"
       }
     },
     "ships": {
