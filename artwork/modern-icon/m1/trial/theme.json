@@ -18,6 +18,8 @@
       "0x0b": "normal-woodland-0b.png",
       "0x0c": "normal-forest-0c.png",
       "0x14": "normal-ocean.png",
+      "0x15": "normal-special-15.png",
+      "0x16": "normal-special-16.png",
       "0x17": "normal-coast-17.png",
       "0x1a": "normal-coast-1a.png",
       "0x1d": "normal-coast-1d.png",
@@ -27,7 +29,11 @@
       "0x26": "normal-college-26.png",
       "0x27": "normal-forest-ground.png",
       "0x28": "normal-desert-ground.png",
+      "0x2d": "normal-special-2d.png",
       "0x2e": "normal-town-2e.png",
+      "0x2f": "normal-special-2f.png",
+      "0x35": "normal-special-35.png",
+      "0x36": "normal-special-36.png",
       "0x3b": "normal-coast-3b.png",
       "0x3c": "normal-coast-3c.png",
       "0x3d": "normal-coast-3d.png",
@@ -48,6 +54,7 @@
       "0x50": "normal-coast-50.png",
       "0x51": "normal-coast-51.png",
       "0x52": "normal-coast-52.png",
+      "0x55": "normal-special-55.png",
       "0x5b": "normal-ruins-5b.png",
       "0x62": "normal-ocean-62.png",
       "0x63": "normal-glyph-63.png",
@@ -67,6 +74,8 @@
       "0x0b": "winter-woodland-0b.png",
       "0x0c": "winter-forest-0c.png",
       "0x14": "winter-ocean.png",
+      "0x15": "winter-special-15.png",
+      "0x16": "winter-special-16.png",
       "0x17": "winter-coast-17.png",
       "0x1a": "winter-coast-1a.png",
       "0x1d": "winter-coast-1d.png",
@@ -76,7 +85,11 @@
       "0x26": "winter-college-26.png",
       "0x27": "winter-forest-ground.png",
       "0x28": "winter-desert-ground.png",
+      "0x2d": "winter-special-2d.png",
       "0x2e": "winter-town-2e.png",
+      "0x2f": "winter-special-2f.png",
+      "0x35": "winter-special-35.png",
+      "0x36": "winter-special-36.png",
       "0x3b": "winter-coast-3b.png",
       "0x3c": "winter-coast-3c.png",
       "0x3d": "winter-coast-3d.png",
@@ -97,6 +110,7 @@
       "0x50": "winter-coast-50.png",
       "0x51": "winter-coast-51.png",
       "0x52": "winter-coast-52.png",
+      "0x55": "winter-special-55.png",
       "0x5b": "winter-ruins-5b.png",
       "0x62": "winter-ocean-62.png",
       "0x63": "winter-glyph-63.png",
@@ -228,196 +242,315 @@
         "south": "monster-00-south.png",
         "west": "monster-00-west.png",
         "east": "monster-00-east.png",
-        "north": "monster-00-north.png"
+        "north": "monster-00-north.png",
+        "southB": "monster-00-south-b.png",
+        "westB": "monster-00-west-b.png",
+        "eastB": "monster-00-east-b.png",
+        "northB": "monster-00-north-b.png"
       },
       "0x01": {
         "south": "monster-01-south.png",
         "west": "monster-01-west.png",
         "east": "monster-01-east.png",
-        "north": "monster-01-north.png"
+        "north": "monster-01-north.png",
+        "southB": "monster-01-south-b.png",
+        "westB": "monster-01-west-b.png",
+        "eastB": "monster-01-east-b.png",
+        "northB": "monster-01-north-b.png"
       },
       "0x02": {
         "south": "monster-02-south.png",
         "west": "monster-02-west.png",
         "east": "monster-02-east.png",
-        "north": "monster-02-north.png"
+        "north": "monster-02-north.png",
+        "southB": "monster-02-south-b.png",
+        "westB": "monster-02-west-b.png",
+        "eastB": "monster-02-east-b.png",
+        "northB": "monster-02-north-b.png"
       },
       "0x03": {
         "south": "monster-03-south.png",
         "west": "monster-03-west.png",
         "east": "monster-03-east.png",
-        "north": "monster-03-north.png"
+        "north": "monster-03-north.png",
+        "southB": "monster-03-south-b.png",
+        "westB": "monster-03-west-b.png",
+        "eastB": "monster-03-east-b.png",
+        "northB": "monster-03-north-b.png"
       },
       "0x04": {
         "south": "monster-04-south.png",
         "west": "monster-04-west.png",
         "east": "monster-04-east.png",
-        "north": "monster-04-north.png"
+        "north": "monster-04-north.png",
+        "southB": "monster-04-south-b.png",
+        "westB": "monster-04-west-b.png",
+        "eastB": "monster-04-east-b.png",
+        "northB": "monster-04-north-b.png"
       },
       "0x06": {
         "south": "monster-06-south.png",
         "west": "monster-06-west.png",
         "east": "monster-06-east.png",
-        "north": "monster-06-north.png"
+        "north": "monster-06-north.png",
+        "southB": "monster-06-south-b.png",
+        "westB": "monster-06-west-b.png",
+        "eastB": "monster-06-east-b.png",
+        "northB": "monster-06-north-b.png"
       },
       "0x07": {
         "south": "monster-07-south.png",
         "west": "monster-07-west.png",
         "east": "monster-07-east.png",
-        "north": "monster-07-north.png"
+        "north": "monster-07-north.png",
+        "southB": "monster-07-south-b.png",
+        "westB": "monster-07-west-b.png",
+        "eastB": "monster-07-east-b.png",
+        "northB": "monster-07-north-b.png"
       },
       "0x08": {
         "south": "monster-08-south.png",
         "west": "monster-08-west.png",
         "east": "monster-08-east.png",
-        "north": "monster-08-north.png"
+        "north": "monster-08-north.png",
+        "southB": "monster-08-south-b.png",
+        "westB": "monster-08-west-b.png",
+        "eastB": "monster-08-east-b.png",
+        "northB": "monster-08-north-b.png"
       },
       "0x09": {
         "south": "monster-09-south.png",
         "west": "monster-09-west.png",
         "east": "monster-09-east.png",
-        "north": "monster-09-north.png"
+        "north": "monster-09-north.png",
+        "southB": "monster-09-south-b.png",
+        "westB": "monster-09-west-b.png",
+        "eastB": "monster-09-east-b.png",
+        "northB": "monster-09-north-b.png"
       },
       "0x0a": {
         "south": "monster-10-south.png",
         "west": "monster-10-west.png",
         "east": "monster-10-east.png",
-        "north": "monster-10-north.png"
+        "north": "monster-10-north.png",
+        "southB": "monster-10-south-b.png",
+        "westB": "monster-10-west-b.png",
+        "eastB": "monster-10-east-b.png",
+        "northB": "monster-10-north-b.png"
       },
       "0x0c": {
         "south": "monster-12-south.png",
         "west": "monster-12-west.png",
         "east": "monster-12-east.png",
-        "north": "monster-12-north.png"
+        "north": "monster-12-north.png",
+        "southB": "monster-12-south-b.png",
+        "westB": "monster-12-west-b.png",
+        "eastB": "monster-12-east-b.png",
+        "northB": "monster-12-north-b.png"
       },
       "0x0d": {
         "south": "monster-13-south.png",
         "west": "monster-13-west.png",
         "east": "monster-13-east.png",
-        "north": "monster-13-north.png"
+        "north": "monster-13-north.png",
+        "southB": "monster-13-south-b.png",
+        "westB": "monster-13-west-b.png",
+        "eastB": "monster-13-east-b.png",
+        "northB": "monster-13-north-b.png"
       },
       "0x0e": {
         "south": "monster-14-south.png",
         "west": "monster-14-west.png",
         "east": "monster-14-east.png",
-        "north": "monster-14-north.png"
+        "north": "monster-14-north.png",
+        "southB": "monster-14-south-b.png",
+        "westB": "monster-14-west-b.png",
+        "eastB": "monster-14-east-b.png",
+        "northB": "monster-14-north-b.png"
       },
       "0x0f": {
         "south": "monster-15-south.png",
         "west": "monster-15-west.png",
         "east": "monster-15-east.png",
-        "north": "monster-15-north.png"
+        "north": "monster-15-north.png",
+        "southB": "monster-15-south-b.png",
+        "westB": "monster-15-west-b.png",
+        "eastB": "monster-15-east-b.png",
+        "northB": "monster-15-north-b.png"
       },
       "0x10": {
         "south": "monster-16-south.png",
         "west": "monster-16-west.png",
         "east": "monster-16-east.png",
-        "north": "monster-16-north.png"
+        "north": "monster-16-north.png",
+        "southB": "monster-16-south-b.png",
+        "westB": "monster-16-west-b.png",
+        "eastB": "monster-16-east-b.png",
+        "northB": "monster-16-north-b.png"
       },
       "0x11": {
         "south": "monster-17-south.png",
         "west": "monster-17-west.png",
         "east": "monster-17-east.png",
-        "north": "monster-17-north.png"
+        "north": "monster-17-north.png",
+        "southB": "monster-17-south-b.png",
+        "westB": "monster-17-west-b.png",
+        "eastB": "monster-17-east-b.png",
+        "northB": "monster-17-north-b.png"
       },
       "0x12": {
         "south": "monster-18-south.png",
         "west": "monster-18-west.png",
         "east": "monster-18-east.png",
-        "north": "monster-18-north.png"
+        "north": "monster-18-north.png",
+        "southB": "monster-18-south-b.png",
+        "westB": "monster-18-west-b.png",
+        "eastB": "monster-18-east-b.png",
+        "northB": "monster-18-north-b.png"
       },
       "0x13": {
         "south": "monster-19-south.png",
         "west": "monster-19-west.png",
         "east": "monster-19-east.png",
-        "north": "monster-19-north.png"
+        "north": "monster-19-north.png",
+        "southB": "monster-19-south-b.png",
+        "westB": "monster-19-west-b.png",
+        "eastB": "monster-19-east-b.png",
+        "northB": "monster-19-north-b.png"
       },
       "0x14": {
         "south": "monster-20-south.png",
         "west": "monster-20-west.png",
         "east": "monster-20-east.png",
-        "north": "monster-20-north.png"
+        "north": "monster-20-north.png",
+        "southB": "monster-20-south-b.png",
+        "westB": "monster-20-west-b.png",
+        "eastB": "monster-20-east-b.png",
+        "northB": "monster-20-north-b.png"
       },
       "0x15": {
         "south": "monster-21-south.png",
         "west": "monster-21-west.png",
         "east": "monster-21-east.png",
-        "north": "monster-21-north.png"
+        "north": "monster-21-north.png",
+        "southB": "monster-21-south-b.png",
+        "westB": "monster-21-west-b.png",
+        "eastB": "monster-21-east-b.png",
+        "northB": "monster-21-north-b.png"
       },
       "0x16": {
         "south": "monster-22-south.png",
         "west": "monster-22-west.png",
         "east": "monster-22-east.png",
-        "north": "monster-22-north.png"
+        "north": "monster-22-north.png",
+        "southB": "monster-22-south-b.png",
+        "westB": "monster-22-west-b.png",
+        "eastB": "monster-22-east-b.png",
+        "northB": "monster-22-north-b.png"
       },
       "0x17": {
         "south": "monster-23-south.png",
         "west": "monster-23-west.png",
         "east": "monster-23-east.png",
-        "north": "monster-23-north.png"
+        "north": "monster-23-north.png",
+        "southB": "monster-23-south-b.png",
+        "westB": "monster-23-west-b.png",
+        "eastB": "monster-23-east-b.png",
+        "northB": "monster-23-north-b.png"
       },
       "0x18": {
         "south": "monster-24-south.png",
         "west": "monster-24-west.png",
         "east": "monster-24-east.png",
-        "north": "monster-24-north.png"
+        "north": "monster-24-north.png",
+        "southB": "monster-24-south-b.png",
+        "westB": "monster-24-west-b.png",
+        "eastB": "monster-24-east-b.png",
+        "northB": "monster-24-north-b.png"
       },
       "0x19": {
         "south": "monster-25-south.png",
         "west": "monster-25-west.png",
         "east": "monster-25-east.png",
-        "north": "monster-25-north.png"
+        "north": "monster-25-north.png",
+        "southB": "monster-25-south-b.png",
+        "westB": "monster-25-west-b.png",
+        "eastB": "monster-25-east-b.png",
+        "northB": "monster-25-north-b.png"
       },
       "0x1a": {
         "south": "monster-26-south.png",
         "west": "monster-26-west.png",
         "east": "monster-26-east.png",
-        "north": "monster-26-north.png"
+        "north": "monster-26-north.png",
+        "southB": "monster-26-south-b.png",
+        "westB": "monster-26-west-b.png",
+        "eastB": "monster-26-east-b.png",
+        "northB": "monster-26-north-b.png"
       },
       "0x1b": {
         "south": "monster-27-south.png",
         "west": "monster-27-west.png",
         "east": "monster-27-east.png",
-        "north": "monster-27-north.png"
+        "north": "monster-27-north.png",
+        "southB": "monster-27-south-b.png",
+        "westB": "monster-27-west-b.png",
+        "eastB": "monster-27-east-b.png",
+        "northB": "monster-27-north-b.png"
       },
       "0x1c": {
         "south": "monster-28-south.png",
         "west": "monster-28-west.png",
         "east": "monster-28-east.png",
-        "north": "monster-28-north.png"
+        "north": "monster-28-north.png",
+        "southB": "monster-28-south-b.png",
+        "westB": "monster-28-west-b.png",
+        "eastB": "monster-28-east-b.png",
+        "northB": "monster-28-north-b.png"
       },
       "0x1d": {
         "south": "monster-29-south.png",
         "west": "monster-29-west.png",
         "east": "monster-29-east.png",
-        "north": "monster-29-north.png"
+        "north": "monster-29-north.png",
+        "southB": "monster-29-south-b.png",
+        "westB": "monster-29-west-b.png",
+        "eastB": "monster-29-east-b.png",
+        "northB": "monster-29-north-b.png"
       }
     },
-    "ships": {
-      "0x00": "ship-south.png",
-      "0x01": "ship-south.png",
-      "0x02": "ship-west.png",
-      "0x03": "ship-west.png",
-      "0x04": "ship-east.png",
-      "0x05": "ship-east.png",
-      "0x06": "ship-north.png",
-      "0x07": "ship-north.png",
-      "0x08": "sea-pirate-south.png",
-      "0x09": "sea-pirate-south.png",
-      "0x0a": "sea-pirate-west.png",
-      "0x0b": "sea-pirate-west.png",
-      "0x0c": "sea-pirate-east.png",
-      "0x0d": "sea-pirate-east.png",
-      "0x0e": "sea-pirate-north.png",
-      "0x0f": "sea-pirate-north.png",
-      "0x10": "sea-monster-south.png",
-      "0x11": "sea-monster-south.png",
-      "0x12": "sea-monster-west.png",
-      "0x13": "sea-monster-west.png",
-      "0x14": "sea-monster-east.png",
-      "0x15": "sea-monster-east.png",
-      "0x16": "sea-monster-north.png",
-      "0x17": "sea-monster-north.png"
+    "ships": {},
+    "shipSets": {
+      "0x00": {
+        "south": "ship-south.png",
+        "west": "ship-west.png",
+        "east": "ship-east.png",
+        "north": "ship-north.png",
+        "southB": "ship-south-b.png",
+        "westB": "ship-west-b.png",
+        "eastB": "ship-east-b.png",
+        "northB": "ship-north-b.png"
+      },
+      "0x01": {
+        "south": "sea-pirate-south.png",
+        "west": "sea-pirate-west.png",
+        "east": "sea-pirate-east.png",
+        "north": "sea-pirate-north.png",
+        "southB": "sea-pirate-south-b.png",
+        "westB": "sea-pirate-west-b.png",
+        "eastB": "sea-pirate-east-b.png",
+        "northB": "sea-pirate-north-b.png"
+      },
+      "0x02": {
+        "south": "sea-monster-south.png",
+        "west": "sea-monster-west.png",
+        "east": "sea-monster-east.png",
+        "north": "sea-monster-north.png",
+        "southB": "sea-monster-south-b.png",
+        "westB": "sea-monster-west-b.png",
+        "eastB": "sea-monster-east-b.png",
+        "northB": "sea-monster-north-b.png"
+      }
     }
   }
 }

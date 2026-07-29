@@ -3,8 +3,32 @@ package main
 import (
 	"testing"
 
+	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 )
+
+func TestAttackEffectsMatchOriginalBranches(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		unit game.Unit
+		miss int
+		hit  int
+	}{
+		{"怪物一般武器", game.Unit{WeaponIndex: 1}, pcspeaker.EffectC3, pcspeaker.EffectC4},
+		{"玩家一般武器", game.Unit{IsPlayer: true, WeaponIndex: 1}, pcspeaker.EffectF3, pcspeaker.EffectC4},
+		{"武器類型2", game.Unit{WeaponIndex: 2}, pcspeaker.EffectC3, pcspeaker.EffectG3},
+		{"帶毒武器類型11", game.Unit{IsPlayer: true, WeaponIndex: -0xb}, pcspeaker.EffectF3, pcspeaker.EffectG3},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := attackMissEffect(&tc.unit); got != tc.miss {
+				t.Fatalf("未命中音效 = %d，預期 %d", got, tc.miss)
+			}
+			if got := attackHitEffect(&tc.unit); got != tc.hit {
+				t.Fatalf("命中音效 = %d，預期 %d", got, tc.hit)
+			}
+		})
+	}
+}
 
 func TestUnitToCharacterUsesSlotNotDuplicateName(t *testing.T) {
 	members := []game.Character{{Name: "同名"}, {Name: "同名"}}

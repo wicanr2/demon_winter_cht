@@ -339,7 +339,7 @@ func (a *app) commitSummon(m *summonMenu, x, y int) error {
 		action = game.ActionUseItem
 	}
 	if _, ok := a.battle.Spend(action); !ok {
-		a.logf(a.tr.UI("battle.msg.noap"), m.caster.Name)
+		a.reportNoAP(m.caster)
 		return nil
 	}
 	if m.item == nil {
@@ -409,7 +409,7 @@ func (a *app) commitSpell(c *aoeCursor, target *game.Unit) {
 		action = game.ActionUseItem
 	}
 	if _, ok := a.battle.Spend(action); !ok {
-		a.logf(a.tr.UI("battle.msg.noap"), c.caster.Name)
+		a.reportNoAP(c.caster)
 		return
 	}
 	if c.item == nil {
@@ -926,8 +926,14 @@ func (a *app) faceToward(u *game.Unit, want game.Facing) {
 		act = game.ActionTurnCCW
 	}
 	if !a.battle.TurnTo(u, act) {
-		a.logf(a.tr.UI("battle.msg.noap"), u.Name)
+		a.reportNoAP(u)
 	}
+}
+
+// reportNoAP 還原原版各戰鬥指令在行動點不足時共用的 effect 2。
+func (a *app) reportNoAP(u *game.Unit) {
+	a.speaker.Play(pcspeaker.EffectD3)
+	a.logf(a.tr.UI("battle.msg.noap"), u.Name)
 }
 
 // runPlayerAction 執行一個玩家指令。
@@ -958,7 +964,7 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 			return
 		}
 		if _, ok := a.battle.Spend(act); !ok {
-			a.logf(a.tr.UI("battle.msg.noap"), u.Name)
+			a.reportNoAP(u)
 			return
 		}
 		a.reportAttack(u, target, a.battle.ResolveAttack(u, target, 0))
@@ -970,7 +976,7 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 			return
 		}
 		if _, ok := a.battle.Spend(act); !ok {
-			a.logf(a.tr.UI("battle.msg.noap"), u.Name)
+			a.reportNoAP(u)
 			return
 		}
 		if game.TurnUndead(a.rng, u, target) {
@@ -982,7 +988,7 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 
 	case game.ActionPray:
 		if _, ok := a.battle.Spend(act); !ok {
-			a.logf(a.tr.UI("battle.msg.noap"), u.Name)
+			a.reportNoAP(u)
 			return
 		}
 		granted, next := game.Pray(a.rng, a.prayChance)
@@ -1000,7 +1006,7 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 			return
 		}
 		if _, ok := a.battle.Spend(act); !ok {
-			a.logf(a.tr.UI("battle.msg.noap"), u.Name)
+			a.reportNoAP(u)
 			return
 		}
 		if ok, amount := game.Leech(a.rng, u, target.CurrentSP); ok {
@@ -1228,14 +1234,13 @@ func turnActionToward(cur, want game.Facing) game.Action {
 
 // reportAttack 把一次攻擊的結果寫進紀錄並播對應音效。
 //
-// 音效編號照反組譯查到的呼叫端（見 docs/re/03 §1.5）：
-// 未命中依交戰距離用 1 或 4、命中依武器類型用 5 或 8、陣亡放那段旋律。
-// 這裡先用「近戰」那一支（1／5）—— 遠端攻擊的判別條件（欄位 0x4ed4）
-// 還沒接進戰鬥單位。
+// 音效編號照反組譯查到的呼叫端（見 docs/re/03 §1.5、docs/re/16 §1）：
+// 未命中依怪物／玩家槽位用 1 或 4；命中依武器類型用 5 或 8；
+// 陣亡播放唯一的多音符短旋律。
 func (a *app) reportAttack(attacker, target *game.Unit, res game.AttackResult) {
 	switch {
 	case !res.Hit:
-		a.speaker.Play(pcspeaker.EffectC3)
+		a.speaker.Play(attackMissEffect(attacker))
 		a.logf(a.tr.UI("battle.msg.miss"), attacker.Name)
 	case res.NoEffect:
 		a.logf(a.tr.UI("battle.msg.noeffect"), attacker.Name, target.Name)
@@ -1243,13 +1248,31 @@ func (a *app) reportAttack(attacker, target *game.Unit, res game.AttackResult) {
 		a.speaker.Play(pcspeaker.EffectDeath)
 		a.logf(a.tr.UI("battle.msg.killed"), attacker.Name, target.Name, res.Damage)
 	default:
-		a.speaker.Play(pcspeaker.EffectG3)
+		a.speaker.Play(attackHitEffect(attacker))
 		verb := a.tr.UI("battle.hit.normal")
 		if res.Critical {
 			verb = a.tr.UI("battle.hit.critical")
 		}
 		a.logf(a.tr.UI("battle.msg.hit"), attacker.Name, verb, target.Name, res.Damage)
 	}
+}
+
+func attackMissEffect(attacker *game.Unit) int {
+	if attacker.IsPlayer {
+		return pcspeaker.EffectF3
+	}
+	return pcspeaker.EffectC3
+}
+
+func attackHitEffect(attacker *game.Unit) int {
+	weapon := attacker.WeaponIndex
+	if weapon < 0 {
+		weapon = -weapon
+	}
+	if weapon == 2 || weapon == 0xb {
+		return pcspeaker.EffectG3
+	}
+	return pcspeaker.EffectC4
 }
 
 // aoeColor 是範圍法術的選取框顏色。

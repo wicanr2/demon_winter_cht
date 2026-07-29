@@ -30,20 +30,26 @@ func TestLoadMonsterCoverageExpandsSets(t *testing.T) {
 		"battleSprites": {
 			"monsters": {"0x8d": "orc.png"},
 			"monsterSets": {"0x03": {
-				"south": "s.png", "west": "w.png", "east": "e.png", "north": "n.png"
+				"south": "s.png", "southB": "sb.png",
+				"west": "w.png", "westB": "wb.png",
+				"east": "e.png", "eastB": "eb.png",
+				"north": "n.png", "northB": "nb.png"
 			}}
 		}
 	}`)
 	if err := os.WriteFile(path, raw, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	covered, err := loadMonsterCoverage(path)
+	covered, animated, err := loadMonsterCoverage(path)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for frame := 0x18; frame <= 0x1f; frame++ {
 		if !covered[frame] {
 			t.Errorf("monster set frame %#02x 未展開", frame)
+		}
+		if !animated[frame] {
+			t.Errorf("monster set frame %#02x 未標為 A/B 分離", frame)
 		}
 	}
 	if !covered[0x8d] {

@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 
+	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
@@ -101,6 +103,8 @@ func (a *app) answerRiddle(s *riddleScreen) {
 		return
 	}
 
+	// 原版兩題答對後都呼叫 effect 8（docs/re/84）。
+	a.speaker.Play(pcspeaker.EffectC4)
 	switch s.plotCase {
 	case game.RiddleCaseSpectralPriest:
 		// 答對沒有台詞，只有把牆打開。**而且牆是真的開著的** ——

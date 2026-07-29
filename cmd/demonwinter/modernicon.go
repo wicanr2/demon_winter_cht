@@ -53,14 +53,19 @@ type modernIconManifest struct {
 		Monsters    map[string]string               `json:"monsters"`
 		MonsterSets map[string]modernIconDirections `json:"monsterSets"`
 		Ships       map[string]string               `json:"ships"`
+		ShipSets    map[string]modernIconDirections `json:"shipSets"`
 	} `json:"battleSprites"`
 }
 
 type modernIconDirections struct {
-	South string `json:"south"`
-	West  string `json:"west"`
-	East  string `json:"east"`
-	North string `json:"north"`
+	South  string `json:"south"`
+	SouthB string `json:"southB,omitempty"`
+	West   string `json:"west"`
+	WestB  string `json:"westB,omitempty"`
+	East   string `json:"east"`
+	EastB  string `json:"eastB,omitempty"`
+	North  string `json:"north"`
+	NorthB string `json:"northB,omitempty"`
 }
 
 func loadModernIconTheme(dir string) (*modernIconTheme, error) {
@@ -144,10 +149,11 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 			return nil, fmt.Errorf("Modern Icon battleSprites.monsterSets index %q：%w", key, err)
 		}
 		for direction, entry := range []struct {
-			name string
-			pair int
+			name, nameB string
+			pair        int
 		}{
-			{names.South, 0}, {names.West, 2}, {names.East, 4}, {names.North, 6},
+			{names.South, names.SouthB, 0}, {names.West, names.WestB, 2},
+			{names.East, names.EastB, 4}, {names.North, names.NorthB, 6},
 		} {
 			src, err := loadModernIconPNG(filepath.Join(dir, entry.name), true)
 			if err != nil {
@@ -157,11 +163,22 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 			}
 			img := ebiten.NewImageFromImage(src)
 			base := int(sprite)*8 + entry.pair
-			// 個別 monsters frame 優先，可用來補上同方向的第二步動畫。
-			for frame := base; frame <= base+1; frame++ {
-				if monsters[byte(frame)] == nil {
-					monsters[byte(frame)] = img
+			if monsters[byte(base)] == nil {
+				monsters[byte(base)] = img
+			}
+			imgB := img
+			if entry.nameB != "" {
+				srcB, err := loadModernIconPNG(filepath.Join(dir, entry.nameB), true)
+				if err != nil {
+					return nil, fmt.Errorf(
+						"Modern Icon battleSprites.monsterSets[%#02x] direction %d B：%w",
+						sprite, direction, err)
 				}
+				imgB = ebiten.NewImageFromImage(srcB)
+			}
+			// 個別 monsters frame 優先，可覆寫方向組的 A／B 相位。
+			if monsters[byte(base+1)] == nil {
+				monsters[byte(base+1)] = imgB
 			}
 		}
 	}
@@ -169,6 +186,42 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 		modernShipFrames)
 	if err != nil {
 		return nil, err
+	}
+	for key, names := range m.BattleSprites.ShipSets {
+		group, err := parseModernIconIndexLimit(key, modernShipFrames/8)
+		if err != nil {
+			return nil, fmt.Errorf("Modern Icon battleSprites.shipSets index %q：%w", key, err)
+		}
+		for direction, entry := range []struct {
+			name, nameB string
+			pair        int
+		}{
+			{names.South, names.SouthB, 0}, {names.West, names.WestB, 2},
+			{names.East, names.EastB, 4}, {names.North, names.NorthB, 6},
+		} {
+			src, err := loadModernIconPNG(filepath.Join(dir, entry.name), true)
+			if err != nil {
+				return nil, fmt.Errorf(
+					"Modern Icon battleSprites.shipSets[%#02x] direction %d：%w",
+					group, direction, err)
+			}
+			base := int(group)*8 + entry.pair
+			if ships[byte(base)] == nil {
+				ships[byte(base)] = ebiten.NewImageFromImage(src)
+			}
+			srcB := src
+			if entry.nameB != "" {
+				srcB, err = loadModernIconPNG(filepath.Join(dir, entry.nameB), true)
+				if err != nil {
+					return nil, fmt.Errorf(
+						"Modern Icon battleSprites.shipSets[%#02x] direction %d B：%w",
+						group, direction, err)
+				}
+			}
+			if ships[byte(base+1)] == nil {
+				ships[byte(base+1)] = ebiten.NewImageFromImage(srcB)
+			}
+		}
 	}
 	return &modernIconTheme{
 		normal: normal, winter: winter,
@@ -190,7 +243,8 @@ func validateModernIconManifest(m modernIconManifest) error {
 	case len(m.Tiles.Normal)+len(m.Tiles.Winter)+len(m.Sprites)+
 		len(m.TileVariants.Normal)+len(m.TileVariants.Winter)+
 		len(m.BattleSprites.Combat)+len(m.BattleSprites.Monsters)+
-		len(m.BattleSprites.MonsterSets)+len(m.BattleSprites.Ships) == 0:
+		len(m.BattleSprites.MonsterSets)+len(m.BattleSprites.Ships)+
+		len(m.BattleSprites.ShipSets) == 0:
 		return fmt.Errorf("Modern Icon manifest 至少要列一張已重畫材質")
 	}
 	for label, set := range map[string]struct {
@@ -233,17 +287,31 @@ func validateModernIconManifest(m modernIconManifest) error {
 			}
 		}
 	}
-	for key, names := range m.BattleSprites.MonsterSets {
-		if _, err := parseModernIconIndexLimit(key, modernMonsterFrames/8); err != nil {
-			return fmt.Errorf("Modern Icon battleSprites.monsterSets index %q：%w", key, err)
-		}
-		for direction, name := range map[string]string{
-			"south": names.South, "west": names.West, "east": names.East, "north": names.North,
-		} {
-			if name == "" || filepath.Base(name) != name {
-				return fmt.Errorf(
-					"Modern Icon battleSprites.monsterSets[%s].%s 必須是同目錄內的檔名，收到 %q",
-					key, direction, name)
+	for label, sets := range map[string]struct {
+		entries map[string]modernIconDirections
+		groups  int
+	}{
+		"monsterSets": {m.BattleSprites.MonsterSets, modernMonsterFrames / 8},
+		"shipSets":    {m.BattleSprites.ShipSets, modernShipFrames / 8},
+	} {
+		for key, names := range sets.entries {
+			if _, err := parseModernIconIndexLimit(key, sets.groups); err != nil {
+				return fmt.Errorf("Modern Icon battleSprites.%s index %q：%w", label, key, err)
+			}
+			for direction, pair := range map[string][2]string{
+				"south": {names.South, names.SouthB}, "west": {names.West, names.WestB},
+				"east": {names.East, names.EastB}, "north": {names.North, names.NorthB},
+			} {
+				for phase, name := range pair {
+					if name == "" && phase == 1 {
+						continue
+					}
+					if name == "" || filepath.Base(name) != name {
+						return fmt.Errorf(
+							"Modern Icon battleSprites.%s[%s].%s 相位 %d 必須是同目錄內的檔名，收到 %q",
+							label, key, direction, phase, name)
+					}
+				}
 			}
 		}
 	}

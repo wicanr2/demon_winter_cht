@@ -3600,7 +3600,16 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > `COMBAT.SHE` 隊員實際範圍 24/24、海戰 runtime 使用範圍 24/24；
 > 可重建切格管線、聯絡表與兩張實機圖見
 > [`docs/playtest/40`](docs/playtest/40-modern-icon-player-and-sea-directions.md)。
-> 同方向兩個步態仍共用視圖，需後續動畫 polish。下一批是少量特殊世界索引；
+> 2026-07-30 後續已依真正的 runtime 路徑補上怪物與海戰 A/B 回合相位；
+> `battleframeinventory` 回報怪物 `covered=224 animated=224`。隊員原版呼叫端
+> 不取奇數幀，沒有為它虛構動畫（[`docs/playtest/42`](docs/playtest/42-modern-icon-battle-animation-phases.md)）。
+> 同輪補齊世界最後七格 `15/16/2d/2f/35/36/55` 正常／冬季版；
+> `mapwindow -theme` 證明世界子地圖 33–64 兩季差集皆為 `none`，14 張 runtime
+> 逐格實跑通過（[`docs/playtest/41`](docs/playtest/41-modern-icon-world-coverage-complete.md)）。
+> 聲音觸發收尾已完成有明確 effect 編號的攻擊命中／未中、行動點不足、
+> 密語正解與恆世寶珠閘門；原版無背景配樂，死亡旋律已還原。世界撞牆與
+> 船隻撞岸的音高尚無可靠編號，維持未知而不猜（[`docs/playtest/43`](docs/playtest/43-audio-trigger-closure.md)）。
+> 下一批進入 A6 固定種子抽樣、JSON 資料分離總稽核與發行打包；
 > `SHIP.SHE 0x18–0x1f` 沒有現有規則呼叫端，不為填表虛構用途；
 > 不新增原版不存在的碼頭地形。
 >

@@ -157,9 +157,15 @@ Bugem；兩波合計覆寫率達 129/224
 隊員三種原版職業輪廓分組與敵方海戰單位也完成四方向基礎素材
 （[`docs/playtest/40`](docs/playtest/40-modern-icon-player-and-sea-directions.md)）：
 隊員 `COMBAT.SHE` 實際範圍 24/24 幀，海戰 runtime 使用範圍 24/24 幀。
-同方向兩個動畫相位目前共用一張，仍不宣稱完整動態 atlas。
+這一批先完成四方向基礎圖；A/B 回合相位由下方後續批次收尾。
 
 ![Modern Icon 隊員與敵方海戰四方向](docs/design/img/modern-icon-combat-sea-contact.png)
+
+後續已依原版真正的切換路徑補上怪物與海戰 A/B 回合相位；隊員呼叫端不切
+奇偶幀，因此沒有為它虛構動畫。盤點結果為怪物 224/224 幀均有獨立 A/B
+（[`docs/playtest/42`](docs/playtest/42-modern-icon-battle-animation-phases.md)）。
+
+![Modern Icon 怪物與船艦 A/B 相位](docs/design/img/modern-icon-battle-phase-contact.png)
 
 這代表外觀與四向完整；同方向第二步仍共用視圖，動畫差異尚待 polish。
 
@@ -220,6 +226,12 @@ Bugem；兩波合計覆寫率達 129/224
 劇情會把神殿替換成的 `0x5b` 毀壞廢墟也已完成正常／冬季配對：
 
 ![Modern Icon 0x5b 廢墟正常／冬季實機對照](docs/design/img/modern-icon-m1-ruins-contact.png)
+
+世界子地圖最後七個稀有索引也已完成正常／冬季重繪與逐格實跑；
+`mapwindow -theme` 證明正常／冬季實際索引差集皆為零
+（[`docs/playtest/41`](docs/playtest/41-modern-icon-world-coverage-complete.md)）。
+
+![Modern Icon 世界稀有索引實機](docs/design/img/modern-icon-world-specials-runtime.png)
 
 它保留殘牆、折柱與中央燒灼空洞的同一構圖；規則語意與固定場景證據見
 [`docs/playtest/24`](docs/playtest/24-modern-icon-ruins-5b.md)。
@@ -297,7 +309,7 @@ tools/package-release.sh 2026.07.29
 | 社群攻略繁中版 | 完成（1,914 行）|
 | 反組譯筆記 | 115 篇；主線、海戰、時間進位、arena、命中修正、營地法術、魔法物品充能與幻象行動前 20% 消失均有位址證據 |
 | 資料格式 | 地圖、事件、道具、怪物、存檔、字型、圖形、音效皆已解 |
-| Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、音效 |
+| Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、PC speaker 音效；原版沒有背景配樂，死亡短旋律與已確認觸發見 [`docs/playtest/43`](docs/playtest/43-audio-trigger-closure.md) |
 | 遊戲內文字中文化 | **500/500（100%）** 原版資料字串；另有 **766 條** JSON 介面文案，玩家程式硬編中文 0 條 |
 | 試玩驗收 | **完成前期垂直切片與後期高風險抽樣**；可重播腳本與 trace 工具在 `tools/playthrough/` |
 

@@ -19,11 +19,22 @@ import (
 
 type manifest struct {
 	BattleSprites struct {
-		Combat      map[string]string          `json:"combat"`
-		Monsters    map[string]string          `json:"monsters"`
-		MonsterSets map[string]json.RawMessage `json:"monsterSets"`
-		Ships       map[string]string          `json:"ships"`
+		Combat      map[string]string                   `json:"combat"`
+		Monsters    map[string]string                   `json:"monsters"`
+		MonsterSets map[string]monsterDirectionManifest `json:"monsterSets"`
+		Ships       map[string]string                   `json:"ships"`
 	} `json:"battleSprites"`
+}
+
+type monsterDirectionManifest struct {
+	South  string `json:"south"`
+	SouthB string `json:"southB"`
+	West   string `json:"west"`
+	WestB  string `json:"westB"`
+	East   string `json:"east"`
+	EastB  string `json:"eastB"`
+	North  string `json:"north"`
+	NorthB string `json:"northB"`
 }
 
 func main() {
@@ -38,30 +49,34 @@ func main() {
 	}
 	groups := groupMonsters(table.All())
 
-	var covered map[int]bool
+	var covered, animated map[int]bool
 	if *manifestPath != "" {
-		covered, err = loadMonsterCoverage(*manifestPath)
+		covered, animated, err = loadMonsterCoverage(*manifestPath)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	totalCovered := 0
+	totalCovered, totalAnimated := 0, 0
 	for _, sprite := range sortedKeys(groups) {
 		names := groups[sprite]
 		first, last := sprite*8, sprite*8+7
-		n := 0
+		n, a := 0, 0
 		for frame := first; frame <= last; frame++ {
 			if covered[frame] {
 				n++
 			}
+			if animated[frame] {
+				a++
+			}
 		}
 		totalCovered += n
-		fmt.Printf("sprite=%02d frames=%02x-%02x covered=%d/8 names=%s\n",
-			sprite, first, last, n, strings.Join(names, "、"))
+		totalAnimated += a
+		fmt.Printf("sprite=%02d frames=%02x-%02x covered=%d/8 animated=%d/8 names=%s\n",
+			sprite, first, last, n, a, strings.Join(names, "、"))
 	}
-	fmt.Printf("summary: monsters=%d appearances=%d frames=%d covered=%d\n",
-		table.Len(), len(groups), len(groups)*8, totalCovered)
+	fmt.Printf("summary: monsters=%d appearances=%d frames=%d covered=%d animated=%d\n",
+		table.Len(), len(groups), len(groups)*8, totalCovered, totalAnimated)
 }
 
 func groupMonsters(monsters []gamedata.Monster) map[int][]string {
@@ -81,33 +96,43 @@ func sortedKeys(groups map[int][]string) []int {
 	return keys
 }
 
-func loadMonsterCoverage(path string) (map[int]bool, error) {
+func loadMonsterCoverage(path string) (map[int]bool, map[int]bool, error) {
 	raw, err := os.ReadFile(path)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var m manifest
 	if err := json.Unmarshal(raw, &m); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	out := make(map[int]bool, len(m.BattleSprites.Monsters))
+	animated := make(map[int]bool)
 	for key := range m.BattleSprites.Monsters {
 		value := strings.TrimPrefix(key, "0x")
 		frame, err := strconv.ParseUint(value, 16, 8)
 		if err != nil {
-			return nil, fmt.Errorf("無效 monster frame %q: %w", key, err)
+			return nil, nil, fmt.Errorf("無效 monster frame %q: %w", key, err)
 		}
 		out[int(frame)] = true
 	}
-	for key := range m.BattleSprites.MonsterSets {
+	for key, directions := range m.BattleSprites.MonsterSets {
 		value := strings.TrimPrefix(key, "0x")
 		sprite, err := strconv.ParseUint(value, 16, 8)
 		if err != nil || sprite >= 30 {
-			return nil, fmt.Errorf("無效 monster set %q", key)
+			return nil, nil, fmt.Errorf("無效 monster set %q", key)
 		}
 		for frame := int(sprite) * 8; frame < int(sprite)*8+8; frame++ {
 			out[frame] = true
 		}
+		for direction, phaseB := range []string{
+			directions.SouthB, directions.WestB, directions.EastB, directions.NorthB,
+		} {
+			if phaseB == "" {
+				continue
+			}
+			base := int(sprite)*8 + direction*2
+			animated[base], animated[base+1] = true, true
+		}
 	}
-	return out, nil
+	return out, animated, nil
 }

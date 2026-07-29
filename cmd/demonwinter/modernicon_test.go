@@ -28,6 +28,12 @@ func validModernIconManifest() modernIconManifest {
 		},
 	}
 	m.BattleSprites.Ships = map[string]string{"0x1f": "ship-1f.png"}
+	m.BattleSprites.ShipSets = map[string]modernIconDirections{
+		"0x01": {
+			South: "ship-south.png", SouthB: "ship-south-b.png",
+			West: "ship-west.png", East: "ship-east.png", North: "ship-north.png",
+		},
+	}
 	return m
 }
 
@@ -51,6 +57,7 @@ func TestValidateModernIconManifest(t *testing.T) {
 			m.BattleSprites.Monsters = nil
 			m.BattleSprites.MonsterSets = nil
 			m.BattleSprites.Ships = nil
+			m.BattleSprites.ShipSets = nil
 		}},
 		{"index", func(m *modernIconManifest) {
 			m.Tiles.Normal = map[string]string{"0xff": "bad.png"}
@@ -91,6 +98,21 @@ func TestValidateModernIconManifest(t *testing.T) {
 		{"monster set missing direction", func(m *modernIconManifest) {
 			m.BattleSprites.MonsterSets = map[string]modernIconDirections{
 				"0x03": {South: "s.png", West: "w.png", East: "e.png"},
+			}
+		}},
+		{"monster set bad B path", func(m *modernIconManifest) {
+			set := m.BattleSprites.MonsterSets["0x03"]
+			set.SouthB = "../south-b.png"
+			m.BattleSprites.MonsterSets["0x03"] = set
+		}},
+		{"ship set index", func(m *modernIconManifest) {
+			m.BattleSprites.ShipSets = map[string]modernIconDirections{
+				"0x04": {South: "s.png", West: "w.png", East: "e.png", North: "n.png"},
+			}
+		}},
+		{"ship set missing direction", func(m *modernIconManifest) {
+			m.BattleSprites.ShipSets = map[string]modernIconDirections{
+				"0x01": {South: "s.png", West: "w.png", East: "e.png"},
 			}
 		}},
 	}

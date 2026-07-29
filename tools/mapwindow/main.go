@@ -5,8 +5,10 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -24,13 +26,14 @@ func main() {
 	y := flag.Int("y", 50, "中心 Y")
 	find := flag.String("find-tiles", "", "掃描所有地圖，找含指定十六進位 tile 的視窗")
 	inventory := flag.Bool("inventory", false, "列出所有地圖實際使用的 tile、總數與第一個座標")
+	theme := flag.String("theme", "", "搭配 inventory 檢查 Modern Icon theme.json 正常／冬季覆寫")
 	minMap := flag.Int("min-map", 0, "掃描時只納入此編號以上的地圖（0 表示不限制）")
 	maxMap := flag.Int("max-map", 0, "掃描時只納入此編號以下的地圖（0 表示不限制）")
 	limit := flag.Int("limit", 12, "find-tiles 最多列出幾個視窗")
 	flag.Parse()
 
 	if *inventory {
-		if err := printInventory(*data, *minMap, *maxMap); err != nil {
+		if err := printInventory(*data, *theme, *minMap, *maxMap); err != nil {
 			panic(err)
 		}
 		return
@@ -88,7 +91,7 @@ type tileUse struct {
 	mapID, x, y int
 }
 
-func printInventory(dataDir string, minMap, maxMap int) error {
+func printInventory(dataDir, themePath string, minMap, maxMap int) error {
 	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
 	if err != nil {
 		return err
@@ -130,7 +133,89 @@ func printInventory(dataDir string, minMap, maxMap int) error {
 		fmt.Printf("%02x count=%-7d first=map%-2d (%2d,%2d)\n",
 			key, u.count, u.mapID, u.x, u.y)
 	}
+	if themePath != "" {
+		normal, winter, err := loadThemeCoverage(themePath)
+		if err != nil {
+			return err
+		}
+		var missingNormal, missingWinter []int
+		for _, key := range keys {
+			if !normal[byte(key)] {
+				missingNormal = append(missingNormal, key)
+			}
+			if !winter[byte(key)] {
+				missingWinter = append(missingWinter, key)
+			}
+		}
+		fmt.Printf("theme normal missing:%s\n", formatTileList(missingNormal))
+		fmt.Printf("theme winter missing:%s\n", formatTileList(missingWinter))
+		if len(missingNormal)+len(missingWinter) != 0 {
+			return fmt.Errorf("Modern Icon 世界索引尚未覆寫完整")
+		}
+	}
 	return nil
+}
+
+func loadThemeCoverage(path string) (map[byte]bool, map[byte]bool, error) {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return nil, nil, err
+	}
+	var manifest struct {
+		Tiles struct {
+			Normal map[string]string `json:"normal"`
+			Winter map[string]string `json:"winter"`
+		} `json:"tiles"`
+		TileVariants struct {
+			Normal map[string][]string `json:"normal"`
+			Winter map[string][]string `json:"winter"`
+		} `json:"tileVariants"`
+	}
+	if err := json.Unmarshal(raw, &manifest); err != nil {
+		return nil, nil, err
+	}
+	decode := func(single map[string]string, variants map[string][]string) (map[byte]bool, error) {
+		out := map[byte]bool{}
+		for key := range single {
+			set, err := parseTileSet(key)
+			if err != nil {
+				return nil, err
+			}
+			for index := range set {
+				out[index] = true
+			}
+		}
+		for key := range variants {
+			set, err := parseTileSet(key)
+			if err != nil {
+				return nil, err
+			}
+			for index := range set {
+				out[index] = true
+			}
+		}
+		return out, nil
+	}
+	normal, err := decode(manifest.Tiles.Normal, manifest.TileVariants.Normal)
+	if err != nil {
+		return nil, nil, err
+	}
+	winter, err := decode(manifest.Tiles.Winter, manifest.TileVariants.Winter)
+	if err != nil {
+		return nil, nil, err
+	}
+	return normal, winter, nil
+}
+
+func formatTileList(keys []int) string {
+	if len(keys) == 0 {
+		return " none"
+	}
+	var out strings.Builder
+	for _, key := range keys {
+		fmt.Fprintf(&out, " %02x", key)
+	}
+	return out.String()
 }
 
 type windowHit struct {
