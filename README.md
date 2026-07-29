@@ -148,6 +148,14 @@ Bugem；兩波合計覆寫率達 129/224
 
 剩餘怪物是風元素、龍、惡魔／Xeres 與巨人四組，共 32 frame。
 
+最終四組也已完成並通過同場戰鬥抽樣；`MONSTER.DAT` 實際使用的 28 組外觀
+現已方向覆寫 224/224
+（[`docs/playtest/39`](docs/playtest/39-modern-icon-monster-direction-complete.md)）：
+
+![Modern Icon 怪物最終四組](docs/design/img/modern-icon-m1-battle-wave4-contact.png)
+
+這代表外觀與四向完整；同方向第二步仍共用視圖，動畫差異尚待 polish。
+
 雙倍移動成本的丘陵 `0x0e/0x2b` 另以每索引四個正常／冬季變體完成無縫拼接，
 選圖只依座標、不碰遊戲 RNG（[`docs/playtest/32`](docs/playtest/32-modern-icon-hill-variants.md)）：
 

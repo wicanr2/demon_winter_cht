@@ -344,6 +344,30 @@
         "west": "monster-25-west.png",
         "east": "monster-25-east.png",
         "north": "monster-25-north.png"
+      },
+      "0x1a": {
+        "south": "monster-26-south.png",
+        "west": "monster-26-west.png",
+        "east": "monster-26-east.png",
+        "north": "monster-26-north.png"
+      },
+      "0x1b": {
+        "south": "monster-27-south.png",
+        "west": "monster-27-west.png",
+        "east": "monster-27-east.png",
+        "north": "monster-27-north.png"
+      },
+      "0x1c": {
+        "south": "monster-28-south.png",
+        "west": "monster-28-west.png",
+        "east": "monster-28-east.png",
+        "north": "monster-28-north.png"
+      },
+      "0x1d": {
+        "south": "monster-29-south.png",
+        "west": "monster-29-west.png",
+        "east": "monster-29-east.png",
+        "north": "monster-29-north.png"
       }
     },
     "ships": {

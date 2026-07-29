@@ -32,9 +32,10 @@ def fit_sprite(image: Image.Image) -> Image.Image:
 
 def extract_sheet(path: Path, names: list[str]) -> list[Image.Image]:
     sheet = Image.open(path).convert("RGBA")
-    if len(names) != 8:
-        raise ValueError("4×2 圖集必須提供八個名稱")
-    cell_width, cell_height = sheet.width // 4, sheet.height // 2
+    if len(names) not in (4, 8):
+        raise ValueError("圖集必須提供四個或八個名稱")
+    rows = len(names) // 4
+    cell_width, cell_height = sheet.width // 4, sheet.height // rows
     out = []
     for i in range(8):
         x, y = (i % 4) * cell_width, (i // 4) * cell_height

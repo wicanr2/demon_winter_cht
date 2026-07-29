@@ -3593,7 +3593,11 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 第三波完成 Stalker、蟲群、鬼火、Orc 與火／金屬／冰／靈體元素；Orc 改為
 > 完整四向組並移除單格特例，目前 24 組、192/224
 >（[`docs/playtest/38`](docs/playtest/38-modern-icon-battle-wave3.md)）。
-> 下一批是其餘怪物外觀、玩家職業、敵船與少量特殊世界索引；
+> 最終波再完成風元素、龍、惡魔／Xeres 與巨人；28 組實際怪物外觀的四向
+> 覆寫已達 224/224，固定頭目混合戰通過
+>（[`docs/playtest/39`](docs/playtest/39-modern-icon-monster-direction-complete.md)）。
+> 同方向兩個步態仍共用視圖，需後續動畫 polish。下一批是玩家職業、敵船與
+> 少量特殊世界索引；
 > 不新增原版不存在的碼頭地形。
 >
 > **操作體驗新增，已完成程式與固定場景抽樣、等待使用者畫面審查：** `F6`
