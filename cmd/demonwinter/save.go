@@ -72,7 +72,7 @@ func (a *app) writeSave() error {
 	a.save.Hour = byte(a.clock.Hour())
 	a.save.Day = byte(a.clock.Day())
 	a.save.Month = byte(a.clock.Month())
-	a.save.TimeCounter = byte(a.clock.Steps())
+	a.save.HourStepCounter = byte(a.clock.Steps())
 
 	if err := os.MkdirAll(a.saveDir(), 0o755); err != nil {
 		return fmt.Errorf("建立存檔目錄失敗: %w", err)

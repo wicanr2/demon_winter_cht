@@ -596,9 +596,9 @@ type SaveGame struct {
 	Day   byte
 	Month byte
 
-	// TimeCounter 是疑似遊戲內時間／回合計數的候選欄位。**待複核**，中信心
-	// （見 timeCounterOffset 註解）。
-	TimeCounter byte
+	// HourStepCounter 是一小時內的移動步數（存檔 +0xa0）。走到 11 時進位
+	// 一小時並重設為 1；見 timeCounterOffset 與 docs/re/08。
+	HourStepCounter byte
 
 	// Ships 是世界上的 10 艘船（trailer +0x22，見 ship.go）。
 	// **不是「我的船」** —— 原版沒有記載歸屬，修船只看船在不在腳邊。
@@ -667,7 +667,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.PositionX = trailer[positionXOffset]
 	save.PositionY = trailer[positionYOffset]
 	save.Facing = trailer[facingOffset]
-	save.TimeCounter = trailer[timeCounterOffset]
+	save.HourStepCounter = trailer[timeCounterOffset]
 	save.Ships = parseShips(trailer)
 	save.ViewedLandToday = trailer[viewedLandTodayOffset] != 0
 	copy(save.FormationBackup[:], trailer[formationBackupOffset:formationBackupOffset+formationLen])

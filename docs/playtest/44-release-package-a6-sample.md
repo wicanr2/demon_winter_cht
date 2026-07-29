@@ -27,8 +27,12 @@
 最終 SHA-256：
 
 ```text
-27c60f26787f9004eb64e2cd37e325ebf707c876af93a043c441c13179d2c19f  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
+5d75408d2fd06d08ebdec04c9ad1a62dbdd9d399bbce221f39ca5a3cecaa5fe2  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
 ```
+
+2026-07-30 最後收斂吐息地形規則、怪物繞障、Modern Icon 地城 namespace、
+JSON 文字與 README 索引後重新打包；`sha256sum -c`、Xvfb 下直接執行包內
+`demonwinter -list-scenes`、426 張 Modern Icon PNG、447 檔及禁入掃描均再次通過。
 
 | Modern Icon 與現代命令卡 | 復古紅色命令列 | F1 手札 |
 |---|---|---|

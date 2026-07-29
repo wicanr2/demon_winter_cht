@@ -10,17 +10,17 @@
 //   - 事件：`nSS.DAT` 查表與直接索引兩條觸發路徑、敘述文字、傳送、遭遇
 //   - 戰鬥：行動點、移動與轉向、攻擊、法術（含範圍法術與選點游標）、
 //     驅散不死、祈禱、汲取法力、閃避、道具、戰場地形與視線遮蔽
-//   - 城鎮：走到城鎮格自動進城、七種設施、市集議價
+//   - 城鎮：走到城鎮格自動進城、八種設施、市集議價
 //   - 角色：建立角色（種族／擲點／重擲／職業／姓名／隊伍位置）、存檔
-//   - 中文化：倚天點陣字混排、全部介面與 148 條字串
+//   - 中文化：倚天點陣字混排、500/500 原版資料字串與 836 條 JSON 介面文案
 //   - 音效：原版 PC speaker 音效
 //
 // # 已知還沒對齊原版的地方
 //
 //   - **版面不是原版版面**。這裡是自訂的 640×400（中文需要 16×16 點陣才可讀），
 //     不是原版 320×200 的復刻。
-//   - 怪物 AI 的決策樹、選法術、挑目標與噴吐都照原版（見 docs/re/23），
-//     但走位（轉向、逼近）那一段原版還沒讀，目前是自己補的。
+//   - 怪物 AI 的決策樹、選法術、挑目標、噴吐與障礙物感知走位均已接；
+//     同長岔路的 tie-break 尚未與 DOSBox 逐步對拍（見 docs/re/116）。
 //
 // 完整的未解清單見 CONTEXT.md 與各 docs/spec 檔案末尾。
 package main
@@ -137,9 +137,8 @@ type app struct {
 	font        *ui.MixedFont
 	gotFont     *ui.Font
 
-	// exits 是 EXITS.DAT。**事件查表已經不用它了** —— 那是 `docs/re/05` §1.3
-	// 誤判造成的（見 special 欄位）。留著是因為 EXITS.DAT 本身確實存在、
-	// 而且是 6-byte 記錄，只是它的消費端還沒解出來（`docs/re/77` §3）。
+	// exits 是 EXITS.DAT。事件查表不用它；換圖成功後會由第六欄更新
+	// MerchantBase，供商隊遭遇等級使用（docs/re/50、107）。
 	exits *world.ExitTable
 
 	// special 是每張子地圖的特殊格清單（`nSS.DAT`）—— 事件與傳送的真正來源。
@@ -652,7 +651,8 @@ func (a *app) update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyM) {
 		a.openDungeonMove()
 	}
-	// F4 是偵錯用的「就地遇到商隊」—— 遭遇觸發還沒解（見 merchantui.go）。
+	// F4 是偵錯用的「就地遇到商隊」；正常入口是 checkMerchantEncounter
+	// 的原版 1/64 分派。這裡只為畫面與交易邊界驗收保留。
 	if inpututil.IsKeyJustPressed(ebiten.KeyF4) {
 		a.openMerchant()
 	}
@@ -1081,8 +1081,7 @@ func (a *app) logTop() int {
 }
 
 // checkEvent 走 docs/spec/03-events.md 的觸發鏈：
-// 落點 tile 決定要不要查表 → 查 EXITS.DAT 取事件索引 → 讀 DATA*.TXT 顯示文字。
-// checkRandomEncounter 擲野外隨機遭遇。
+// 落點 tile 決定要不要查表 → 查同圖 nSS.DAT → 讀 DATA*.TXT／地點劇情。
 //
 // 原版每走一步 1/64（`rnd_raw() & 0x3f == 0x34`），只在戶外、且不在船上時擲；
 // 遇到什麼由腳下 tile 的地形決定（見 game.RollEncounter）。
@@ -1281,7 +1280,8 @@ func (a *app) checkEvent(tile byte) {
 		}
 		idx = hit.EventIndex
 		// 記錄「看過了」：類別留著，記錄之後照樣命中（`docs/re/78` §3）。
-		// ⚠ 這個改動目前只留在記憶體 —— 存回 `nSS.DAT` 還沒做（見 CONTEXT §7 A2）。
+		// 改動先留在記憶體，writeSave 會由 writeSpecialTiles 把五張
+		// nSS.DAT 寫進玩家存檔目錄，不碰原版資料。
 		st.MarkVisited(hit.Index)
 	}
 
@@ -1868,8 +1868,8 @@ func main() {
 	// 選城鎮的選單要按十幾次方向鍵才到得了後面的城鎮，headless 截圖驗收時
 	// xdotool 偶爾會漏掉一兩下，跑出來的畫面就不是預期的那座城。直接指定。
 	townFlag := flag.Int("town", 0, "偵錯：啟動後直接進入指定編號的城鎮（1–25）")
-	// 掉寶生成解出來了（docs/re/30），但「什麼時候掉」還沒追出來，
-	// 所以沒有正規入口。這個旗標是唯一能在遊戲裡看到成品的路徑。
+	// 正常戰鬥勝利已由 awardDrops 發放；此旗標只供指定型別／等級的
+	// 生成器邊界驗收，不是唯一產品入口。
 	lootFlag := flag.String("loot", "",
 		"偵錯：用掉寶生成器發道具給第一名隊員，格式 `type,等級[,件數]`")
 	flag.Parse()
@@ -2136,11 +2136,12 @@ func main() {
 	}
 
 	a := &app{
-		trace:       newTracer(*traceFlag),
-		auto:        newAutoFighter(*autoFightFlag),
-		world:       game.NewWorld(m, tables),
-		party:       newPartyAt(px, py, save),
-		clock:       game.ClockAt(int(save.Hour), int(save.Day), int(save.Month), int(save.TimeCounter)),
+		trace: newTracer(*traceFlag),
+		auto:  newAutoFighter(*autoFightFlag),
+		world: game.NewWorld(m, tables),
+		party: newPartyAt(px, py, save),
+		clock: game.ClockAt(int(save.Hour), int(save.Day), int(save.Month),
+			int(save.HourStepCounter)),
 		tiles:       m,
 		mapID:       mapID,
 		drawTiles:   ditheredTiles(m, uint16(*seed), save.TempleRuins),
@@ -2366,9 +2367,8 @@ func (a *app) weaponLabel(c game.Character) string {
 
 // debugLoot 用掉寶生成器發道具給第一名隊員（格式 `type,等級[,件數]`）。
 //
-// 掉寶生成的規則解出來了（`docs/re/30`），但**「什麼時候掉」還沒追出來** ——
-// 戰鬥勝利與寶箱的判定不在已解範圍內，所以沒有正規入口。
-// 沒有這個旗標就沒辦法在遊戲裡看到生成器的成品。
+// 正常戰鬥勝利會由 awardDrops 擲每隻怪物的掉落；這支只讓測試明確指定
+// type／等級／件數，重播 GenerateDrop 的邊界。
 func (a *app) debugLoot(spec string) error {
 	f := strings.Split(spec, ",")
 	if len(f) < 2 || len(f) > 3 {

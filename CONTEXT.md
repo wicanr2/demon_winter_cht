@@ -3641,8 +3641,39 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > **2026-07-30 最終重打包：**打包全流程已移入無網路、具資源限制的一次性
 > Docker；修正 checksum 曾寫入容器絕對路徑的不可攜問題。解壓後 F8／F6／F1
 > 重新實跑並人工檢視，426 張 Modern Icon、836 UI key、447 檔與禁入掃描通過。
-> SHA-256 為 `27c60f26787f9004eb64e2cd37e325ebf707c876af93a043c441c13179d2c19f`
+> 收斂怪物繞障、吐息地形與地城 namespace 後重打包，SHA-256 為
+> `5d75408d2fd06d08ebdec04c9ad1a62dbdd9d399bbce221f39ca5a3cecaa5fe2`
 >（[`docs/playtest/44`](docs/playtest/44-release-package-a6-sample.md)）。
+>
+> **2026-07-30 Modern Icon 地城邊界稽核：**最終畫布的世界覆寫原本只依
+> tile index，沒有分辨 MAP1–MAP5 地城與 SUM.MAP 世界的同號異義格。現已在
+> `theme.json` 加入獨立 `dungeonTiles` namespace，loader／世界／戰鬥清底
+> 全部按 map 類型分流；空地城素材安全保留 EGA/CGA 底稿。MAP1 與 map 34
+> 實機反例均通過。世界、怪物、隊員及海戰的客觀覆蓋已完成；剩餘美術真相
+> 是地城方向稿待使用者審查、之後逐 index 量產及 P4 最終審圖
+>（[`docs/playtest/49`](docs/playtest/49-modern-icon-dungeon-namespace.md)）。
+>
+> **2026-07-30 怪物走位逆向收尾：**舊 `monsterTurn` 明列近戰走位是 remake
+> 補充；IDA 9.4 現已證明 `1990:0554` 產生障礙物感知候選路線，
+> `1990:0002` 依序執行 1／2／3 點的轉向／移動／攻擊。規則層原已有
+> `FirstStepToward` 最短路卻沒有正式呼叫端，現已接入並補直線、L 形、
+> 隊友／terrain 繞路與無路測試。原版固定候選與 remake 完整最短路在同長
+> 岔路的 tie-break 尚未動態逐步對拍，誠實標為強證據
+>（[`docs/re/116`](docs/re/116-monster-obstacle-aware-pathing.md)）。
+> 同輪把存檔 `+0xa0` 從過期的 `TimeCounter` 候選更名
+> `HourStepCounter`；`+0x9c` 維持獨立 `EncounterCountdown`，不再把兩者
+> 寫成待複核。
+>
+> **2026-07-30 吐息規則補洞：**IDA `sub_15088+2d7–2f6` 證明第二趟
+> 每格先畫效果，再檢查戰場值；`<= 0x13` 時不搜尋或傷害該格單位。第一趟
+> 命中／誤傷計數沒有這道過濾。remake 現只在 `Breathe` 實際套用階段照接，
+> 並以測試固定這個兩趟不對稱；舊文件稱「規則層不受影響」已勘誤。
+>
+> **2026-07-30 交付索引收斂：**既有 1.1 MB 實機宣傳影片已移入
+> `docs/promo/` 並由 README 索引；歷次使用者要求與證據整理於
+> [`docs/playtest/50`](docs/playtest/50-completion-requirement-matrix.md)。
+> 明確未結案仍只有 Modern Icon 地城方向稿審查、逐索引量產及 P4 最終審圖；
+> 不得因其餘發行閘門通過而宣稱整個 goal 完成。
 >
 > **操作體驗新增，已完成程式與固定場景抽樣、等待使用者畫面審查：** `F6`
 > 切換整套復古／現代模式：復古恢復原版紅底直式命令列與相對轉向；現代使用
@@ -3650,7 +3681,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 說明鍵，舊 `F2` 暫留相容別名；視窗關閉鈕會先走完整
 > `writeSave()`，存檔失敗時不退出。參數、規則邊界、畫面與 close-request
 > 實跑證據見 [`docs/ui/04`](docs/ui/04-control-modes-and-safe-exit.md)。
-> 同輪完成引擎／資料分離：766 條玩家文案及 world／camp／battle／town 的
+> 同輪完成引擎／資料分離，後續稽核擴充後現為 836 條玩家文案；world／camp／battle／town 的
 > 復古順序、現代 tab／左右欄全部進 `ui.json`；Go 玩家程式硬編中文為 0，
 > JSON 前後固定畫面 `AE=0`（[`docs/playtest/28`](docs/playtest/28-ui-json-data-separation.md)）。
 

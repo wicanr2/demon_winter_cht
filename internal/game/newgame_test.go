@@ -77,7 +77,7 @@ func TestApplyNewGame(t *testing.T) {
 		{"糧食", int(s.Rations), NewGameRations},
 		{"日", int(s.Day), NewGameDay},
 		{"時", int(s.Hour), NewGameHour},
-		{"步數計數", int(s.TimeCounter), NewGameTimeCounter},
+		{"小時計步", int(s.HourStepCounter), NewGameHourStepCounter},
 		{"X", int(s.PositionX), NewGameX},
 		{"Y", int(s.PositionY), NewGameY},
 		{"地圖", int(s.MapID), NewGameMapID},

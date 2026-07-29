@@ -289,6 +289,34 @@ func TestBreathe_ExactDamageKills(t *testing.T) {
 	}
 }
 
+// 原版第一趟仍把低值地形上的單位算進誤傷評估，第二趟實際套用時才跳過。
+func TestBreathe_LowTerrainSkipsDamageOnlyOnSecondPass(t *testing.T) {
+	b := breathBattle(t)
+	dragon := b.Unit(0)
+	var terrain BattleTerrain
+	for i := range terrain {
+		terrain[i] = 0x23
+	}
+	b.Terrain = &terrain
+
+	victim := b.Unit(PlayerSlotStart)
+	terrain[victim.Y*BattleTerrainSize+victim.X] = 0x13
+
+	plan := b.BreathPlan(dragon)
+	if plan.Enemy == 0 {
+		t.Fatal("第一趟應仍把低值地形上的敵人算進否決評估")
+	}
+	before := victim.HP
+	for _, hit := range b.Breathe(dragon) {
+		if hit.Unit == victim {
+			t.Fatal("第二趟不應命中低值地形上的單位")
+		}
+	}
+	if victim.HP != before {
+		t.Fatalf("低值地形上的單位 HP = %d，預期保持 %d", victim.HP, before)
+	}
+}
+
 // 噴吐錐形：形狀與 inBreathCone 一致、順序是由近而遠。
 func TestBreathCone(t *testing.T) {
 	b := breathBattle(t)

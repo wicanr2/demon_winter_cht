@@ -1041,8 +1041,9 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 // 順序照原版的決策樹（見 game 套件的 ai.go）：先看噴吐、再看施法，
 // 最後走近戰。
 //
-// 近戰的走位（轉向、逼近）是本作自己的補充 —— 原版那一段還沒讀，
-// 這裡先讓怪物走得到玩家面前，戰鬥才跑得完。
+// 近戰走位由 FirstStepToward 依地形與佔位找最短路。原版 `1990:0554`
+// 會產生障礙物感知的候選路線，再由 `1990:0002` 逐段轉向、前進與攻擊；
+// remake 保留相同能力與行動點成本，不逐行翻譯 16-bit 暫存緩衝。
 func (a *app) monsterTurn(u *game.Unit) {
 	if a.monsterBreathe(u) {
 		return
@@ -1064,7 +1065,15 @@ func (a *app) monsterTurn(u *game.Unit) {
 		a.battle.Spend(game.ActionEndTurn)
 		return
 	}
-	if want, ok := stepToward(u, target); ok && game.Facing(u.Facing) != want {
+	want, ok := stepToward(u, target)
+	if !ok {
+		a.battle.Spend(game.ActionEndTurn)
+		return
+	}
+	if routed, found := a.battle.FirstStepToward(u, target, want); found {
+		want = routed
+	}
+	if game.Facing(u.Facing) != want {
 		if a.battle.TurnTo(u, turnActionToward(game.Facing(u.Facing), want)) {
 			return
 		}

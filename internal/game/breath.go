@@ -187,6 +187,12 @@ func (b *Battle) Breathe(caster *Unit) []BreathHit {
 
 	var out []BreathHit
 	for _, u := range plan.Targets {
+		// 原版第二趟先畫效果，再讀戰場緩衝；該格值 <= 0x13 時不搜尋
+		// 單位（138d:1aef–1b08／IDA sub_15088+2d7–2f6）。
+		// 第一趟的誤傷計數沒有這道判定，所以不能把它搬進 BreathPlan。
+		if b.Terrain != nil && b.Terrain.TileAt(u.X, u.Y) <= 0x13 {
+			continue
+		}
 		dmg := BreathDamage(b.rng, caster.HP)
 		if hasElement && element == breathImmuneElement &&
 			breathImmuneRaces[u.RaceOrElement] {

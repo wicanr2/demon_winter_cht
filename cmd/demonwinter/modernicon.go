@@ -11,6 +11,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
+	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/ui"
 	"github.com/wicanr2/demon_winter_cht/internal/ui/layout"
@@ -26,6 +27,7 @@ const (
 // 索引；缺格就保留底下的相容預覽，不拿舊圖或假圖冒充完整新素材。
 type modernIconTheme struct {
 	normal, winter map[byte]*ebiten.Image
+	dungeon        map[byte]*ebiten.Image
 	normalVariants map[byte][]*ebiten.Image
 	winterVariants map[byte][]*ebiten.Image
 	sprites        map[byte]*ebiten.Image
@@ -47,6 +49,7 @@ type modernIconManifest struct {
 		Normal map[string][]string `json:"normal"`
 		Winter map[string][]string `json:"winter"`
 	} `json:"tileVariants"`
+	DungeonTiles  map[string]string `json:"dungeonTiles"`
 	Sprites       map[string]string `json:"sprites"`
 	BattleSprites struct {
 		Combat      map[string]string               `json:"combat"`
@@ -101,6 +104,10 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 		return nil, err
 	}
 	winter, err := loadSet("winter", m.Tiles.Winter, false, modernTerrainFrames)
+	if err != nil {
+		return nil, err
+	}
+	dungeon, err := loadSet("dungeonTiles", m.DungeonTiles, false, modernTerrainFrames)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +231,7 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 		}
 	}
 	return &modernIconTheme{
-		normal: normal, winter: winter,
+		normal: normal, winter: winter, dungeon: dungeon,
 		normalVariants: normalVariants, winterVariants: winterVariants,
 		sprites: sprites,
 		combat:  combat, monsters: monsters, ships: ships,
@@ -241,6 +248,7 @@ func validateModernIconManifest(m modernIconManifest) error {
 		return fmt.Errorf("Modern Icon frame = %dx%d，預期最終呈現尺寸 %dx%d",
 			m.FrameWidth, m.FrameHeight, modernIconWidth, modernIconHeight)
 	case len(m.Tiles.Normal)+len(m.Tiles.Winter)+len(m.Sprites)+
+		len(m.DungeonTiles)+
 		len(m.TileVariants.Normal)+len(m.TileVariants.Winter)+
 		len(m.BattleSprites.Combat)+len(m.BattleSprites.Monsters)+
 		len(m.BattleSprites.MonsterSets)+len(m.BattleSprites.Ships)+
@@ -253,6 +261,7 @@ func validateModernIconManifest(m modernIconManifest) error {
 	}{
 		"normal":                 {m.Tiles.Normal, modernTerrainFrames},
 		"winter":                 {m.Tiles.Winter, modernTerrainFrames},
+		"dungeonTiles":           {m.DungeonTiles, modernTerrainFrames},
 		"sprites":                {m.Sprites, modernTerrainFrames},
 		"battleSprites.combat":   {m.BattleSprites.Combat, modernCombatFrames},
 		"battleSprites.monsters": {m.BattleSprites.Monsters, modernMonsterFrames},
@@ -383,6 +392,16 @@ func (t *modernIconTheme) tileAt(winter bool, index byte, x, y int) *ebiten.Imag
 	return t.tile(winter, index)
 }
 
+func (t *modernIconTheme) terrainAt(mapID int, winter bool, index byte, x, y int) *ebiten.Image {
+	if world.IsWorldSubMap(mapID) {
+		return t.tileAt(winter, index, x, y)
+	}
+	if isDungeonMapID(mapID) {
+		return t.dungeon[index]
+	}
+	return nil
+}
+
 func (t *modernIconTheme) sprite(index byte) *ebiten.Image { return t.sprites[index] }
 func (t *modernIconTheme) combatSprite(index int) *ebiten.Image {
 	return t.combat[byte(index)]
@@ -425,7 +444,8 @@ func (a *app) drawModernIconWorld(screen *ebiten.Image) {
 				if sprite := a.modernIcons.sprite(partyGlyph); sprite != nil {
 					x := (layout.MapOriginX + dx*gfx.EGATileWidth) * scale
 					y := (layout.MapOriginY + dy*gfx.EGATileHeight) * scale
-					if ground := a.modernIcons.tileAt(a.useWinter, tile, mx, my); ground != nil {
+					if ground := a.modernIcons.terrainAt(
+						a.mapID, a.useWinter, tile, mx, my); ground != nil {
 						ui.DrawImageAt(screen, ground, x, y)
 					} else if ground := a.tileset().Tile(tile); ground != nil {
 						ui.DrawImageScaled(screen, ground, x, y, scale)
@@ -435,7 +455,7 @@ func (a *app) drawModernIconWorld(screen *ebiten.Image) {
 				}
 				tile = partyGlyph
 			}
-			img := a.modernIcons.tileAt(a.useWinter, tile, mx, my)
+			img := a.modernIcons.terrainAt(a.mapID, a.useWinter, tile, mx, my)
 			if img == nil {
 				continue
 			}
@@ -456,9 +476,21 @@ func (a *app) drawModernIconWorld(screen *ebiten.Image) {
 }
 
 func (a *app) modernIconWorldVisible() bool {
-	return a.battle == nil && a.sea == nil && a.camp == nil && a.merchant == nil &&
+	return modernIconMapEnabled(a.mapID) &&
+		a.battle == nil && a.sea == nil && a.camp == nil && a.merchant == nil &&
 		a.pool == nil && a.dungeon == nil && a.plotGift == nil && a.confirm == nil &&
 		a.workshop == nil && !a.showRoster && !a.box.Active()
+}
+
+// modernIconMapEnabled 只接受真正可玩的世界或地城地圖。兩類地圖的 tile
+// index 共用數字、語意卻完全不同；terrainAt 會分流到世界 normal/winter
+// 與獨立 dungeonTiles namespace，空的地城索引安全保留原版底稿。
+func modernIconMapEnabled(mapID int) bool {
+	return world.IsWorldSubMap(mapID) || isDungeonMapID(mapID)
+}
+
+func isDungeonMapID(mapID int) bool {
+	return mapID >= 1 && mapID <= 5
 }
 
 // drawModernIconBattleActors 在最終畫布重畫已核准的戰鬥單位。舊素材把黑底
@@ -515,7 +547,8 @@ func (a *app) drawModernIconBattleActors(screen *ebiten.Image) {
 		tx, ty := camX+vx, camY+vy
 		if a.battleTerrain != nil && game.InArena(tx, ty) {
 			tile := a.battleTerrain.TileAt(tx, ty) & 0x7f
-			if ground := a.modernIcons.tileAt(a.useWinter, tile, tx, ty); ground != nil {
+			if ground := a.modernIcons.terrainAt(
+				a.mapID, a.useWinter, tile, tx, ty); ground != nil {
 				ui.DrawImageAt(screen, ground, x, y)
 			} else if ground := a.tileset().Tile(tile); ground != nil {
 				ui.DrawImageScaled(screen, ground, x, y, logicalScale*scale)

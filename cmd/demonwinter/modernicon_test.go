@@ -3,6 +3,8 @@ package main
 import (
 	"strings"
 	"testing"
+
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 func validModernIconManifest() modernIconManifest {
@@ -18,6 +20,7 @@ func validModernIconManifest() modernIconManifest {
 	m.TileVariants.Winter = map[string][]string{
 		"0x0e": {"winter-0e-a.png", "winter-0e-b.png"},
 	}
+	m.DungeonTiles = map[string]string{"0x01": "dungeon-01.png"}
 	m.Sprites = map[string]string{"0x1e": "party-north-a.png"}
 	m.BattleSprites.Combat = map[string]string{"0x14": "combat-14.png"}
 	m.BattleSprites.Monsters = map[string]string{"0xef": "monster-ef.png"}
@@ -52,6 +55,7 @@ func TestValidateModernIconManifest(t *testing.T) {
 		{"empty", func(m *modernIconManifest) {
 			m.Tiles.Normal, m.Tiles.Winter = nil, nil
 			m.TileVariants.Normal, m.TileVariants.Winter = nil, nil
+			m.DungeonTiles = nil
 			m.Sprites = nil
 			m.BattleSprites.Combat = nil
 			m.BattleSprites.Monsters = nil
@@ -67,6 +71,9 @@ func TestValidateModernIconManifest(t *testing.T) {
 		}},
 		{"sprite path", func(m *modernIconManifest) {
 			m.Sprites = map[string]string{"0x1e": "../party.png"}
+		}},
+		{"dungeon path", func(m *modernIconManifest) {
+			m.DungeonTiles = map[string]string{"0x01": "../dungeon.png"}
 		}},
 		{"combat index", func(m *modernIconManifest) {
 			m.BattleSprites.Combat = map[string]string{"44": "bad.png"}
@@ -124,6 +131,37 @@ func TestValidateModernIconManifest(t *testing.T) {
 				t.Fatal("無效 manifest 未被拒絕")
 			}
 		})
+	}
+}
+
+func TestModernIconMapEnabledOnlyForPlayableMaps(t *testing.T) {
+	for _, mapID := range []int{0, 6, 10, 78, 80} {
+		if modernIconMapEnabled(mapID) {
+			t.Errorf("map %d 是無效地圖，不得套用 Modern Icon terrain", mapID)
+		}
+	}
+	for _, mapID := range []int{1, 2, 3, 4, 5, 11, 34, 64} {
+		if !modernIconMapEnabled(mapID) {
+			t.Errorf("map %d 是可玩地圖，應允許 Modern Icon 命名空間", mapID)
+		}
+	}
+}
+
+func TestModernIconTerrainNamespacesDoNotCollide(t *testing.T) {
+	worldTile := &ebiten.Image{}
+	dungeonTile := &ebiten.Image{}
+	theme := &modernIconTheme{
+		normal:  map[byte]*ebiten.Image{1: worldTile},
+		dungeon: map[byte]*ebiten.Image{1: dungeonTile},
+	}
+	if got := theme.terrainAt(34, false, 1, 0, 0); got != worldTile {
+		t.Fatal("世界 map 34 沒有使用 normal namespace")
+	}
+	if got := theme.terrainAt(1, false, 1, 0, 0); got != dungeonTile {
+		t.Fatal("地城 MAP1 沒有使用 dungeonTiles namespace")
+	}
+	if got := theme.terrainAt(6, false, 1, 0, 0); got != nil {
+		t.Fatal("無效 map 6 不得回傳任何 terrain")
 	}
 }
 

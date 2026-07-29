@@ -119,8 +119,8 @@ func (f *Formation) AddMember(member int) int {
 //	G(-1, 1) H(0, 1) I(1, 1)
 //
 // 原版佈陣（`0xc615`–`0xc6c4`）就是拿這組位移去加一個中心點。
-// **本專案還沒有把它接到戰鬥擺位上** —— 原版的中心點是 64 寬緩衝裡的
-// (13, 13)，與本專案 9×9 的戰場網格還沒對上（見 `docs/re/34` §4）。
+// remake 由 DeployPartyAt 把這組位移換到 9×9 戰場中心，startBattle 依
+// 存檔陣型逐人上場；不在陣型裡的人刻意不上場（試煉室依賴此規則）。
 func FormationOffset(cell int) (dx, dy int) {
 	if cell < 0 || cell >= FormationCells {
 		return 0, 0

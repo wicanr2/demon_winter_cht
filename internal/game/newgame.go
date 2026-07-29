@@ -23,8 +23,8 @@ const (
 	NewGameDay = 8
 	// NewGameHour 是起始時辰（`0x14912`：`+0x9f = 5`）。
 	NewGameHour = 5
-	// NewGameTimeCounter 是起始步數計數（`0x1491c`：`+0xa0 = 1`）。
-	NewGameTimeCounter = 1
+	// NewGameHourStepCounter 是一小時內的起始步數（`0x1491c`：`+0xa0 = 1`）。
+	NewGameHourStepCounter = 1
 	// NewGameX／NewGameY 是起始座標（`0x148d6`／`0x148e0`）。
 	NewGameX = 28
 	NewGameY = 50
@@ -83,7 +83,7 @@ func ApplyNewGame(s *scenario.SaveGame, encounterCountdown int) {
 	s.Rations = NewGameRations
 	s.Day = NewGameDay
 	s.Hour = NewGameHour
-	s.TimeCounter = NewGameTimeCounter
+	s.HourStepCounter = NewGameHourStepCounter
 	s.PositionX = NewGameX
 	s.PositionY = NewGameY
 	s.MapID = NewGameMapID
