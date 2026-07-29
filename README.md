@@ -130,10 +130,14 @@ remake 不必像原版一樣每次走完整座地城才能重現一個 bug。`-s
 tools/go.sh run ./cmd/demonwinter -list-scenes
 tools/go.sh run ./cmd/demonwinter -scene armory -seed 11
 tools/go.sh run ./cmd/demonwinter -scene circle-light -glyphs -seed 11
+tools/go.sh run ./cmd/demonwinter -scene trap-pool -give-skill 27 -seed 7
+tools/go.sh run ./cmd/demonwinter -battle -battle-examine-fixture -give-skill 7,25 -seed 11
 ```
 
 清單涵蓋附魔工坊、恆世寶珠、惡魔水晶、兵器庫、活動牆、艾瑞戈爾、墓園、
-夜鐘、旅人的床、兩道密語與光之環。`-map/-x/-y/-event` 等底層旗標仍保留，
+夜鐘、旅人的床、兩道密語、光之環與固定朝向的水池陷阱。`-give-skill`／
+`-remove-skill` 可重播技能有無的分支；戰鬥檢視 fixture 只補目標記憶與一隻
+召喚物，不替玩家行動。`-map/-x/-y/-event` 等底層旗標仍保留，
 供逐 byte 的逆向邊界實驗使用；正常玩家不需要任何這些旗標。
 
 ### 發行包
@@ -250,6 +254,7 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 | [`docs/playtest/15-modern-ega-png-theme-loader.md`](docs/playtest/15-modern-ega-png-theme-loader.md) | Modern EGA 五張 PNG atlas 經 manifest 載入後，與記憶體調色預覽逐 byte 相同的端到端證據 |
 | [`docs/playtest/16-modern-ega-direct-downscale-rejection.md`](docs/playtest/16-modern-ega-direct-downscale-rejection.md) | B 方向稿強制縮入實機後的岸線接縫、重複噪音與角色比例反證，以及 M1 手工像素化裁決 |
 | [`docs/playtest/17-modern-ega-m1-b-bounded-runtime.md`](docs/playtest/17-modern-ega-m1-b-bounded-runtime.md) | 七個已證 terrain index 的真正 32×28 手工試片、正式 loader 實跑與隊伍兩步 anchor 證據 |
+| [`docs/playtest/18-remaining-skill-ui-sampling.md`](docs/playtest/18-remaining-skill-ui-sampling.md) | 解除陷阱、無技能 25%、觀室額度、戰術目標與召喚物 HP/SP 的實機閉合；並修掉檢視卡被紅色命令面板遮蔽 |
 | `docs/formats/` | 資料格式規格書（建置中） |
 | `docs/re/` | 反組譯筆記與 Ghidra 環境說明（建置中） |
 

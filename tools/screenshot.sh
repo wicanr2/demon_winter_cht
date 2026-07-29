@@ -71,6 +71,12 @@ if [ -n '$KEYS' ]; then
     DISPLAY=:99 xdotool windowactivate --sync \$WID 2>/dev/null || true
     sleep 1
     for k in \$(echo '$KEYS' | tr ',' ' '); do
+        # WAIT1／WAIT2… 是重播腳本的同步點。AI 回合、長文字換頁與
+        # 場景切換不一定能在固定 0.25 秒內完成，過早送下一鍵會被吃掉。
+        if [[ "\$k" =~ ^WAIT([0-9]+)$ ]]; then
+            sleep "\${BASH_REMATCH[1]}"
+            continue
+        fi
         DISPLAY=:99 xdotool key --window \$WID --clearmodifiers \$k
         sleep 0.25
     done

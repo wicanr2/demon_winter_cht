@@ -181,3 +181,21 @@ func (a *app) debugGiveSkill(spec string) error {
 	}
 	return nil
 }
+
+// debugRemoveSkill 從全隊移除指定技能。它與 debugGiveSkill 一樣只動記憶體，
+// 用來重播「隊伍沒有人具備某技能」的原版機率分支。
+func (a *app) debugRemoveSkill(spec string) error {
+	for _, f := range strings.Split(spec, ",") {
+		n, err := strconv.Atoi(strings.TrimSpace(f))
+		if err != nil {
+			return fmt.Errorf("技能 id %q 不是數字：%w", f, err)
+		}
+		if n < 0 || n >= gamedata.NumSkills {
+			return fmt.Errorf("技能 id %d 超出 0–%d", n, gamedata.NumSkills-1)
+		}
+		for i := range a.members {
+			a.members[i].Skills[n] = false
+		}
+	}
+	return nil
+}

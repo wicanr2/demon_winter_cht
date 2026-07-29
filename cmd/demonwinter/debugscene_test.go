@@ -3,6 +3,8 @@ package main
 import (
 	"strings"
 	"testing"
+
+	"github.com/wicanr2/demon_winter_cht/internal/game"
 )
 
 func TestFindDebugScene(t *testing.T) {
@@ -12,6 +14,17 @@ func TestFindDebugScene(t *testing.T) {
 	}
 	if got.MapID != 5 || got.X != 11 || got.Y != 48 {
 		t.Fatalf("circle-light = %+v", got)
+	}
+}
+
+func TestTrapPoolScenePinsFacingWithoutMoving(t *testing.T) {
+	got, err := findDebugScene("trap-pool")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.MapID != 1 || got.X != 12 || got.Y != 17 ||
+		!got.SetFacing || got.Facing != game.West {
+		t.Fatalf("trap-pool = %+v", got)
 	}
 }
 

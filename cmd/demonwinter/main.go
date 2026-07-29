@@ -1732,6 +1732,8 @@ func main() {
 		"偵錯：開場就把測試戰鬥的怪物全部打倒，用來驗勝利後的流程")
 	battleMonsters := flag.String("battle-monsters", "",
 		"測試戰鬥要放哪幾隻怪（MONSTER.DAT 索引，逗號分隔）。留空用預設那組")
+	battleExamineFixture := flag.Bool("battle-examine-fixture", false,
+		"偵錯：測試戰鬥加入一隻召喚物，並讓怪物記住目標（驗證 ? 面板）")
 	// 起始存檔裡每一件裝備的效果索引與強度都是 0，照原版規則在 Use 選單裡
 	// 一件都選不到 —— 沒有這個旗標就沒辦法驗「用道具真的會生效」。
 	// 英數的字模來源。`eten` 是預設，因為原版兩套 ASCII 字模都是粗筆畫的
@@ -1745,6 +1747,8 @@ func main() {
 	// headless 驗收時因此一步都走不到。
 	giveSkill := flag.String("give-skill", "",
 		"偵錯：教第一名隊員幾個技能（技能 id，逗號分隔）")
+	removeSkill := flag.String("remove-skill", "",
+		"偵錯：從全隊移除幾個技能（技能 id，逗號分隔）")
 	// 起始隊伍沒有人有信仰，敬拜那一項在 headless 驗收時走不到最後一步。
 	deityFlag := flag.Int("deity", 0,
 		"偵錯：給第一名隊員一個信仰（神祇 1–11）與 20% 祈禱成功率")
@@ -1877,6 +1881,9 @@ func main() {
 		save.MapID = byte(scene.MapID)
 		save.PositionX = byte(scene.X)
 		save.PositionY = byte(scene.Y)
+		if scene.SetFacing {
+			save.Facing = byte(scene.Facing)
+		}
 		log.Printf("偵錯場景 %s：地圖 %d (%d,%d) — %s",
 			*sceneFlag, scene.MapID, scene.X, scene.Y, scene.Note)
 	}
@@ -2193,6 +2200,11 @@ func main() {
 			log.Fatalf("-give-skill：%v", err)
 		}
 	}
+	if *removeSkill != "" {
+		if err := a.debugRemoveSkill(*removeSkill); err != nil {
+			log.Fatalf("-remove-skill：%v", err)
+		}
+	}
 	if *deityFlag != 0 {
 		if len(a.members) == 0 {
 			log.Fatalf("-deity：隊伍是空的")
@@ -2217,6 +2229,11 @@ func main() {
 			}
 		}
 		a.startBattle(picks)
+		if *battleExamineFixture {
+			if err := a.debugBattleExamineFixture(); err != nil {
+				log.Fatalf("-battle-examine-fixture：%v", err)
+			}
+		}
 		if *battleWin {
 			for _, u := range a.battle.Units() {
 				if u != nil && !u.IsPlayer {

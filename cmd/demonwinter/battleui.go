@@ -1506,6 +1506,13 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 	cur := a.battle.Current()
 	y := a.logTop() + layout.BoxPadY
 
+	// `?` 檢視會把整個右欄換成單位卡片；卡片自己的 C／B／Q 提示也在
+	// drawExamine 裡。若繼續畫紅色戰鬥選單，它會從 x=480 蓋住卡片右半，
+	// 召喚物的法力值與戰術目標正好都會被遮掉。
+	if a.examine != nil {
+		return
+	}
+
 	if a.battle.Outcome() != game.Ongoing {
 		a.font.Draw(dst, a.tr.UI("battle.over.keys", "戰鬥結束　空白鍵：繼續"), layout.BoxPadX, y)
 		return
