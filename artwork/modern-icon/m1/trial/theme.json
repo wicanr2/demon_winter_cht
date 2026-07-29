@@ -86,7 +86,17 @@
     }
   },
   "sprites": {
+    "0x18": "party-south-a.png",
+    "0x19": "party-south-b.png",
+    "0x1b": "party-east-a.png",
+    "0x1c": "party-east-b.png",
     "0x1e": "party-north-a.png",
-    "0x1f": "party-north-b.png"
+    "0x1f": "party-north-b.png",
+    "0x21": "party-west-a.png",
+    "0x22": "party-west-b.png",
+    "0x3f": "ship-north.png",
+    "0x40": "ship-east.png",
+    "0x41": "ship-south.png",
+    "0x42": "ship-west.png"
   }
 }

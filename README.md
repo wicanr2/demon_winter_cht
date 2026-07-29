@@ -118,8 +118,10 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 重畫並通過固定地圖正常／冬季實機抽樣（[`docs/playtest/27`](docs/playtest/27-modern-icon-world-sites.md)）。
 三處主線緋紅符印 `0x63` 也已完成季節配對與實機抽樣
 （[`docs/playtest/29`](docs/playtest/29-modern-icon-crimson-glyph-63.md)）。先前工作表所稱
-「碼頭地形」並不存在：碼頭是城鎮設施；待重畫的是海上的四向船隻
-`0x3f–0x42`、隊伍其餘方向及其他特殊索引。
+「碼頭地形」並不存在：碼頭是城鎮設施。海上的四向船隻 `0x3f–0x42` 與隊伍
+四向兩步現已完成並通過固定場景實跑
+（[`docs/playtest/30`](docs/playtest/30-modern-icon-party-and-sailing-directions.md)）；
+仍待其餘特殊索引及戰鬥呈現層。
 
 ### 玩家操作與安全存檔
 
@@ -141,8 +143,8 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 
 完整固定場景與裁決見
 [`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)。沙地／森林岸線、
-城鎮與緋紅符印已在後續批次完成；隊伍其餘方向、船隻及其他索引尚未重畫，
-因此仍不能稱為完整主題。
+城鎮、緋紅符印、隊伍四向與航海圖示已在後續批次完成；其他特殊索引與戰鬥
+呈現層尚未重畫，因此仍不能稱為完整主題。
 
 劇情會把神殿替換成的 `0x5b` 毀壞廢墟也已完成正常／冬季配對：
 

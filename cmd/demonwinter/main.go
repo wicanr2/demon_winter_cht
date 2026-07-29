@@ -1780,6 +1780,8 @@ func main() {
 	// 進得了 ebiten 的輸入佇列）。開一個旗標走同一條路，讓截圖驗收可重跑。
 	startBattle := flag.Bool("battle", false, "啟動後直接開一場測試戰鬥（偵錯）")
 	startSeaBattle := flag.Bool("sea-battle", false, "啟動後直接開一場海戰（偵錯）")
+	sailingFacing := flag.Int("sailing-facing", -1,
+		"偵錯：以航海狀態開場並指定面向 0北／1東／2南／3西；不新增船或改劇情")
 	// 用 xdotool 打完一場戰鬥不切實際（要走位、要相鄰才打得到），
 	// 但「打贏之後會怎樣」得看得到 —— 這個旗標直接把怪物血量清零。
 	battleWin := flag.Bool("battle-win", false,
@@ -2187,6 +2189,13 @@ func main() {
 		dataDir:        *dataDir,
 		itemloc:        itemloc,
 		dungeonItems:   dungeonItems,
+	}
+	if *sailingFacing >= 0 {
+		if *sailingFacing > 3 {
+			log.Fatalf("-sailing-facing 必須是 0–3，收到 %d", *sailingFacing)
+		}
+		a.party.SetSailing(true)
+		a.party.Turn(game.Facing(*sailingFacing))
 	}
 
 	// 船停在海上，而海面在可通行性表裡是不可通行的 —— 沒有這一條，

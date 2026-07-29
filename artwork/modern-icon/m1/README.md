@@ -21,6 +21,21 @@ F8 管線；它不是平原索引的正式美術。實際索引盤點完成後�
 本批可在 `demonwinter-go` 容器內以 `rebuild-coasts.sh` 重建；腳本同時執行
 曲線化岸線、`0x62` 母稿匯出與 8 像素邊緣錨定，避免只靠文件記住手動步驟。
 
+世界隊伍四向兩步由 `rebuild-party.sh` 重建：南 `0x18/19`、東 `0x1b/1c`、
+北 `0x1e/1f`、西 `0x21/22`。西向是東向的精確鏡射，四向都維持透明 overlay，
+先畫腳下真實地形再疊角色，不把黑底寫回地圖格。
+同一腳本亦由北向船隻母圖精確旋轉出航海四向：北 `0x3f`、東 `0x40`、
+南 `0x41`、西 `0x42`；船沒有兩步相位。
+
+透明母圖使用共用 `remove_chroma_key.py`，所需 Pillow 已固定在本目錄 Dockerfile：
+
+```bash
+docker build --memory 1g -t demonwinter-art:modern-icon artwork/modern-icon
+docker run --rm --network none --memory 512m --cpus 1 --pids-limit 128 \
+  -u "$(id -u):$(id -g)" -v "$PWD:/work" -w /work \
+  demonwinter-art:modern-icon bash artwork/modern-icon/m1/rebuild-party.sh
+```
+
 後續同一管線加入兩組獨立地表：
 
 - `0x43–0x4a`：金赭沙地海岸，冬季仍保留風蝕沙紋；
