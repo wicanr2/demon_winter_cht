@@ -24,37 +24,37 @@ func TestLoadMonsterTable_RealFile(t *testing.T) {
 	wantByIndex := map[int]Monster{
 		26: {
 			Name: "Kobold", Speed: 7, Strength: 7, Skill: 7, HP: 7,
-			AttackType: 2, SpriteIndex: 3, NumAttacks: 0, Experience: 16,
+			AttackType: 2, SpriteIndex: 3, ArmorPoints: 0, Experience: 16,
 			Level: 1, SP: 0, Special: 0,
 		},
 		85: {
 			Name: "Uffuspgot", Speed: 11, Strength: 10, Skill: 10, HP: 22,
-			AttackType: 4, SpriteIndex: 3, NumAttacks: 2, Experience: 500,
+			AttackType: 4, SpriteIndex: 3, ArmorPoints: 2, Experience: 500,
 			Level: 6, SP: 13, Special: 0,
 		},
 		67: {
 			Name: "Cave bear", Speed: 10, Strength: 26, Skill: 11, HP: 60,
-			AttackType: 13, SpriteIndex: 7, NumAttacks: 4, Experience: 215,
+			AttackType: 13, SpriteIndex: 7, ArmorPoints: 4, Experience: 215,
 			Level: 7, SP: 0, Special: 0,
 		},
 		2: {
 			Name: "Orc", Speed: 6, Strength: 9, Skill: 7, HP: 15,
-			AttackType: 2, SpriteIndex: 17, NumAttacks: 2, Experience: 26,
+			AttackType: 2, SpriteIndex: 17, ArmorPoints: 2, Experience: 26,
 			Level: 2, SP: 0, Special: 0,
 		},
 		91: {
 			Name: "Xeres", Speed: 15, Strength: 27, Skill: 18, HP: 66,
-			AttackType: 0, SpriteIndex: 28, NumAttacks: 6, Experience: 3500,
+			AttackType: 0, SpriteIndex: 28, ArmorPoints: 6, Experience: 3500,
 			Level: 10, SP: 56, Special: 1,
 		},
 		97: {
 			Name: "Eregore", Speed: 17, Strength: 20, Skill: 20, HP: 200,
-			AttackType: 7, SpriteIndex: 2, NumAttacks: 5, Experience: 5000,
+			AttackType: 7, SpriteIndex: 2, ArmorPoints: 5, Experience: 5000,
 			Level: 8, SP: 200, Special: 1,
 		},
 		98: {
 			Name: "Guardian", Speed: 14, Strength: 50, Skill: 15, HP: 75,
-			AttackType: 0, SpriteIndex: 4, NumAttacks: 15, Experience: 10000,
+			AttackType: 0, SpriteIndex: 4, ArmorPoints: 15, Experience: 10000,
 			Level: 10, SP: 0, Special: 7,
 		},
 	}

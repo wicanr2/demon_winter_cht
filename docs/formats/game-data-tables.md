@@ -382,7 +382,7 @@ ASCII 姓名或道具名字串），也**不是** `MONSTER.DAT`/`ITEMS.DAT` 那�
 | `PARTY.DAT` | `0xb6`–`0xc3`（14 bytes）| 本存檔全零 | 動態 diff |
 | `PARTY.DAT` | 隊伍位置與朝向 | 陣型格（trailer `0x00-0x08`）已驗證，見 `docs/re/34`；朝向在 trailer `+0xa4` | — |
 | `PARTY.DAT` | 遊戲內時間（時/日/月）| 一度懷疑是 trailer `0x1a-0x1c`，已被 `PARTY.BAK` 交叉驗證推翻 | DOSBox 內讓遊戲時間流逝後 diff，鎖定規律遞增的 byte。**這同時是「一天幾小時（26 vs 38）」的驗證路徑** |
-| `MONSTER.DAT` | 只剩 `special`（第 11 欄）| **11 個欄位已有 10 個定案**（`docs/re/57`）：與召喚生物表同構，12 隻同名生物有 96 個數值零誤差，欄位語意由召喚側已驗證的搬移目標帶過來。`num_attacks` → 護甲、`level` 用途兩處原本的假設在那一輪被推翻 | `special` 欄：龍系 `8,9,10` 疑似吐息屬性索引，元素系 `1,2,3,7,5` 對不上五大符文順序。召喚表同欄只有冰元素不同（4 vs 7），值得從那個差異切入 |
+| `MONSTER.DAT` | **11 欄全部定案** | 與召喚生物表同構，12 隻同名生物有 96 個數值零誤差；第 7 欄是護甲、第 9 欄是 level。第 11 欄 `special` 已由 `docs/re/23` 的 AI／吐息與免疫路徑證明是種族／元素類型（8–11 龍、7 冰系） | 已完成；噴吐的實際繪圖 tile 6／7／8 另見 `docs/re/106` |
 | `ITEMS.DAT` | `f1`–`f6` 六個欄位 | 30 件商品的欄位已全部 dump（3. 節）。武器全是 `1 3 0 10 8 9`、護甲全是 `0 3 12 7 7 7`，看得出是「類別 + 可帶的能力類別」，逐欄語意未定。**`f0`（價格）已確認**，是市集定價的基礎值 | 比對手冊附錄 C（魔法道具）列出的「各類道具可帶哪些能力」與 `f4`–`f6` 的值 |
 | `TEMPLAT*.DAT` | 整體格式（疑似圖像）| 只完成用途定位，byte 級格式未解 | 比照已知 shape 檔格式，或 DOSBox 進到對應藏寶室截圖比對 |
 
@@ -397,6 +397,6 @@ ASCII 姓名或道具名字串），也**不是** `MONSTER.DAT`/`ITEMS.DAT` 那�
 2. **反組譯 `DEMON.EXE` 讀取 `PARTY.DAT`/`MONSTER.DAT`/`ITEMS.DAT` 的程式碼**：直接找到讀取這些檔案
    欄位的組合語言片段，可以不靠猜測直接讀出欄位順序與長度，尤其能解決 `MONSTER.DAT` 的
    `special` 與 `ITEMS.DAT` 的 category/weapon_slot 這幾個「規律合理但語意不確定」
-   的欄位（level 與 num_attacks 已於 `docs/re/57` 解決）。`tools/ghidra_headless.sh` 已經在專案裡，可以直接用。
+   的欄位（level 與 armour 已於 `docs/re/57` 解決，special 已於 `docs/re/23` 解決）。`tools/ghidra_headless.sh` 已經在專案裡，可以直接用。
 3. **`TEMPLAT*.DAT` 的圖像格式解碼**：如果確認是點陣圖，跟 `MONSTER.SHP`/`MONSTER.SHE` 這類已知
    「shape 檔」格式做比對，可能可以共用同一套解碼邏輯。

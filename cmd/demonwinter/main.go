@@ -1360,7 +1360,7 @@ func (a *app) startBattle(ids []int) {
 			X: x, Y: y, Facing: int(game.East),
 			Speed: speed, Strength: m.Strength, Skill: m.Skill,
 			Level: m.Level, Intellect: m.Level, Experience: m.Experience,
-			HP: hp, MaxHP: hp,
+			HP: hp, MaxHP: hp, Armor: m.ArmorPoints,
 			WeaponIndex:   m.AttackType,
 			SpriteIndex:   m.SpriteIndex,
 			RaceOrElement: m.Special,

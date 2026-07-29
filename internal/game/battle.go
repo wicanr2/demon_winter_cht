@@ -49,6 +49,10 @@ type Battle struct {
 
 	// Terrain 是這場戰鬥的地形。nil 代表不做地形判定（單元測試常這樣用）。
 	Terrain *BattleTerrain
+
+	// lastBreathTile 是上一口吐息交給原版圖塊繪製器的索引（6–8）。
+	// 呈現層只讀它來重播逐格動畫，不參與傷害判定。
+	lastBreathTile int
 }
 
 // NewBattle 建立一場戰鬥。units 依槽位放入，空槽傳 nil。
@@ -79,6 +83,9 @@ func (b *Battle) Unit(slot int) *Unit {
 
 // Round 回傳目前回合數（第一回合是 1）。
 func (b *Battle) Round() int { return b.round }
+
+// LastBreathTile 回傳上一口吐息使用的 DEMON/WINTER 圖塊索引。
+func (b *Battle) LastBreathTile() int { return b.lastBreathTile }
 
 // Units 回傳全部非空槽的單位。
 func (b *Battle) Units() []*Unit {

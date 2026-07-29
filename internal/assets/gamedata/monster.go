@@ -39,9 +39,9 @@ type Monster struct {
 	// 種系怪物數值完全一致（4 種熊皆為 7、7 種龍皆為 27、6 種蛇皆為 12 等），
 	// 只有「圖像索引」能合理解釋這種按外觀分組的規律。
 	SpriteIndex int
-	// NumAttacks 每回合攻擊次數。語意未確認：戰士序列此欄位隨等級遞增後
-	// 趨緩（1,2,3,4,4,4,5,6,6），符合直覺但沒有戰鬥公式佐證。
-	NumAttacks int
+	// ArmorPoints 是護甲點數。召喚同構表把本欄搬進 unit+0x0a；命中公式
+	// 會扣除此值，檢視畫面也直接以 "Armor: %3d pts." 印出。
+	ArmorPoints int
 	// Experience 擊殺經驗值。已驗證：戰士序列單調遞增，終盤劇情怪物
 	// （Xeres/Jesric/Eregore/Guardian）明顯高出一般怪物一個量級，且
 	// DEMON.INT 有對應的戰鬥結算字串（"Exp per chr: %ld"）佐證機制存在。
@@ -109,7 +109,7 @@ func LoadMonsterTable(path string) (*MonsterTable, error) {
 		nums := make([]int, 0, monsterTokensPerRecord-1)
 		fieldLabels := []string{
 			"speed", "strength", "skill", "hp", "attack_type", "sprite_index",
-			"num_attacks", "experience", "level", "sp", "special",
+			"armor_points", "experience", "level", "sp", "special",
 		}
 		for j, label := range fieldLabels {
 			v, err := parseASCIIInt(fmt.Sprintf("%s(monster #%d %s)", label, i, name), chunk[1+j])
@@ -127,7 +127,7 @@ func LoadMonsterTable(path string) (*MonsterTable, error) {
 			HP:          nums[3],
 			AttackType:  nums[4],
 			SpriteIndex: nums[5],
-			NumAttacks:  nums[6],
+			ArmorPoints: nums[6],
 			Experience:  nums[7],
 			Level:       nums[8],
 			SP:          nums[9],

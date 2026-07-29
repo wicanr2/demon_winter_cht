@@ -899,7 +899,7 @@ func (a *app) monsterBreathe(u *game.Unit) bool {
 	if len(hits) == 0 {
 		return false
 	}
-	a.breath = &breathAnim{cells: cone}
+	a.breath = &breathAnim{cells: cone, tile: a.battle.LastBreathTile()}
 	a.speaker.Play(pcspeaker.EffectDeath)
 	a.logf(a.tr.UI("battle.msg.breath", "%s 噴出吐息（波及 %d 人）"), u.Name, len(hits))
 	for _, h := range hits {
@@ -1052,17 +1052,12 @@ func (a *app) reportAttack(attacker, target *game.Unit, res game.AttackResult) {
 // aoeColor 是範圍法術的選取框顏色。
 var aoeColor = color.RGBA{0xff, 0x55, 0x55, 0xff}
 
-// breathColor 是噴吐動畫的填色。
-//
-// 原版是拿法術記錄的 school（`ds:0x4e2c`）去查一個圖塊逐格畫
-// （`138d:1a59`），那個圖塊的來源還沒解；本專案先用單色方塊，
-// 形狀與順序照原版（`game.BreathCone`）。
-var breathColor = color.RGBA{0xff, 0xaa, 0x22, 0xff}
-
 // breathAnim 是噴吐動畫的狀態：整個錐形逐格點亮，亮完就消失。
 type breathAnim struct {
 	cells []game.BreathCell
 	frame int
+	// tile 是原版 `ds:0x4e2c` 傳給圖塊繪製器的 6／7／8。
+	tile int
 }
 
 // breathFramesPerCell 是每一格停留幾個 frame。
@@ -1145,10 +1140,14 @@ func (a *app) drawBattlefield(dst *ebiten.Image) {
 			if i > a.breath.shown() {
 				break
 			}
-			ui.FillRect(dst,
-				layout.MapOriginX+(c.X-camX)*cellW,
-				layout.MapOriginY+(c.Y-camY)*cellH,
-				cellW, cellH, breathColor)
+			x := layout.MapOriginX + (c.X-camX)*cellW
+			y := layout.MapOriginY + (c.Y-camY)*cellH
+			if a.breath.tile < 0 || a.breath.tile > 255 {
+				continue
+			}
+			if img := ts.Tile(byte(a.breath.tile)); img != nil {
+				ui.DrawImageScaled(dst, img, x, y, scale)
+			}
 		}
 	}
 

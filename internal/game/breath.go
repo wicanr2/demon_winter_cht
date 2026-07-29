@@ -171,6 +171,7 @@ func (b *Battle) BreathPlan(caster *Unit) BreathPlan {
 //
 // 回傳被打到的單位與各自受的傷害；放棄時回 nil。倒下的單位已經結算過。
 func (b *Battle) Breathe(caster *Unit) []BreathHit {
+	b.lastBreathTile = -1
 	if caster == nil {
 		return nil
 	}
@@ -179,6 +180,10 @@ func (b *Battle) Breathe(caster *Unit) []BreathHit {
 		return nil
 	}
 	element, hasElement := BreathElement(b.rng, caster.RaceOrElement)
+	if hasElement {
+		// 原版 `138d:1a59` 把這個 6／7／8 直接傳給共用圖塊繪製器。
+		b.lastBreathTile = element
+	}
 
 	var out []BreathHit
 	for _, u := range plan.Targets {

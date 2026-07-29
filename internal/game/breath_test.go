@@ -204,6 +204,16 @@ func TestBreathElement(t *testing.T) {
 	}
 }
 
+func TestBreatheRemembersOriginalEffectTile(t *testing.T) {
+	b := breathBattle(t)
+	dragon := b.Unit(0)
+	dragon.RaceOrElement = 8 // fire dragon → tile 6
+	_ = b.Breathe(dragon)
+	if got := b.LastBreathTile(); got != 6 {
+		t.Fatalf("fire breath tile = %d, want 6", got)
+	}
+}
+
 // 否決：一個敵人都沒打到，或己方命中 × 2 > 敵方命中。
 func TestBreathPlan_Veto(t *testing.T) {
 	for _, c := range []struct {
