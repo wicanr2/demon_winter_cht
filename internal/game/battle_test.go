@@ -352,6 +352,76 @@ func TestBattle_IllusionZeroesSP(t *testing.T) {
 	}
 }
 
+func TestBattle_SummonWaitsUntilNextRound(t *testing.T) {
+	tb := loadTables(t)
+	e, err := tb.Summon(0)
+	if err != nil {
+		t.Fatalf("Summon(0): %v", err)
+	}
+	player := mkUnit(PlayerSlotStart, true, 10, 10)
+	b := NewBattle(rng.NewWithSeed(1), []*Unit{player})
+	b.BeginRound() // 行動佇列已在召喚前拍好
+
+	summoned := b.PlaceSummon(SummonSlotStart, e, KindSummon, 3, 3)
+	summoned.Name = "召喚物"
+	summoned.Speed = 100
+
+	if got := b.Current(); got != player {
+		t.Fatalf("召喚當回合仍應輪到原佇列的隊員，得到 %v", got)
+	}
+	b.EndTurn()
+	if got := b.Current(); got != nil {
+		t.Fatalf("召喚物不應被追加到當回合佇列，得到 %v", got)
+	}
+
+	b.BeginRound()
+	if got := b.Current(); got != summoned {
+		t.Fatalf("下一回合才應依速度輪到召喚物，得到 %v", got)
+	}
+}
+
+func TestBattle_NewIllusionCanVanishBeforeFirstAction(t *testing.T) {
+	tb := loadTables(t)
+	e, err := tb.Summon(0)
+	if err != nil {
+		t.Fatalf("Summon(0): %v", err)
+	}
+
+	// PlaceSummon 先用一次 Roll(4) 決定面向；找第二次 Roll(10)=2 的種子，
+	// 釘住「建立當回合不進佇列，下一回合第一次行動前就可能消失」。
+	var seed uint32
+	for s := uint32(1); s < 100000; s++ {
+		r := rng.NewWithSeed(s)
+		r.Roll(4)
+		if r.Roll(10) == 2 {
+			seed = s
+			break
+		}
+	}
+	if seed == 0 {
+		t.Fatal("找不到召喚面向後 Roll(10)=2 的測試種子")
+	}
+
+	player := mkUnit(PlayerSlotStart, true, 10, 10)
+	b := NewBattle(rng.NewWithSeed(seed), []*Unit{player})
+	b.BeginRound()
+	illusion := b.PlaceSummon(SummonSlotStart, e, KindIllusion, 3, 3)
+	illusion.Name = "幻影"
+	illusion.Speed = 100
+
+	if got := b.Current(); got != player {
+		t.Fatalf("建立當回合應維持原佇列，得到 %v", got)
+	}
+	b.EndTurn()
+	b.BeginRound()
+	if got := b.Current(); got != nil {
+		t.Fatalf("幻象第一次正式行動前應先消失，得到 %v", got)
+	}
+	if got := b.TakeVanished(); got != illusion {
+		t.Fatalf("消失事件 = %v，預期新建幻象 %v", got, illusion)
+	}
+}
+
 // 召喚成本 = 附魔基數 ×4、幻術 ×2。
 func TestSummonCost(t *testing.T) {
 	tb := loadTables(t)
