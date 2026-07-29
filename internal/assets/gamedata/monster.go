@@ -27,9 +27,8 @@ type Monster struct {
 	Strength int
 	// Skill 技巧。已驗證：量級與 PC 屬性一致。
 	Skill int
-	// HP 生命值。語意未確認：「戰士」序列（Lvl 1 → Lvl 15 fighter）此欄位
-	// 單調遞增（8,14,18,...,55），量級合理，但沒有直接證據排除這其實是
-	// 「耐力」而非直接儲存的生命值上限。
+	// HP 生命值。DS:0A44 間接映射把本欄搬到 unit+0x06（當前 HP）；
+	// 戰士序列也隨等級單調遞增（docs/re/111）。
 	HP int
 	// AttackType 攻擊／武器類型索引，負值＝帶毒。已驗證：對照 DEMON.INT
 	// 的武器類型清單（索引 0–13，13=Bite），所有蛇類怪物此欄位全部是
@@ -46,14 +45,13 @@ type Monster struct {
 	// （Xeres/Jesric/Eregore/Guardian）明顯高出一般怪物一個量級，且
 	// DEMON.INT 有對應的戰鬥結算字串（"Exp per chr: %ld"）佐證機制存在。
 	Experience int
-	// Level 怪物等級／難度分級（1–10）。語意未確認：不等於名稱裡的數字
-	// （例如 "Lvl 6 fighter" 此欄位是 5），推測是與名稱脫鉤的另一套內部
-	// 難度分級。
+	// Level 怪物等級／難度分級（1–10）。DS:0A44 映射直接搬到 unit+0x1a，
+	// 勝利結算把它當戰利金幣公式的指數（docs/re/111）。
 	//
 	// **「遭遇表分級」這個猜測可以排除了**：隨機遭遇的等級判定用的是
 	// 遭遇群組表自己的欄位（`FILES.DAT 0x28E`，見 `docs/re/24`），
-	// 從頭到尾沒有讀 `MONSTER.DAT` 的這一格。剩下的猜測（法術抗性？
-	// 經驗值分配？）仍未定。
+	// 從頭到尾沒有讀 `MONSTER.DAT` 的這一格；它是戰鬥／獎勵等級，不是
+	// 遭遇群組門檻。
 	Level int
 	// SP 法力值上限。已驗證：「法師」序列（Lvl 1 mage → Lvl 16 wizard）
 	// 單調遞增，非法師系怪物大多是 0，與 PARTY.DAT 的法力值屬性語意一致。

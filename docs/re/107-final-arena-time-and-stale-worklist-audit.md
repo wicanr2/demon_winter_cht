@@ -80,8 +80,8 @@ remake 已用 `EXITS.DAT` 的第六 byte 更新 `MerchantBase`，這一格應結
 
 - C1：價格量級與戰鬥金幣的原版動態 oracle；remake 公式已有靜態強證據，
   但仍值得做相鄰邊界注入。
-- C5：怪物 level/EXP 的「搬入戰鬥單位」那兩條確切 MOV 尚未標名；讀取端、
-  record 同構與 runtime 行為已有交叉證據。
+- ~~C5~~：後續找到 DS:`0A44` 的 11-word 間接搬移表，field 7／8
+  確切寫到 `unit+24h/+1Ah`，已結案（`docs/re/111`）。
 - trailer `+09h`：位於九格 formation 與 32-bit gold 之間，兩份原版存檔皆 0，
   沒有 consumer；remake 原樣 round-trip，不賦予玩法。
 - ~~C13~~：**已由 `sub_11CBF` 結案**。`11h`–`14h` 分別修改
