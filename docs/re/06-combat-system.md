@@ -65,8 +65,9 @@ do {                                   // 每次迭代 = 一個「回合」
         if (!alive_check(unit)) continue;
         move_camera_toward(unit);              // 鏡頭/游標移動到該單位
 
-        if (unit.attack_type in {3, 0xd} && RNG(10) < 3) {   // 30% 機率
-            result = breath_weapon_path(...);    // 特殊能力(吐息類),見 §1.3
+        if (unit.side in {3, 0xd} && RNG(10) < 3) { // Roll 是 1..10，故 20%
+            print(unit.name + " dies!");
+            remove_unit(unit);                    // 幻象在行動前消失，見 §1.3
         } else {
             if (unit.attack_type == 2 && RNG(5) == 2) unit.attack_type = 0xb;  // 狀態轉換(未查明)
             if (unit.attack_type < 0xb)
@@ -112,13 +113,13 @@ do {                                   // 每次迭代 = 一個「回合」
   ~~case 0xa~~ 是舊的錯誤編號,見 §5 修正)、其他選單動作
   (施法/用道具/逃跑等,見 §5)。行動選完後扣點數、回到主迴圈換下一個單位。
 
-### 1.3 怪物特殊能力(吐息)觸發
+### 1.3 幻象在行動前消失
 
-`breathes!`(`31f0:0717`)在 `FUN_138d_17b8`(`138d:17b8`,1244 bytes,即命中/傷害
-函式旁邊那個處理「特殊傷害結算」的函式)內被引用。主迴圈用
-`unit.attack_type ∈ {3, 0xd}` 且 `RNG(10) < 3`(30% 機率)進這條分支
-(**假設**:`attack_type` 這兩個值在此處被借用為「有吐息能力」的旗標,不是字面上
-Shortsword/Bite 的意思,見 §6 對 `attack_type` 欄位角色的說明)。
+> **2026-07-29 更正（`docs/re/115`）**：`+0x20`／`DS:4ED4` 是陣營，不是
+> `attack_type`；值 3／13 分別是敵我幻象。`sub_1E7FB(10)` 回傳 1–10，
+> 所以 `< 3` 是 **20%**，不是 30%。成功分支格式化 `31f0:06c2 "%s dies!"`
+> 並呼叫死亡／移除常式。吐息是另一條依種族／元素值 8–11 分派的路徑，
+> 詳見 `docs/re/23` 與 `docs/re/106`。
 
 ### 1.4 勝負判定
 

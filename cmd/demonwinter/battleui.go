@@ -112,6 +112,10 @@ func (a *app) updateBattle() error {
 	}
 
 	cur := a.battle.Current()
+	if vanished := a.battle.TakeVanished(); vanished != nil {
+		a.logf(a.tr.UI("battle.msg.illusiondies", "%s 消散了"), vanished.Name)
+		return nil
+	}
 	if cur == nil {
 		a.battle.BeginRound()
 		a.logf(a.tr.UI("battle.log.round", "── 第 %d 回合 ──"), a.battle.Round())

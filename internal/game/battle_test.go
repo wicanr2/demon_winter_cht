@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/wicanr2/demon_winter_cht/internal/rng"
@@ -58,6 +59,82 @@ func TestBattle_RoundAdvances(t *testing.T) {
 	b.BeginRound()
 	if b.Round() != 2 {
 		t.Errorf("第二回合應為 2，得到 %d", b.Round())
+	}
+	if got := b.Points(); got != 10 {
+		t.Errorf("新回合應重新取得 10 點行動點，得到 %d", got)
+	}
+}
+
+func TestBattle_IllusionVanishesOnRollBelowThree(t *testing.T) {
+	for _, tc := range []struct {
+		name     string
+		wantRoll int
+		vanishes bool
+	}{
+		{name: "roll2", wantRoll: 2, vanishes: true},
+		{name: "roll3", wantRoll: 3, vanishes: false},
+	} {
+		for _, side := range []int{SideEnemyIllusion, SideIllusion} {
+			t.Run(fmt.Sprintf("%s/side%d", tc.name, side), func(t *testing.T) {
+				var seed uint32
+				for s := uint32(1); s < 100000; s++ {
+					if rng.NewWithSeed(s).Roll(10) == tc.wantRoll {
+						seed = s
+						break
+					}
+				}
+				if seed == 0 {
+					t.Fatalf("找不到 Roll(10)=%d 的測試種子", tc.wantRoll)
+				}
+
+				illusion := mkUnit(12, side >= 10, 10, 10)
+				illusion.Name = "幻影"
+				illusion.Side = side
+				b := NewBattle(rng.NewWithSeed(seed), []*Unit{illusion})
+				b.BeginRound()
+
+				got := b.Current()
+				event := b.TakeVanished()
+				if tc.vanishes {
+					if got != nil || event != illusion || illusion.Alive() {
+						t.Fatalf("Roll(10)=%d 應在行動前消失：current=%v event=%v alive=%v",
+							tc.wantRoll, got, event, illusion.Alive())
+					}
+					if again := b.TakeVanished(); again != nil {
+						t.Errorf("同一筆消失事件被回報兩次：%v", again)
+					}
+					return
+				}
+				if got != illusion || event != nil || !illusion.Alive() {
+					t.Fatalf("Roll(10)=%d 不應消失：current=%v event=%v alive=%v",
+						tc.wantRoll, got, event, illusion.Alive())
+				}
+				// 同一個行動可被 UI 查詢很多幀，只能擲一次。
+				state := b.rng.State()
+				if again := b.Current(); again != illusion || b.rng.State() != state {
+					t.Errorf("同一行動重查 Current 不得重擲：current=%v state=%d→%d",
+						again, state, b.rng.State())
+				}
+			})
+		}
+	}
+}
+
+func TestBattle_OnlyIllusionsUseVanishRoll(t *testing.T) {
+	for _, side := range []int{SideMonster, SideCharmedPlayer, SideEnemySummon,
+		SidePlayer, SideCharmedMonster, SideSummon} {
+		u := mkUnit(12, side >= 10, 10, 10)
+		u.Side = side
+		r := rng.NewWithSeed(1)
+		before := r.State()
+		b := NewBattle(r, []*Unit{u})
+		b.BeginRound()
+		if got := b.Current(); got != u {
+			t.Fatalf("side %d 不應消失，Current=%v", side, got)
+		}
+		if after := r.State(); after != before {
+			t.Errorf("side %d 不應消耗幻象判定亂數：%d→%d", side, before, after)
+		}
 	}
 }
 

@@ -1184,6 +1184,10 @@ U 使用道具
 :: zh
 %s 的汲取失敗
 
+## battle.msg.illusiondies
+:: zh
+%s 消散了
+
 ## battle.msg.miss
 :: zh
 %s 落空

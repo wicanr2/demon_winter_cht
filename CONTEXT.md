@@ -73,7 +73,7 @@
 | M6 地城玩法 | ✅ **本週補齊**。陷阱（七種傷害＋`L` 偵測／解除）、地城道具六個指令的五個（`T` 拾取／`D` 丟棄／`E` 檢視／`M` 推開／`U` 使用，只剩 `I` 探查）、靈視兩支（`V` 觀室／`X` 鑑物）、治療水池、戰鬥 `?` 檢視、地點劇情 6 格（壓牆走廊、鐵匠鋪、兩道密語、艾瑞戈爾）。**兩條解謎鏈實跑驗過**：`Iron key`＋`Cage`、`Mallet`＋`Man in glass`。連帶鋪好 `MAPn.MAP` 的寫回路徑（第三份「就地改寫」的存檔資料），順手修好「密語門解完換張圖就白解」的舊 bug |
 | M5 城鎮與經濟 | ✅ **八種設施全部可實際操作**：市集（議價／買／賣）、治療所（四項服務）、旅店（休息）、酒館（買糧）、神殿（捐獻／祈禱／改宗）、公會（免費升級）、碼頭（買船／修船）、學院（教技能）。價格體系完整；設施旗標 `+0x1ee`–`+0x1f6` 已解，畫面依實際設施過濾；**自動進城已完成**（tile `0x2e`/`0x64` → 25 筆座標表，25/25 對得上）|
 | 建角擲點分佈（**已訂正**）| ✅ **公式是 `max(3, 2d6 + 種族修正 + 1)`，人類再 +2**（`DEMON.INT` 0x13bba）。原本推定的 `Roll(15)` 是錯的 —— 期望值剛好也是 8，所以「該種族平均」那一欄一直對，錯的是分布。**三次重擲機制也在同一段找到**（0x13b9d／0x13d60），初擲 + 兩次重擲、可一次勾多項、沒有「低於 6」門檻，三個原本靠手冊裁決的結論全部成立 |
-| 中文化 | ✅ **資料字串 500/500（100%）**。顯示層完成、倚天 16×15 點陣字（Big5 分區索引已驗證）、中英混排排版格與標點禁則、畫布 640×400、全介面中文。翻譯目錄現況：事件敘述 117（`data1`–`data5`）、法術 43、道具 30、怪物 99、城鎮 25、月份 22、技能 32、劇情 20、**地城道具 112** —— 共 **500 條資料字串**，另加 **748 條介面文案**（2026-07-29 `dwstrings uicheck` 實數，語意化 key）。品質閘全綠。<br>地城道具那一批：`FILES.DTT` 164–463 共 300 條，**真正可翻的是 112 條** ——`+3` 座標、`+4` 查表鍵、`*` 佔位、`T`/`P`/`S` 參數都不能動（判準見 `cmd/dwstrings/dungeonitems.go`）。<br>**D1 已完成**：正式介面文案全走目錄；18 條開發者 `-scene` 描述／清單格式由檢查器明確列出，`dwstrings uicheck` 持續守門。<br>`DEMON.INT` 的 800 條 UI 文案只抽了清單（重製版不讀它，是參考不是資源）|
+| 中文化 | ✅ **資料字串 500/500（100%）**。顯示層完成、倚天 16×15 點陣字（Big5 分區索引已驗證）、中英混排排版格與標點禁則、畫布 640×400、全介面中文。翻譯目錄現況：事件敘述 117（`data1`–`data5`）、法術 43、道具 30、怪物 99、城鎮 25、月份 22、技能 32、劇情 20、**地城道具 112** —— 共 **500 條資料字串**，另加 **749 條介面文案**（2026-07-29 `dwstrings uicheck` 實數，語意化 key）。品質閘全綠。<br>地城道具那一批：`FILES.DTT` 164–463 共 300 條，**真正可翻的是 112 條** ——`+3` 座標、`+4` 查表鍵、`*` 佔位、`T`/`P`/`S` 參數都不能動（判準見 `cmd/dwstrings/dungeonitems.go`）。<br>**D1 已完成**：正式介面文案全走目錄；18 條開發者 `-scene` 描述／清單格式由檢查器明確列出，`dwstrings uicheck` 持續守門。<br>`DEMON.INT` 的 800 條 UI 文案只抽了清單（重製版不讀它，是參考不是資源）|
 
 程式碼結構：`internal/assets`（純解碼，回傳 `image.RGBA`，不認識 Ebiten）→
 `internal/game`（規則層，不認識畫面）→ `internal/ui`（Ebiten 呈現層）→ `cmd/demonwinter`。
@@ -3087,6 +3087,7 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`34-formation-grid.md`](docs/re/34-formation-grid.md) | **3×3 陣型格**（trailer `+0x00`–`+0x08`）：四個呼叫端、Reorder 是整張重填、佈陣的座標換算（讀出來但未接）|
 | [`112-party-trailer-reserved-09.md`](docs/re/112-party-trailer-reserved-09.md) | **C9 結案**：IDA 全檔稽核證明 trailer `+09h` 沒有 DOS gameplay consumer；四條陣型路徑上界都是 9，下一欄直接是 `+0Ah/+0Ch` 金幣；remake 保留非零值 round-trip |
 | [`113-dosbox-price-and-battle-gold-oracle.md`](docs/re/113-dosbox-price-and-battle-gold-oracle.md) | **C1 結案**：原版 Seaside 市集 dagger = 2 Gold；固定神殿遭遇原版結算 Gold = 31，吻合 remake 對該 level 組合的 26–33 預測，EXP 24 同畫面交叉驗證 |
+| [`115-illusion-turn-vanish.md`](docs/re/115-illusion-turn-vanish.md) | **幻象消失結案**：敵我 side 3／13 輪到行動前執行 `Roll(10)<3`；Roll 值域 1–10，故為 20%。另記死亡清理、一次性 UI 事件與 2／3 邊界測試 |
 | [`33-camp-menu-items.md`](docs/re/33-camp-menu-items.md) | **紮營選單 14 項**的完整對照（名稱／快捷鍵／處理常式）＋ Drop 與 Trade 的規則；訂正 `docs/re/26` 的 13 項與「順序對不上」|
 | [`89-natural-vs-bonus-attributes.md`](docs/re/89-natural-vs-bonus-attributes.md) | **更正 `docs/re/88` §3**：`+0xe8`／`+0xe9`／`+0xf8`／`+0xfb` 不是未解欄位，是天生 vs 含裝備加成的力量／技巧 —— `save.go` 的屬性位移全部相對 `expOffset`（`0xc4`），所以 `0xe8` 的字面值從沒出現過，**拿字面值去搜一個算出來的值**必然落空。建角的兩處複製是「擲點結果從含加成抄回天生」。**順帶抓到 bug**：`ApplyTo` 不寫那四個 byte，新角色的存檔留著出貨那五個人的數字 —— 名冊是自己擲的點、存檔是別人的，重讀就換人 |
 | [`88-character-creation-record-init.md`](docs/re/88-character-creation-record-init.md) | **建角寫進角色記錄的四件事**：等級 1（`0x14dc5`）、十格背包 `Type = 0xff`（`0x150d1` 迴圈）、裝備武器／護甲槽 `0xff`（`0x150ed`／`0x150ff`）、trailer 人數 +1（`0x15109`）。**角色記錄的基底是 `ds:0x4c7e`（步長 `0x104`）**，不是 trailer 的 `ds:0x4c76`；`ds:0x548c` 全檔零 `les`，不是實際指標。收掉 `docs/re/87` §6 的「推論不是驗證」。道具槽長度 **17** —— 原版迴圈用 `shl 4` + `add i` 湊出來，只看 `shl 4` 會誤讀成 16。`+0xe8`／`+0xe9` 兩處複製語意未解 |
@@ -3569,15 +3570,19 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > Blades* 與 *Pools of Darkness* 的探索、對話、商店、地圖及戰鬥畫面。
 > 系列共同規律與《冬之魔》的裁決記在 `docs/ui/03`；第三方截圖只連結，
 > 不複製進 repo。
-> 研究另整理成 `skill-build/research-pc98-golden-box-ui/` 的漸進式 knowledge
-> skill：只有 metadata 關鍵字常駐，詳細 corpus 與量測規則從 reference link
-> 按需讀取；已同步 `~/.codex/skills` 與 `~/my_skill`（my_skill commit `99f28ac`）。
+> 研究另整理成 `research-pc98-golden-box-ui` 的漸進式 knowledge skill：
+> 唯一來源在 `~/my_skill/knowledge-base/retro-cht/`，`~/.codex/skills` 只放
+> 符號連結；只有 metadata 關鍵字常駐，詳細 corpus 與量測規則按需讀取。
+> 已推送 my_skill commit `399b496`。
 >
 > **同日 gameplay closure 再抓到兩個消費端缺口並補上。** 營地法術尾段、
 > 營地／戰鬥魔法物品與四種充能規則已依 `1000:11e5`、`1000:2262`、
 > `138d:1e72`、`17c5:18ab` 串回 UI（`docs/re/114`）；普通攻擊也不再從
 > 玩家與 AI 固定傳 0，而會套背後 +12、附魔 ×3、劍擊 +10 與狀態計數 ×−4。
-> 幻術每回合消失機率仍無可信證據，維持未解。
+> **幻術消失機率隨後由 IDA 9.4 結案（`docs/re/115`）**：戰鬥主迴圈
+> 對 side 3／13 在輪到行動前執行 `Roll(10) < 3`；Roll 值域為 1–10，
+> 所以是 20%，不是舊 `docs/re/06` 誤讀的吐息 30%。remake 已接入一次性
+> RNG 判定、死亡清理與「消散」戰鬥訊息，並測試 2／3 邊界及同幀不重擲。
 >
 > **Modern EGA 沒有停在「等審稿」。** 新增低紋理、大形優先的 B 方向與
 > 強制 32×28 原生資訊量證明，建議 B 作 M1 runtime 基準；同時完成 PNG atlas
@@ -3724,7 +3729,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 
 | # | 項目 | 現況 |
 |---|---|---|
-| D1 | ~~介面文案硬編在 Go~~ **✅ 完成（2026-07-28）** | `cmd/demonwinter/*.go` 的正式介面文字全部走 `i18n.Translator.UI`：**2026-07-29 實數 748 條**（`assets/lang/zh-Hant/ui.txt`，語意化 key）；檢查器另列出 18 條只供開發者 `-scene` 清單使用的描述／格式。這個數字會隨 debug 書籤一起長，不能沿用舊快照。<br>**守住它的是 `dwstrings uicheck`**（`cmd/dwstrings/uicheck.go`）：查 key 都在目錄裡、目錄沒孤兒、目錄譯文＝程式碼 fallback、還剩幾條硬編，另擋 Big5 打不出來的字與 fallback 裡的 `\n`。第一次跑就抓到 **51 條打錯 key 的靜默退回** —— 那種錯畫面一模一樣，只是永遠不走目錄，所以這個檢查不是可選的。<br>41 條 key 是**算出來的**（`trapNameKey(c)`、`"proving.colour."+c`…），靜態掃不到配對，程式碼那一側用 `ui:dynamic` 標記宣告（規約見 `docs/i18n/ui-key-conventions.md`）|
+| D1 | ~~介面文案硬編在 Go~~ **✅ 完成（2026-07-28）** | `cmd/demonwinter/*.go` 的正式介面文字全部走 `i18n.Translator.UI`：**2026-07-29 實數 749 條**（`assets/lang/zh-Hant/ui.txt`，語意化 key）；檢查器另列出 18 條只供開發者 `-scene` 清單使用的描述／格式。這個數字會隨 debug 書籤一起長，不能沿用舊快照。<br>**守住它的是 `dwstrings uicheck`**（`cmd/dwstrings/uicheck.go`）：查 key 都在目錄裡、目錄沒孤兒、目錄譯文＝程式碼 fallback、還剩幾條硬編，另擋 Big5 打不出來的字與 fallback 裡的 `\n`。第一次跑就抓到 **51 條打錯 key 的靜默退回** —— 那種錯畫面一模一樣，只是永遠不走目錄，所以這個檢查不是可選的。<br>41 條 key 是**算出來的**（`trapNameKey(c)`、`"proving.colour."+c`…），靜態掃不到配對，程式碼那一側用 `ui:dynamic` 標記宣告（規約見 `docs/i18n/ui-key-conventions.md`）|
 | D2 | 密語提示 **定案不翻** | 符文是要玩家自己建對照表的解謎機制，答案要用英文輸入。施力點放在手冊與提示（`docs/re/72` §6）|
 | D3 | 標題花體 logo **定案不重繪** | 1988 年的美術與署名是歷史紀錄（`rulebook/83`／`93`）|
 | D4 | ~~`Bungei` 待譯~~ **✅ 完成** | 官方英文手冊的 `Punji pit` 明列 50% 跌落、1–6 傷害，與 executable case 2 逐項相同；`A Bungei pit!` 是誤拼，不是專名。原文 key 保留，繁中依 glossary 譯「竹籤陷阱」（`docs/re/68` §5）|

@@ -47,6 +47,11 @@ type Battle struct {
 	points    int
 	pointsFor *Unit
 
+	// turnCheckedFor 防止呈現層在同一回合反覆呼叫 Current 時，重擲幻象消失
+	// 判定。vanished 暫存剛消失的單位，讓 UI 能顯示原版的 "%s dies!"。
+	turnCheckedFor *Unit
+	vanished       *Unit
+
 	// Terrain 是這場戰鬥的地形。nil 代表不做地形判定（單元測試常這樣用）。
 	Terrain *BattleTerrain
 
@@ -103,6 +108,9 @@ func (b *Battle) BeginRound() {
 	b.round++
 	b.order = TurnOrder(b.Units())
 	b.cursor = 0
+	b.pointsFor = nil
+	b.turnCheckedFor = nil
+	b.vanished = nil
 }
 
 // Current 回傳目前該行動的單位。回合已跑完時回傳 nil。
@@ -112,6 +120,18 @@ func (b *Battle) Current() *Unit {
 		// 排序後才死掉的單位跳過 —— 順序是回合開始時算好的，
 		// 中途死亡不會重排，但已死的不該再行動。
 		if u != nil && u.Alive() {
+			if b.turnCheckedFor != u {
+				b.turnCheckedFor = u
+				// 原版 `138d:026d–02e4`：只對 side 3／13
+				// 擲 Roll(10)，結果 < 3（Roll 是 1..10）便在行動前死亡。
+				if (u.Side == SideEnemyIllusion || u.Side == SideIllusion) &&
+					b.rng.Roll(10) < 3 {
+					b.Kill(u)
+					b.vanished = u
+					b.cursor++
+					return nil
+				}
+			}
 			b.beginTurn(u)
 			return u
 		}
@@ -120,11 +140,27 @@ func (b *Battle) Current() *Unit {
 	return nil
 }
 
+// TakeVanished 取走剛在回合開始前消失的幻象事件。每筆事件只回報一次。
+func (b *Battle) TakeVanished() *Unit {
+	u := b.vanished
+	b.vanished = nil
+	return u
+}
+
 // EndTurn 讓目前單位結束行動，游標前進。
 func (b *Battle) EndTurn() { b.cursor++ }
 
 // RoundFinished 回報這一回合的所有單位是否都行動過了。
-func (b *Battle) RoundFinished() bool { return b.Current() == nil }
+//
+// 這裡不能呼叫 Current：Current 會執行幻象消失判定，是有狀態變化的操作。
+func (b *Battle) RoundFinished() bool {
+	for i := b.cursor; i < len(b.order); i++ {
+		if u := b.units[b.order[i]]; u != nil && u.Alive() {
+			return false
+		}
+	}
+	return true
+}
 
 // Outcome 判定勝負。
 //
