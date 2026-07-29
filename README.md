@@ -187,6 +187,7 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 |---|---|
 | [`docs/ui/01-ui-assessment.md`](docs/ui/01-ui-assessment.md) | **現況 vs 原版的逐項量測**：原版座標全部從 DOSBox 截圖量出來（地圖視窗 288×252、紅底選單 176 px、停用列的網點比例），11 條問題依嚴重度排序 |
 | [`docs/ui/02-ui-plan.md`](docs/ui/02-ui-plan.md) | **改版計畫**：定案約束、四個老遊戲重製版的做法調查（Wasteland Remastered、冰城傳奇、Wizardry 2024、Gold Box Companion）、七個階段的實作順序 |
+| [`docs/ui/03-pc98-gold-box-layout-reference.md`](docs/ui/03-pc98-gold-box-layout-reference.md) | **PC-98 日文排版比對**：以《克萊恩英豪／Champions of Krynn》與《幽靈騎士／Death Knights of Krynn》實機截圖量測 640×400、16×16 CJK 字格、38 格正文與資訊分區，裁決哪些規格帶回繁中介面 |
 
 原版 → 目前 → 建議，三張版面對照：
 

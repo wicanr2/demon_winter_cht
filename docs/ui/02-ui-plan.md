@@ -48,6 +48,12 @@ C2 直接決定了參考對象。四個重製版裡：
 分界線因此畫在**裝飾 vs 內容**：外框、底色、色調、鍵帽可以重做；
 圖塊、人物、地形、字元格一律不動。
 
+另以 PC-98 日文版《Champions of Krynn／Death Knights of Krynn》檢查 CJK
+排版尺度。兩作同為 SSI 西洋 CRPG 的日文化移植，實際採 640×400、
+約 16×16 全形字與約 38 格寬正文，支持本專案現有的 640×400＋倚天 16×15
+規劃；資訊分區、色彩階層及不可照抄處見
+[`03-pc98-gold-box-layout-reference.md`](03-pc98-gold-box-layout-reference.md)。
+
 ## 2. 四個重製版的共通做法
 
 1. 版面骨架原位保留，只換材質。
@@ -227,3 +233,5 @@ SKALD（2024）用 C64 調色盤重做現代 CRPG UI，失敗處是像素畫太�
 - SKALD 評測（像素密度） — https://www.pcgamer.com/games/rpg/skald-against-the-black-priory-review/
 - 倚天中文系統 — https://zh.wikipedia.org/zh-tw/倚天中文系統
 - 點陣中文的可讀性下限 — https://blog.justfont.com/2017/08/chinese-bitmap-font/
+- PC-98《Champions of Krynn》— https://retroarchives.fr/champions-of-krynn/
+- PC-98《Death Knights of Krynn》— https://retroarchives.fr/death-knights-of-krynn/
