@@ -1544,10 +1544,16 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 			Enabled: a.battle.CanAct(c.action),
 		}
 	}
-	ui.DrawMenuList(dst, a.font, items, -1,
-		layout.MenuX, layout.MenuY, layout.MenuW)
+	a.drawOperationMenu(dst, items, []ui.CommandGroup{
+		commandGroup(a.tr.UI("command.tab.combat", "戰鬥"), 0, items[0:4]),
+		commandGroup(a.tr.UI("command.tab.support", "支援"), 1, items[4:9]),
+	})
+	hintY := layout.MenuY + len(items)*ui.LineHeight + ui.LineHeight
+	if a.controls == controlsModern {
+		hintY = layout.MenuY + 11*ui.LineHeight
+	}
 	a.font.Draw(dst, a.tr.UI("battle.move.keys", "方向鍵：轉向／前進　Enter：前進　? 檢視"),
-		layout.StatusX, layout.MenuY+len(items)*ui.LineHeight+ui.LineHeight)
+		layout.StatusX, hintY)
 }
 
 // awardExperience 發放戰鬥勝利的經驗值（`docs/re/56`）。

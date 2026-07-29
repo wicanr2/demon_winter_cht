@@ -1398,7 +1398,7 @@ Enter：施放　Esc：取消
 
 ## status.debug.keys1
 :: zh
-B 開打 F1 建角 F3 進城
+B 開打　F3 進城
 
 ## status.debug.keys2
 :: zh
@@ -1478,11 +1478,71 @@ F4 商隊
 
 ## world.menu.manual
 :: zh
-[F2] 手札
+[F1] 說明
+
+## world.menu.controls
+:: zh
+[F6] 模式
 
 ## world.menu.quit
 :: zh
 [F10] 離開
+
+## controls.changed
+:: zh
+操作模式：%s
+
+## command.tab.common
+:: zh
+常用
+
+## command.tab.explore
+:: zh
+探索
+
+## command.tab.items
+:: zh
+物品
+
+## command.tab.system
+:: zh
+系統
+
+## command.tab.party
+:: zh
+隊伍
+
+## command.tab.rest
+:: zh
+休整
+
+## command.tab.inventory
+:: zh
+裝備物品
+
+## command.tab.actions
+:: zh
+行動
+
+## command.tab.combat
+:: zh
+戰鬥
+
+## command.tab.support
+:: zh
+支援
+
+## command.tab.town
+:: zh
+城鎮設施
+
+## command.tab.services
+:: zh
+服務與離開
+
+## save.close_error_stay
+:: zh
+自動存檔失敗，沒有關閉：%v
 
 ## camp.menu.party
 :: zh

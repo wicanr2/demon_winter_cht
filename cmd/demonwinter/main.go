@@ -204,6 +204,9 @@ type app struct {
 	savePath string
 	// quitting 為真時畫面停在離開確認框。
 	quitting bool
+	// controls 只決定探索時如何解讀方向鍵。現代模式是絕對方向直接走；
+	// 復古模式是左右轉向、上／Enter 前進、下轉身。
+	controls controlMode
 
 	// battle 非 nil 時遊戲進入戰鬥模式，地圖輸入停止。
 	battle *game.Battle
@@ -324,6 +327,16 @@ func (a *app) Update() error {
 }
 
 func (a *app) update() error {
+	// 視窗關閉鈕與 F10 的「存檔後離開」共用同一條完整存檔路徑。
+	// SetWindowClosingHandled(true) 讓存檔失敗時可以留在遊戲，不丟進度。
+	if ebiten.IsWindowBeingClosed() {
+		if err := a.writeSave(); err != nil {
+			a.message = fmt.Sprintf(a.tr.UI("save.close_error_stay",
+				"自動存檔失敗，沒有關閉：%v"), err)
+			return nil
+		}
+		return ebiten.Termination
+	}
 	// F8：在同一局遊戲中切換原版 EGA／CGA 素材。放在各模態分派之前，
 	// 讓地圖、戰鬥、城鎮或文字框開著時都能直接比較；切換只換呈現資產，
 	// 不碰遊戲狀態與倚天中文字型。
@@ -333,8 +346,21 @@ func (a *app) update() error {
 			a.message = fmt.Sprintf(a.tr.UI("theme.failed", "切換顯示主題失敗：%v"), err)
 		}
 	}
+	// F6：操作配置是玩家偏好，不是規則狀態；切換後不改座標、面向或存檔。
+	if inpututil.IsKeyJustPressed(ebiten.KeyF6) {
+		a.controls = a.controls.next()
+		a.message = fmt.Sprintf(a.tr.UI("controls.changed", "操作模式：%s"), a.controls.label())
+	}
+	// F1 永遠是玩家說明。它刻意放在各畫面分派之前，因此戰鬥、城鎮、
+	// 地城與其他模態中都能開啟，關掉後回到原畫面。
+	if inpututil.IsKeyJustPressed(ebiten.KeyF1) {
+		a.openManual()
+	}
 	if handled, err := a.updateQuitDialog(); handled || err != nil {
 		return err
+	}
+	if a.manualUI != nil {
+		return a.updateManual()
 	}
 	// 死亡與結局排在所有畫面之前 —— 兩者都是終局，不該還能回去紮營。
 	if a.death != nil {
@@ -355,9 +381,6 @@ func (a *app) update() error {
 	}
 	if a.riddle != nil {
 		return a.updateRiddle()
-	}
-	if a.manualUI != nil {
-		return a.updateManual()
 	}
 	if a.runeBox != nil {
 		return a.updateRuneBox()
@@ -450,11 +473,40 @@ func (a *app) update() error {
 		return a.updateWorkshop()
 	}
 
-	for _, kf := range keyFacing {
-		if !inpututil.IsKeyJustPressed(kf.key) {
-			continue
+	moveRequested := false
+	moveFacing := a.party.Facing()
+	if a.controls == controlsRetro {
+		switch {
+		case inpututil.IsKeyJustPressed(ebiten.KeyLeft):
+			a.party.Turn(turnFacing(a.party.Facing(), -1))
+			a.message = ""
+			a.armReread()
+			return nil
+		case inpututil.IsKeyJustPressed(ebiten.KeyRight):
+			a.party.Turn(turnFacing(a.party.Facing(), 1))
+			a.message = ""
+			a.armReread()
+			return nil
+		case inpututil.IsKeyJustPressed(ebiten.KeyDown):
+			a.party.Turn(turnFacing(a.party.Facing(), 2))
+			a.message = ""
+			a.armReread()
+			return nil
+		case inpututil.IsKeyJustPressed(ebiten.KeyUp),
+			inpututil.IsKeyJustPressed(ebiten.KeyEnter):
+			moveRequested = true
 		}
-		a.party.Turn(kf.f)
+	} else {
+		for _, kf := range keyFacing {
+			if inpututil.IsKeyJustPressed(kf.key) {
+				moveRequested = true
+				moveFacing = kf.f
+				break
+			}
+		}
+	}
+	if moveRequested {
+		a.party.Turn(moveFacing)
 		// 光之環的門**不在這裡擋**。它是地點劇情表的 case 15，只在
 		// 繞著 (11,50) 的四格十字上判定，走上去之後才印訊息並推回來
 		// （`a.circleOfLightDoor`）。這裡原本有一條「`mapID == 5` 就擋」
@@ -586,15 +638,9 @@ func (a *app) update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyF12) {
 		a.debugHUD = !a.debugHUD
 	}
-	// F2：手札。原版沒有這個畫面（那些資料印在紙本手冊上），見 manualui.go。
+	// F2 保留為舊版手札別名；F1 才是固定、公開的說明鍵。
 	if inpututil.IsKeyJustPressed(ebiten.KeyF2) {
 		a.openManual()
-	}
-	// F1 是建立角色。原版把它放在遊戲外的 Character Utilities 選單，
-	// 大地圖上根本沒有這個鍵 —— 所以挪到 F1 這種一看就是「不在原版裡」
-	// 的位置，把 `C` 讓回給紮營。
-	if inpututil.IsKeyJustPressed(ebiten.KeyF1) {
-		a.openCreate()
 	}
 	// M：推開腳下的家具（手冊「物品 → 移動」，原版動作 0x0b）。
 	// **偵錯用的「就地遇到商隊」讓位到 F4** —— M 是原版的鍵。
@@ -1477,7 +1523,7 @@ func (a *app) monthName() string {
 
 var statusDebugKeys = []uiLabel{
 	{"status.debug.header", "── 偵錯　F12 收起"},
-	{"status.debug.keys1", "B 開打 F1 建角 F3 進城"},
+	{"status.debug.keys1", "B 開打　F3 進城"},
 	{"status.debug.keys2", "F4 商隊"},
 }
 
@@ -1496,7 +1542,8 @@ var worldMenuLabels = []uiLabel{
 	{"world.menu.traps", "[L] 陷阱"},
 	{"world.menu.viewroom", "[V] 觀室"},
 	{"world.menu.viewitem", "[X] 鑑物"},
-	{"world.menu.manual", "[F2] 手札"},
+	{"world.menu.manual", "[F1] 說明"},
+	{"world.menu.controls", "[F6] 模式"},
 	{"world.menu.quit", "[F10] 離開"},
 }
 
@@ -1548,8 +1595,12 @@ func (a *app) drawWorldMenu(dst *ebiten.Image) {
 		items[i].Enabled = dungeon
 	}
 	items[10].Enabled = a.reread > 0
-	ui.DrawMenuList(dst, a.font, items, -1,
-		layout.MenuX, layout.MenuY, layout.MenuW)
+	a.drawOperationMenu(dst, items, []ui.CommandGroup{
+		commandGroup(a.tr.UI("command.tab.common", "常用"), 0, items[0:4]),
+		commandGroup(a.tr.UI("command.tab.explore", "探索"), 0, items[10:14]),
+		commandGroup(a.tr.UI("command.tab.items", "物品"), 1, items[4:10]),
+		commandGroup(a.tr.UI("command.tab.system", "系統"), 1, items[14:17]),
+	})
 }
 
 // 常駐隊伍表的欄寬（排版格）。表頭與資料列**共用這組常數** ——
@@ -1718,6 +1769,8 @@ func main() {
 	// 當年看到的畫面；CGA 保留（完整性原則，`rulebook/83`），不是畫質選項。
 	videoMode := flag.String("video", "ega",
 		"素材版本：ega（原版 16 色）、cga（原版 4 色）或 modern（Modern Icon）")
+	controlsFlag := flag.String("controls", "modern",
+		"探索操作：modern（方向鍵朝絕對方向前進）或 retro（左右轉向、上／Enter 前進、下轉身）")
 	modernThemeDir := flag.String("modern-theme-dir", "",
 		"Modern Icon PNG theme 目錄；留空使用舊版相容調色預覽")
 	modernIconDir := flag.String("modern-icon-dir", "",
@@ -1824,6 +1877,11 @@ func main() {
 	lootFlag := flag.String("loot", "",
 		"偵錯：用掉寶生成器發道具給第一名隊員，格式 `type,等級[,件數]`")
 	flag.Parse()
+
+	selectedControls, err := parseControlMode(*controlsFlag)
+	if err != nil {
+		log.Fatalf("-controls：%v", err)
+	}
 
 	if *listScenesFlag {
 		fmt.Print(debugSceneList())
@@ -2125,6 +2183,7 @@ func main() {
 		save:           save,
 		torch:          save.LightSource,
 		savePath:       *savePath,
+		controls:       selectedControls,
 		dataDir:        *dataDir,
 		itemloc:        itemloc,
 		dungeonItems:   dungeonItems,
@@ -2271,6 +2330,7 @@ func main() {
 
 	ebiten.SetWindowSize(layout.CanvasWidth*scale, layout.CanvasHeight*scale)
 	ebiten.SetWindowTitle(a.tr.UI("window.title", "冬之魔 Demon's Winter"))
+	ebiten.SetWindowClosingHandled(true)
 
 	defer a.trace.close()
 	a.trace.note("啟動：地圖 %d，隊伍在 (%d,%d)，%d 人",

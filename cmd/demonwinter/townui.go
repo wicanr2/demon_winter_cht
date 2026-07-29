@@ -368,8 +368,11 @@ func (a *app) drawTownMenu(dst *ebiten.Image, line func(string)) {
 	menu = append(menu, ui.MenuItem{
 		Label: a.tr.UI("town.menu.keys", "Esc：離開城鎮"), Enabled: true,
 	})
-	ui.DrawMenuList(dst, a.font, menu, -1,
-		layout.MenuX, layout.MenuY, layout.MenuW)
+	split := (len(menu) + 1) / 2
+	a.drawOperationMenu(dst, menu, []ui.CommandGroup{
+		commandGroup(a.tr.UI("command.tab.town", "城鎮設施"), 0, menu[:split]),
+		commandGroup(a.tr.UI("command.tab.services", "服務與離開"), 1, menu[split:]),
+	})
 }
 
 // restAtInn 在旅店睡一晚。

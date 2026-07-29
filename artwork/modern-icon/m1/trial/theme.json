@@ -14,8 +14,11 @@
       "0x1d": "normal-coast-1d.png",
       "0x20": "normal-coast-20.png",
       "0x23": "normal-plain.png",
+      "0x25": "normal-temple-25.png",
+      "0x26": "normal-college-26.png",
       "0x27": "normal-forest-ground.png",
       "0x28": "normal-desert-ground.png",
+      "0x2e": "normal-town-2e.png",
       "0x3b": "normal-coast-3b.png",
       "0x3c": "normal-coast-3c.png",
       "0x3d": "normal-coast-3d.png",
@@ -37,7 +40,8 @@
       "0x51": "normal-coast-51.png",
       "0x52": "normal-coast-52.png",
       "0x5b": "normal-ruins-5b.png",
-      "0x62": "normal-ocean-62.png"
+      "0x62": "normal-ocean-62.png",
+      "0x64": "normal-asaht-64.png"
     },
     "winter": {
       "0x04": "winter-tree-04.png",
@@ -49,8 +53,11 @@
       "0x1d": "winter-coast-1d.png",
       "0x20": "winter-coast-20.png",
       "0x23": "winter-plain.png",
+      "0x25": "winter-temple-25.png",
+      "0x26": "winter-college-26.png",
       "0x27": "winter-forest-ground.png",
       "0x28": "winter-desert-ground.png",
+      "0x2e": "winter-town-2e.png",
       "0x3b": "winter-coast-3b.png",
       "0x3c": "winter-coast-3c.png",
       "0x3d": "winter-coast-3d.png",
@@ -72,7 +79,8 @@
       "0x51": "winter-coast-51.png",
       "0x52": "winter-coast-52.png",
       "0x5b": "winter-ruins-5b.png",
-      "0x62": "winter-ocean-62.png"
+      "0x62": "winter-ocean-62.png",
+      "0x64": "winter-asaht-64.png"
     }
   },
   "sprites": {

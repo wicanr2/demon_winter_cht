@@ -371,8 +371,12 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 			items[i].Enabled = false
 		}
 	}
-	ui.DrawMenuList(dst, a.font, items, -1,
-		layout.MenuX, layout.MenuY, layout.MenuW)
+	a.drawOperationMenu(dst, items, []ui.CommandGroup{
+		commandGroup(a.tr.UI("command.tab.party", "隊伍"), 0, items[0:2]),
+		commandGroup(a.tr.UI("command.tab.rest", "休整"), 0, items[2:7]),
+		commandGroup(a.tr.UI("command.tab.inventory", "裝備物品"), 1, items[7:11]),
+		commandGroup(a.tr.UI("command.tab.actions", "行動"), 1, items[11:14]),
+	})
 
 	if c.message != "" {
 		for _, l := range strings.Split(c.message, "\n") {
