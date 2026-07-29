@@ -3533,7 +3533,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 >
 > **這不代表整個專案完成。** 本輪交付的是可發行基線；仍開著的工作包括
 > Modern EGA P1 使用者審稿及 P2–P4 逐格素材、C1 原版價格／戰鬥金幣 oracle、
-> C5 搬移指令定位、C7 第二數值欄與 C9 trailer `+09h`。
+> C5 搬移指令定位與 C9 trailer `+09h`。
 > 在這些項目結案前，狀態只能寫「本輪完成／專案進行中」，不可寫 goal achieved。
 >
 > **2026-07-29 程式碼收尾稽核新增一項並已修正：**怪物 AI 的 5×5 法術會
@@ -3550,6 +3550,11 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > `15h` 才是武器特效。換裝、脫裝與升級共用重建邏輯，載入／存檔保留
 > 已持久化的有效欄位，戰鬥讀取該有效值；
 > 兵器庫釘頭鎚 `12h/0Ch` 現在確實提供速度 +2（`docs/re/109`）。
+>
+> **C7 第二數值欄結案方式相反：證明它沒有 consumer。** `ITEMS.DAT`
+> 數值表基址 `ds:5300` 的全檔六個讀取點只碰價格、charge kind 與四個
+> 效果類別，沒有 `record+2`。舊猜名 `WeaponSlot` 已撤回為 `UnusedFlag`，
+> 原值保留但不驅動 DOS remake 規則（`docs/re/110`）。
 >
 > PC-98 日文排版參考也從 Krynn 兩作擴成六款 Gold Box 樣本：另納入
 > *Pool of Radiance*、*Curse of the Azure Bonds*、*Secret of the Silver
@@ -3669,7 +3674,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 | ~~C4~~ | ~~移動操作與原版不同~~ | **完成（2026-07-29）**。探索定案採現代絕對方向：方向鍵轉向並前進；背後攻擊仍讀實際面向。海戰保留相對轉舵／直行與原版移動點成本。決策與差異已寫入 `docs/spec/04-movement.md`、`docs/manual-coverage.md` 與 README |
 | C5 | 怪物屬性的搬移指令未定位 | `unit+0x1a`／`+0x24` 沒有指向怪物的寫入點（`docs/re/57` §6）。同構與讀取端已確定 `+0x1a`＝level、`+0x24`＝EXP；2026-07-29 稽核另修正第 7 數值欄是 Armor points，並接回 remake 怪物單位（原先錯名 `NumAttacks` 且載入後未使用） |
 | ~~C6~~ | ~~`MONSTER.DAT` 第 11 欄 `special`~~ | **完成**。`docs/re/23` 的 AI／吐息路徑已證明是種族／元素類型：8–11 為四種龍吐息，7 為冰系；載入單位 `+0x22`，並由免疫規則交叉驗證。舊 worklist 未隨文件更新 |
-| C7 | `ITEMS.DAT` `f1`–`f6` | **舊描述大半過期**：`docs/re/25`、`30` 已定案價格、charge kind 與四個效果類別，掉寶也已實裝。只剩第二數值欄（現名 `WeaponSlot`）缺原版 consumer 證據；收尾時不得拿猜測名稱當規則 |
+| ~~C7~~ | ~~`ITEMS.DAT` 第二數值欄~~ | **完成（2026-07-29，`docs/re/110`）**。IDA 9.4 對 `ds:5300` 全部六個 consumer 的稽核只讀價格、charge kind 與四個效果類別，沒有任何 `record+2` 讀取。舊名 `WeaponSlot` 撤回為 `UnusedFlag`；parser 保留原值，但 DOS remake 不據此新增行為。 |
 | ~~C8~~ | ~~時間 wrap 值 `38/35/23`~~ | **結案（`docs/re/107` §2）**：IDA `sub_228B6`／`sub_22A53` 明確比較 `26h/23h/17h`，即 38/35/23；鐘要求 `hour >= 24`、床設 25 形成獨立交叉證據。手冊的 26 小時是 Apple II 描述，不能覆蓋 DOS 執行檔 |
 | C9 | 零星 trailer 欄位 | **只剩 `+0x09`，且無 gameplay consumer**；兩份原版存檔皆 0，remake 原樣 round-trip。舊稱「戶外商隊 size base `[0x4c90]`」已更正：`4C90` 是 `EXITS.DAT` arena 指標，商隊基準是 `+0xaf`／出口記錄參數（`docs/re/107` §3）。`+0xaa`＝水池次數；`+0xc1`＝成神抉擇閂鎖 |
 | ~~C12~~ | ~~靈視技能一天三次還是一次~~ | **DOSBox 實跑已複核，3 才對**（2026-07-27，`docs/re/93` §4.1）。把存檔的 `+0xad` 預設成 **2** 按一次 `V` 照樣跑（`You see nothing`），預設成 **3** 就印 `Your psychic powers are weak`。兩個相鄰值配成一對 → 上限 ＝ 3。手冊的「一天一次」是 Apple II 版的規則。引擎的 `PsychicUsesPerDay = 3` 不必改。<br>**方法值得記**：原本要「連按四次 `V`」，但原版按一次顯示訊息、再按一次只是關訊息，靠送鍵時序數次數會飄（實測出現非交替序列）—— 改成**把計數器直接寫成邊界值再按一次**就一次過（`docs/re/93` §4.2）|

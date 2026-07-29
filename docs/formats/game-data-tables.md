@@ -327,7 +327,7 @@ Brigand／Highwayman／Master thief／Assassin）、以及劇情專屬怪物（X
 | 順序 | 欄位 | 語意 | 驗證狀態 | 依據 |
 |---|---|---|---|---|
 | 1 | price | 售價（金幣） | **已驗證** | 8 把武器售價 `2,6,15,13,20,30,65,100` 大致隨武器強度遞增（匕首最便宜、雙手劍最貴；唯一例外是 mace 的 13 比 short sword 的 15 便宜，跟 `docs/walkthrough/part-2.md` 武器力量需求表的順序 mace(7)>short sword(6) 不完全對齊，但整體趨勢仍是弱武器便宜、強武器貴），5 件護甲售價 `5,15,40,200,400` 嚴格隨防護力遞增，量級與攻略 `docs/walkthrough/part-6.md` 第 5 節列出的裝備售價數量級（幾百到幾萬，那些是「附魔後」的價格，基礎價格本來就該低很多）方向一致 |
-| 2 | weapon_slot | 是否佔用「武器手」欄位（1/0） | 假設 | 8 把武器與飾品類（戒指/魔杖/法杖/權杖/護身符/勳章/雕像/護符/藥膏）都是 `1`，5 件護甲跟純道具（寶石/火把/提燈/惡魔水晶/恆世寶珠）都是 `0`。跟 `DEMON.INT` 字串裡 `Weapon: ` / `Armor: ` 兩種不同的裝備提示（分別對應「武器欄位」「護甲欄位」兩個獨立槽位）的介面設計吻合，但邊界不完全乾淨（例如 `vial` 藥水瓶是 `0`，理論上該算消耗品而非武器/護甲，跟這個假設不衝突；但 `salve` 藥膏也是消耗品卻是 `1`，兩者行為不一致，無法完全排除這是別的意思） |
+| 2 | unused_flag | DOS runtime 未消費的 0/1 欄位 | **已驗證未讀** | `ds:5300` 全檔六個 consumer 只讀 record `+0`、`+4`、`+6..+12`，沒有 `+2`；舊名 `weapon_slot` 已撤回（`docs/re/110`） |
 | 3 | category | 道具分類索引 | 假設 | 武器、護甲、`crown`、`medallion` 都是 `3`；`wand`／`staff`／`rod`／`talisman`／`salve` 都是 `1`；`vial`（兩筆）都是 `2`；`ring`／`gem`／`amulet`／`figurine`／`torch`／`lantern`／`Demon Crystal`／`Orb/Evertime` 都是 `0`。四種取值、分組看起來有規律但無法直接對應到某個已知的字串表，只能算假設 |
 | 4–7 | f3–f6（4 個未定欄位） | 未知 | 未知 | **同一大類（8 把武器 / 5 件護甲）內部這 4 個欄位數值完全相同**（8 把武器全部是 `0,10,8,9`；5 件護甲全部是 `12,7,7,7`），代表這不是「每種武器獨立的傷害骰/最低力量需求」（那些數值查 `docs/walkthrough/part-2.md` 是各武器不同的，1-3 到 1-12 傷害、6 到 18 力量需求，跟這裡「全部武器共用同一組數字」矛盾）。推測這組數字是與「武器」「護甲」這個大類本身綁定的共用參數（可能是圖示座標、或某種基礎判定表索引），實際傷害骰/力量需求很可能寫死在 `DEMON.EXE`，不在 `ITEMS.DAT` 裡 |
 
@@ -396,7 +396,8 @@ ASCII 姓名或道具名字串），也**不是** `MONSTER.DAT`/`ITEMS.DAT` 那�
    確定為「已驗證」。
 2. **反組譯 `DEMON.EXE` 讀取 `PARTY.DAT`/`MONSTER.DAT`/`ITEMS.DAT` 的程式碼**：直接找到讀取這些檔案
    欄位的組合語言片段，可以不靠猜測直接讀出欄位順序與長度，尤其能解決 `MONSTER.DAT` 的
-   `special` 與 `ITEMS.DAT` 的 category/weapon_slot 這幾個「規律合理但語意不確定」
+   `special` 與 `ITEMS.DAT` 的 category／unused flag 這幾個欄位
+   （後續 consumer 結論見 `docs/re/23`、`30`、`110`）
    的欄位（level 與 armour 已於 `docs/re/57` 解決，special 已於 `docs/re/23` 解決）。`tools/ghidra_headless.sh` 已經在專案裡，可以直接用。
 3. **`TEMPLAT*.DAT` 的圖像格式解碼**：如果確認是點陣圖，跟 `MONSTER.SHP`/`MONSTER.SHE` 這類已知
    「shape 檔」格式做比對，可能可以共用同一套解碼邏輯。

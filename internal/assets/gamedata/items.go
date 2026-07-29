@@ -64,12 +64,11 @@ type Item struct {
 	// Price 售價（金幣）。已驗證：8 把武器售價隨強度遞增（匕首最便宜、
 	// 雙手劍最貴），5 件護甲售價嚴格隨防護力遞增，量級與攻略裝備售價方向一致。
 	Price int
-	// WeaponSlot 標記是否佔用「武器手」欄位。語意未確認：8 把武器與飾品類
-	// （戒指/魔杖/法杖/權杖/護身符/勳章/雕像/護符/藥膏）此欄位為真，5 件護甲
-	// 與純道具（寶石/火把/提燈/惡魔水晶/恆世寶珠）為假，跟 DEMON.INT 字串
-	// 「Weapon: / Armor: 」兩種提示的介面設計吻合，但邊界不完全乾淨（例如
-	// vial 藥水瓶為假、salve 藥膏為真，行為不一致，無法完全排除是別的意思）。
-	WeaponSlot bool
+	// UnusedFlag 是原始記錄的第二數值欄（0/1）。IDA 9.4 對數值表基址
+	// `ds:5300` 的全檔 xref 證明 DOS 執行檔沒有讀 record+2；舊名
+	// WeaponSlot 是從資料分組猜的，已撤回（docs/re/110）。
+	// 保留它只為忠實解析與研究其他平台，不得據此新增玩法。
+	UnusedFlag bool
 	// CategoryIndex 是**充能種類**（0–3）。原本標「語意未確認」，
 	// 掉寶生成端（`1990:1334`）拿它當 switch 的分支值（見 `docs/re/30`）：
 	//
@@ -134,7 +133,7 @@ func LoadItemTable(path string) (*ItemTable, error) {
 	items := make([]Item, 0, n)
 	byName := make(map[string]int, n)
 
-	fieldLabels := []string{"price", "weapon_slot", "category", "f3", "f4", "f5", "f6"}
+	fieldLabels := []string{"price", "unused_flag", "category", "f3", "f4", "f5", "f6"}
 
 	for i := 0; i < n; i++ {
 		chunk := tokens[i*itemTokensPerRecord : (i+1)*itemTokensPerRecord]
@@ -161,7 +160,7 @@ func LoadItemTable(path string) (*ItemTable, error) {
 			Name:          name,
 			Kind:          kind,
 			Price:         nums[0],
-			WeaponSlot:    nums[1] != 0,
+			UnusedFlag:    nums[1] != 0,
 			CategoryIndex: nums[2],
 			EffectClasses: [4]int{nums[3], nums[4], nums[5], nums[6]},
 		}

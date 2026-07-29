@@ -43,8 +43,8 @@ func TestLoadItemTable_RealFile(t *testing.T) {
 		if got.Price != want.price {
 			t.Errorf("%s 的 Price = %d，want %d", got.Name, got.Price, want.price)
 		}
-		if !got.WeaponSlot {
-			t.Errorf("%s 的 WeaponSlot = false，want true（武器應佔用武器手欄位）", got.Name)
+		if !got.UnusedFlag {
+			t.Errorf("%s 的原始 unused flag = false，檔案錨點預期 true", got.Name)
 		}
 	}
 
@@ -69,8 +69,8 @@ func TestLoadItemTable_RealFile(t *testing.T) {
 		if got.Price != want.price {
 			t.Errorf("%s 的 Price = %d，want %d", got.Name, got.Price, want.price)
 		}
-		if got.WeaponSlot {
-			t.Errorf("%s 的 WeaponSlot = true，want false（護甲不佔用武器手欄位）", got.Name)
+		if got.UnusedFlag {
+			t.Errorf("%s 的原始 unused flag = true，檔案錨點預期 false", got.Name)
 		}
 	}
 

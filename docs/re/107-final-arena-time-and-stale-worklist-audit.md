@@ -71,9 +71,10 @@ remake 已用 `EXITS.DAT` 的第六 byte 更新 `MerchantBase`，這一格應結
 - f3：charge kind 0–3；
 - f4–f7：四個效果類別；首值為 0 時是排除清單，否則是候選清單。
 
-舊 C7 的「f1–f6 逐欄未定」已不成立。唯一未完成的是第二數值欄：
-目前程式保守叫 `WeaponSlot`，它對武器與部分可持用飾品為真，但藥膏／藥水等
-邊界不夠乾淨。它目前不參與 remake 規則，故保留原值、不得據名稱新增行為。
+舊 C7 的「f1–f6 逐欄未定」已不成立。第二數值欄後續也以 IDA 全 xref 結案：
+`ds:5300` 的六個 consumer 只讀價格、charge kind 與四個效果類別，完全不讀
+`record+2`。舊名 `WeaponSlot` 已撤回為 `UnusedFlag`；結論範圍是 DOS runtime
+未使用，不猜其他平台或開發早期的用途（`docs/re/110`）。
 
 ## 5. 真正仍開著、但不該阻擋發行的證據缺口
 
