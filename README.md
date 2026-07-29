@@ -88,6 +88,9 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 完整呈現架構、素材分批與驗收門檻，以
 [`docs/design/modern-ega-theme.md`](docs/design/modern-ega-theme.md) 為單一設計規格。
 在 P2–P4 完成前，README 與發行說明不得把 Modern Icon 稱為完成重畫。
+高解析 loader 與第一張實機架構證據見
+[`docs/playtest/20`](docs/playtest/20-modern-icon-high-resolution-layer.md)：它已證明
+64×56 最終畫布覆寫可行，也誠實保留重複圖樣與接縫尚未達美術門檻的結果。
 
 驗收採「前期完整垂直切片＋後期高風險串接抽樣」：新遊戲建角、購物與換裝，
 正常戰鬥／死亡／治療、狗頭人營地、升級、跨圖抵達加穆爾神殿均由可重播腳本實際跑通；

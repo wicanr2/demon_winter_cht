@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "id": "modern-icon",
+  "frameWidth": 64,
+  "frameHeight": 56,
+  "tiles": {
+    "normal": {
+      "0x23": "normal-forest.png"
+    },
+    "winter": {}
+  }
+}

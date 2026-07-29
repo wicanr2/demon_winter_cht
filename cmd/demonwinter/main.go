@@ -130,8 +130,11 @@ type app struct {
 	videoMode      gfx.VideoMode
 	themeID        themeID
 	videoThemes    map[themeID]*videoTheme
-	font           *ui.MixedFont
-	gotFont        *ui.Font
+	// modernIcons 是 Modern Icon 專用的最終解析度材質。遊戲規則仍只讀
+	// normal/winter 的索引與碰撞；這組材質只在 1280×800 呈現階段覆寫地圖格。
+	modernIcons *modernIconTheme
+	font        *ui.MixedFont
+	gotFont     *ui.Font
 
 	// exits 是 EXITS.DAT。**事件查表已經不用它了** —— 那是 `docs/re/05` §1.3
 	// 誤判造成的（見 special 欄位）。留著是因為 EXITS.DAT 本身確實存在、
@@ -783,6 +786,7 @@ func (a *app) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{Filter: ebiten.FilterNearest}
 	op.GeoM.Scale(scale, scale)
 	screen.DrawImage(a.canvas, op)
+	a.drawModernIconWorld(screen)
 }
 
 // loadMapArg 解讀 -map：純數字當成 SUM.MAP 的子地圖編號，其餘當檔名。
@@ -1713,9 +1717,11 @@ func main() {
 	// 原版同時出貨 EGA 與 CGA 兩套美術。**預設 EGA** —— 那是絕大多數玩家
 	// 當年看到的畫面；CGA 保留（完整性原則，`rulebook/83`），不是畫質選項。
 	videoMode := flag.String("video", "ega",
-		"素材版本：ega（原版 16 色）、cga（原版 4 色）或 modern（現代 EGA 調色）")
+		"素材版本：ega（原版 16 色）、cga（原版 4 色）或 modern（Modern Icon）")
 	modernThemeDir := flag.String("modern-theme-dir", "",
 		"Modern Icon PNG theme 目錄；留空使用舊版相容調色預覽")
+	modernIconDir := flag.String("modern-icon-dir", "",
+		"Modern Icon 高解析 terrain 目錄（64×56 frame）；不接受概念稿縮圖")
 	startX := flag.Int("x", -1, "起始 X。負值代表用存檔裡的座標")
 	startY := flag.Int("y", -1, "起始 Y。負值代表用存檔裡的座標")
 	sceneFlag := flag.String("scene", "",
@@ -2011,6 +2017,14 @@ func main() {
 		videoThemes[themeModern] = theme
 		log.Printf("Modern Icon：使用 PNG theme %s", *modernThemeDir)
 	}
+	if *modernIconDir != "" {
+		icons, loadErr := loadModernIconTheme(*modernIconDir)
+		if loadErr != nil {
+			log.Fatalf("載入 Modern Icon 高解析材質：%v", loadErr)
+		}
+		videoThemes[themeModern].icons = icons
+		log.Printf("Modern Icon：使用高解析 terrain %s", *modernIconDir)
+	}
 	initialTheme := videoThemes[selectedTheme]
 	// ASCII 的字模來源三選一，見 -ascii。預設 `eten`：英數走倚天全形，
 	// 與漢字同一套設計、同一個筆畫重量。
@@ -2102,6 +2116,7 @@ func main() {
 		videoMode:      mode,
 		themeID:        selectedTheme,
 		videoThemes:    videoThemes,
+		modernIcons:    initialTheme.icons,
 		font:           font,
 		gotFont:        gotFont,
 		speaker:        ui.NewSpeaker(*volume),

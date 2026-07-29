@@ -11,6 +11,7 @@ type videoTheme struct {
 	normal, winter   *ui.Tileset
 	combat, monsters *ui.SpriteSheet
 	ships            *ui.SpriteSheet
+	icons            *modernIconTheme
 }
 
 type themeID string
@@ -102,6 +103,7 @@ func (a *app) toggleVideoTheme() error {
 
 	a.normal, a.winter = t.normal, t.winter
 	a.combatSprites, a.monsterSprites, a.shipSprites = t.combat, t.monsters, t.ships
+	a.modernIcons = t.icons
 	a.videoMode = t.normal.Mode()
 	a.themeID = next
 	name := themeName(next)

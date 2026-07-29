@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "id": "modern-icon",
+  "frameWidth": 64,
+  "frameHeight": 56,
+  "tiles": {
+    "normal": {
+      "0x01": "normal-01.png"
+    },
+    "winter": {
+      "0x01": "winter-01.png"
+    }
+  }
+}
