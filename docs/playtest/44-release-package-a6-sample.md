@@ -27,13 +27,15 @@
 最終 SHA-256：
 
 ```text
-99d4d81972e36f6011de45bf9974f7a65477eebedd11db63c0e24f53c6ce9bc0  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
+3699a819b7078e64db347a5288a82deb464f230648e06afd1a2f8fb0bad3206e  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
 ```
 
 2026-07-30 最後收斂吐息地形規則、怪物繞障、Modern Icon 地城 namespace、
 JSON 文字與 README 索引後重新打包；`sha256sum -c`、Xvfb 下直接執行包內
 `demonwinter -list-scenes`、442 張 Modern Icon PNG、463 檔及禁入掃描均再次通過。
 新增的 16 張是 `0x5a` 正常／冬季各八個凍土變體；母稿與開發文件不進玩家包。
+其後只更新包內 README 的地城十二格審稿入口並再次重建；內容仍為 442 張
+Modern Icon PNG、463 檔，解壓後 `-list-scenes` 再次通過，以上雜湊是此最新版。
 
 | Modern Icon 與現代命令卡 | 復古紅色命令列 | F1 手札 |
 |---|---|---|

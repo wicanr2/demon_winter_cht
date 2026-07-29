@@ -3642,7 +3642,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > Docker；修正 checksum 曾寫入容器絕對路徑的不可攜問題。解壓後 F8／F6／F1
 > 重新實跑並人工檢視；補入 `0x5a` 凍土後為 442 張 Modern Icon、
 > 836 UI key、463 檔，禁入掃描通過。SHA-256 為
-> `99d4d81972e36f6011de45bf9974f7a65477eebedd11db63c0e24f53c6ce9bc0`
+> `3699a819b7078e64db347a5288a82deb464f230648e06afd1a2f8fb0bad3206e`
 >（[`docs/playtest/44`](docs/playtest/44-release-package-a6-sample.md)）。
 >
 > **2026-07-30 Modern Icon 地城邊界稽核：**最終畫布的世界覆寫原本只依
@@ -3689,6 +3689,13 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 各輸出八個無接縫變體，map 21 `(47,27)` 同狀態 runtime 已人工檢視。
 > 所有 SUM.MAP 世界段兩季現均為 `missing: none`；地城仍誠實缺 59 格
 >（[`docs/playtest/51`](docs/playtest/51-modern-icon-tundra-and-dungeon-inventory.md)）。
+>
+> **2026-07-30 地城審稿入口收斂：**方向稿十二格已依 3×4 位置編號，
+> 名稱、D1–D4 批次、核准狀態與不可破壞規則集中在
+> `artwork/modern-icon/m1/dungeon-review.json`，不是寫死於引擎。
+> `mapwindow -review-check` 會拒絕缺格、重複格位、無效決定或空規則。
+> README 已提供最短回覆格式；目前 12 格均維持 `pending`，仍須使用者明確
+> 核准後才能進入 59 索引量產。
 >
 > **操作體驗新增，已完成程式與固定場景抽樣、等待使用者畫面審查：** `F6`
 > 切換整套復古／現代模式：復古恢復原版紅底直式命令列與相對轉向；現代使用

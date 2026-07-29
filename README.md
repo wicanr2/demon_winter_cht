@@ -104,6 +104,11 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 |---|---|
 | [![Modern Icon 地城方向稿](docs/design/img/modern-icon-dungeon-direction-v1.png)](docs/design/modern-icon-dungeon-production.md) | [![Modern Icon 地城安全底稿](docs/design/img/modern-icon-dungeon-fallback-runtime.png)](docs/playtest/49-modern-icon-dungeon-namespace.md) |
 
+方向稿由左至右、由上至下編為 1–12；可回覆「**1–12 全部核准**」，或列出
+需修改的編號與原因。逐格名稱、製作批次與不可破壞的規則集中在
+[`dungeon-review.json`](artwork/modern-icon/m1/dungeon-review.json)，並由工具驗證，
+不硬寫在引擎程式中。未收到明確核准前，P3-D 維持「美術待審」。
+
 全域檢查也修正了早期世界盤點的範圍漏洞：map 21 的 `0x5a` 凍土先前不在
 33–64 掃描範圍內。現已補成正常／冬季各八變體，全部 SUM.MAP 世界段的
 正常與冬季缺格皆為 `none`：

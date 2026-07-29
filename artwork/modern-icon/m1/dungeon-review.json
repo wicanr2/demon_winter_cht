@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "directionImage": "../../../docs/design/img/modern-icon-dungeon-direction-v1.png",
+  "status": "pending",
+  "elements": [
+    {
+      "id": "01-floor",
+      "label": "石板地面",
+      "row": 1,
+      "column": 1,
+      "decision": "pending",
+      "batch": "D1",
+      "mustPreserve": ["可無縫鋪排", "不誤判為特殊地形"]
+    },
+    {
+      "id": "02-wall",
+      "label": "緋紅磚牆",
+      "row": 1,
+      "column": 2,
+      "decision": "pending",
+      "batch": "D2",
+      "mustPreserve": ["阻擋輪廓清楚", "與地面對比足夠"]
+    },
+    {
+      "id": "03-corner",
+      "label": "牆角",
+      "row": 1,
+      "column": 3,
+      "decision": "pending",
+      "batch": "D2",
+      "mustPreserve": ["轉角拓撲可讀", "與直牆接縫一致"]
+    },
+    {
+      "id": "04-corridor",
+      "label": "走廊",
+      "row": 1,
+      "column": 4,
+      "decision": "pending",
+      "batch": "D1",
+      "mustPreserve": ["行走方向可讀", "重複鋪排不露接縫"]
+    },
+    {
+      "id": "05-door",
+      "label": "木門",
+      "row": 2,
+      "column": 1,
+      "decision": "pending",
+      "batch": "D3",
+      "mustPreserve": ["門的開關狀態可辨", "不與一般牆混淆"]
+    },
+    {
+      "id": "06-portcullis",
+      "label": "鐵閘",
+      "row": 2,
+      "column": 2,
+      "decision": "pending",
+      "batch": "D3",
+      "mustPreserve": ["與木門明確區別", "阻擋狀態可讀"]
+    },
+    {
+      "id": "07-secret-wall",
+      "label": "密牆",
+      "row": 2,
+      "column": 3,
+      "decision": "pending",
+      "batch": "D3",
+      "mustPreserve": ["發現前不得主動洩漏", "發現後提示仍須克制"]
+    },
+    {
+      "id": "08-column",
+      "label": "石柱",
+      "row": 2,
+      "column": 4,
+      "decision": "pending",
+      "batch": "D2",
+      "mustPreserve": ["阻擋輪廓清楚", "不誤判為牆角"]
+    },
+    {
+      "id": "09-stairs",
+      "label": "樓梯",
+      "row": 3,
+      "column": 1,
+      "decision": "pending",
+      "batch": "D3",
+      "mustPreserve": ["出口可讀", "上下方向可辨"]
+    },
+    {
+      "id": "10-ritual-circle",
+      "label": "儀式陣",
+      "row": 3,
+      "column": 2,
+      "decision": "pending",
+      "batch": "D4",
+      "mustPreserve": ["不可誤認為普通地面", "劇情重點清楚但不新增提示"]
+    },
+    {
+      "id": "11-ice-wall",
+      "label": "冰牆",
+      "row": 3,
+      "column": 3,
+      "decision": "pending",
+      "batch": "D4",
+      "mustPreserve": ["碰撞輪廓清楚", "冰寒材質可辨"]
+    },
+    {
+      "id": "12-lava-floor",
+      "label": "熔岩地",
+      "row": 3,
+      "column": 4,
+      "decision": "pending",
+      "batch": "D4",
+      "mustPreserve": ["危險性可讀", "不得改變原地形規則"]
+    }
+  ]
+}

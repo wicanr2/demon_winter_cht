@@ -29,11 +29,19 @@ func main() {
 	inventory := flag.Bool("inventory", false, "列出所有地圖實際使用的 tile、總數與第一個座標")
 	inventoryJSON := flag.String("inventory-json", "", "把 inventory 另存為 JSON（空字串表示不輸出）")
 	theme := flag.String("theme", "", "搭配 inventory 檢查 Modern Icon theme.json 正常／冬季覆寫")
+	reviewCheck := flag.String("review-check", "", "驗證 Modern Icon 地城審稿 JSON 後離開")
 	minMap := flag.Int("min-map", 0, "掃描時只納入此編號以上的地圖（0 表示不限制）")
 	maxMap := flag.Int("max-map", 0, "掃描時只納入此編號以下的地圖（0 表示不限制）")
 	limit := flag.Int("limit", 12, "find-tiles 最多列出幾個視窗")
 	flag.Parse()
 
+	if *reviewCheck != "" {
+		if err := checkDungeonReview(*reviewCheck); err != nil {
+			panic(err)
+		}
+		fmt.Printf("地城審稿 JSON：通過（%s）\n", *reviewCheck)
+		return
+	}
 	if *inventory {
 		if err := printInventory(*data, *theme, *inventoryJSON, *minMap, *maxMap); err != nil {
 			panic(err)
@@ -86,6 +94,80 @@ func main() {
 		fmt.Printf(" %02x=%d", k, counts[byte(k)])
 	}
 	fmt.Println()
+}
+
+type dungeonReview struct {
+	Schema         int                    `json:"schema"`
+	DirectionImage string                 `json:"directionImage"`
+	Status         string                 `json:"status"`
+	Elements       []dungeonReviewElement `json:"elements"`
+}
+
+type dungeonReviewElement struct {
+	ID           string   `json:"id"`
+	Label        string   `json:"label"`
+	Row          int      `json:"row"`
+	Column       int      `json:"column"`
+	Decision     string   `json:"decision"`
+	Batch        string   `json:"batch"`
+	MustPreserve []string `json:"mustPreserve"`
+}
+
+func checkDungeonReview(path string) error {
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("讀取地城審稿 JSON：%w", err)
+	}
+	var review dungeonReview
+	if err := json.Unmarshal(raw, &review); err != nil {
+		return fmt.Errorf("解析地城審稿 JSON：%w", err)
+	}
+	if review.Schema != 1 {
+		return fmt.Errorf("地城審稿 schema = %d，預期 1", review.Schema)
+	}
+	if review.DirectionImage == "" {
+		return fmt.Errorf("地城審稿缺 directionImage")
+	}
+	if !validReviewDecision(review.Status) {
+		return fmt.Errorf("地城審稿總狀態 %q 無效", review.Status)
+	}
+	if len(review.Elements) != 12 {
+		return fmt.Errorf("地城審稿元素 = %d，預期 12", len(review.Elements))
+	}
+	ids := map[string]bool{}
+	positions := map[[2]int]bool{}
+	for i, e := range review.Elements {
+		if e.ID == "" || e.Label == "" || e.Batch == "" {
+			return fmt.Errorf("地城審稿元素 %d 缺 id、label 或 batch", i+1)
+		}
+		if ids[e.ID] {
+			return fmt.Errorf("地城審稿 id %q 重複", e.ID)
+		}
+		ids[e.ID] = true
+		if e.Row < 1 || e.Row > 3 || e.Column < 1 || e.Column > 4 {
+			return fmt.Errorf("地城審稿 %q 格位 (%d,%d) 超界", e.ID, e.Row, e.Column)
+		}
+		pos := [2]int{e.Row, e.Column}
+		if positions[pos] {
+			return fmt.Errorf("地城審稿格位 (%d,%d) 重複", e.Row, e.Column)
+		}
+		positions[pos] = true
+		if !validReviewDecision(e.Decision) {
+			return fmt.Errorf("地城審稿 %q decision %q 無效", e.ID, e.Decision)
+		}
+		if len(e.MustPreserve) == 0 {
+			return fmt.Errorf("地城審稿 %q 缺 mustPreserve", e.ID)
+		}
+	}
+	return nil
+}
+
+func validReviewDecision(s string) bool {
+	switch s {
+	case "pending", "approved", "revise", "rejected":
+		return true
+	}
+	return false
 }
 
 type tileUse struct {

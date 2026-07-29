@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -85,6 +86,45 @@ func TestFormatTileList(t *testing.T) {
 	}
 	if got := formatTileList([]int{0x15, 0x2f}); got != " 15 2f" {
 		t.Fatalf("清單 = %q", got)
+	}
+}
+
+func TestCheckDungeonReview(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "review.json")
+	var elements []string
+	for i := 0; i < 12; i++ {
+		elements = append(elements, fmt.Sprintf(
+			`{"id":"e%d","label":"元素%d","row":%d,"column":%d,`+
+				`"decision":"pending","batch":"D1","mustPreserve":["規則"]}`,
+			i, i, i/4+1, i%4+1))
+	}
+	raw := fmt.Sprintf(`{"schema":1,"directionImage":"direction.png",`+
+		`"status":"pending","elements":[%s]}`, strings.Join(elements, ","))
+	if err := os.WriteFile(path, []byte(raw), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkDungeonReview(path); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCheckDungeonReviewRejectsDuplicateGridCell(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "review.json")
+	raw := `{"schema":1,"directionImage":"direction.png","status":"pending","elements":[`
+	for i := 0; i < 12; i++ {
+		if i != 0 {
+			raw += ","
+		}
+		raw += fmt.Sprintf(
+			`{"id":"e%d","label":"元素","row":1,"column":1,`+
+				`"decision":"pending","batch":"D1","mustPreserve":["規則"]}`, i)
+	}
+	raw += `]}`
+	if err := os.WriteFile(path, []byte(raw), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkDungeonReview(path); err == nil {
+		t.Fatal("重複格位沒有被拒絕")
 	}
 }
 
