@@ -92,9 +92,9 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 [`docs/playtest/20`](docs/playtest/20-modern-icon-high-resolution-layer.md)：它已證明
 64×56 最終畫布覆寫可行；實際索引盤點後，首批平原與深海也已進入同一固定場景。
 
-![Modern Icon 平原／深海 M1 實機試片](docs/design/img/modern-icon-m1-terrain-runtime.png)
+![Modern Icon 平原／深海／0x17 海岸 M1 實機試片](docs/design/img/modern-icon-m1-coast-runtime.png)
 
-岸線、樹木、城鎮、隊伍及其他索引尚未重畫，因此仍不能稱為完整主題。
+其餘方向岸線、樹木、城鎮、隊伍及其他索引尚未重畫，因此仍不能稱為完整主題。
 
 驗收採「前期完整垂直切片＋後期高風險串接抽樣」：新遊戲建角、購物與換裝，
 正常戰鬥／死亡／治療、狗頭人營地、升級、跨圖抵達加穆爾神殿均由可重播腳本實際跑通；
