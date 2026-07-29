@@ -56,11 +56,11 @@ func CampCastable(effect int) (bool, string) {
 		EffectResurrect, EffectPoison, EffectLight, EffectWindWalk:
 		return true, ""
 	case EffectSkillMod, EffectStrengthMod, EffectSpeedMod, EffectArmorMod:
-		return false, "這種增減只在戰鬥中有意義"
+		return false, "reason.cast.combat_modifier"
 	case EffectAOE, EffectInstantDeath, EffectBindApply:
-		return false, "這個法術要在戰鬥中才放得出來"
+		return false, "reason.cast.combat_only"
 	}
-	return false, "這個法術還不能在營地施放"
+	return false, "reason.cast.camp_unsupported"
 }
 
 // CampEffectNeedsTarget 回報營地效果是否需要從隊伍中選一名目標。
@@ -87,13 +87,13 @@ func CampItemCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, power
 func campCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, sp int, spendSP bool) CampCastResult {
 	switch {
 	case caster == nil || target == nil:
-		return CampCastResult{Reason: "沒有這個人"}
+		return CampCastResult{Reason: "reason.member.invalid"}
 	case int(caster.Status) >= campCastStatusLimit:
-		return CampCastResult{Reason: "現在沒辦法施法"}
+		return CampCastResult{Reason: "reason.cast.unavailable"}
 	case sp <= 0:
-		return CampCastResult{Reason: "要投入法力才放得出來"}
+		return CampCastResult{Reason: "reason.cast.sp_required"}
 	case spendSP && caster.CurrentSP < sp:
-		return CampCastResult{Reason: "法力不夠"}
+		return CampCastResult{Reason: "reason.cast.sp_insufficient"}
 	}
 	if ok, why := CampCastable(s.Effect); !ok {
 		return CampCastResult{Reason: why}
@@ -116,7 +116,7 @@ func campCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, sp int, s
 		res.Withered = CastWither(r, sp, s, u)
 	case EffectPoison:
 		if target.Status != scenario.StatusPoison {
-			res.Reason = "目標沒有中毒"
+			res.Reason = "reason.cast.target_not_poisoned"
 			break
 		}
 		if spellPercent(sp, s) >= r.Roll(100) {
@@ -126,7 +126,7 @@ func campCast(r *rng.RNG, caster, target *Character, s gamedata.Spell, sp int, s
 		return res
 	case EffectResurrect:
 		if target.Status != scenario.StatusDead && target.CurrentHP > 0 {
-			res.Reason = "目標並未死亡"
+			res.Reason = "reason.cast.target_not_dead"
 			break
 		}
 		// 原版復活擲兩次百分骰取較小值，再與 K×SP/M 比較。
@@ -187,8 +187,8 @@ func writeBackFromUnit(c *Character, u *Unit) {
 
 // CampCastCandidates 列出這名角色在營地放得出來的法術索引。
 //
-// 過濾的是**效果類型**，不是技能 —— 本專案的施法選單目前不看技能
-// （戰鬥中也一樣），那是另一個待補的坑。
+// 這一層只過濾**效果類型**；呼叫端 `rebuildCampSpells` 再依目前施法者
+// 呼叫 `CanCast` 套用符文／吟唱技能閘門。戰鬥選單也走同一閘門。
 func CampCastCandidates(t *gamedata.Tables) []int {
 	if t == nil {
 		return nil

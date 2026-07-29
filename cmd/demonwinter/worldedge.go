@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
+	"github.com/wicanr2/demon_winter_cht/internal/game"
 )
 
 // 世界子地圖的邊界換圖（步進分派碼 `0x15`／`0x19`）。
@@ -51,7 +52,21 @@ func (a *app) crossSubMapEdge(prevX, prevY int) bool {
 		return false
 	}
 
-	a.changeMap(res.MapID, res.X, res.Y)
+	// 原版在子地圖換算之前就能命中相鄰地圖的船。Walk 的 Boardable 已
+	// 放行邊界格；換算後用新地圖的精確座標取得同一艘船，完成登船狀態。
+	boarded := -1
+	if !game.Sailing(a.save.Boat) {
+		boarded = game.BoatAt(&a.save.Ships, res.X, res.Y, res.MapID)
+	}
+	if !a.changeMap(res.MapID, res.X, res.Y) {
+		return false
+	}
+	if boarded >= 0 && a.mapID == res.MapID &&
+		a.party.X() == res.X && a.party.Y() == res.Y {
+		a.save.Boat = game.BoatValue(boarded)
+		a.party.SetSailing(true)
+		a.trace.note("跨子地圖登船：第 %d 艘", boarded+1)
+	}
 	// **`0x15` 的動作是「什麼都不做」**（`docs/re/58` §2）——
 	// 換子地圖在移動常式裡就做完了，畫面只是重畫。
 	// `changeMap` 給的「進入地圖 N」是給樓梯用的，這裡要清掉：

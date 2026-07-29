@@ -34,8 +34,8 @@ func TestShippedSaveIsNotANewGame(t *testing.T) {
 	got := origParty(t)
 
 	type field struct {
-		name       string
-		shipped    int
+		name        string
+		shipped     int
 		wantNewGame int
 	}
 	fields := []field{
@@ -71,7 +71,7 @@ func TestApplyNewGame(t *testing.T) {
 	ApplyNewGame(s, NewGameEncounterMin)
 
 	checks := []struct {
-		name     string
+		name      string
 		got, want int
 	}{
 		{"糧食", int(s.Rations), NewGameRations},
@@ -150,9 +150,9 @@ func TestApplyNewGameShips(t *testing.T) {
 	}
 }
 
-// 遭遇倒數要夾在 14–18。
+// 遭遇倒數要夾在 15–19；Roll(5) 是 1-based。
 func TestApplyNewGameEncounterClamp(t *testing.T) {
-	for _, in := range []int{-5, 0, 13, 14, 18, 19, 999} {
+	for _, in := range []int{-5, 0, 14, 15, 18, 19, 20, 999} {
 		s := origParty(t)
 		ApplyNewGame(s, in)
 		got := int(s.EncounterCountdown)
@@ -160,5 +160,12 @@ func TestApplyNewGameEncounterClamp(t *testing.T) {
 			t.Errorf("給 %d 得到 %d，超出 %d–%d",
 				in, got, NewGameEncounterMin, NewGameEncounterMax)
 		}
+	}
+	low, high := origParty(t), origParty(t)
+	ApplyNewGame(low, 0)
+	ApplyNewGame(high, 999)
+	if low.EncounterCountdown != 15 || high.EncounterCountdown != 19 {
+		t.Fatalf("鉗制端點 = %d／%d，預期 15／19",
+			low.EncounterCountdown, high.EncounterCountdown)
 	}
 }

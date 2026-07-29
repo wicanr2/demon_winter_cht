@@ -43,4 +43,6 @@ var commands = []struct {
 go run ./cmd/dwstrings uicheck
 ```
 
-通過條件是 key 完整、無孤兒、Big5 可顯示且玩家程式硬編中文為 0。
+通過條件是 key 完整、無孤兒、Big5 可顯示，且 `cmd/demonwinter` 與
+`internal/game` 的玩家文字硬編中文均為 0。規則結果只能回傳 key 與格式參數，
+不得先在引擎內組成某一語言的句子。

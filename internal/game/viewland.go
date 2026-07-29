@@ -36,15 +36,15 @@ const viewLandMinMapID = world.SubMapMinID
 func CanViewLand(c *Character, mapID int, usedToday bool) (bool, string) {
 	switch {
 	case c == nil:
-		return false, "沒有這個人"
+		return false, "reason.member.invalid"
 	case c.Status >= viewLandStatusLimit:
-		return false, "現在爬不上高處"
+		return false, "reason.viewland.unavailable"
 	case !c.HasSkill(SkillViewLand):
-		return false, "不會觀地"
+		return false, "reason.viewland.no_skill"
 	case usedToday:
-		return false, "今天已經看過了"
+		return false, "reason.viewland.used_today"
 	case mapID < viewLandMinMapID:
-		return false, "這裡看不到地形"
+		return false, "reason.viewland.location"
 	}
 	return true, ""
 }

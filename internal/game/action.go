@@ -42,7 +42,8 @@ type actionSpec struct {
 	endsTurn bool
 	// consumesAll 為真代表花掉全部剩餘點數（只有閃避）。
 	consumesAll bool
-	name        string
+	// name 是測試／追蹤用的穩定識別字，不是玩家文案。
+	name string
 }
 
 // actionSpecs 是手冊「移動點數」表。
@@ -51,23 +52,23 @@ type actionSpec struct {
 // **攻擊沒有星號** —— 12 點速度的角色可以攻擊兩次再閃避，
 // 這是原版刻意的攻守配置設計，不是疏漏。
 var actionSpecs = map[Action]actionSpec{
-	ActionForward:    {cost: 2, name: "前進"},
-	ActionTurnCW:     {cost: 1, name: "右轉"},
-	ActionTurnCCW:    {cost: 1, name: "左轉"},
-	ActionAboutFace:  {cost: 1, name: "迴轉"},
-	ActionAttack:     {cost: 3, name: "攻擊"},
-	ActionCast:       {cost: 3, endsTurn: true, name: "施法"},
-	ActionUseItem:    {cost: 3, endsTurn: true, name: "使用道具"},
-	ActionTurnUndead: {cost: 3, endsTurn: true, name: "驅散不死"},
-	ActionPray:       {cost: 3, endsTurn: true, name: "祈禱"},
-	ActionLeech:      {cost: 3, endsTurn: true, name: "汲取法力"},
-	ActionDodge:      {cost: 0, endsTurn: true, consumesAll: true, name: "閃避"},
-	ActionExamine:    {cost: 0, name: "檢視"},
-	ActionSound:      {cost: 0, name: "音效"},
-	ActionEndTurn:    {cost: 0, endsTurn: true, name: "結束回合"},
+	ActionForward:    {cost: 2, name: "forward"},
+	ActionTurnCW:     {cost: 1, name: "turn_cw"},
+	ActionTurnCCW:    {cost: 1, name: "turn_ccw"},
+	ActionAboutFace:  {cost: 1, name: "about_face"},
+	ActionAttack:     {cost: 3, name: "attack"},
+	ActionCast:       {cost: 3, endsTurn: true, name: "cast"},
+	ActionUseItem:    {cost: 3, endsTurn: true, name: "use_item"},
+	ActionTurnUndead: {cost: 3, endsTurn: true, name: "turn_undead"},
+	ActionPray:       {cost: 3, endsTurn: true, name: "pray"},
+	ActionLeech:      {cost: 3, endsTurn: true, name: "leech"},
+	ActionDodge:      {cost: 0, endsTurn: true, consumesAll: true, name: "dodge"},
+	ActionExamine:    {cost: 0, name: "examine"},
+	ActionSound:      {cost: 0, name: "sound"},
+	ActionEndTurn:    {cost: 0, endsTurn: true, name: "end_turn"},
 }
 
-// ActionName 回傳動作的中文名稱。
+// ActionName 回傳動作的穩定識別字，只供測試與追蹤。
 func ActionName(a Action) string { return actionSpecs[a].name }
 
 // ActionCost 回傳動作的點數成本。閃避回傳 0（它吃掉全部剩餘點數）。

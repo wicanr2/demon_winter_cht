@@ -33,6 +33,29 @@ func TestEncounterTriggered(t *testing.T) {
 	}
 }
 
+func TestEncounterLevelUsesMapBaseAndWinterStage(t *testing.T) {
+	tests := []struct {
+		name  string
+		base  int
+		stage byte
+		want  int
+	}{
+		{"一般時期", 4, 0, 4},
+		{"冬之魔降臨", 4, 2, 6},
+		{"只有階段二加值", 4, 3, 4},
+		{"上限十", 9, 2, 10},
+		{"損壞存檔下限", 0, 0, 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := EncounterLevel(tt.base, tt.stage); got != tt.want {
+				t.Fatalf("EncounterLevel(%d, %d) = %d，預期 %d",
+					tt.base, tt.stage, got, tt.want)
+			}
+		})
+	}
+}
+
 // 隻數 = 8 − rnd(7)，值域 1–7。
 func TestEncounterCount(t *testing.T) {
 	for roll := 1; roll <= 7; roll++ {

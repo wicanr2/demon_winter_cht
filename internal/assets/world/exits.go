@@ -38,12 +38,12 @@ const (
 	exitRecordCount = 55
 	exitFileSize    = exitRecordSize * exitRecordCount // 330
 
-	exitOffFromX = 0
-	exitOffFromY = 1
-	exitOffToMap = 2
-	exitOffToX   = 3
-	exitOffToY   = 4
-	exitOffUnk   = 5
+	exitOffFromX        = 0
+	exitOffFromY        = 1
+	exitOffToMap        = 2
+	exitOffToX          = 3
+	exitOffToY          = 4
+	exitOffMerchantBase = 5
 )
 
 // ExitRecord 是一筆出口：站在 (FromX, FromY) 會被送到 ToMap 的 (ToX, ToY)。
@@ -52,9 +52,9 @@ type ExitRecord struct {
 	// ToMap 是目的子地圖編號（原版寫進隊伍 `+0xa3`）。
 	ToMap    byte
 	ToX, ToY byte
-	// Unknown 是第 6 欄（原版寫進隊伍 `+0xaf`），語意未解。
-	// 觀察值多為 1–5，不猜它是什麼。
-	Unknown byte
+	// MerchantBase 是第 6 欄；換圖時原版寫進隊伍 `+0xaf`，並拿同一值
+	// 初始化遭遇／商隊共用的 `ds:0x5c60`（docs/re/107 §3）。
+	MerchantBase byte
 }
 
 // ExitTable 是 EXITS.DAT 解析後的 55 筆出口。
@@ -81,12 +81,12 @@ func LoadExits(path string) (*ExitTable, error) {
 	for i := range records {
 		off := i * exitRecordSize
 		rec := ExitRecord{
-			FromX:   data[off+exitOffFromX],
-			FromY:   data[off+exitOffFromY],
-			ToMap:   data[off+exitOffToMap],
-			ToX:     data[off+exitOffToX],
-			ToY:     data[off+exitOffToY],
-			Unknown: data[off+exitOffUnk],
+			FromX:        data[off+exitOffFromX],
+			FromY:        data[off+exitOffFromY],
+			ToMap:        data[off+exitOffToMap],
+			ToX:          data[off+exitOffToX],
+			ToY:          data[off+exitOffToY],
+			MerchantBase: data[off+exitOffMerchantBase],
 		}
 		records[i] = rec
 

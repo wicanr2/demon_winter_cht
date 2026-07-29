@@ -33,27 +33,27 @@ func TestDropItem_Refusals(t *testing.T) {
 		reason string
 	}{
 		{"空格", func() (*Character, int, byte) { return campChar("A"), 0, 0 },
-			"這一格是空的"},
+			"reason.slot.empty"},
 		{"地城道具", func() (*Character, int, byte) { return campChar("A", ItemTypeDungeon), 0, 0 },
-			"地城道具不能在營地丟棄"},
+			"reason.item.dungeon_drop"},
 		{"裝備中的武器", func() (*Character, int, byte) {
 			c := campChar("A", 3)
 			c.EquippedWeapon = 0
 			return c, 0, 0
-		}, "那件裝備還在身上"},
+		}, "reason.item.equipped"},
 		{"裝備中的護甲", func() (*Character, int, byte) {
 			c := campChar("A", 9)
 			c.EquippedArmor = 0
 			return c, 0, 0
-		}, "那件裝備還在身上"},
+		}, "reason.item.equipped"},
 		{"型別 0x1c 一律不可丟", func() (*Character, int, byte) {
 			return campChar("A", itemTypeNoDrop), 0, 0xff
-		}, "我看你不會想這麼做"},
+		}, "reason.item.drop_refused"},
 		{"型別 0x1d 且旗標為 0", func() (*Character, int, byte) {
 			return campChar("A", itemTypeGatedDrop), 0, 0
-		}, "我看你不會想這麼做"},
+		}, "reason.item.drop_refused"},
 		{"沒有這一格", func() (*Character, int, byte) { return campChar("A", 3), 10, 0 },
-			"沒有這一格"},
+			"reason.slot.invalid"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -125,10 +125,10 @@ func TestGiveItem_Refusals(t *testing.T) {
 		slot     int
 		reason   string
 	}{
-		{"收方滿了", campChar("A", 3), full, 0, "B 的道具欄滿了"},
-		{"空格", campChar("A"), campChar("B"), 0, "這一格是空的"},
-		{"裝備中", equipped, campChar("B"), 0, "那件裝備還在身上"},
-		{"沒有這一格", campChar("A", 3), campChar("B"), -1, "沒有這一格"},
+		{"收方滿了", campChar("A", 3), full, 0, "reason.inventory.member_full"},
+		{"空格", campChar("A"), campChar("B"), 0, "reason.slot.empty"},
+		{"裝備中", equipped, campChar("B"), 0, "reason.item.equipped"},
+		{"沒有這一格", campChar("A", 3), campChar("B"), -1, "reason.slot.invalid"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -151,5 +151,15 @@ func TestGiveItem_SelfIsRefused(t *testing.T) {
 	c := campChar("A", 3)
 	if res := GiveItem(c, c, 0); res.OK {
 		t.Fatal("不應該可以給自己")
+	}
+}
+
+func TestGiveItem_FullCarriesNameAsData(t *testing.T) {
+	full := campChar("收件人", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	res := GiveItem(campChar("寄件人", 3), full, 0)
+	if res.Reason != "reason.inventory.member_full" ||
+		len(res.ReasonArgs) != 1 || res.ReasonArgs[0] != "收件人" {
+		t.Fatalf("滿載原因應拆成 key＋名稱參數，得到 %#v／%#v",
+			res.Reason, res.ReasonArgs)
 	}
 }

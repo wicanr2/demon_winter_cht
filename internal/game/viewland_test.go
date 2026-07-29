@@ -25,11 +25,11 @@ func TestCanViewLand_Refusals(t *testing.T) {
 		usedToday bool
 		reason    string
 	}{
-		{"沒有這個人", nil, 44, false, "沒有這個人"},
-		{"狀態太差", poisoned, 44, false, "現在爬不上高處"},
-		{"不會觀地", viewChar(false), 44, false, "不會觀地"},
-		{"今天用過了", viewChar(true), 44, true, "今天已經看過了"},
-		{"在地城裡", viewChar(true), 10, false, "這裡看不到地形"},
+		{"沒有這個人", nil, 44, false, "reason.member.invalid"},
+		{"狀態太差", poisoned, 44, false, "reason.viewland.unavailable"},
+		{"不會觀地", viewChar(false), 44, false, "reason.viewland.no_skill"},
+		{"今天用過了", viewChar(true), 44, true, "reason.viewland.used_today"},
+		{"在地城裡", viewChar(true), 10, false, "reason.viewland.location"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

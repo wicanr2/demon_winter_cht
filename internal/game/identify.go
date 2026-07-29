@@ -93,22 +93,22 @@ type IdentifyResult struct {
 // → 有沒有對應的學識。
 func CanIdentify(c *Character, slot int) (bool, string) {
 	if c.Status >= scenario.CombatStatus(identifyStatusLimit) {
-		return false, "現在沒辦法研究東西"
+		return false, "reason.identify.unavailable"
 	}
 	if c.IdentifiedToday {
-		return false, "今天已經研究過了"
+		return false, "reason.identify.used_today"
 	}
 	if slot < 0 || slot >= InventorySlots {
-		return false, "沒有這一格"
+		return false, "reason.slot.invalid"
 	}
 	it := c.Inventory[slot]
 	switch {
 	case it.Empty():
-		return false, "這一格是空的"
+		return false, "reason.slot.empty"
 	case it.Identified:
-		return false, "這件已經鑑定過了"
+		return false, "reason.identify.already"
 	case !c.HasSkill(LoreSkillFor(it.Type)):
-		return false, "看不懂這一類東西"
+		return false, "reason.identify.unsupported"
 	}
 	return true, ""
 }

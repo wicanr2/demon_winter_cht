@@ -67,14 +67,15 @@ func modernVideoTheme(src *videoTheme) *videoTheme {
 	}
 }
 
-func themeName(id themeID) string {
+// themeNameKey 只回傳穩定識別字；玩家看見的名稱一律由 ui.json 提供。
+func themeNameKey(id themeID) string {
 	if id == themeCGA {
-		return "CGA"
+		return "theme.name.cga"
 	}
 	if id == themeModern {
-		return "Modern Icon"
+		return "theme.name.modern"
 	}
-	return "EGA"
+	return "theme.name.ega"
 }
 
 func nextThemeID(id themeID) themeID {
@@ -98,7 +99,7 @@ func (a *app) toggleVideoTheme() error {
 
 	t := a.videoThemes[next]
 	if t == nil {
-		return fmt.Errorf("%s theme 尚未載入", themeName(next))
+		return fmt.Errorf("theme %s unavailable", next)
 	}
 
 	a.normal, a.winter = t.normal, t.winter
@@ -106,8 +107,8 @@ func (a *app) toggleVideoTheme() error {
 	a.modernIcons = t.icons
 	a.videoMode = t.normal.Mode()
 	a.themeID = next
-	name := themeName(next)
-	a.message = a.tr.UI("theme.changed") + name
-	a.logf("F8 → %s theme", name)
+	name := a.tr.UI(themeNameKey(next))
+	a.message = fmt.Sprintf(a.tr.UI("theme.changed"), name)
+	a.logf(a.tr.UI("theme.log"), name)
 	return nil
 }

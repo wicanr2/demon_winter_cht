@@ -31,7 +31,8 @@ const MerchantMaxSize = 9
 //
 //	規模 = clamp(基準 + rnd(3) − 2, ≤ 9)
 //
-// 基準來自存檔的 `+0xaf`（戶外會被地圖記錄自帶的參數覆蓋，那個來源沒解）。
+// 基準來自存檔的 `+0xaf`；踩出口時會被 EXITS.DAT 第六欄更新
+// （`docs/re/107` §3）。
 const (
 	merchantSizeDie    = 3
 	merchantSizeOffset = 2
@@ -257,21 +258,21 @@ func HaggleWith(r *rng.RNG, m *Merchant, i int) (HaggleOutcome, bool) {
 // 那個狀態是公式缺一項時的自保，補齊就拿掉。
 func BuyFromMerchant(m *Merchant, i int, members []Character, gold int) TradeResult {
 	if m == nil || i < 0 || i >= len(m.Wares) {
-		return TradeResult{Reason: "沒有這一件", Gold: gold}
+		return TradeResult{Reason: "reason.merchant.item_missing", Gold: gold}
 	}
 	w := &m.Wares[i]
 	switch {
 	case w.Sold:
-		return TradeResult{Reason: "這件已經賣掉了", Gold: gold}
+		return TradeResult{Reason: "reason.merchant.item_sold", Gold: gold}
 	case w.Exposed:
 		// 原版把揭穿的貨標成計數器 1001，貨單上**不顯示價錢**（改印
 		// " LIE "）。它還賣不賣得成沒讀（`docs/re/53` §3），
 		// 沒讀就不猜 —— 標出來、不賣，是誠實的一邊。
-		return TradeResult{Reason: "他報的價是假的，你不買了", Gold: gold}
+		return TradeResult{Reason: "reason.merchant.quote_invalid", Gold: gold}
 	case w.Haggle.Refused():
-		return TradeResult{Reason: "商人不肯賣這件給你了", Gold: gold}
+		return TradeResult{Reason: "reason.merchant.refused", Gold: gold}
 	case w.WarePrice() > gold:
-		return TradeResult{Reason: "金幣不夠", Gold: gold, Slot: -1}
+		return TradeResult{Reason: "reason.gold.insufficient", Gold: gold, Slot: -1}
 	}
 	for n := range members {
 		slot := members[n].FreeSlot()
@@ -282,5 +283,5 @@ func BuyFromMerchant(m *Merchant, i int, members []Character, gold int) TradeRes
 		w.Sold = true
 		return TradeResult{OK: true, Gold: gold - w.WarePrice(), Slot: slot, Member: n}
 	}
-	return TradeResult{Reason: "全隊的道具欄都滿了", Gold: gold}
+	return TradeResult{Reason: "reason.inventory.party_full", Gold: gold}
 }

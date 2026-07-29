@@ -1,10 +1,6 @@
 package game
 
-import (
-	"fmt"
-
-	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
-)
+import "github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 
 // 城鎮設施的「做下去會怎樣」那一半。
 //
@@ -18,8 +14,10 @@ import (
 type ServiceResult struct {
 	// OK 為 true 代表服務完成、Gold 已經是扣款後的餘額。
 	OK bool
-	// Reason 是沒成的原因。
+	// Reason 是 ui.json 的原因 key；規則層不得保存玩家文案。
 	Reason string
+	// ReasonArgs 是套入 Reason 文案的格式參數。
+	ReasonArgs []any
 	// Gold 是結束後的金幣（沒成交時等於原值）。
 	Gold int
 	// Cost 是這次服務的價錢（沒成交時仍然填，方便顯示「你差多少」）。
@@ -28,7 +26,7 @@ type ServiceResult struct {
 
 // notEnoughGold 是四個設施共用的同一句話。原版在五處都是同構的 32-bit 比較。
 func notEnoughGold(gold, cost int) ServiceResult {
-	return ServiceResult{Reason: "金幣不夠", Gold: gold, Cost: cost}
+	return ServiceResult{Reason: "reason.gold.insufficient", Gold: gold, Cost: cost}
 }
 
 // --- 治療所 ---
@@ -47,7 +45,8 @@ func Heal(e Economy, c *Character, gold int) (HealerService, ServiceResult) {
 		c.MaxHP-c.CurrentHP)
 	switch {
 	case svc == HealerNone:
-		return svc, ServiceResult{Reason: c.Name + " 不需要治療", Gold: gold}
+		return svc, ServiceResult{Reason: "reason.heal.not_needed",
+			ReasonArgs: []any{c.Name}, Gold: gold}
 	case cost > gold:
 		return svc, notEnoughGold(gold, cost)
 	}
@@ -73,7 +72,7 @@ func Heal(e Economy, c *Character, gold int) (HealerService, ServiceResult) {
 func BuyRations(e Economy, gold, rations, count int) ServiceResult {
 	if count < MinRations || count > MaxRations {
 		return ServiceResult{Gold: gold,
-			Reason: "一次只能買 1–200 份"}
+			Reason: "reason.rations.range"}
 	}
 	cost := e.RationUnitPrice() * count
 	if cost > gold {
@@ -81,7 +80,7 @@ func BuyRations(e Economy, gold, rations, count int) ServiceResult {
 	}
 	if rations+count > maxRationsHeld {
 		return ServiceResult{Gold: gold, Cost: cost,
-			Reason: "隊伍帶不了那麼多糧食"}
+			Reason: "reason.rations.capacity"}
 	}
 	return ServiceResult{OK: true, Gold: gold - cost, Cost: cost}
 }
@@ -93,7 +92,7 @@ func BuyRations(e Economy, gold, rations, count int) ServiceResult {
 // 沒有倍率，也不看等級或神祇 —— 就是 1:1（`docs/re/19` §3.2 指令級證據）。
 func Donate(c *Character, gold, amount int) ServiceResult {
 	if amount < 1 {
-		return ServiceResult{Gold: gold, Reason: "要捐多少？"}
+		return ServiceResult{Gold: gold, Reason: "reason.donate.amount"}
 	}
 	if amount > gold {
 		return notEnoughGold(gold, amount)
@@ -116,11 +115,12 @@ func Donate(c *Character, gold, amount int) ServiceResult {
 // 本專案照著寫成「沒有信仰的人不擋」，也一併訂正。
 func PrayAtTemple(c *Character, gold, townDeity int) ServiceResult {
 	if !c.HasSkill(DeityOrder(townDeity)) || c.Deity != townDeity {
-		return ServiceResult{Gold: gold, Reason: c.Name + " 不信奉這位神"}
+		return ServiceResult{Gold: gold, Reason: "reason.temple.not_worshipper",
+			ReasonArgs: []any{c.Name}}
 	}
 	if c.PrayChance >= FavorMax {
 		return ServiceResult{Gold: gold,
-			Reason: c.Name + " 與神的關係已經很好"}
+			Reason: "reason.temple.favor_full", ReasonArgs: []any{c.Name}}
 	}
 	cost := PrayCost(c.Level)
 	if cost > gold {
@@ -185,7 +185,8 @@ func (c *Character) CanLevelUp() (bool, int) {
 // （見 Character.RemainingSkillPoints）—— 所以學了就永久佔著。
 func LearnSkill(t *gamedata.Tables, c *Character, gold int, skill gamedata.SkillID) (ServiceResult, error) {
 	if c.HasSkill(skill) {
-		return ServiceResult{Gold: gold, Reason: c.Name + " 已經會這項技能了"}, nil
+		return ServiceResult{Gold: gold, Reason: "reason.skill.already_known",
+			ReasonArgs: []any{c.Name}}, nil
 	}
 	points, err := t.SkillCost(skill, c.Class)
 	if err != nil {
@@ -198,8 +199,8 @@ func LearnSkill(t *gamedata.Tables, c *Character, gold int, skill gamedata.Skill
 	cost := CollegeGoldCost(points)
 	if remaining < points {
 		return ServiceResult{Gold: gold, Cost: cost,
-			Reason: fmt.Sprintf("%s 的智力點數不夠（要 %d，剩 %d）",
-				c.Name, points, remaining)}, nil
+			Reason:     "reason.skill.intelligence",
+			ReasonArgs: []any{c.Name, points, remaining}}, nil
 	}
 	if cost > gold {
 		return notEnoughGold(gold, cost), nil
@@ -260,14 +261,15 @@ func DeityOrder(deity int) gamedata.SkillID {
 //   - 智力點數不夠 → 拒絕
 func ConvertAtTemple(t *gamedata.Tables, c *Character, gold, deity int) (ServiceResult, error) {
 	if deity < DeityMin || deity > DeityMax {
-		return ServiceResult{Gold: gold, Reason: "這裡沒有神殿"}, nil
+		return ServiceResult{Gold: gold, Reason: "reason.temple.missing"}, nil
 	}
 	if c.Deity == deity {
-		return ServiceResult{Gold: gold, Reason: c.Name + " 已經信奉這位神了"}, nil
+		return ServiceResult{Gold: gold, Reason: "reason.temple.already_worships",
+			ReasonArgs: []any{c.Name}}, nil
 	}
 	if c.HasSkill(SkillShaman) || c.HasSkill(SkillPriesthood) {
-		return ServiceResult{Gold: gold,
-			Reason: c.Name + " 已經獻身給另一位神了"}, nil
+		return ServiceResult{Gold: gold, Reason: "reason.temple.other_deity",
+			ReasonArgs: []any{c.Name}}, nil
 	}
 
 	skill := DeityOrder(deity)
@@ -280,9 +282,8 @@ func ConvertAtTemple(t *gamedata.Tables, c *Character, gold, deity int) (Service
 		return ServiceResult{Gold: gold}, err
 	}
 	if remaining < points {
-		return ServiceResult{Gold: gold,
-			Reason: fmt.Sprintf("%s 的智力點數不夠（要 %d，剩 %d）",
-				c.Name, points, remaining)}, nil
+		return ServiceResult{Gold: gold, Reason: "reason.skill.intelligence",
+			ReasonArgs: []any{c.Name, points, remaining}}, nil
 	}
 
 	c.Skills[skill] = true

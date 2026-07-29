@@ -11,8 +11,9 @@ import (
 // 掛在事件動作分派表的 `case 0x16`。**觸發條件是倒數計時器
 // `隊伍[+0x9c]` 歸零**（`0x16aee`），不是機率 —— 本文原本寫的
 // 「觸發在 FUN_222f_0763（時間推進）」是把商隊那一擲當成了戰鬥，
-// 見 `docs/re/51`。計時器的重設規則還沒解。資料表的來歷與「地形就是可通行性值」
-// 這個結論見 `internal/assets/gamedata/encounter.go` 與 `docs/re/24`。
+// 見 `docs/re/51`。計時器初值、戰後、警報與海戰重設均已解並接入；
+// 資料表的來歷與「地形就是可通行性值」見
+// `internal/assets/gamedata/encounter.go` 與 `docs/re/24`。
 //
 // # 流程
 //
@@ -44,7 +45,7 @@ const (
 	// 歸零觸發，不是機率。
 	//
 	// 常數本身沒錯，錯的是它接到哪裡。本專案現在拿它觸發商隊；
-	// 隨機戰鬥另外擲一次同樣機率的**替身**（倒數計時器的重設值還沒解）。
+	// 隨機戰鬥走獨立的持久化倒數，不再使用這道 1/64。
 	EncounterChanceMask = 0x3f
 	EncounterChanceHit  = 0x34
 
@@ -60,6 +61,23 @@ const (
 	// encounterEntryRetries 是單隻怪挑不到時的重試上限，理由同上。
 	encounterEntryRetries = 32
 )
+
+// EncounterLevel 重現進地圖後的遭遇難度值。
+//
+// 基準來自存檔 +0xaf；踩 EXITS.DAT 出口時，第六欄會更新該值。
+// 冬之魔降臨（劇情階段 2）後，原版再加 2，並把結果鉗在 10。
+func EncounterLevel(base int, plotStage byte) int {
+	if base < 1 {
+		base = 1
+	}
+	if plotStage == 2 {
+		base += 2
+	}
+	if base > 10 {
+		base = 10
+	}
+	return base
+}
 
 // EncounterTriggered 回報這一步有沒有觸發隨機遭遇。
 //
@@ -179,8 +197,8 @@ func EncounterCountdownAfterBattle(r *rng.RNG) int {
 
 // EncounterCountdownAlarm 回傳觸發警報之後的重設值（1–5 步）。
 //
-// 原版還有兩個寫入點沒讀完（`0x106ff` 的 151–200、`0x189ad` 的 1），
-// 脈絡不明就不實作 —— 那兩個值套錯地方會直接改掉遭遇節奏。
+// `0x106ff` 的 151–200 後續已由 IDA 海戰收尾定案；由海戰呼叫端直接設定。
+// 另一個常數 1 的事件脈絡與警報不同，不在這個 helper 合併。
 func EncounterCountdownAlarm(r *rng.RNG) int { return r.Roll(countdownAlarmDie) }
 
 // StepEncounterCountdown 走一步：把計時器減一，回報這一步要不要開打。

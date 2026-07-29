@@ -172,10 +172,10 @@ func TestBuyFromMerchant_Refusals(t *testing.T) {
 		member Character
 		reason string
 	}{
-		{"金幣不夠", base, 10, *campChar("窮"), "金幣不夠"},
+		{"金幣不夠", base, 10, *campChar("窮"), "reason.gold.insufficient"},
 		{"已經賣掉", MerchantWare{Item: base.Item, Price: 50, Sold: true},
-			999, *campChar("A"), "這件已經賣掉了"},
-		{"包包滿了", base, 999, full, "全隊的道具欄都滿了"},
+			999, *campChar("A"), "reason.merchant.item_sold"},
+		{"包包滿了", base, 999, full, "reason.inventory.party_full"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

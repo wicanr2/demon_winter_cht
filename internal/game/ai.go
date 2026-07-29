@@ -46,7 +46,7 @@ package game
 // 對翻表都相容，完整推導見 side.go。所以 0x79ef 的 `> 10` 就是「目標必須在
 // 玩家側」。
 //
-// **還沒實作**：噴吐傷害（範圍已解，見 breath.go）。
+// 噴吐範圍、傷害、元素免疫與誤傷否決已在 breath.go 接入；
 // AI 選法術見 aispell.go，效果分派與挑目標見 aicast.go。
 
 // noAITarget 是「還沒有目標」的哨兵值。

@@ -60,22 +60,22 @@ type UseResult struct {
 // 光源則是另外一條路、不看那兩個欄位。
 func CanUseInCamp(c *Character, slot int) (bool, string) {
 	if c == nil {
-		return false, "沒有這個人"
+		return false, "reason.member.invalid"
 	}
 	if int(c.Status) >= useStatusLimit {
-		return false, "現在沒辦法用東西"
+		return false, "reason.item.use_unavailable"
 	}
 	if slot < 0 || slot >= InventorySlots {
-		return false, "沒有這一格"
+		return false, "reason.slot.invalid"
 	}
 	it := c.Inventory[slot]
 	switch {
 	case it.Empty():
-		return false, "這一格是空的"
+		return false, "reason.slot.empty"
 	case LightSourceLevel(it.Type) != 0:
 		return true, ""
 	case !it.Usable():
-		return false, "這件現在用不了"
+		return false, "reason.item.cannot_use_now"
 	}
 	return true, ""
 }
@@ -92,7 +92,7 @@ func UseInCamp(c *Character, slot int) UseResult {
 	level := LightSourceLevel(c.Inventory[slot].Type)
 	if level == 0 {
 		// CanUseInCamp 已經擋掉其餘情形，走到這裡代表判定與行為脫節了。
-		return UseResult{Reason: "這件要在戰鬥中才用得出來"}
+		return UseResult{Reason: "reason.item.combat_only"}
 	}
 	c.Inventory[slot].Type = itemSlotEmpty
 	c.unequipIfSlot(slot)

@@ -26,8 +26,9 @@ const (
 // ItemMoveResult 是一次丟棄或轉手的結果。
 type ItemMoveResult struct {
 	OK bool
-	// Reason 是沒成功的原因。
-	Reason string
+	// Reason 是 ui.json 的原因 key。
+	Reason     string
+	ReasonArgs []any
 	// Slot 是收方收下的那一格（轉手成功時才有意義），其餘情況為 −1。
 	Slot int
 }
@@ -47,19 +48,19 @@ type ItemMoveResult struct {
 // 清空的那一格因此留著前一件的殘值 —— 與原版存檔的樣子一致。
 func DropItem(c *Character, slot int, flagC1 byte) ItemMoveResult {
 	if slot < 0 || slot >= InventorySlots {
-		return ItemMoveResult{Reason: "沒有這一格", Slot: -1}
+		return ItemMoveResult{Reason: "reason.slot.invalid", Slot: -1}
 	}
 	it := c.Inventory[slot]
 	switch {
 	case it.Empty():
-		return ItemMoveResult{Reason: "這一格是空的", Slot: -1}
+		return ItemMoveResult{Reason: "reason.slot.empty", Slot: -1}
 	case it.Type == ItemTypeDungeon:
-		return ItemMoveResult{Reason: "地城道具不能在營地丟棄", Slot: -1}
+		return ItemMoveResult{Reason: "reason.item.dungeon_drop", Slot: -1}
 	case slot == c.EquippedWeapon || slot == c.EquippedArmor:
-		return ItemMoveResult{Reason: "那件裝備還在身上", Slot: -1}
+		return ItemMoveResult{Reason: "reason.item.equipped", Slot: -1}
 	case it.Type == itemTypeNoDrop,
 		it.Type == itemTypeGatedDrop && flagC1 == 0:
-		return ItemMoveResult{Reason: "我看你不會想這麼做", Slot: -1}
+		return ItemMoveResult{Reason: "reason.item.drop_refused", Slot: -1}
 	}
 	c.Inventory[slot] = scenario.InventorySlot{Type: scenario.SlotEmpty}
 	return ItemMoveResult{OK: true, Slot: -1}
@@ -78,21 +79,22 @@ func DropItem(c *Character, slot int, flagC1 byte) ItemMoveResult {
 // 搬的是整格 17 bytes，來源那一格只把型別寫成 0xff（同 Drop）。
 func GiveItem(from, to *Character, slot int) ItemMoveResult {
 	if slot < 0 || slot >= InventorySlots {
-		return ItemMoveResult{Reason: "沒有這一格", Slot: -1}
+		return ItemMoveResult{Reason: "reason.slot.invalid", Slot: -1}
 	}
 	if from == to {
-		return ItemMoveResult{Reason: "不能給自己", Slot: -1}
+		return ItemMoveResult{Reason: "reason.item.give_self", Slot: -1}
 	}
 	it := from.Inventory[slot]
 	switch {
 	case it.Empty():
-		return ItemMoveResult{Reason: "這一格是空的", Slot: -1}
+		return ItemMoveResult{Reason: "reason.slot.empty", Slot: -1}
 	case slot == from.EquippedWeapon || slot == from.EquippedArmor:
-		return ItemMoveResult{Reason: "那件裝備還在身上", Slot: -1}
+		return ItemMoveResult{Reason: "reason.item.equipped", Slot: -1}
 	}
 	dst := to.FreeSlot()
 	if dst < 0 {
-		return ItemMoveResult{Reason: to.Name + " 的道具欄滿了", Slot: -1}
+		return ItemMoveResult{Reason: "reason.inventory.member_full",
+			ReasonArgs: []any{to.Name}, Slot: -1}
 	}
 	to.Inventory[dst] = it
 	from.Inventory[slot] = scenario.InventorySlot{Type: scenario.SlotEmpty}

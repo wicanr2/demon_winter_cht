@@ -19,10 +19,19 @@
 - 解壓後 `-list-scenes` smoke test 通過。
 - 發行 staging 的禁入掃描通過：沒有原版
   `.DAT/.DTT/.SHE/.SHP/.PIE/.PIC` 或倚天字型檔。
+- 最終包含 426 張 Modern Icon PNG、836 條 UI key，共 447 個檔案。
+- `package-release.sh` 的建置、staging、禁入掃描、壓縮與雜湊現在全部位於
+  同一個無網路、具資源限制的 Docker 容器；checksum 只記錄檔名，可在任意
+  解壓目錄直接驗證。
+
+最終 SHA-256：
+
+```text
+27c60f26787f9004eb64e2cd37e325ebf707c876af93a043c441c13179d2c19f  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
+```
 
 | Modern Icon 與現代命令卡 | 復古紅色命令列 | F1 手札 |
 |---|---|---|
 | ![發行包 Modern Icon](../design/img/release-a6-modern-icon.png) | ![發行包復古介面](../design/img/release-a6-retro-ui.png) | ![發行包 F1 手札](../design/img/release-a6-help.png) |
 
 這是使用者同意的 A6 抽樣範圍之新增發行回歸，不宣稱重新逐房間完整破關。
-

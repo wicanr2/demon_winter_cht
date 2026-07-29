@@ -49,11 +49,11 @@ type SeaBattle struct {
 	Outcome SeaOutcome
 }
 
-func NewSeaBattle(r *rng.RNG, hull int, enemies []*SeaUnit) *SeaBattle {
+func NewSeaBattle(r *rng.RNG, hull int, playerName string, enemies []*SeaUnit) *SeaBattle {
 	if hull < 1 {
 		hull = 1
 	}
-	player := &SeaUnit{Name: "你", Kind: SeaPlayer, X: SeaCentre, Y: SeaCentre,
+	player := &SeaUnit{Name: playerName, Kind: SeaPlayer, X: SeaCentre, Y: SeaCentre,
 		Facing: North, Hull: hull, MaxHull: ShipMaxHull}
 	units := []*SeaUnit{player}
 	units = append(units, enemies...)

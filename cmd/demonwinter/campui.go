@@ -182,7 +182,7 @@ func (a *app) updateEquipPicker() error {
 		m := &a.members[c.equipMember]
 		ok, why := m.Equip(c.equipSlot)
 		if !ok {
-			c.message = why
+			c.message = a.reasonText(why)
 			return nil
 		}
 		c.message = fmt.Sprintf(a.tr.UI("camp.equip.done"), m.Name,
@@ -274,7 +274,7 @@ func (a *app) updateHuntPicker() error {
 
 		switch {
 		case res.Reason != "":
-			c.message = res.Reason
+			c.message = a.reasonText(res.Reason, res.ReasonArgs...)
 		case res.Gained == 0:
 			c.message = a.tr.UI("camp.hunt.empty")
 		default:

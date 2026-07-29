@@ -193,7 +193,7 @@ func (a *app) dropSelected(p *itemPicker) {
 	label := a.itemLabel(m.Inventory[p.slot])
 	res := game.DropItem(m, p.slot, a.save.EndingOffered)
 	if !res.OK {
-		a.camp.message = res.Reason
+		a.camp.message = a.reasonText(res.Reason, res.ReasonArgs...)
 		return
 	}
 	a.camp.message = fmt.Sprintf(a.tr.UI("campitem.msg.dropped"), m.Name, label)
@@ -205,7 +205,7 @@ func (a *app) identifySelected(p *itemPicker) {
 	label := a.itemLabel(m.Inventory[p.slot])
 	res := game.Identify(a.rng, m, p.slot)
 	if !res.OK {
-		a.camp.message = res.Reason
+		a.camp.message = a.reasonText(res.Reason)
 		return
 	}
 	if res.Success {
@@ -223,13 +223,13 @@ func (a *app) useSelected(p *itemPicker) {
 	it := m.Inventory[p.slot]
 	label := a.itemLabel(it)
 	if ok, why := game.CanUseInCamp(m, p.slot); !ok {
-		a.camp.message = why
+		a.camp.message = a.reasonText(why)
 		return
 	}
 	if game.LightSourceLevel(it.Type) != 0 {
 		res := game.UseInCamp(m, p.slot)
 		if !res.OK {
-			a.camp.message = res.Reason
+			a.camp.message = a.reasonText(res.Reason)
 			return
 		}
 		a.torch = byte(res.Light)
@@ -245,7 +245,7 @@ func (a *app) useSelected(p *itemPicker) {
 		return
 	}
 	if ok, why := game.CampCastable(spell.Effect); !ok {
-		a.camp.message = why
+		a.camp.message = a.reasonText(why)
 		return
 	}
 	if game.CampEffectNeedsTarget(spell.Effect) {
@@ -268,7 +268,7 @@ func (a *app) useMagicSelected(p *itemPicker) {
 	}
 	res := game.CampItemCast(a.rng, caster, target, spell, it.Power)
 	if !res.OK {
-		a.camp.message = res.Reason
+		a.camp.message = a.reasonText(res.Reason)
 		return
 	}
 	destroyed := game.UseItemCharge(a.rng, caster, p.slot)
@@ -298,7 +298,7 @@ func (a *app) useMagicSelected(p *itemPicker) {
 	case res.Delta < 0:
 		msg += fmt.Sprintf(a.tr.UI("campitem.msg.lost"), target.Name, -res.Delta)
 	case res.Reason != "":
-		msg += "　" + res.Reason
+		msg += "　" + a.reasonText(res.Reason)
 	default:
 		msg += a.tr.UI("campitem.msg.no_effect")
 	}
@@ -314,7 +314,7 @@ func (a *app) exorciseSelected(p *itemPicker) {
 	label := a.itemLabel(target.Inventory[p.slot])
 	res := game.Exorcise(a.rng, caster, target, p.slot)
 	if !res.OK {
-		a.camp.message = res.Reason
+		a.camp.message = a.reasonText(res.Reason)
 		return
 	}
 	if res.Success {
@@ -341,7 +341,7 @@ func (a *app) giveSelected(p *itemPicker) {
 	res := game.GiveItem(from, to, p.slot)
 	if !res.OK {
 		// 原版撞到「裝備中」會退回選道具那一步，不是整個取消 —— 照做。
-		a.camp.message = res.Reason
+		a.camp.message = a.reasonText(res.Reason, res.ReasonArgs...)
 		p.target = -1
 		return
 	}

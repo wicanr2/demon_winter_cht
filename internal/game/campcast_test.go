@@ -89,10 +89,10 @@ func TestCampCast_Refusals(t *testing.T) {
 		sp     int
 		reason string
 	}{
-		{"沒有這個人", nil, 5, "沒有這個人"},
-		{"狀態太差", stunned, 5, "現在沒辦法施法"},
-		{"沒投法力", casterChar(20), 0, "要投入法力才放得出來"},
-		{"法力不夠", casterChar(3), 5, "法力不夠"},
+		{"沒有這個人", nil, 5, "reason.member.invalid"},
+		{"狀態太差", stunned, 5, "reason.cast.unavailable"},
+		{"沒投法力", casterChar(20), 0, "reason.cast.sp_required"},
+		{"法力不夠", casterChar(3), 5, "reason.cast.sp_insufficient"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

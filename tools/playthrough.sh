@@ -63,6 +63,10 @@ cleanup() { docker kill "$CONTAINER" >/dev/null 2>&1 || true; }
 trap cleanup EXIT INT TERM
 
 docker run --rm --name "$CONTAINER" \
+    --network none \
+    --memory 2g \
+    --cpus 2 \
+    --pids-limit 256 \
     -v "$REPO_ROOT:/src" \
     -v "$OUT_ABS:/out" \
     -v "$SCRIPT_ABS:/script.txt:ro" \

@@ -85,11 +85,11 @@ func TestLoadExits_ExitsArePaired(t *testing.T) {
 	}
 
 	// 40/55 是實測值，不是門檻猜的。**沒有回程的 15 筆不是雜訊** ——
-	// 它們依 Unknown 欄位分群：
+	// 它們依 MerchantBase 欄位分群：
 	//
-	//	Unknown 10 → 六筆全部通往圖 5（禁錮惡魔那張圖，game.ImprisonSubMap）
-	//	Unknown  8 → 四筆通往圖 1／圖 4
-	//	Unknown  1 → 三筆通往圖 34 的同一格 (55,8)
+	//	MerchantBase 10 → 六筆全部通往圖 5（禁錮惡魔那張圖，game.ImprisonSubMap）
+	//	MerchantBase  8 → 四筆通往圖 1／圖 4
+	//	MerchantBase  1 → 三筆通往圖 34 的同一格 (55,8)
 	//
 	// 單向通往終局區域是合理的設計（走進去就不能走回來）。
 	// 拿實測值當錨點而不是放寬門檻 —— 這個數字變了就該回頭看為什麼。

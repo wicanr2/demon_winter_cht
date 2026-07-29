@@ -248,3 +248,13 @@ func TestHunt_CapsRations(t *testing.T) {
 		t.Errorf("糧食 %d，應鉗在 %d", rations, maxRationsHeld)
 	}
 }
+
+func TestHunt_RefusalCarriesNameAsData(t *testing.T) {
+	c := &Character{Name: "獵人", Status: scenario.StatusBound1}
+	res := Hunt(&fixedRolls{vals: []int{16}}, c, nil)
+	if res.Reason != "reason.hunt.status" ||
+		len(res.ReasonArgs) != 1 || res.ReasonArgs[0] != "獵人" {
+		t.Fatalf("打獵拒絕應拆成 key＋名稱參數，得到 %#v／%#v",
+			res.Reason, res.ReasonArgs)
+	}
+}

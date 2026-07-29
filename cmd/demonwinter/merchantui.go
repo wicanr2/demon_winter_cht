@@ -144,7 +144,7 @@ func (a *app) buyFromMerchant(s *merchantScreen) {
 	label := a.itemLabel(s.m.Wares[s.cursor].Item)
 	res := game.BuyFromMerchant(&s.m, s.cursor, a.members, a.gold())
 	if !res.OK {
-		s.message = res.Reason
+		s.message = a.reasonText(res.Reason)
 		return
 	}
 	a.setGold(res.Gold)

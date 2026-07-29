@@ -30,7 +30,7 @@ import (
 //	1. 程式碼裡每一個 `tr.UI(key)` 的 key 都在 `ui.json` 裡
 //	2. `ui.json` 裡沒有孤兒 key（程式碼已經不用了）
 //	3. JSON 譯文無換行且倚天 Big5 字型可顯示
-//	4. `cmd/demonwinter/` 不得再有玩家可見的硬編中文字面值
+//	4. `cmd/demonwinter/` 與 `internal/game/` 不得再有玩家可見的硬編中文字面值
 
 // uiSkipCallees 是「這一層呼叫裡的中文字串不算介面文案」的函式。
 // 偵錯輸出、旗標說明、錯誤訊息都不上畫面。
@@ -78,6 +78,7 @@ var uiKeyStem = regexp.MustCompile(`^[a-z][a-z0-9_]*(\.[a-z0-9_%+-]*)+$`)
 func uiCheck(args []string) {
 	fs := flag.NewFlagSet("uicheck", flag.ExitOnError)
 	srcDir := fs.String("src", "cmd/demonwinter", "要掃的原始碼目錄")
+	rulesDir := fs.String("rules", "internal/game", "要掃的規則層目錄")
 	langDir := fs.String("lang", "assets/lang/zh-Hant", "翻譯目錄")
 	list := fs.Bool("list", false, "把還沒遷的字串逐條列出來（給遷移用）")
 	fix := fs.Bool("fix", false, "已停用；JSON 模式缺文案必須明確編輯資料檔")
@@ -87,6 +88,13 @@ func uiCheck(args []string) {
 	if err != nil {
 		fatal(err)
 	}
+	ruleCalls, ruleHard, ruleStems, err := scanUIStrings(*rulesDir)
+	if err != nil {
+		fatal(err)
+	}
+	calls = append(calls, ruleCalls...)
+	hard = append(hard, ruleHard...)
+	stems = append(stems, ruleStems...)
 
 	cat, err := i18n.LoadUICatalogJSON(filepath.Join(*langDir, "ui.json"))
 	if err != nil {
@@ -174,6 +182,9 @@ func uiCheck(args []string) {
 
 	fmt.Printf("介面文案：已遷 %d 條（其中 %d 條 key 是算出來的）／目錄 %d 條／還硬編 %d 條\n",
 		len(used)+dynamic, dynamic, len(inCatalog), len(hard))
+	if len(hard) > 0 {
+		problems += len(hard)
+	}
 
 	if *list {
 		byFile := map[string][]uiHardcoded{}

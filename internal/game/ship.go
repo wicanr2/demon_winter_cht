@@ -36,7 +36,8 @@ var shipPlacementOrder = [4][2]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
 
 // ShipResult 是一次買船／修船的結果。
 type ShipResult struct {
-	OK     bool
+	OK bool
+	// Reason 是 ui.json 的原因 key。
 	Reason string
 	Gold   int
 	Cost   int
@@ -73,14 +74,14 @@ func FindShipNear(ships *[ShipSlots]scenario.Ship, x, y int) int {
 func RepairShip(e Economy, ships *[ShipSlots]scenario.Ship, x, y, gold int) ShipResult {
 	i := FindShipNear(ships, x, y)
 	if i < 0 {
-		return ShipResult{Reason: "這裡沒有船可以修", Gold: gold, Slot: -1}
+		return ShipResult{Reason: "reason.ship.none_to_repair", Gold: gold, Slot: -1}
 	}
 	cost := e.RepairPrice(int(ships[i].Hull))
 	if cost == 0 {
-		return ShipResult{Reason: "你的船看起來好得很", Gold: gold, Slot: i}
+		return ShipResult{Reason: "reason.ship.healthy", Gold: gold, Slot: i}
 	}
 	if cost > gold {
-		return ShipResult{Reason: "金幣不夠", Gold: gold, Cost: cost, Slot: i}
+		return ShipResult{Reason: "reason.gold.insufficient", Gold: gold, Cost: cost, Slot: i}
 	}
 	ships[i].Hull = scenario.ShipMaxHull
 	return ShipResult{OK: true, Gold: gold - cost, Cost: cost, Slot: i}
@@ -101,7 +102,7 @@ func BuyShip(ships *[ShipSlots]scenario.Ship, tileAt func(x, y int) byte,
 	x, y, mapID, gold, price int) ShipResult {
 
 	if price > gold {
-		return ShipResult{Reason: "金幣不夠", Gold: gold, Cost: price, Slot: -1}
+		return ShipResult{Reason: "reason.gold.insufficient", Gold: gold, Cost: price, Slot: -1}
 	}
 
 	full := false
@@ -123,9 +124,9 @@ func BuyShip(ships *[ShipSlots]scenario.Ship, tileAt func(x, y int) byte,
 		return ShipResult{OK: true, Gold: gold - price, Cost: price, Slot: slot}
 	}
 	if full {
-		return ShipResult{Reason: "你已經有 10 艘船了", Gold: gold, Cost: price, Slot: -1}
+		return ShipResult{Reason: "reason.ship.limit", Gold: gold, Cost: price, Slot: -1}
 	}
-	return ShipResult{Reason: "碼頭滿了，附近沒有水位可以停船",
+	return ShipResult{Reason: "reason.ship.no_berth",
 		Gold: gold, Cost: price, Slot: -1}
 }
 
@@ -180,6 +181,35 @@ func IsOcean(tile byte) bool { return tile == tileOceanA || tile == tileOceanB }
 // 比對 X、Y、子地圖三者）。
 func BoatAt(ships *[ShipSlots]scenario.Ship, x, y, mapID int) int {
 	return shipAt(ships, x, y, mapID)
+}
+
+// ReachableBoatAt 找出「這一步」能登上的船，包含停在相鄰世界子地圖的船。
+//
+// 原版移動常式在換子地圖之前掃船（222f:0f8e–106d），因此邊界兩側的
+// 座標要先換算：
+//
+//   - 子地圖編號差 10：X 相差 0x38（56），Y 相同；
+//   - 子地圖編號差 1：Y 相差 0x38（56），X 相同。
+//
+// 同圖仍走精確的 X／Y／MapID 比對。回傳船槽，沒有回 −1。
+func ReachableBoatAt(ships *[ShipSlots]scenario.Ship, x, y, mapID int) int {
+	for i := range ships {
+		s := &ships[i]
+		if s.Hull == 0 {
+			continue
+		}
+		sx, sy, sm := int(s.X), int(s.Y), int(s.MapID)
+		if sm == mapID && sx == x && sy == y {
+			return i
+		}
+		if absInt(sm-mapID) == 10 && sy == y && absInt(sx-x) == 0x38 {
+			return i
+		}
+		if absInt(sm-mapID) == 1 && sx == x && absInt(sy-y) == 0x38 {
+			return i
+		}
+	}
+	return -1
 }
 
 // Sailing 回報這個存檔值代表有沒有在船上。

@@ -43,6 +43,7 @@ import (
 	"github.com/wicanr2/demon_winter_cht/internal/assets/gfx"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/world"
+	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 	"github.com/wicanr2/demon_winter_cht/internal/i18n"
 	"github.com/wicanr2/demon_winter_cht/internal/manual"
@@ -538,6 +539,11 @@ func (a *app) update() error {
 		switch res {
 		case game.MoveBlocked:
 			a.message = a.tr.UI("world.blocked")
+			// 航行撞到非海面障礙時，原版走 2000:03f2 →
+			// FUN_1d9f_2a02，固定播放 effect 1（docs/re/31）。
+			if effect := moveBlockedEffect(a.party.Sailing()); effect != 0 {
+				a.speaker.Play(effect)
+			}
 		case game.MoveExitedSubmap:
 			a.message = a.tr.UI("world.leftsubmap")
 		default:
@@ -1081,9 +1087,8 @@ func (a *app) logTop() int {
 // 原版每走一步 1/64（`rnd_raw() & 0x3f == 0x34`），只在戶外、且不在船上時擲；
 // 遇到什麼由腳下 tile 的地形決定（見 game.RollEncounter）。
 //
-// 目前的難度取隊伍最高等級，鉗在 1–10。原版存在 `ds:0x5c60`，會隨劇情推進
-// 被加值（`222f:2b5f`），那條加值路徑的觸發條件還沒追出來，所以先用隊伍等級
-// 近似 —— 這是**本作自己的取捨**，不是原版行為。
+// 遭遇難度取換圖時由 EXITS.DAT 第六欄寫入的 +0xaf；冬之魔降臨後加 2、
+// 上限 10。這是原版 `ds:0x5c60` 的完整來源鏈（docs/re/107 §3）。
 // checkMerchantEncounter 擲原版那道 1/64（`222f:081b`，見 `docs/re/51`）。
 //
 // **這一擲的回傳碼是 `0x17`，而動作分派表的 `case 0x17` 是商隊** ——
@@ -1145,8 +1150,8 @@ const worldMapMinID = 9
 
 // debugGiveItem 把一件有效果的道具塞進第一名隊員的空格。
 //
-// 純偵錯用。原版的道具效果是掉寶時生成的（`FUN_1990_????` 依 ITEMS.DAT 的
-// 四個候選類別擲兩層骰，見 docs/re/25），那條路徑還沒實作。
+// 純偵錯用。正常流程已由 `RollBattleDrops` 依 ITEMS.DAT 的四個候選類別
+// 生成戰利品；這個入口只為固定效果／強度／次數的高風險抽樣。
 func (a *app) debugGiveItem(spec string) error {
 	f := strings.Split(spec, ",")
 	if len(f) != 4 {
@@ -1194,16 +1199,7 @@ func (a *app) setGold(v int) {
 
 // encounterLevel 回傳目前的遭遇難度（1–10）。
 func (a *app) encounterLevel() int {
-	level := 1
-	for _, c := range a.members {
-		if c.Level > level {
-			level = c.Level
-		}
-	}
-	if level > 10 {
-		level = 10
-	}
-	return level
+	return game.EncounterLevel(int(a.save.MerchantBase), a.save.PlotStage)
 }
 
 func (a *app) checkEvent(tile byte) {
@@ -1783,6 +1779,8 @@ func main() {
 	startSeaBattle := flag.Bool("sea-battle", false, "啟動後直接開一場海戰（偵錯）")
 	sailingFacing := flag.Int("sailing-facing", -1,
 		"偵錯：以航海狀態開場並指定面向 0北／1東／2南／3西；不新增船或改劇情")
+	encounterCountdownFlag := flag.Int("encounter-countdown", -1,
+		"偵錯：設定離下一場隨機遭遇的步數 0–255；負值使用存檔")
 	// 用 xdotool 打完一場戰鬥不切實際（要走位、要相鄰才打得到），
 	// 但「打贏之後會怎樣」得看得到 —— 這個旗標直接把怪物血量清零。
 	battleWin := flag.Bool("battle-win", false,
@@ -1840,8 +1838,8 @@ func main() {
 	// 這些分支都在事件顯示路徑裡 —— 沒有這個旗標就只能靠導航去碰。
 	eventFlag := flag.Int("event", -1, "偵錯：直接觸發某一筆事件（DATA*.TXT 索引）")
 	// -ruins 讓「冬之魔降臨之後」的世界看得見。原版把這兩個旗標接在劇情上
-	// （`+0xb9 == 2` 觸發神殿全毀），而劇情觸發本身還沒接 ——
-	// 沒有這個旗標就沒辦法驗收 tile 替換與廢墟訊息（`docs/re/79`）。
+	// （`+0xb9 == 2` 觸發神殿全毀）。正常劇情鏈已接；這個旗標只用來
+	// 跳過前置流程，固定驗收 tile 替換與廢墟訊息（`docs/re/79`）。
 	plotFlag := flag.Int("plot", -1,
 		"偵錯：劇情階段 +0xb9（1 = 下次睡覺冬之魔降臨）。負值代表用存檔裡的")
 	endingFlag := flag.Bool("ending", false,
@@ -2065,7 +2063,7 @@ func main() {
 	for id, m := range map[themeID]gfx.VideoMode{themeEGA: gfx.ModeEGA, themeCGA: gfx.ModeCGA} {
 		theme, loadErr := loadVideoTheme(*dataDir, m)
 		if loadErr != nil {
-			log.Fatalf("載入 %s 顯示主題：%v", themeName(id), loadErr)
+			log.Fatalf("載入 %s 顯示主題：%v", id, loadErr)
 		}
 		videoThemes[id] = theme
 	}
@@ -2202,7 +2200,7 @@ func main() {
 	// 船停在海上，而海面在可通行性表裡是不可通行的 —— 沒有這一條，
 	// 船看得到卻走不上去。
 	a.world.Boardable = func(x, y int) bool {
-		return game.BoatAt(&a.save.Ships, x, y, a.mapID) >= 0
+		return game.ReachableBoatAt(&a.save.Ships, x, y, a.mapID) >= 0
 	}
 
 	a.canvas = ebiten.NewImage(layout.CanvasWidth, layout.CanvasHeight)
@@ -2215,6 +2213,13 @@ func main() {
 	}
 	if *merchantBase >= 0 {
 		a.save.MerchantBase = byte(*merchantBase)
+	}
+	if *encounterCountdownFlag >= 0 {
+		if *encounterCountdownFlag > 255 {
+			log.Fatalf("-encounter-countdown 必須是 0–255，收到 %d", *encounterCountdownFlag)
+		}
+		a.save.EncounterCountdown = byte(*encounterCountdownFlag)
+		log.Printf("偵錯：遭遇倒數設為 %d", *encounterCountdownFlag)
 	}
 	a.debugMerchantLies = *merchantLies
 	if *goldFlag >= 0 {
@@ -2423,6 +2428,13 @@ func newPartyAt(x, y int, save *scenario.SaveGame) *game.Party {
 	p := game.NewParty(x, y, game.Facing(save.Facing), 0)
 	p.SetSailing(game.Sailing(save.Boat))
 	return p
+}
+
+func moveBlockedEffect(sailing bool) int {
+	if sailing {
+		return pcspeaker.EffectC3
+	}
+	return 0
 }
 
 // stepBoat 處理走完一步之後的上／下船。

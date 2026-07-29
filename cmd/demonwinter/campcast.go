@@ -54,7 +54,7 @@ func (a *app) updateWorship() error {
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 		if !w.picked {
 			if ok, why := game.CanWorship(&a.members[w.caster]); !ok {
-				a.camp.message = why
+				a.camp.message = a.reasonText(why)
 				return nil
 			}
 			w.target, w.picked = w.caster, true
@@ -69,7 +69,7 @@ func (a *app) doWorship(w *worshipScreen) {
 	caster, target := &a.members[w.caster], &a.members[w.target]
 	res := game.Worship(a.rng, a.tables, caster, target)
 	if !res.OK {
-		a.camp.message = res.Reason
+		a.camp.message = a.reasonText(res.Reason)
 		return
 	}
 	if !res.Answered {
@@ -87,7 +87,7 @@ func (a *app) doWorship(w *worshipScreen) {
 		a.deityName(caster.Deity), caster.Name, name)
 	switch {
 	case !res.Cast.OK:
-		msg += "　" + res.Cast.Reason
+		msg += "　" + a.reasonText(res.Cast.Reason)
 	case res.Cast.Delta > 0:
 		msg += fmt.Sprintf(a.tr.UI("campcast.worship.heal"), target.Name, res.Cast.Delta)
 	case res.Cast.Delta < 0:
@@ -110,7 +110,7 @@ func (a *app) drawWorship(line func(string)) {
 		a.drawMemberList(line, w.caster, func(i int) string {
 			c := a.members[i]
 			if ok, why := game.CanWorship(&c); !ok {
-				return "（" + why + "）"
+				return "（" + a.reasonText(why) + "）"
 			}
 			return fmt.Sprintf("%s　%d%%", a.deityName(c.Deity), c.PrayChance)
 		})
@@ -297,7 +297,7 @@ func (a *app) doCampCast(c *castScreen) {
 
 	res := game.CampCast(a.rng, caster, target, e.spell, c.power)
 	if !res.OK {
-		a.camp.message = res.Reason
+		a.camp.message = a.reasonText(res.Reason)
 		return
 	}
 	msg := fmt.Sprintf(a.tr.UI("campcast.cast.cast"), caster.Name, target.Name, e.name)
@@ -319,7 +319,7 @@ func (a *app) doCampCast(c *castScreen) {
 	case res.Cured:
 		msg += a.tr.UI("campcast.cast.cured")
 	case res.Reason != "":
-		msg += "　" + res.Reason
+		msg += "　" + a.reasonText(res.Reason)
 	case res.Delta > 0:
 		msg += fmt.Sprintf(a.tr.UI("campcast.cast.heal"), res.Delta)
 	case res.Delta < 0:

@@ -73,12 +73,12 @@ func TestUseInCamp_Refusals(t *testing.T) {
 		slot   int
 		reason string
 	}{
-		{"沒有這個人", nil, 0, "沒有這個人"},
-		{"狀態太差", stunned, 0, "現在沒辦法用東西"},
-		{"空格", campChar("A"), 0, "這一格是空的"},
-		{"沒有這一格", campChar("A", ItemTypeTorch), 10, "沒有這一格"},
-		{"平凡裝備", plain, 0, "這件現在用不了"},
-		{"次數用完", spent, 0, "這件現在用不了"},
+		{"沒有這個人", nil, 0, "reason.member.invalid"},
+		{"狀態太差", stunned, 0, "reason.item.use_unavailable"},
+		{"空格", campChar("A"), 0, "reason.slot.empty"},
+		{"沒有這一格", campChar("A", ItemTypeTorch), 10, "reason.slot.invalid"},
+		{"平凡裝備", plain, 0, "reason.item.cannot_use_now"},
+		{"次數用完", spent, 0, "reason.item.cannot_use_now"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

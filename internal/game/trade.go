@@ -14,8 +14,8 @@ import "github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 // 30 種基本道具在 `ITEMS.DAT` 裡沒有帶效果值。而且起始存檔那五個人身上
 // 每一件的 `+0x05`–`+0x08` 都是 0 —— 那就是原版平凡裝備的樣子。
 //
-// 掉寶生成那條路徑本專案還沒實作（`docs/re/25` §3 有一角未解），
-// 所以現在買不到魔法道具。
+// 戰鬥掉寶已由 `RollBattleDrops` 接入；商店貨仍刻意是平凡裝備，因為
+// 原版商店的 30 種基本道具記錄沒有攜帶效果值。
 //
 // # 裝備
 //
@@ -27,7 +27,7 @@ import "github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 type TradeResult struct {
 	// OK 為 true 代表成交。
 	OK bool
-	// Reason 是沒成的原因。
+	// Reason 是 ui.json 的原因 key。
 	Reason string
 	// Gold 是成交後的金幣。
 	Gold int
@@ -53,7 +53,7 @@ func (c *Character) FreeSlot() int {
 // 道具會放進**第一個有空格的隊員**身上。
 func Buy(members []Character, gold, price, itemType int) TradeResult {
 	if price > gold {
-		return TradeResult{Reason: "金幣不夠", Gold: gold}
+		return TradeResult{Reason: "reason.gold.insufficient", Gold: gold}
 	}
 	for i := range members {
 		slot := members[i].FreeSlot()
@@ -67,7 +67,7 @@ func Buy(members []Character, gold, price, itemType int) TradeResult {
 		}
 		return TradeResult{OK: true, Gold: gold - price, Slot: slot, Member: i}
 	}
-	return TradeResult{Reason: "全隊的道具欄都滿了", Gold: gold}
+	return TradeResult{Reason: "reason.inventory.party_full", Gold: gold}
 }
 
 // Sell 讓某名隊員賣掉一格道具。
@@ -76,14 +76,14 @@ func Buy(members []Character, gold, price, itemType int) TradeResult {
 // **裝備中的那一件不能賣** —— 賣掉會讓裝備索引指向空格。
 func Sell(members []Character, gold, member, slot, price int) TradeResult {
 	if member < 0 || member >= len(members) {
-		return TradeResult{Reason: "沒有這名隊員", Gold: gold}
+		return TradeResult{Reason: "reason.member.invalid_trade", Gold: gold}
 	}
 	c := &members[member]
 	if slot < 0 || slot >= InventorySlots || c.Inventory[slot].Empty() {
-		return TradeResult{Reason: "那一格是空的", Gold: gold}
+		return TradeResult{Reason: "reason.slot.empty", Gold: gold}
 	}
 	if slot == c.EquippedWeapon || slot == c.EquippedArmor {
-		return TradeResult{Reason: "身上正在用的東西不能賣", Gold: gold}
+		return TradeResult{Reason: "reason.item.sell_equipped", Gold: gold}
 	}
 	c.Inventory[slot] = scenario.InventorySlot{Type: slotEmptyType}
 	return TradeResult{OK: true, Gold: gold + price, Slot: slot, Member: member}
@@ -112,12 +112,12 @@ func CanEquipAsArmor(it scenario.InventorySlot) bool {
 // 換裝只改角色記錄的槽位索引（`+0x100`／`+0x101`），道具本身不動。
 func (c *Character) Equip(slot int) (bool, string) {
 	if slot < 0 || slot >= InventorySlots {
-		return false, "沒有這一格"
+		return false, "reason.slot.invalid"
 	}
 	it := c.Inventory[slot]
 	switch {
 	case it.Empty():
-		return false, "那一格是空的"
+		return false, "reason.slot.empty"
 	case CanEquipAsWeapon(it):
 		c.EquippedWeapon = slot
 		c.RecomputeEquipmentBonuses()
@@ -126,11 +126,11 @@ func (c *Character) Equip(slot int) (bool, string) {
 		// 型別過了還要過職業（`1000:283d`）。原版的訊息是
 		// `You're the wrong class.`（`ds:0x044a`）。
 		if !ClassCanWear(c.Class, it) {
-			return false, "你的職業穿不了這麼重的護甲"
+			return false, "reason.equip.armor_class"
 		}
 		c.EquippedArmor = slot
 		c.RecomputeEquipmentBonuses()
 		return true, ""
 	}
-	return false, "這件不是武器也不是護甲"
+	return false, "reason.equip.unsupported"
 }

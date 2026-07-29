@@ -172,10 +172,6 @@ const (
 	// （見 gamedata.LightInsetAt），所以它確實是「幾點」而不是別的計數。
 	hourOffset = 0x9f
 
-	// unknown9COffset：**待複核**，低信心。DOSBox 動態 diff 顯示移動時每步 -1，
-	// 與 timeCounterOffset 反向連動，候選是口糧／體力，未對到遊戲內 UI 確認。
-	unknown9COffset = 0x9c
-
 	// monthOffset／dayOffset：**月與日**（已驗證，反組譯）。睡覺常式
 	// `0x1f1d0` 起那一段是完整的兩層進位：
 	//
@@ -604,10 +600,6 @@ type SaveGame struct {
 	// （見 timeCounterOffset 註解）。
 	TimeCounter byte
 
-	// Unknown9C 是與 TimeCounter 反向連動（每步 -1）的候選欄位，疑似口糧／
-	// 體力。**待複核**，低信心（見 unknown9COffset 註解）。
-	Unknown9C byte
-
 	// Ships 是世界上的 10 艘船（trailer +0x22，見 ship.go）。
 	// **不是「我的船」** —— 原版沒有記載歸屬，修船只看船在不在腳邊。
 	Ships [shipCount]Ship
@@ -676,7 +668,6 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	save.PositionY = trailer[positionYOffset]
 	save.Facing = trailer[facingOffset]
 	save.TimeCounter = trailer[timeCounterOffset]
-	save.Unknown9C = trailer[unknown9COffset]
 	save.Ships = parseShips(trailer)
 	save.ViewedLandToday = trailer[viewedLandTodayOffset] != 0
 	copy(save.FormationBackup[:], trailer[formationBackupOffset:formationBackupOffset+formationLen])

@@ -2205,7 +2205,9 @@ Equip／Use／Hunt／Cast／Quit），睡覺只是其中一項。
 （跟著隊伍走、停在下船處）、隊伍座標與子地圖、步數。**`+0xb0` 不在差異裡**，
 上岸後回到 0。
 
-**沒實作**：跨子地圖上船、撞岸音效、船體損耗（什麼時候掉血還沒追）。
+**2026-07-30 後續已結案**：跨子地圖登船的兩組換算（地圖差 10／1，
+分別換 X／Y ±56）已接；撞岸是 effect 1；一般撞岸不扣船體，船體損耗
+由海戰傷害寫回。位址與測試見 `docs/re/31`。
 
 ### 這一輪（2026-07-26）：商隊遭遇的生成規則（`docs/re/32`）
 
@@ -3608,7 +3610,8 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 逐格實跑通過（[`docs/playtest/41`](docs/playtest/41-modern-icon-world-coverage-complete.md)）。
 > 聲音觸發收尾已完成有明確 effect 編號的攻擊命中／未中、行動點不足、
 > 密語正解與恆世寶珠閘門；原版無背景配樂，死亡旋律已還原。世界撞牆與
-> 船隻撞岸的音高尚無可靠編號，維持未知而不猜（[`docs/playtest/43`](docs/playtest/43-audio-trigger-closure.md)）。
+> 船隻撞岸後續已由 `2000:03f2` wrapper 定案為 effect 1，並與跨圖登船
+> 一起接入（[`docs/playtest/45`](docs/playtest/45-sailing-boundary-and-collision.md)）。
 > 下一批進入 A6 固定種子抽樣、JSON 資料分離總稽核與發行打包；
 > `SHIP.SHE 0x18–0x1f` 沒有現有規則呼叫端，不為填表虛構用途；
 > 不新增原版不存在的碼頭地形。
@@ -3617,6 +3620,29 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 玩家程式硬編中文 0 均通過。舊打包腳本原本漏掉 Modern Icon PNG，已補為
 > 隨包附帶並由預設相對路徑自動載入；解壓後執行檔的 F8／F6／F1 固定場景
 > 抽樣與禁入原版素材掃描通過（[`docs/playtest/44`](docs/playtest/44-release-package-a6-sample.md)）。
+>
+> **2026-07-30 遭遇／航海後續收尾：**跨子地圖登船、船隻撞岸 effect 1、
+> 新遊戲倒數 15–19 與 `+0x9c` 重複 alias 均已修正。另撤除「隊伍最高等級」
+> 的遭遇近似：換圖成功後以 `EXITS.DAT` 第六欄更新 `+0xaf`，冬之魔降臨時
+> 再加 2、上限 10（[`docs/playtest/45`](docs/playtest/45-sailing-boundary-and-collision.md)、
+> [`docs/playtest/46`](docs/playtest/46-encounter-countdown-and-map-level.md)）。
+>
+> **2026-07-30 JSON 分離稽核補洞：**舊 `uicheck` 只掃畫面套件，漏掉
+> `internal/game` 直接顯示的 `Reason` 中文，而且硬編數量沒有計入失敗。
+> 現已把原因拆成 `reason.*` key／`ReasonArgs`，城鎮設施、F8 主題與海戰玩家名
+> 也改由 JSON 提供；檢查器擴到兩個套件並真正失敗即關閉。現況為
+> **836/836、硬編玩家中文 0**（[`docs/playtest/47`](docs/playtest/47-rule-reason-json-separation.md)）。
+>
+> **2026-07-30 A6 重驗：**固定倒數 1／seed 11 的平原遭遇走完兩回合、
+> 經驗／金幣／短劍掉落、回到探索並存檔；密門段亦由 `(13,26)` 穿到
+> `(9,26)`。兩張畫面已人工檢視，沒有 `reason.*` 外洩或排版退步
+>（[`docs/playtest/48`](docs/playtest/48-encounter-and-movement-a6-recheck.md)）。
+>
+> **2026-07-30 最終重打包：**打包全流程已移入無網路、具資源限制的一次性
+> Docker；修正 checksum 曾寫入容器絕對路徑的不可攜問題。解壓後 F8／F6／F1
+> 重新實跑並人工檢視，426 張 Modern Icon、836 UI key、447 檔與禁入掃描通過。
+> SHA-256 為 `27c60f26787f9004eb64e2cd37e325ebf707c876af93a043c441c13179d2c19f`
+>（[`docs/playtest/44`](docs/playtest/44-release-package-a6-sample.md)）。
 >
 > **操作體驗新增，已完成程式與固定場景抽樣、等待使用者畫面審查：** `F6`
 > 切換整套復古／現代模式：復古恢復原版紅底直式命令列與相對轉向；現代使用
@@ -3860,7 +3886,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 
 | # | 項目 | 現況 |
 |---|---|---|
-| D1 | ~~介面文案硬編在 Go~~ **✅ JSON 資料分離完成（2026-07-29；2026-07-30 升為持久驗收條件）** | 766 條玩家介面文案全部由 `assets/lang/zh-Hant/ui.json` 載入；`cmd/demonwinter` 的玩家可見硬編中文為 **0**。Go 只保留 key、格式參數、熱鍵與 action；`Translator.UI` 不再接受 fallback，缺 key 顯示 `⟦key⟧`。使用者再次明確要求引擎與資料分離：往後新增的玩家文字、Help、命令標籤與模式專用命令排版資料都必須進語系／資料 JSON，不得硬編在 Go。每批新增介面都要跑 `dwstrings uicheck`；它會檢查缺 key、孤兒、重複／空白、換行、Big5 字形與硬編中文。動態 key 仍以 `ui:dynamic` 前綴宣告，規約見 `docs/i18n/ui-key-conventions.md`。|
+| D1 | ~~介面／規則文案硬編在 Go~~ **✅ JSON 資料分離完成並補強閘門（2026-07-30）** | 836 條玩家文案由 `assets/lang/zh-Hant/ui.json` 載入；規則層只回傳 `reason.*` key／`ReasonArgs`，介面層才組句。`uicheck` 現同時掃 `cmd/demonwinter` 與 `internal/game`，且硬編數量會真正令驗收失敗；現況 836/836、硬編玩家中文 0。命令標籤與復古／現代模式排版也維持 JSON 驅動（`docs/playtest/47`、`docs/i18n/ui-key-conventions.md`）。|
 | D2 | 密語提示 **定案不翻** | 符文是要玩家自己建對照表的解謎機制，答案要用英文輸入。施力點放在手冊與提示（`docs/re/72` §6）|
 | D3 | 標題花體 logo **定案不重繪** | 1988 年的美術與署名是歷史紀錄（`rulebook/83`／`93`）|
 | D4 | ~~`Bungei` 待譯~~ **✅ 完成** | 官方英文手冊的 `Punji pit` 明列 50% 跌落、1–6 傷害，與 executable case 2 逐項相同；`A Bungei pit!` 是誤拼，不是專名。原文 key 保留，繁中依 glossary 譯「竹籤陷阱」（`docs/re/68` §5）|

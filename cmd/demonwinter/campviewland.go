@@ -49,7 +49,7 @@ func (a *app) updateViewLand() error {
 			c := &a.members[v.member]
 			ok, why := game.CanViewLand(c, int(a.mapID), a.save.ViewedLandToday)
 			if !ok {
-				a.camp.message = why
+				a.camp.message = a.reasonText(why)
 				return nil
 			}
 			a.save.ViewedLandToday = true

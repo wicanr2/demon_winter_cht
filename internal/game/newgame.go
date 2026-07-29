@@ -43,9 +43,10 @@ const (
 	NewGameMerchantBase = 1
 
 	// NewGameEncounterMin／Max 是起始遭遇倒數。
-	// 原版是 `rand(5) + 0xe`（`0x14922`–`0x14933`），所以 14–18。
-	NewGameEncounterMin = 14
-	NewGameEncounterMax = 18
+	// 原版是 `Roll(5) + 0xe`（`0x14922`–`0x14933`）；Roll 值域 1–5，
+	// 所以是 15–19，不是把 raw RNG 當成 0-based 得出的 14–18。
+	NewGameEncounterMin = 15
+	NewGameEncounterMax = 19
 )
 
 // 起始那艘船（`0x14956`–`0x1497a` 寫的是船隻陣列第 9 格）。
@@ -72,8 +73,8 @@ const newGameFormationEmpty = 0xff
 // 角色本身不動 —— 建角是另一件事（玩家用 `F1` 逐個換掉五個槽位）。
 // 這裡只設隊伍共用的那些欄位。
 //
-// encounterCountdown 由呼叫端給（原版是 `rand(5) + 14`），
-// 這樣才擲得出可重現的值；超出 14–18 會被夾回範圍。
+// encounterCountdown 由呼叫端給（原版是 `Roll(5) + 14`），
+// 這樣才擲得出可重現的值；超出 15–19 會被夾回範圍。
 func ApplyNewGame(s *scenario.SaveGame, encounterCountdown int) {
 	for i := range s.Formation {
 		s.Formation[i] = newGameFormationEmpty

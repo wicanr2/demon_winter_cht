@@ -75,7 +75,7 @@ func TestIdentify_FailureStillCostsTheDay(t *testing.T) {
 	if !c.IdentifiedToday {
 		t.Error("失敗也要用掉今天的機會")
 	}
-	if _, why := CanIdentify(c, 0); why != "今天已經研究過了" {
+	if _, why := CanIdentify(c, 0); why != "reason.identify.used_today" {
 		t.Errorf("第二次的理由是 %q", why)
 	}
 }
@@ -96,13 +96,13 @@ func TestIdentify_Refusals(t *testing.T) {
 		slot   int
 		reason string
 	}{
-		{"狀態太差", poisoned, 0, "現在沒辦法研究東西"},
-		{"今天研究過了", done, 0, "今天已經研究過了"},
-		{"空格", loreChar(3, SkillWeaponLore), 5, "這一格是空的"},
-		{"已鑑定", known, 0, "這件已經鑑定過了"},
-		{"沒有那種學識", loreChar(3), 0, "看不懂這一類東西"},
-		{"藥劑要藥劑學識", loreChar(14, SkillWeaponLore, SkillItemLore), 0, "看不懂這一類東西"},
-		{"沒有這一格", loreChar(3, SkillWeaponLore), 99, "沒有這一格"},
+		{"狀態太差", poisoned, 0, "reason.identify.unavailable"},
+		{"今天研究過了", done, 0, "reason.identify.used_today"},
+		{"空格", loreChar(3, SkillWeaponLore), 5, "reason.slot.empty"},
+		{"已鑑定", known, 0, "reason.identify.already"},
+		{"沒有那種學識", loreChar(3), 0, "reason.identify.unsupported"},
+		{"藥劑要藥劑學識", loreChar(14, SkillWeaponLore, SkillItemLore), 0, "reason.identify.unsupported"},
+		{"沒有這一格", loreChar(3, SkillWeaponLore), 99, "reason.slot.invalid"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

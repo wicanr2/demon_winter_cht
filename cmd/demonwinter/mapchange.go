@@ -51,7 +51,12 @@ func (a *app) checkExit(tile byte) bool {
 	if !ok {
 		return false
 	}
-	a.changeMap(int(rec.ToMap), int(rec.ToX), int(rec.ToY))
+	if !a.changeMap(int(rec.ToMap), int(rec.ToX), int(rec.ToY)) {
+		return false
+	}
+	// 原版換圖常式把 EXITS.DAT 第六欄寫進存檔 +0xaf；進圖初始化再
+	// 以它設定遭遇／商隊共用的 ds:0x5c60（docs/re/107 §3）。
+	a.save.MerchantBase = rec.MerchantBase
 	return true
 }
 
@@ -61,13 +66,13 @@ func (a *app) checkExit(tile byte) bool {
 // 事件改寫的是那張圖自己那一份，物件留在記憶體裡 ——
 // 換回來時狀態還在（原版是用 `ds:0x5c52` 那組旗標做同一件事，
 // 見 `0x191c4`：換圖前把緩衝區刷進該圖的快取）。
-func (a *app) changeMap(id, x, y int) {
+func (a *app) changeMap(id, x, y int) bool {
 	m, err := world.LoadByID(a.saveDir(), a.dataDir, id)
 	if err != nil {
 		// 換不過去就留在原地並說清楚 —— 靜默失敗會讓玩家
 		// 以為那一格本來就沒事，然後在樓梯上反覆踩。
 		a.message = fmt.Sprintf(a.tr.UI("mapchange.error"), id, err)
-		return
+		return false
 	}
 
 	a.tiles = m
@@ -77,7 +82,7 @@ func (a *app) changeMap(id, x, y int) {
 	// Boardable 是閉包，重建 world 之後要重新掛上，
 	// 不然換過一次地圖之後船就上不去了（而且完全沒有錯誤訊息）。
 	a.world.Boardable = func(bx, by int) bool {
-		return game.BoatAt(&a.save.Ships, bx, by, a.mapID) >= 0
+		return game.ReachableBoatAt(&a.save.Ships, bx, by, a.mapID) >= 0
 	}
 	a.drawTiles = ditheredTiles(m, uint16(a.ditherSeed), a.save.TempleRuins)
 	a.party.TeleportTo(x, y)
@@ -85,6 +90,7 @@ func (a *app) changeMap(id, x, y int) {
 	a.save.MapID = byte(id)
 	a.message = fmt.Sprintf(a.tr.UI("mapchange.entered"), id, x, y)
 	a.trace.note("換地圖 → %d (%d,%d)", id, x, y)
+	return true
 }
 
 // selectEventTable 讓 DATA*.TXT 與地城編號同步。戶外地圖（>=9）沒有

@@ -54,15 +54,15 @@ type WorshipResult struct {
 func CanWorship(c *Character) (bool, string) {
 	switch {
 	case c == nil:
-		return false, "沒有這個人"
+		return false, "reason.member.invalid"
 	case int(c.Status) >= worshipStatusLimit:
-		return false, "現在沒辦法祈求"
+		return false, "reason.worship.unavailable"
 	case !c.HasSkill(SkillShaman) && !c.HasSkill(SkillPriesthood):
-		return false, "不懂得如何祈求"
+		return false, "reason.worship.no_skill"
 	case c.WorshipedToday:
-		return false, "今天已經祈求過了"
+		return false, "reason.worship.used_today"
 	case c.Deity < DeityMin || c.Deity > DeityMax:
-		return false, "沒有信奉的神祇"
+		return false, "reason.worship.no_deity"
 	}
 	return true, ""
 }
@@ -82,7 +82,7 @@ func Worship(r *rng.RNG, t *gamedata.Tables, c, target *Character) WorshipResult
 
 	spellID, err := t.DeitySpell(c.Deity)
 	if err != nil {
-		return WorshipResult{Reason: "查不到這位神祇"}
+		return WorshipResult{Reason: "reason.worship.deity_missing"}
 	}
 
 	res := WorshipResult{OK: true, Chance: c.PrayChance, SpellID: spellID}
@@ -101,7 +101,7 @@ func Worship(r *rng.RNG, t *gamedata.Tables, c, target *Character) WorshipResult
 	}
 	sp, err := t.Spell(spellID)
 	if err != nil {
-		res.Cast = CampCastResult{Reason: "查不到那個法術"}
+		res.Cast = CampCastResult{Reason: "reason.cast.spell_missing"}
 		return res
 	}
 	// 神祇不吃施術者的法力 —— 力度是固定的 300，不是投入的 SP。

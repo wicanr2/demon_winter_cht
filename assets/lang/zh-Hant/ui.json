@@ -2083,6 +2083,266 @@
       "text": "巨魔"
     },
     {
+      "key": "reason.cast.camp_unsupported",
+      "text": "這個法術還不能在營地施放"
+    },
+    {
+      "key": "reason.cast.combat_modifier",
+      "text": "這種增減只在戰鬥中有意義"
+    },
+    {
+      "key": "reason.cast.combat_only",
+      "text": "這個法術要在戰鬥中才放得出來"
+    },
+    {
+      "key": "reason.cast.sp_insufficient",
+      "text": "法力不夠"
+    },
+    {
+      "key": "reason.cast.sp_required",
+      "text": "要投入法力才放得出來"
+    },
+    {
+      "key": "reason.cast.spell_missing",
+      "text": "查不到那個法術"
+    },
+    {
+      "key": "reason.cast.target_not_dead",
+      "text": "目標並未死亡"
+    },
+    {
+      "key": "reason.cast.target_not_poisoned",
+      "text": "目標沒有中毒"
+    },
+    {
+      "key": "reason.cast.unavailable",
+      "text": "現在沒辦法施法"
+    },
+    {
+      "key": "reason.donate.amount",
+      "text": "要捐多少？"
+    },
+    {
+      "key": "reason.equip.armor_class",
+      "text": "你的職業穿不了這麼重的護甲"
+    },
+    {
+      "key": "reason.equip.unsupported",
+      "text": "這件不是武器也不是護甲"
+    },
+    {
+      "key": "reason.exorcise.no_skill",
+      "text": "不會驅邪"
+    },
+    {
+      "key": "reason.exorcise.not_equipped",
+      "text": "只能對身上穿戴著的東西驅邪"
+    },
+    {
+      "key": "reason.exorcise.unavailable",
+      "text": "現在沒辦法驅邪"
+    },
+    {
+      "key": "reason.exorcise.used_today",
+      "text": "今天已經驅過了"
+    },
+    {
+      "key": "reason.gold.insufficient",
+      "text": "金幣不夠"
+    },
+    {
+      "key": "reason.heal.not_needed",
+      "text": "%s 不需要治療"
+    },
+    {
+      "key": "reason.hunt.no_hunter",
+      "text": "沒有人可以去打獵"
+    },
+    {
+      "key": "reason.hunt.no_skill",
+      "text": "%s 不會狩獵"
+    },
+    {
+      "key": "reason.hunt.status",
+      "text": "%s 的狀態沒辦法出去打獵"
+    },
+    {
+      "key": "reason.identify.already",
+      "text": "這件已經鑑定過了"
+    },
+    {
+      "key": "reason.identify.unavailable",
+      "text": "現在沒辦法研究東西"
+    },
+    {
+      "key": "reason.identify.unsupported",
+      "text": "看不懂這一類東西"
+    },
+    {
+      "key": "reason.identify.used_today",
+      "text": "今天已經研究過了"
+    },
+    {
+      "key": "reason.inventory.member_full",
+      "text": "%s 的道具欄滿了"
+    },
+    {
+      "key": "reason.inventory.party_full",
+      "text": "全隊的道具欄都滿了"
+    },
+    {
+      "key": "reason.item.cannot_use_now",
+      "text": "這件現在用不了"
+    },
+    {
+      "key": "reason.item.combat_only",
+      "text": "這件要在戰鬥中才用得出來"
+    },
+    {
+      "key": "reason.item.drop_refused",
+      "text": "我看你不會想這麼做"
+    },
+    {
+      "key": "reason.item.dungeon_drop",
+      "text": "地城道具不能在營地丟棄"
+    },
+    {
+      "key": "reason.item.equipped",
+      "text": "那件裝備還在身上"
+    },
+    {
+      "key": "reason.item.give_self",
+      "text": "不能給自己"
+    },
+    {
+      "key": "reason.item.sell_equipped",
+      "text": "身上正在用的東西不能賣"
+    },
+    {
+      "key": "reason.item.use_unavailable",
+      "text": "現在沒辦法用東西"
+    },
+    {
+      "key": "reason.member.invalid",
+      "text": "沒有這個人"
+    },
+    {
+      "key": "reason.member.invalid_trade",
+      "text": "沒有這名隊員"
+    },
+    {
+      "key": "reason.merchant.item_missing",
+      "text": "沒有這一件"
+    },
+    {
+      "key": "reason.merchant.item_sold",
+      "text": "這件已經賣掉了"
+    },
+    {
+      "key": "reason.merchant.quote_invalid",
+      "text": "他報的價是假的，你不買了"
+    },
+    {
+      "key": "reason.merchant.refused",
+      "text": "商人不肯賣這件給你了"
+    },
+    {
+      "key": "reason.rations.capacity",
+      "text": "隊伍帶不了那麼多糧食"
+    },
+    {
+      "key": "reason.rations.range",
+      "text": "一次只能買 1–200 份"
+    },
+    {
+      "key": "reason.ship.healthy",
+      "text": "你的船看起來好得很"
+    },
+    {
+      "key": "reason.ship.limit",
+      "text": "你已經有 10 艘船了"
+    },
+    {
+      "key": "reason.ship.no_berth",
+      "text": "碼頭滿了，附近沒有水位可以停船"
+    },
+    {
+      "key": "reason.ship.none_to_repair",
+      "text": "這裡沒有船可以修"
+    },
+    {
+      "key": "reason.skill.already_known",
+      "text": "%s 已經會這項技能了"
+    },
+    {
+      "key": "reason.skill.intelligence",
+      "text": "%s 的智力點數不夠（要 %d，剩 %d）"
+    },
+    {
+      "key": "reason.slot.empty",
+      "text": "這一格是空的"
+    },
+    {
+      "key": "reason.slot.invalid",
+      "text": "沒有這一格"
+    },
+    {
+      "key": "reason.temple.already_worships",
+      "text": "%s 已經信奉這位神了"
+    },
+    {
+      "key": "reason.temple.favor_full",
+      "text": "%s 與神的關係已經很好"
+    },
+    {
+      "key": "reason.temple.missing",
+      "text": "這裡沒有神殿"
+    },
+    {
+      "key": "reason.temple.not_worshipper",
+      "text": "%s 不信奉這位神"
+    },
+    {
+      "key": "reason.temple.other_deity",
+      "text": "%s 已經獻身給另一位神了"
+    },
+    {
+      "key": "reason.viewland.location",
+      "text": "這裡看不到地形"
+    },
+    {
+      "key": "reason.viewland.no_skill",
+      "text": "不會觀地"
+    },
+    {
+      "key": "reason.viewland.unavailable",
+      "text": "現在爬不上高處"
+    },
+    {
+      "key": "reason.viewland.used_today",
+      "text": "今天已經看過了"
+    },
+    {
+      "key": "reason.worship.deity_missing",
+      "text": "查不到這位神祇"
+    },
+    {
+      "key": "reason.worship.no_deity",
+      "text": "沒有信奉的神祇"
+    },
+    {
+      "key": "reason.worship.no_skill",
+      "text": "不懂得如何祈求"
+    },
+    {
+      "key": "reason.worship.unavailable",
+      "text": "現在沒辦法祈求"
+    },
+    {
+      "key": "reason.worship.used_today",
+      "text": "今天已經祈求過了"
+    },
+    {
       "key": "read.nothing",
       "text": "這裡沒有值得再看一次的東西"
     },
@@ -2337,6 +2597,10 @@
       "text": "船向右轉"
     },
     {
+      "key": "sea.player",
+      "text": "你"
+    },
+    {
       "key": "sea.victory.dismiss",
       "text": "敵方全滅（按空白鍵返回）"
     },
@@ -2419,11 +2683,27 @@
     },
     {
       "key": "theme.changed",
-      "text": "顯示主題："
+      "text": "顯示主題：%s"
     },
     {
       "key": "theme.failed",
       "text": "切換顯示主題失敗：%v"
+    },
+    {
+      "key": "theme.log",
+      "text": "F8 → %s 主題"
+    },
+    {
+      "key": "theme.name.cga",
+      "text": "CGA"
+    },
+    {
+      "key": "theme.name.ega",
+      "text": "EGA"
+    },
+    {
+      "key": "theme.name.modern",
+      "text": "Modern Icon"
     },
     {
       "key": "title.name",

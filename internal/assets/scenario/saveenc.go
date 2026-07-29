@@ -35,7 +35,6 @@ func (s *SaveGame) Encode() ([]byte, error) {
 	putByte(trailer[:], positionYOffset, s.PositionY)
 	putByte(trailer[:], facingOffset, s.Facing)
 	putByte(trailer[:], timeCounterOffset, s.TimeCounter)
-	putByte(trailer[:], unknown9COffset, s.Unknown9C)
 	putByte(trailer[:], hourOffset, s.Hour)
 	putByte(trailer[:], dayOffset, s.Day)
 	putByte(trailer[:], monthOffset, s.Month)

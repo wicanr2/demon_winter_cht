@@ -48,19 +48,19 @@ type ExorciseResult struct {
 func CanExorcise(caster, target *Character, slot int) (bool, string) {
 	switch {
 	case caster == nil || target == nil:
-		return false, "沒有這個人"
+		return false, "reason.member.invalid"
 	case int(caster.Status) >= exorciseStatusLimit:
-		return false, "現在沒辦法驅邪"
+		return false, "reason.exorcise.unavailable"
 	case !caster.HasSkill(SkillShaman) && !caster.HasSkill(SkillPriesthood):
-		return false, "不會驅邪"
+		return false, "reason.exorcise.no_skill"
 	case caster.ExorcisedToday:
-		return false, "今天已經驅過了"
+		return false, "reason.exorcise.used_today"
 	case slot < 0 || slot >= InventorySlots:
-		return false, "沒有這一格"
+		return false, "reason.slot.invalid"
 	case target.Inventory[slot].Empty():
-		return false, "這一格是空的"
+		return false, "reason.slot.empty"
 	case slot != target.EquippedWeapon && slot != target.EquippedArmor:
-		return false, "只能對身上穿戴著的東西驅邪"
+		return false, "reason.exorcise.not_equipped"
 	}
 	return true, ""
 }

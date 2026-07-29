@@ -55,7 +55,7 @@ func (a *app) startSeaBattle() {
 			X: x, Y: y, Facing: game.South, Hull: hp, MaxHull: hp, Experience: exp,
 		})
 	}
-	a.sea = game.NewSeaBattle(a.rng, hull, enemies)
+	a.sea = game.NewSeaBattle(a.rng, hull, a.tr.UI("sea.player"), enemies)
 	a.log = []string{fmt.Sprintf(a.tr.UI("sea.encounter"), len(enemies))}
 	a.trace.note("海戰：%d 名敵人，船體 %d", len(enemies), hull)
 }

@@ -255,7 +255,7 @@ func (a *app) buyCurrent(t *townScreen) {
 	price := t.visit.Price(t.cursor, item.Price)
 	res := game.Buy(a.members, a.gold(), price, t.cursor)
 	if !res.OK {
-		t.message = res.Reason
+		t.message = a.reasonText(res.Reason)
 		return
 	}
 	a.setGold(res.Gold)
@@ -409,7 +409,8 @@ func (a *app) drawFacility(dst *ebiten.Image, line func(string)) {
 	v := t.visit
 	e := v.Economy
 
-	line(fmt.Sprintf("%s — %s", a.townName(v.Town), game.FacilityName(*t.facility)))
+	line(fmt.Sprintf("%s — %s", a.townName(v.Town),
+		a.tr.UI(game.FacilityName(*t.facility))))
 	line("")
 
 	// 疊在設施上的子畫面自己畫完就結束，不要把價目表也一起畫出來。

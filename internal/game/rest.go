@@ -42,14 +42,11 @@ import "github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 //	道具 +0x06 = 0        ; 使用次數歸零 ＝ 過夜充能
 //	                      ; （限 +0x05 < 100 且 +0x06 != 0xff 的道具）
 //
-// # 還沒接
+// # 接線狀態
 //
-//   - 睡到一半被打斷（`1000:026d`：休息常式回 0 時整個離開紮營選單，
-//     看起來是遭遇；那條路徑還沒讀）。
-//   - 睡覺觸發的劇情夢境（`1000:0278`–`0330` 依 `party+0xbd`／`+0xb9`／`+0xba`
-//     推進旗標並播兩張圖）。
-//   - 紮營選單本身的其餘 12 個選項（Reorder／Identify／Worship／Xorcise／
-//     View land／Trade／Drop／Equip／Use／Hunt／Cast／Quit）。
+// 睡覺夢境與紮營 14 項命令都已接入。`1000:026d` 的「休息常式回 0」
+// 尚無足夠證據判定是睡眠遭遇或其他取消條件，因此保持未知，不自行新增
+// 睡眠中斷玩法。
 
 const (
 	// RestHourWakeDie 是起床時辰的骰面（`2aed:04ba` 的 `rnd(6)`）。
@@ -240,7 +237,8 @@ type HuntResult struct {
 	// Gained 是拿到幾份糧食，0 代表空手而回。
 	Gained int
 	// Reason 非空代表這個人根本打不了獵。
-	Reason string
+	Reason     string
+	ReasonArgs []any
 }
 
 // Hunt 讓一名角色打獵，回傳收穫並把糧食加進 rations。
@@ -249,11 +247,11 @@ type HuntResult struct {
 func Hunt(r RollSource, c *Character, rations *int) HuntResult {
 	switch {
 	case c == nil || r == nil:
-		return HuntResult{Reason: "沒有人可以去打獵"}
+		return HuntResult{Reason: "reason.hunt.no_hunter"}
 	case c.Status > scenario.StatusPoison:
-		return HuntResult{Reason: c.Name + " 的狀態沒辦法出去打獵"}
+		return HuntResult{Reason: "reason.hunt.status", ReasonArgs: []any{c.Name}}
 	case !c.Skills[SkillHunting]:
-		return HuntResult{Reason: c.Name + " 不會狩獵"}
+		return HuntResult{Reason: "reason.hunt.no_skill", ReasonArgs: []any{c.Name}}
 	}
 
 	got := r.Roll(HuntDie) - huntPenalty

@@ -3,6 +3,7 @@ package main
 import (
 	"testing"
 
+	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 	"github.com/wicanr2/demon_winter_cht/internal/game"
 )
 
@@ -43,5 +44,14 @@ func TestTurnFacingWraps(t *testing.T) {
 	}
 	if got := turnFacing(game.East, 2); got != game.West {
 		t.Fatalf("east around = %v; want west", got)
+	}
+}
+
+func TestMoveBlockedEffect_SailingUsesOriginalClick(t *testing.T) {
+	if got := moveBlockedEffect(true); got != pcspeaker.EffectC3 {
+		t.Fatalf("航行撞岸音效 = %d，預期 effect 1", got)
+	}
+	if got := moveBlockedEffect(false); got != 0 {
+		t.Fatalf("徒步撞牆不應由航海路徑播音，得到 %d", got)
 	}
 }

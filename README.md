@@ -311,7 +311,7 @@ tools/package-release.sh 2026.07.30
 | 反組譯筆記 | 115 篇；主線、海戰、時間進位、arena、命中修正、營地法術、魔法物品充能與幻象行動前 20% 消失均有位址證據 |
 | 資料格式 | 地圖、事件、道具、怪物、存檔、字型、圖形、音效皆已解 |
 | Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、PC speaker 音效；原版沒有背景配樂，死亡短旋律與已確認觸發見 [`docs/playtest/43`](docs/playtest/43-audio-trigger-closure.md) |
-| 遊戲內文字中文化 | **500/500（100%）** 原版資料字串；另有 **766 條** JSON 介面文案，玩家程式硬編中文 0 條 |
+| 遊戲內文字中文化 | **500/500（100%）** 原版資料字串；另有 **836 條** JSON 介面文案，畫面層與規則層硬編玩家中文 0 條 |
 | 試玩驗收 | **完成前期垂直切片與後期高風險抽樣**；可重播腳本與 trace 工具在 `tools/playthrough/` |
 
 ---
@@ -350,7 +350,7 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 | 檔案 | 內容 |
 |---|---|
 | [`translations/glossary.md`](translations/glossary.md) | 統一譯名表。種族、職業、技能、法術、裝備、附魔、神祇、城鎮、介面指令等。全專案唯一的譯名真相來源 |
-| [`assets/lang/zh-Hant/ui.json`](assets/lang/zh-Hant/ui.json) | 766 條玩家介面文案；Go 只保留 key、熱鍵與 action |
+| [`assets/lang/zh-Hant/ui.json`](assets/lang/zh-Hant/ui.json) | 836 條玩家介面文案；Go 只保留 key、格式參數、熱鍵與 action |
 | [`docs/i18n/ui-catalog.md`](docs/i18n/ui-catalog.md) | JSON schema、嚴格缺 key 行為與 `uicheck` 發行閘門 |
 
 譯名以 `DEMON.INT` 內的實際字串為準，因此收錄的是原版拼字（`Shamen`、`Xorcise`、`Small ax`），

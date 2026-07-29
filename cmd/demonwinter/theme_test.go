@@ -11,7 +11,7 @@ func TestThemeCycle(t *testing.T) {
 			t.Fatalf("第 %d 次 F8 = %q，預期 %q", i+1, got, expected)
 		}
 	}
-	if got := themeName(themeModern); got != "Modern Icon" {
-		t.Fatalf("Modern 主題名稱 = %q，預期 Modern Icon", got)
+	if got := themeNameKey(themeModern); got != "theme.name.modern" {
+		t.Fatalf("Modern 主題名稱 key = %q，預期 theme.name.modern", got)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
+	worlddata "github.com/wicanr2/demon_winter_cht/internal/assets/world"
 )
 
 // oceanEverywhere 是「四周都是海」的地形，用來測放船的位置選擇。
@@ -282,6 +283,52 @@ func TestStepBoat_MapIDMatters(t *testing.T) {
 	ships[0] = scenario.Ship{X: 10, Y: 10, MapID: 45, Hull: 50}
 	if _, res := StepBoat(ships, 0, tileOceanA, 10, 10, 44); res != BoardNone {
 		t.Error("別張地圖的船不該上得了")
+	}
+}
+
+func TestReachableBoatAt_CrossMapCoordinates(t *testing.T) {
+	var ships [ShipSlots]scenario.Ship
+	ships[1] = scenario.Ship{X: 4, Y: 20, MapID: 44, Hull: 50}
+	ships[2] = scenario.Ship{X: 30, Y: 4, MapID: 45, Hull: 50}
+
+	tests := []struct {
+		name        string
+		x, y, mapID int
+		want        int
+	}{
+		{"同圖", 4, 20, 44, 1},
+		{"地圖差10且X加56", 60, 20, 34, 1},
+		{"地圖差10且X減56", 60, 20, 54, 1},
+		{"地圖差1且Y加56", 30, 60, 44, 2},
+		{"地圖差1且Y減56", 30, 60, 46, 2},
+		{"錯軸不算", 60, 20, 43, -1},
+		{"只差地圖不算", 4, 20, 43, -1},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := ReachableBoatAt(&ships, tc.x, tc.y, tc.mapID); got != tc.want {
+				t.Fatalf("ReachableBoatAt(%d,%d,map%d) = %d，預期 %d",
+					tc.x, tc.y, tc.mapID, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestReachableBoatAt_ComposesWithCrossEdge(t *testing.T) {
+	var ships [ShipSlots]scenario.Ship
+	ships[3] = scenario.Ship{X: 4, Y: 20, MapID: 44, Hull: 50}
+
+	// 隊伍在 map34 走到東界 x=60 時，原版會先以跨圖座標命中船，
+	// 再把位置換成 map44 x=4；兩個判定必須落在同一艘。
+	if got := ReachableBoatAt(&ships, 60, 20, 34); got != 3 {
+		t.Fatalf("換圖前登船槽 = %d，預期 3", got)
+	}
+	cross := worlddata.CrossEdge(34, 60, 20)
+	if !cross.Crossed || cross.MapID != 44 || cross.X != 4 || cross.Y != 20 {
+		t.Fatalf("CrossEdge = %+v，預期 map44 (4,20)", cross)
+	}
+	if got := BoatAt(&ships, cross.X, cross.Y, cross.MapID); got != 3 {
+		t.Fatalf("換圖後精確船槽 = %d，預期 3", got)
 	}
 }
 

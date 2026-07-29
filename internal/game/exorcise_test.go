@@ -79,13 +79,13 @@ func TestExorcise_Refusals(t *testing.T) {
 		slot           int
 		reason         string
 	}{
-		{"沒有這個人", nil, cursedTarget(50), 0, "沒有這個人"},
-		{"狀態太差", stunned, cursedTarget(50), 0, "現在沒辦法驅邪"},
-		{"不會驅邪", campChar("路人"), cursedTarget(50), 0, "不會驅邪"},
-		{"今天驅過了", done, cursedTarget(50), 0, "今天已經驅過了"},
-		{"沒有這一格", exorcist(), cursedTarget(50), 99, "沒有這一格"},
-		{"空格", exorcist(), campChar("空手"), 0, "這一格是空的"},
-		{"沒穿在身上", exorcist(), inBag, 0, "只能對身上穿戴著的東西驅邪"},
+		{"沒有這個人", nil, cursedTarget(50), 0, "reason.member.invalid"},
+		{"狀態太差", stunned, cursedTarget(50), 0, "reason.exorcise.unavailable"},
+		{"不會驅邪", campChar("路人"), cursedTarget(50), 0, "reason.exorcise.no_skill"},
+		{"今天驅過了", done, cursedTarget(50), 0, "reason.exorcise.used_today"},
+		{"沒有這一格", exorcist(), cursedTarget(50), 99, "reason.slot.invalid"},
+		{"空格", exorcist(), campChar("空手"), 0, "reason.slot.empty"},
+		{"沒穿在身上", exorcist(), inBag, 0, "reason.exorcise.not_equipped"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

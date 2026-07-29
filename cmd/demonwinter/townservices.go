@@ -142,12 +142,13 @@ func (a *app) healCurrent(t *townScreen) {
 	}
 	svc, res := game.Heal(t.visit.Economy, c, a.gold())
 	if !res.OK {
+		reason := a.reasonText(res.Reason, res.ReasonArgs...)
 		if res.Cost > 0 {
 			t.message = fmt.Sprintf(a.tr.UI("townsvc.heal.cost_note"),
-				res.Reason, a.healerServiceName(svc), res.Cost)
+				reason, a.healerServiceName(svc), res.Cost)
 			return
 		}
-		t.message = res.Reason
+		t.message = reason
 		return
 	}
 	a.setGold(res.Gold)
@@ -167,7 +168,7 @@ func (a *app) openRationInput(t *townScreen) {
 			rations := int(a.save.Rations)
 			res := game.BuyRations(t.visit.Economy, a.gold(), rations, n)
 			if !res.OK {
-				t.message = res.Reason
+				t.message = a.reasonText(res.Reason, res.ReasonArgs...)
 				return
 			}
 			a.setGold(res.Gold)
@@ -192,7 +193,7 @@ func (a *app) openDonateInput(t *townScreen) {
 		apply: func(n int) {
 			res := game.Donate(c, a.gold(), n)
 			if !res.OK {
-				t.message = res.Reason
+				t.message = a.reasonText(res.Reason, res.ReasonArgs...)
 				return
 			}
 			a.setGold(res.Gold)
@@ -209,11 +210,12 @@ func (a *app) prayCurrent(t *townScreen) {
 	}
 	res := game.PrayAtTemple(c, a.gold(), t.visit.Town.Facilities.Church)
 	if !res.OK {
+		reason := a.reasonText(res.Reason, res.ReasonArgs...)
 		if res.Cost > 0 {
-			t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.pray_cost_note"), res.Reason, res.Cost)
+			t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.pray_cost_note"), reason, res.Cost)
 			return
 		}
-		t.message = res.Reason
+		t.message = reason
 		return
 	}
 	a.setGold(res.Gold)
@@ -322,7 +324,7 @@ func (a *app) sellCurrent(t *townScreen) {
 	price := t.visit.Economy.SellPrice(item.Price)
 	res := game.Sell(a.members, a.gold(), s.member, s.slot, price)
 	if !res.OK {
-		t.message = res.Reason
+		t.message = a.reasonText(res.Reason)
 		return
 	}
 	a.setGold(res.Gold)
@@ -389,7 +391,8 @@ func (a *app) buyShip(t *townScreen) {
 	res := game.BuyShip(&a.save.Ships, a.tileAt,
 		a.party.X(), a.party.Y(), a.mapID, a.gold(), price)
 	if !res.OK {
-		t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.buy_cost_note"), res.Reason, price)
+		t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.buy_cost_note"),
+			a.reasonText(res.Reason), price)
 		return
 	}
 	a.setGold(res.Gold)
@@ -401,11 +404,12 @@ func (a *app) repairShip(t *townScreen) {
 	res := game.RepairShip(t.visit.Economy, &a.save.Ships,
 		a.party.X(), a.party.Y(), a.gold())
 	if !res.OK {
+		reason := a.reasonText(res.Reason)
 		if res.Cost > 0 {
-			t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.repair_cost_note"), res.Reason, res.Cost)
+			t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.repair_cost_note"), reason, res.Cost)
 			return
 		}
-		t.message = res.Reason
+		t.message = reason
 		return
 	}
 	a.setGold(res.Gold)
@@ -462,7 +466,7 @@ func (a *app) learnCurrent(t *townScreen) {
 		return
 	}
 	if !res.OK {
-		t.message = res.Reason
+		t.message = a.reasonText(res.Reason, res.ReasonArgs...)
 		if res.Cost > 0 {
 			t.message += fmt.Sprintf(a.tr.UI("townsvc.college.cost_note"), res.Cost)
 		}
@@ -542,7 +546,7 @@ func (a *app) convertCurrent(t *townScreen) {
 		return
 	}
 	if !res.OK {
-		t.message = res.Reason
+		t.message = a.reasonText(res.Reason, res.ReasonArgs...)
 		return
 	}
 	t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.convert_done"),

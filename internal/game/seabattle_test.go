@@ -7,7 +7,7 @@ import (
 )
 
 func TestSeaCostsAndEscape(t *testing.T) {
-	b := NewSeaBattle(rng.NewWithSeed(1), 75, []*SeaUnit{{
+	b := NewSeaBattle(rng.NewWithSeed(1), 75, "player", []*SeaUnit{{
 		Name: "pirate", Kind: SeaPirate, X: 1, Y: 1, Hull: 20,
 	}})
 	if !b.Move(false) || b.Points != 5 {
@@ -33,7 +33,7 @@ func TestSeaCostsAndEscape(t *testing.T) {
 }
 
 func TestSeaCannonDamageAndVictory(t *testing.T) {
-	b := NewSeaBattle(rng.NewWithSeed(1), 75, []*SeaUnit{{
+	b := NewSeaBattle(rng.NewWithSeed(1), 75, "player", []*SeaUnit{{
 		Name: "pirate", Kind: SeaPirate, X: SeaCentre, Y: SeaCentre - 1,
 		Hull: 1, MaxHull: 1, Experience: 25,
 	}})
@@ -47,7 +47,7 @@ func TestSeaCannonDamageAndVictory(t *testing.T) {
 }
 
 func TestSeaMonsterClosesAndSinks(t *testing.T) {
-	b := NewSeaBattle(rng.NewWithSeed(1), 1, []*SeaUnit{{
+	b := NewSeaBattle(rng.NewWithSeed(1), 1, "player", []*SeaUnit{{
 		Name: "serpent", Kind: SeaMonster, X: SeaCentre, Y: SeaCentre - 1, Hull: 20,
 	}})
 	results := b.EnemyTurn()

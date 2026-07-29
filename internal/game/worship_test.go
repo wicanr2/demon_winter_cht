@@ -98,11 +98,11 @@ func TestWorship_Refusals(t *testing.T) {
 		c      *Character
 		reason string
 	}{
-		{"沒有這個人", nil, "沒有這個人"},
-		{"狀態太差", stunned, "現在沒辦法祈求"},
-		{"不懂祈求", noSkill, "不懂得如何祈求"},
-		{"今天求過了", done, "今天已經祈求過了"},
-		{"沒有信仰", noFaith, "沒有信奉的神祇"},
+		{"沒有這個人", nil, "reason.member.invalid"},
+		{"狀態太差", stunned, "reason.worship.unavailable"},
+		{"不懂祈求", noSkill, "reason.worship.no_skill"},
+		{"今天求過了", done, "reason.worship.used_today"},
+		{"沒有信仰", noFaith, "reason.worship.no_deity"},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

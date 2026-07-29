@@ -46,3 +46,10 @@ JSON 文字＋版面資料化後像素差異：0（compare=0）
 
 介面資料分離完成；引擎仍保有必須由規則決定的熱鍵、action 與 enabled 條件，
 但玩家文字、復古順序與現代排版分組不再硬編於 Go。
+
+## 2026-07-30 後續補強
+
+本篇當時只掃 `cmd/demonwinter`，漏掉 `internal/game` 的 `Reason` 玩家文案；
+而舊檢查器也沒有讓非零硬編數量造成失敗。後續已把規則原因拆成 JSON key／
+格式參數，檢查範圍擴至規則層，目錄現為 836 條且硬編玩家中文 0。
+完整修正與驗證見 `docs/playtest/47-rule-reason-json-separation.md`。

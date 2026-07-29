@@ -97,6 +97,17 @@ func TestHeal_HealthyNeedsNothing(t *testing.T) {
 	}
 }
 
+func TestHeal_ReasonCarriesNameAsData(t *testing.T) {
+	c := hurtCharacter()
+	c.Name, c.CurrentHP = "冒險者", c.MaxHP
+	_, res := Heal(Economy{}, c, 0)
+	if res.Reason != "reason.heal.not_needed" ||
+		len(res.ReasonArgs) != 1 || res.ReasonArgs[0] != "冒險者" {
+		t.Fatalf("治療原因應拆成 key＋名稱參數，得到 %#v／%#v",
+			res.Reason, res.ReasonArgs)
+	}
+}
+
 // 買糧：份數範圍、扣款、上限。
 func TestBuyRations(t *testing.T) {
 	e := testEconomy() // 單價 = 30/5 = 6

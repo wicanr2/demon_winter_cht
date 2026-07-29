@@ -29,25 +29,25 @@ const (
 	FacilityCollege
 )
 
-// FacilityName 回傳設施的中文名稱。
+// FacilityName 回傳設施在 ui.json 的顯示 key。
 func FacilityName(f Facility) string {
 	switch f {
 	case FacilityMarket:
-		return "市集"
+		return "town.menu.label_market"
 	case FacilityHealers:
-		return "治療所"
+		return "town.menu.label_healers"
 	case FacilityInn:
-		return "旅店"
+		return "town.menu.label_inn"
 	case FacilityGuild:
-		return "城鎮公會"
+		return "town.menu.label_guild"
 	case FacilityChurch:
-		return "神殿"
+		return "town.menu.label_temple"
 	case FacilityDocks:
-		return "碼頭"
+		return "town.menu.label_docks"
 	case FacilityPub:
-		return "酒館"
+		return "town.menu.label_pub"
 	case FacilityCollege:
-		return "學院"
+		return "town.menu.label_college"
 	}
 	return "?"
 }
