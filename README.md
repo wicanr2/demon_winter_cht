@@ -121,7 +121,9 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 「碼頭地形」並不存在：碼頭是城鎮設施。海上的四向船隻 `0x3f–0x42` 與隊伍
 四向兩步現已完成並通過固定場景實跑
 （[`docs/playtest/30`](docs/playtest/30-modern-icon-party-and-sailing-directions.md)）；
-仍待其餘特殊索引及戰鬥呈現層。
+戰鬥隊員、Orc 怪物與海戰玩家船的逐 frame 高解析覆寫層也已通過代表場景實跑
+（[`docs/playtest/31`](docs/playtest/31-modern-icon-battle-overlay-layer.md)）。
+其餘特殊索引與戰鬥素材仍待量產。
 
 ### 玩家操作與安全存檔
 
@@ -144,7 +146,7 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 完整固定場景與裁決見
 [`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)。沙地／森林岸線、
 城鎮、緋紅符印、隊伍四向與航海圖示已在後續批次完成；其他特殊索引與戰鬥
-呈現層尚未重畫，因此仍不能稱為完整主題。
+素材尚未全數重畫，因此仍不能稱為完整主題。
 
 劇情會把神殿替換成的 `0x5b` 毀壞廢墟也已完成正常／冬季配對：
 

@@ -98,5 +98,23 @@
     "0x40": "ship-east.png",
     "0x41": "ship-south.png",
     "0x42": "ship-west.png"
+  },
+  "battleSprites": {
+    "combat": {
+      "0x1a": "party-west-a.png"
+    },
+    "monsters": {
+      "0x8d": "monster-orc-east-8d.png"
+    },
+    "ships": {
+      "0x00": "ship-south.png",
+      "0x01": "ship-south.png",
+      "0x02": "ship-west.png",
+      "0x03": "ship-west.png",
+      "0x04": "ship-east.png",
+      "0x05": "ship-east.png",
+      "0x06": "ship-north.png",
+      "0x07": "ship-north.png"
+    }
   }
 }

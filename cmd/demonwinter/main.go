@@ -832,6 +832,7 @@ func (a *app) Draw(screen *ebiten.Image) {
 	op.GeoM.Scale(scale, scale)
 	screen.DrawImage(a.canvas, op)
 	a.drawModernIconWorld(screen)
+	a.drawModernIconBattleActors(screen)
 }
 
 // loadMapArg 解讀 -map：純數字當成 SUM.MAP 的子地圖編號，其餘當檔名。

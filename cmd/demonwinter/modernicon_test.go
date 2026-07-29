@@ -13,6 +13,9 @@ func validModernIconManifest() modernIconManifest {
 	m.Tiles.Normal = map[string]string{"0x01": "normal-01.png"}
 	m.Tiles.Winter = map[string]string{"0x01": "winter-01.png"}
 	m.Sprites = map[string]string{"0x1e": "party-north-a.png"}
+	m.BattleSprites.Combat = map[string]string{"0x14": "combat-14.png"}
+	m.BattleSprites.Monsters = map[string]string{"0xef": "monster-ef.png"}
+	m.BattleSprites.Ships = map[string]string{"0x1f": "ship-1f.png"}
 	return m
 }
 
@@ -31,6 +34,9 @@ func TestValidateModernIconManifest(t *testing.T) {
 		{"empty", func(m *modernIconManifest) {
 			m.Tiles.Normal, m.Tiles.Winter = nil, nil
 			m.Sprites = nil
+			m.BattleSprites.Combat = nil
+			m.BattleSprites.Monsters = nil
+			m.BattleSprites.Ships = nil
 		}},
 		{"index", func(m *modernIconManifest) {
 			m.Tiles.Normal = map[string]string{"0xff": "bad.png"}
@@ -40,6 +46,18 @@ func TestValidateModernIconManifest(t *testing.T) {
 		}},
 		{"sprite path", func(m *modernIconManifest) {
 			m.Sprites = map[string]string{"0x1e": "../party.png"}
+		}},
+		{"combat index", func(m *modernIconManifest) {
+			m.BattleSprites.Combat = map[string]string{"44": "bad.png"}
+		}},
+		{"monster index", func(m *modernIconManifest) {
+			m.BattleSprites.Monsters = map[string]string{"240": "bad.png"}
+		}},
+		{"ship index", func(m *modernIconManifest) {
+			m.BattleSprites.Ships = map[string]string{"32": "bad.png"}
+		}},
+		{"battle sprite path", func(m *modernIconManifest) {
+			m.BattleSprites.Monsters = map[string]string{"0": "../monster.png"}
 		}},
 	}
 	for _, tc := range tests {

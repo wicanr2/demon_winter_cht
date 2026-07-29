@@ -3566,7 +3566,10 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 證據見 [`docs/playtest/29`](docs/playtest/29-modern-icon-crimson-glyph-63.md)。
 > 隊伍四向兩步與航海四向亦完成透明試片、座標奇偶及同海面四向實跑，見
 > [`docs/playtest/30`](docs/playtest/30-modern-icon-party-and-sailing-directions.md)。
-> 下一批是其餘特殊索引與戰鬥隊員／怪物／船呈現層；不新增原版不存在的碼頭地形。
+> 戰鬥隊員／怪物／海戰也已完成 JSON 逐 frame 漸進覆寫層與三類代表實跑：
+> 玩家 `0x1a`、Orc `0x8d`、海戰玩家船 `0x00–07` 均先還原底格再疊透明素材，
+> 未列 frame 不冒充完成（[`docs/playtest/31`](docs/playtest/31-modern-icon-battle-overlay-layer.md)）。
+> 下一批是其餘特殊索引與戰鬥素材量產；不新增原版不存在的碼頭地形。
 >
 > **操作體驗新增，已完成程式與固定場景抽樣、等待使用者畫面審查：** `F6`
 > 切換整套復古／現代模式：復古恢復原版紅底直式命令列與相對轉向；現代使用

@@ -27,6 +27,9 @@ const (
 type modernIconTheme struct {
 	normal, winter map[byte]*ebiten.Image
 	sprites        map[byte]*ebiten.Image
+	combat         map[byte]*ebiten.Image
+	monsters       map[byte]*ebiten.Image
+	ships          map[byte]*ebiten.Image
 }
 
 type modernIconManifest struct {
@@ -38,7 +41,12 @@ type modernIconManifest struct {
 		Normal map[string]string `json:"normal"`
 		Winter map[string]string `json:"winter"`
 	} `json:"tiles"`
-	Sprites map[string]string `json:"sprites"`
+	Sprites       map[string]string `json:"sprites"`
+	BattleSprites struct {
+		Combat   map[string]string `json:"combat"`
+		Monsters map[string]string `json:"monsters"`
+		Ships    map[string]string `json:"ships"`
+	} `json:"battleSprites"`
 }
 
 func loadModernIconTheme(dir string) (*modernIconTheme, error) {
@@ -53,10 +61,11 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 	if err := validateModernIconManifest(m); err != nil {
 		return nil, err
 	}
-	loadSet := func(label string, entries map[string]string, allowAlpha bool) (map[byte]*ebiten.Image, error) {
+	loadSet := func(label string, entries map[string]string, allowAlpha bool,
+		frames int) (map[byte]*ebiten.Image, error) {
 		out := make(map[byte]*ebiten.Image, len(entries))
 		for key, name := range entries {
-			index, err := parseModernIconIndex(key)
+			index, err := parseModernIconIndexLimit(key, frames)
 			if err != nil {
 				return nil, fmt.Errorf("Modern Icon %s index %q：%w", label, key, err)
 			}
@@ -68,19 +77,37 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 		}
 		return out, nil
 	}
-	normal, err := loadSet("normal", m.Tiles.Normal, false)
+	normal, err := loadSet("normal", m.Tiles.Normal, false, modernTerrainFrames)
 	if err != nil {
 		return nil, err
 	}
-	winter, err := loadSet("winter", m.Tiles.Winter, false)
+	winter, err := loadSet("winter", m.Tiles.Winter, false, modernTerrainFrames)
 	if err != nil {
 		return nil, err
 	}
-	sprites, err := loadSet("sprites", m.Sprites, true)
+	sprites, err := loadSet("sprites", m.Sprites, true, modernTerrainFrames)
 	if err != nil {
 		return nil, err
 	}
-	return &modernIconTheme{normal: normal, winter: winter, sprites: sprites}, nil
+	combat, err := loadSet("battleSprites.combat", m.BattleSprites.Combat, true,
+		modernCombatFrames)
+	if err != nil {
+		return nil, err
+	}
+	monsters, err := loadSet("battleSprites.monsters", m.BattleSprites.Monsters, true,
+		modernMonsterFrames)
+	if err != nil {
+		return nil, err
+	}
+	ships, err := loadSet("battleSprites.ships", m.BattleSprites.Ships, true,
+		modernShipFrames)
+	if err != nil {
+		return nil, err
+	}
+	return &modernIconTheme{
+		normal: normal, winter: winter, sprites: sprites,
+		combat: combat, monsters: monsters, ships: ships,
+	}, nil
 }
 
 func validateModernIconManifest(m modernIconManifest) error {
@@ -92,14 +119,24 @@ func validateModernIconManifest(m modernIconManifest) error {
 	case m.FrameWidth != modernIconWidth || m.FrameHeight != modernIconHeight:
 		return fmt.Errorf("Modern Icon frame = %dx%d，預期最終呈現尺寸 %dx%d",
 			m.FrameWidth, m.FrameHeight, modernIconWidth, modernIconHeight)
-	case len(m.Tiles.Normal)+len(m.Tiles.Winter)+len(m.Sprites) == 0:
+	case len(m.Tiles.Normal)+len(m.Tiles.Winter)+len(m.Sprites)+
+		len(m.BattleSprites.Combat)+len(m.BattleSprites.Monsters)+
+		len(m.BattleSprites.Ships) == 0:
 		return fmt.Errorf("Modern Icon manifest 至少要列一張已重畫材質")
 	}
-	for label, entries := range map[string]map[string]string{
-		"normal": m.Tiles.Normal, "winter": m.Tiles.Winter, "sprites": m.Sprites,
+	for label, set := range map[string]struct {
+		entries map[string]string
+		frames  int
+	}{
+		"normal":                 {m.Tiles.Normal, modernTerrainFrames},
+		"winter":                 {m.Tiles.Winter, modernTerrainFrames},
+		"sprites":                {m.Sprites, modernTerrainFrames},
+		"battleSprites.combat":   {m.BattleSprites.Combat, modernCombatFrames},
+		"battleSprites.monsters": {m.BattleSprites.Monsters, modernMonsterFrames},
+		"battleSprites.ships":    {m.BattleSprites.Ships, modernShipFrames},
 	} {
-		for key, name := range entries {
-			if _, err := parseModernIconIndex(key); err != nil {
+		for key, name := range set.entries {
+			if _, err := parseModernIconIndexLimit(key, set.frames); err != nil {
 				return fmt.Errorf("Modern Icon tiles.%s index %q：%w", label, key, err)
 			}
 			if name == "" || filepath.Base(name) != name {
@@ -112,9 +149,13 @@ func validateModernIconManifest(m modernIconManifest) error {
 }
 
 func parseModernIconIndex(s string) (byte, error) {
+	return parseModernIconIndexLimit(s, modernTerrainFrames)
+}
+
+func parseModernIconIndexLimit(s string, frames int) (byte, error) {
 	n, err := strconv.ParseUint(s, 0, 8)
-	if err != nil || n >= modernTerrainFrames {
-		return 0, fmt.Errorf("必須是 0–%d 的十進位或 0x 十六進位索引", modernTerrainFrames-1)
+	if err != nil || n >= uint64(frames) {
+		return 0, fmt.Errorf("必須是 0–%d 的十進位或 0x 十六進位索引", frames-1)
 	}
 	return byte(n), nil
 }
@@ -153,6 +194,15 @@ func (t *modernIconTheme) tile(winter bool, index byte) *ebiten.Image {
 }
 
 func (t *modernIconTheme) sprite(index byte) *ebiten.Image { return t.sprites[index] }
+func (t *modernIconTheme) combatSprite(index int) *ebiten.Image {
+	return t.combat[byte(index)]
+}
+func (t *modernIconTheme) monsterSprite(index int) *ebiten.Image {
+	return t.monsters[byte(index)]
+}
+func (t *modernIconTheme) shipSprite(index int) *ebiten.Image {
+	return t.ships[byte(index)]
+}
 
 // drawModernIconWorld 在 1280×800 最終畫布直接畫 64×56 terrain。
 // 這不是把概念稿縮回 32×28；正式素材從一開始就以顯示尺寸重新繪製。
@@ -219,4 +269,115 @@ func (a *app) modernIconWorldVisible() bool {
 	return a.battle == nil && a.sea == nil && a.camp == nil && a.merchant == nil &&
 		a.pool == nil && a.dungeon == nil && a.plotGift == nil && a.confirm == nil &&
 		a.workshop == nil && !a.showRoster && !a.box.Active()
+}
+
+// drawModernIconBattleActors 在最終畫布重畫已核准的戰鬥單位。舊素材把黑底
+// 一起覆寫整格，所以不能只疊透明角色：必須先還原該格地形／海面，再畫角色。
+func (a *app) drawModernIconBattleActors(screen *ebiten.Image) {
+	if a.themeID != themeModern || a.modernIcons == nil {
+		return
+	}
+	if a.sea != nil {
+		a.drawModernIconSeaActors(screen)
+		return
+	}
+	if a.battle == nil || a.spInput != nil || a.spells != nil || a.useMenu != nil ||
+		(a.summon != nil && !a.summon.placing) {
+		return
+	}
+
+	cellW, cellH, logicalScale := a.tileMetrics()
+	camX, camY := a.battleCam()
+	cur := a.battle.Current()
+	for _, u := range a.battle.Units() {
+		if !u.Alive() {
+			continue
+		}
+		vx, vy := u.X-camX, u.Y-camY
+		if vx < 0 || vy < 0 || vx >= layout.ViewTilesX || vy >= layout.ViewTilesY {
+			continue
+		}
+		var sprite *ebiten.Image
+		if u.Slot >= game.PlayerSlotStart && u.Slot < game.PlayerSlotEnd {
+			member := u.Slot - game.PlayerSlotStart
+			if member >= 0 && member < len(a.members) {
+				frame := 0x14 + (u.Facing&3)*2
+				class := int(a.members[member].Class)
+				switch {
+				case class > 5:
+					frame += 8
+				case class > 2:
+					frame += 0x10
+				}
+				sprite = a.modernIcons.combatSprite(frame)
+			}
+		} else {
+			pair := [...]int{6, 4, 0, 2}
+			frame := u.SpriteIndex*8 + pair[u.Facing&3] + (a.battle.Round() & 1)
+			sprite = a.modernIcons.monsterSprite(frame)
+		}
+		if sprite == nil {
+			continue
+		}
+
+		x := (layout.MapOriginX + vx*cellW) * scale
+		y := (layout.MapOriginY + vy*cellH) * scale
+		tx, ty := camX+vx, camY+vy
+		if a.battleTerrain != nil && game.InArena(tx, ty) {
+			tile := a.battleTerrain.TileAt(tx, ty) & 0x7f
+			if ground := a.modernIcons.tile(a.useWinter, tile); ground != nil {
+				ui.DrawImageAt(screen, ground, x, y)
+			} else if ground := a.tileset().Tile(tile); ground != nil {
+				ui.DrawImageScaled(screen, ground, x, y, logicalScale*scale)
+			}
+		}
+		ui.DrawImageAt(screen, sprite, x, y)
+		border := enemyColor
+		if u == cur {
+			border = markerColor
+		} else if u.IsPlayer {
+			border = partyColor
+		}
+		ui.StrokeRect(screen, x, y, modernIconWidth, modernIconHeight, border)
+		if a.examine != nil && u.Slot == a.examine.slot() {
+			ui.StrokeRect(screen, x, y, modernIconWidth, modernIconHeight, trapMarkerColor)
+		}
+	}
+}
+
+func (a *app) drawModernIconSeaActors(screen *ebiten.Image) {
+	b := a.sea
+	cellW, cellH, _ := a.tileMetrics()
+	camX := b.PlayerShip().X - layout.ViewTilesX/2
+	camY := b.PlayerShip().Y - layout.ViewTilesY/2
+	pairs := [...]int{6, 4, 0, 2}
+	for _, u := range b.Units {
+		if !u.Alive() {
+			continue
+		}
+		group := 0
+		if u.Kind == game.SeaPirate {
+			group = 1
+		} else if u.Kind == game.SeaMonster {
+			group = 2
+		}
+		frame := group*8 + pairs[u.Facing&3] + b.Round&1
+		sprite := a.modernIcons.shipSprite(frame)
+		if sprite == nil {
+			continue
+		}
+		vx, vy := u.X-camX, u.Y-camY
+		if vx < 0 || vy < 0 || vx >= layout.ViewTilesX || vy >= layout.ViewTilesY {
+			continue
+		}
+		x := (layout.MapOriginX + vx*cellW) * scale
+		y := (layout.MapOriginY + vy*cellH) * scale
+		ui.FillRect(screen, x, y, modernIconWidth, modernIconHeight, seaColor)
+		ui.DrawImageAt(screen, sprite, x, y)
+		border := enemyColor
+		if u.Kind == game.SeaPlayer {
+			border = partyColor
+		}
+		ui.StrokeRect(screen, x, y, modernIconWidth, modernIconHeight, border)
+	}
 }
