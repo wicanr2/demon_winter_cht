@@ -130,7 +130,14 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 |---|---|
 | ![Modern Icon 正常丘陵](docs/design/img/modern-icon-m1-hills-normal-runtime.png) | ![Modern Icon 冬季丘陵](docs/design/img/modern-icon-m1-hills-winter-runtime.png) |
 
-其餘高山、特殊索引與戰鬥素材仍待量產。
+高山／岩地 `0x0f/0x10` 也以不同輪廓完成每索引四個季節變體
+（[`docs/playtest/33`](docs/playtest/33-modern-icon-mountain-variants.md)）：
+
+| 正常高山 | 冬季高山 |
+|---|---|
+| ![Modern Icon 正常高山](docs/design/img/modern-icon-m1-mountains-normal-runtime.png) | ![Modern Icon 冬季高山](docs/design/img/modern-icon-m1-mountains-winter-runtime.png) |
+
+其餘特殊索引與戰鬥素材仍待量產。
 
 ### 玩家操作與安全存檔
 

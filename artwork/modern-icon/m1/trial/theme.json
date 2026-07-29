@@ -93,6 +93,18 @@
         "normal-hills-0e-v2.png",
         "normal-hills-0e-v3.png"
       ],
+      "0x0f": [
+        "normal-mountains-0f-v0.png",
+        "normal-mountains-0f-v1.png",
+        "normal-mountains-0f-v2.png",
+        "normal-mountains-0f-v3.png"
+      ],
+      "0x10": [
+        "normal-mountains-10-v0.png",
+        "normal-mountains-10-v1.png",
+        "normal-mountains-10-v2.png",
+        "normal-mountains-10-v3.png"
+      ],
       "0x2b": [
         "normal-hills-2b-v0.png",
         "normal-hills-2b-v1.png",
@@ -106,6 +118,18 @@
         "winter-hills-0e-v1.png",
         "winter-hills-0e-v2.png",
         "winter-hills-0e-v3.png"
+      ],
+      "0x0f": [
+        "winter-mountains-0f-v0.png",
+        "winter-mountains-0f-v1.png",
+        "winter-mountains-0f-v2.png",
+        "winter-mountains-0f-v3.png"
+      ],
+      "0x10": [
+        "winter-mountains-10-v0.png",
+        "winter-mountains-10-v1.png",
+        "winter-mountains-10-v2.png",
+        "winter-mountains-10-v3.png"
       ],
       "0x2b": [
         "winter-hills-2b-v0.png",
