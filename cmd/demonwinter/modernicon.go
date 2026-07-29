@@ -26,6 +26,8 @@ const (
 // 索引；缺格就保留底下的相容預覽，不拿舊圖或假圖冒充完整新素材。
 type modernIconTheme struct {
 	normal, winter map[byte]*ebiten.Image
+	normalVariants map[byte][]*ebiten.Image
+	winterVariants map[byte][]*ebiten.Image
 	sprites        map[byte]*ebiten.Image
 	combat         map[byte]*ebiten.Image
 	monsters       map[byte]*ebiten.Image
@@ -41,6 +43,10 @@ type modernIconManifest struct {
 		Normal map[string]string `json:"normal"`
 		Winter map[string]string `json:"winter"`
 	} `json:"tiles"`
+	TileVariants struct {
+		Normal map[string][]string `json:"normal"`
+		Winter map[string][]string `json:"winter"`
+	} `json:"tileVariants"`
 	Sprites       map[string]string `json:"sprites"`
 	BattleSprites struct {
 		Combat   map[string]string `json:"combat"`
@@ -89,6 +95,31 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 	if err != nil {
 		return nil, err
 	}
+	loadVariants := func(label string, entries map[string][]string) (map[byte][]*ebiten.Image, error) {
+		out := make(map[byte][]*ebiten.Image, len(entries))
+		for key, names := range entries {
+			index, err := parseModernIconIndexLimit(key, modernTerrainFrames)
+			if err != nil {
+				return nil, fmt.Errorf("Modern Icon %s index %q：%w", label, key, err)
+			}
+			for _, name := range names {
+				src, err := loadModernIconPNG(filepath.Join(dir, name), false)
+				if err != nil {
+					return nil, fmt.Errorf("Modern Icon %s[%#02x]：%w", label, index, err)
+				}
+				out[index] = append(out[index], ebiten.NewImageFromImage(src))
+			}
+		}
+		return out, nil
+	}
+	normalVariants, err := loadVariants("tileVariants.normal", m.TileVariants.Normal)
+	if err != nil {
+		return nil, err
+	}
+	winterVariants, err := loadVariants("tileVariants.winter", m.TileVariants.Winter)
+	if err != nil {
+		return nil, err
+	}
 	combat, err := loadSet("battleSprites.combat", m.BattleSprites.Combat, true,
 		modernCombatFrames)
 	if err != nil {
@@ -105,8 +136,10 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 		return nil, err
 	}
 	return &modernIconTheme{
-		normal: normal, winter: winter, sprites: sprites,
-		combat: combat, monsters: monsters, ships: ships,
+		normal: normal, winter: winter,
+		normalVariants: normalVariants, winterVariants: winterVariants,
+		sprites: sprites,
+		combat:  combat, monsters: monsters, ships: ships,
 	}, nil
 }
 
@@ -120,6 +153,7 @@ func validateModernIconManifest(m modernIconManifest) error {
 		return fmt.Errorf("Modern Icon frame = %dx%d，預期最終呈現尺寸 %dx%d",
 			m.FrameWidth, m.FrameHeight, modernIconWidth, modernIconHeight)
 	case len(m.Tiles.Normal)+len(m.Tiles.Winter)+len(m.Sprites)+
+		len(m.TileVariants.Normal)+len(m.TileVariants.Winter)+
 		len(m.BattleSprites.Combat)+len(m.BattleSprites.Monsters)+
 		len(m.BattleSprites.Ships) == 0:
 		return fmt.Errorf("Modern Icon manifest 至少要列一張已重畫材質")
@@ -142,6 +176,25 @@ func validateModernIconManifest(m modernIconManifest) error {
 			if name == "" || filepath.Base(name) != name {
 				return fmt.Errorf("Modern Icon tiles.%s[%s] 必須是同目錄內的檔名，收到 %q",
 					label, key, name)
+			}
+		}
+	}
+	for label, entries := range map[string]map[string][]string{
+		"tileVariants.normal": m.TileVariants.Normal,
+		"tileVariants.winter": m.TileVariants.Winter,
+	} {
+		for key, names := range entries {
+			if _, err := parseModernIconIndexLimit(key, modernTerrainFrames); err != nil {
+				return fmt.Errorf("Modern Icon %s index %q：%w", label, key, err)
+			}
+			if len(names) < 2 {
+				return fmt.Errorf("Modern Icon %s[%s] 至少要兩張變體", label, key)
+			}
+			for _, name := range names {
+				if name == "" || filepath.Base(name) != name {
+					return fmt.Errorf("Modern Icon %s[%s] 必須是同目錄內的檔名，收到 %q",
+						label, key, name)
+				}
 			}
 		}
 	}
@@ -193,6 +246,26 @@ func (t *modernIconTheme) tile(winter bool, index byte) *ebiten.Image {
 	return t.normal[index]
 }
 
+func (t *modernIconTheme) tileAt(winter bool, index byte, x, y int) *ebiten.Image {
+	var variants map[byte][]*ebiten.Image
+	if winter {
+		variants = t.winterVariants
+	} else {
+		variants = t.normalVariants
+	}
+	if set := variants[index]; len(set) != 0 {
+		// 純座標雜湊，不讀遊戲 RNG；F8、存檔與重播狀態完全不受影響。
+		n := uint32(x)*73856093 ^ uint32(y)*19349663 ^ uint32(index)*83492791
+		n ^= n >> 16
+		n *= 0x7feb352d
+		n ^= n >> 15
+		n *= 0x846ca68b
+		n ^= n >> 16
+		return set[int(n%uint32(len(set)))]
+	}
+	return t.tile(winter, index)
+}
+
 func (t *modernIconTheme) sprite(index byte) *ebiten.Image { return t.sprites[index] }
 func (t *modernIconTheme) combatSprite(index int) *ebiten.Image {
 	return t.combat[byte(index)]
@@ -235,7 +308,7 @@ func (a *app) drawModernIconWorld(screen *ebiten.Image) {
 				if sprite := a.modernIcons.sprite(partyGlyph); sprite != nil {
 					x := (layout.MapOriginX + dx*gfx.EGATileWidth) * scale
 					y := (layout.MapOriginY + dy*gfx.EGATileHeight) * scale
-					if ground := a.modernIcons.tile(a.useWinter, tile); ground != nil {
+					if ground := a.modernIcons.tileAt(a.useWinter, tile, mx, my); ground != nil {
 						ui.DrawImageAt(screen, ground, x, y)
 					} else if ground := a.tileset().Tile(tile); ground != nil {
 						ui.DrawImageScaled(screen, ground, x, y, scale)
@@ -245,7 +318,7 @@ func (a *app) drawModernIconWorld(screen *ebiten.Image) {
 				}
 				tile = partyGlyph
 			}
-			img := a.modernIcons.tile(a.useWinter, tile)
+			img := a.modernIcons.tileAt(a.useWinter, tile, mx, my)
 			if img == nil {
 				continue
 			}
@@ -325,7 +398,7 @@ func (a *app) drawModernIconBattleActors(screen *ebiten.Image) {
 		tx, ty := camX+vx, camY+vy
 		if a.battleTerrain != nil && game.InArena(tx, ty) {
 			tile := a.battleTerrain.TileAt(tx, ty) & 0x7f
-			if ground := a.modernIcons.tile(a.useWinter, tile); ground != nil {
+			if ground := a.modernIcons.tileAt(a.useWinter, tile, tx, ty); ground != nil {
 				ui.DrawImageAt(screen, ground, x, y)
 			} else if ground := a.tileset().Tile(tile); ground != nil {
 				ui.DrawImageScaled(screen, ground, x, y, logicalScale*scale)

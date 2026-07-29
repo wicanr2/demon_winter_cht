@@ -123,7 +123,14 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 （[`docs/playtest/30`](docs/playtest/30-modern-icon-party-and-sailing-directions.md)）；
 戰鬥隊員、Orc 怪物與海戰玩家船的逐 frame 高解析覆寫層也已通過代表場景實跑
 （[`docs/playtest/31`](docs/playtest/31-modern-icon-battle-overlay-layer.md)）。
-其餘特殊索引與戰鬥素材仍待量產。
+雙倍移動成本的丘陵 `0x0e/0x2b` 另以每索引四個正常／冬季變體完成無縫拼接，
+選圖只依座標、不碰遊戲 RNG（[`docs/playtest/32`](docs/playtest/32-modern-icon-hill-variants.md)）：
+
+| 正常丘陵 | 冬季丘陵 |
+|---|---|
+| ![Modern Icon 正常丘陵](docs/design/img/modern-icon-m1-hills-normal-runtime.png) | ![Modern Icon 冬季丘陵](docs/design/img/modern-icon-m1-hills-winter-runtime.png) |
+
+其餘高山、特殊索引與戰鬥素材仍待量產。
 
 ### 玩家操作與安全存檔
 

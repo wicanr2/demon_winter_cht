@@ -85,6 +85,36 @@
       "0x64": "winter-asaht-64.png"
     }
   },
+  "tileVariants": {
+    "normal": {
+      "0x0e": [
+        "normal-hills-0e-v0.png",
+        "normal-hills-0e-v1.png",
+        "normal-hills-0e-v2.png",
+        "normal-hills-0e-v3.png"
+      ],
+      "0x2b": [
+        "normal-hills-2b-v0.png",
+        "normal-hills-2b-v1.png",
+        "normal-hills-2b-v2.png",
+        "normal-hills-2b-v3.png"
+      ]
+    },
+    "winter": {
+      "0x0e": [
+        "winter-hills-0e-v0.png",
+        "winter-hills-0e-v1.png",
+        "winter-hills-0e-v2.png",
+        "winter-hills-0e-v3.png"
+      ],
+      "0x2b": [
+        "winter-hills-2b-v0.png",
+        "winter-hills-2b-v1.png",
+        "winter-hills-2b-v2.png",
+        "winter-hills-2b-v3.png"
+      ]
+    }
+  },
   "sprites": {
     "0x18": "party-south-a.png",
     "0x19": "party-south-b.png",
