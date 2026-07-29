@@ -107,7 +107,7 @@ func (a *app) toggleVideoTheme() error {
 	a.videoMode = t.normal.Mode()
 	a.themeID = next
 	name := themeName(next)
-	a.message = a.tr.UI("theme.changed", "顯示主題：") + name
+	a.message = a.tr.UI("theme.changed") + name
 	a.logf("F8 → %s theme", name)
 	return nil
 }

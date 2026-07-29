@@ -3569,6 +3569,9 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 說明鍵，舊 `F2` 暫留相容別名；視窗關閉鈕會先走完整
 > `writeSave()`，存檔失敗時不退出。參數、規則邊界、畫面與 close-request
 > 實跑證據見 [`docs/ui/04`](docs/ui/04-control-modes-and-safe-exit.md)。
+> 同輪完成引擎／資料分離：766 條玩家文案及 world／camp／battle／town 的
+> 復古順序、現代 tab／左右欄全部進 `ui.json`；Go 玩家程式硬編中文為 0，
+> JSON 前後固定畫面 `AE=0`（[`docs/playtest/28`](docs/playtest/28-ui-json-data-separation.md)）。
 
 > **2026-07-29 最後收尾基準（取代本節底部過期的「建議下一步」）。**
 > A6 已完成「正常前期垂直切片＋後期高風險抽樣」，不是尚未開始；F2–F6
@@ -3802,7 +3805,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 
 | # | 項目 | 現況 |
 |---|---|---|
-| D1 | ~~介面文案硬編在 Go~~ **✅ 完成（2026-07-28）** | `cmd/demonwinter/*.go` 的正式介面文字全部走 `i18n.Translator.UI`：**2026-07-29 實數 749 條**（`assets/lang/zh-Hant/ui.txt`，語意化 key）；檢查器另列出 19 條只供開發者 debug／`-scene` 使用的描述與格式。這個數字會隨 debug 書籤一起長，不能沿用舊快照。<br>**守住它的是 `dwstrings uicheck`**（`cmd/dwstrings/uicheck.go`）：查 key 都在目錄裡、目錄沒孤兒、目錄譯文＝程式碼 fallback、還剩幾條硬編，另擋 Big5 打不出來的字與 fallback 裡的 `\n`。第一次跑就抓到 **51 條打錯 key 的靜默退回** —— 那種錯畫面一模一樣，只是永遠不走目錄，所以這個檢查不是可選的。<br>41 條 key 是**算出來的**（`trapNameKey(c)`、`"proving.colour."+c`…），靜態掃不到配對，程式碼那一側用 `ui:dynamic` 標記宣告（規約見 `docs/i18n/ui-key-conventions.md`）|
+| D1 | ~~介面文案硬編在 Go~~ **✅ JSON 資料分離完成（2026-07-29）** | 766 條玩家介面文案全部由 `assets/lang/zh-Hant/ui.json` 載入；`cmd/demonwinter` 的玩家可見硬編中文為 **0**。Go 只保留 key、格式參數、熱鍵與 action；`Translator.UI` 不再接受 fallback，缺 key 顯示 `⟦key⟧`。`dwstrings uicheck` 檢查缺 key、孤兒、重複／空白、換行、Big5 字形與硬編中文。動態 key 仍以 `ui:dynamic` 前綴宣告，規約見 `docs/i18n/ui-key-conventions.md`。|
 | D2 | 密語提示 **定案不翻** | 符文是要玩家自己建對照表的解謎機制，答案要用英文輸入。施力點放在手冊與提示（`docs/re/72` §6）|
 | D3 | 標題花體 logo **定案不重繪** | 1988 年的美術與署名是歷史紀錄（`rulebook/83`／`93`）|
 | D4 | ~~`Bungei` 待譯~~ **✅ 完成** | 官方英文手冊的 `Punji pit` 明列 50% 跌落、1–6 傷害，與 executable case 2 逐項相同；`A Bungei pit!` 是誤拼，不是專名。原文 key 保留，繁中依 glossary 譯「竹籤陷阱」（`docs/re/68` §5）|

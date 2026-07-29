@@ -25,24 +25,21 @@ import (
 // `game.ActionExamine` 只有定義。手冊寫的是：反白游標、顯示名稱／力量／技巧／
 // 速度／護甲／武器，`←→` 切換，有怪物學識才顯示怪物屬性、有戰術才顯示牠要打誰。
 // 少了這一格，**戰術與怪物學識兩個技能等於沒有效果**（`docs/manual-coverage.md` §7）。
-// **`uikey` 與 `label` 是一組**：`label` 是 fallback，`uikey` 去 `ui.txt` 查。
-// 這張表是套件層的變數，init 時還沒有 translator，所以不能在這裡就翻好 ——
-// 翻譯發生在畫的時候（見 drawBattleCommands）。
+// 玩家文案只留 JSON key，熱鍵與規則 action 留在引擎。
 var playerCommands = []struct {
 	key    ebiten.Key
 	uikey  string
-	label  string
 	action game.Action
 }{
-	{ebiten.KeyA, "battle.cmd.attack", "A 攻擊", game.ActionAttack},
-	{ebiten.KeyC, "battle.cmd.cast", "C 施法", game.ActionCast},
-	{ebiten.KeyU, "battle.cmd.useitem", "U 使用道具", game.ActionUseItem},
-	{ebiten.KeyT, "battle.cmd.turnundead", "T 驅散不死", game.ActionTurnUndead},
-	{ebiten.KeyP, "battle.cmd.pray", "P 祈禱", game.ActionPray},
-	{ebiten.KeyL, "battle.cmd.leech", "L 汲取法力", game.ActionLeech},
-	{ebiten.KeyD, "battle.cmd.dodge", "D 閃避", game.ActionDodge},
-	{ebiten.KeyS, "battle.cmd.sound", "S 音效開關", game.ActionSound},
-	{ebiten.KeyEscape, "battle.cmd.endturn", "Esc 結束回合", game.ActionEndTurn},
+	{ebiten.KeyA, "battle.cmd.attack", game.ActionAttack},
+	{ebiten.KeyC, "battle.cmd.cast", game.ActionCast},
+	{ebiten.KeyU, "battle.cmd.useitem", game.ActionUseItem},
+	{ebiten.KeyT, "battle.cmd.turnundead", game.ActionTurnUndead},
+	{ebiten.KeyP, "battle.cmd.pray", game.ActionPray},
+	{ebiten.KeyL, "battle.cmd.leech", game.ActionLeech},
+	{ebiten.KeyD, "battle.cmd.dodge", game.ActionDodge},
+	{ebiten.KeyS, "battle.cmd.sound", game.ActionSound},
+	{ebiten.KeyEscape, "battle.cmd.endturn", game.ActionEndTurn},
 }
 
 // updateBattle 推進戰鬥。
@@ -87,14 +84,14 @@ func (a *app) updateBattle() error {
 			// 試煉室把陣型借走了（原版 `0x0e004` 也在收尾常式第一行還原）。
 			a.restoreProvingFormation()
 			if out == game.Victory {
-				a.logLine(a.tr.UI("battle.msg.monstersdead", "怪物全滅"))
+				a.logLine(a.tr.UI("battle.msg.monstersdead"))
 				a.awardExperience()
 				a.awardGold()
 				a.awardDrops()
 				// 試煉室的那一場：戰勝才算過關（原版 `0x0e1bc`）。
 				a.finishProvingRoom()
 			} else {
-				a.logLine(a.tr.UI("battle.msg.partydead", "隊伍全滅"))
+				a.logLine(a.tr.UI("battle.msg.partydead"))
 			}
 		}
 		// 全滅就直接走死亡畫面，不要等玩家按鍵回世界地圖 ——
@@ -113,12 +110,12 @@ func (a *app) updateBattle() error {
 
 	cur := a.battle.Current()
 	if vanished := a.battle.TakeVanished(); vanished != nil {
-		a.logf(a.tr.UI("battle.msg.illusiondies", "%s 消散了"), vanished.Name)
+		a.logf(a.tr.UI("battle.msg.illusiondies"), vanished.Name)
 		return nil
 	}
 	if cur == nil {
 		a.battle.BeginRound()
-		a.logf(a.tr.UI("battle.log.round", "── 第 %d 回合 ──"), a.battle.Round())
+		a.logf(a.tr.UI("battle.log.round"), a.battle.Round())
 		return nil
 	}
 
@@ -232,7 +229,7 @@ func (a *app) castSelected(u *game.Unit) {
 	// 原版的順序：先看法力夠不夠（SP < M → not enough points），
 	// 再看行動點。兩個都不足時顯示法力那一則 —— 玩家先想知道的是那個。
 	if u.CurrentSP < e.spell.M {
-		a.logf(a.tr.UI("battle.cast.nosp", "%s 的法力不足以施放%s（需要 %d 點）"), u.Name, e.name, e.spell.M)
+		a.logf(a.tr.UI("battle.cast.nosp"), u.Name, e.name, e.spell.M)
 		return
 	}
 	if e.spell.Effect == game.EffectSummon {
@@ -285,7 +282,7 @@ func (a *app) updateSummonMenu() error {
 			return nil
 		}
 		if !a.battle.CanSummonAt(a.aoeX, a.aoeY) {
-			a.logLine(a.tr.UI("battle.summon.badplace", "那一格不能放置召喚生物"))
+			a.logLine(a.tr.UI("battle.summon.badplace"))
 			return nil
 		}
 		return a.commitSummon(m, a.aoeX, a.aoeY)
@@ -300,21 +297,21 @@ func (a *app) updateSummonMenu() error {
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 		e, err := a.tables.Summon(m.cursor)
 		if err != nil {
-			a.logf(a.tr.UI("battle.summon.badentry", "召喚資料錯誤：%v"), err)
+			a.logf(a.tr.UI("battle.summon.badentry"), err)
 			return nil
 		}
 		cost := game.SummonCost(e, m.kind)
 		if m.item == nil && m.caster.CurrentSP < cost {
-			a.logf(a.tr.UI("battle.summon.nosp", "%s 的法力不足（需要 %d）"), m.caster.Name, cost)
+			a.logf(a.tr.UI("battle.summon.nosp"), m.caster.Name, cost)
 			return nil
 		}
 		if m.item != nil && m.item.Item.Power < cost {
-			a.logf(a.tr.UI("battle.summon.itemweak", "這件道具的力量不足（需要 %d，只有 %d）"),
+			a.logf(a.tr.UI("battle.summon.itemweak"),
 				cost, m.item.Item.Power)
 			return nil
 		}
 		if a.battle.FreeSummonSlot() < 0 {
-			a.logLine(a.tr.UI("battle.summon.full", "同時只能維持三隻召喚／幻化生物"))
+			a.logLine(a.tr.UI("battle.summon.full"))
 			return nil
 		}
 		// 原版先把游標交給玩家，並不限制在施法者旁邊。起點放在施法者
@@ -328,13 +325,13 @@ func (a *app) updateSummonMenu() error {
 func (a *app) commitSummon(m *summonMenu, x, y int) error {
 	e, err := a.tables.Summon(m.cursor)
 	if err != nil {
-		a.logf(a.tr.UI("battle.summon.badentry", "召喚資料錯誤：%v"), err)
+		a.logf(a.tr.UI("battle.summon.badentry"), err)
 		return nil
 	}
 	cost := game.SummonCost(e, m.kind)
 	slot := a.battle.FreeSummonSlot()
 	if slot < 0 {
-		a.logLine(a.tr.UI("battle.summon.full", "同時只能維持三隻召喚／幻化生物"))
+		a.logLine(a.tr.UI("battle.summon.full"))
 		return nil
 	}
 	action := game.ActionCast
@@ -342,7 +339,7 @@ func (a *app) commitSummon(m *summonMenu, x, y int) error {
 		action = game.ActionUseItem
 	}
 	if _, ok := a.battle.Spend(action); !ok {
-		a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), m.caster.Name)
+		a.logf(a.tr.UI("battle.msg.noap"), m.caster.Name)
 		return nil
 	}
 	if m.item == nil {
@@ -352,11 +349,11 @@ func (a *app) commitSummon(m *summonMenu, x, y int) error {
 	}
 	u := a.battle.PlaceSummon(slot, e, m.kind, x, y)
 	names := a.strings.IllusionSummonNames()
-	u.Name = fmt.Sprintf(a.tr.UI("battle.summon.fallback", "生物 %d"), m.cursor+1)
+	u.Name = fmt.Sprintf(a.tr.UI("battle.summon.fallback"), m.cursor+1)
 	if m.cursor < len(names) {
 		u.Name = a.tr.Event(spellSourceFile, 489+m.cursor, names[m.cursor])
 	}
-	a.logf(a.tr.UI("battle.summon.done", "%s 召來了 %s"), m.caster.Name, u.Name)
+	a.logf(a.tr.UI("battle.summon.done"), m.caster.Name, u.Name)
 	a.summon = nil
 	return nil
 }
@@ -368,7 +365,7 @@ func (a *app) drawSummonMenu(dst *ebiten.Image) {
 		a.font.Draw(dst, s, layout.BoxPadX, y)
 		y += ui.LineHeight
 	}
-	line(fmt.Sprintf(a.tr.UI("battle.summon.which", "%s 要召來哪種生物？"), m.caster.Name))
+	line(fmt.Sprintf(a.tr.UI("battle.summon.which"), m.caster.Name))
 	line("")
 	names := a.strings.IllusionSummonNames()
 	for i := 0; i < a.tables.NumSummons(); i++ {
@@ -376,7 +373,7 @@ func (a *app) drawSummonMenu(dst *ebiten.Image) {
 		if err != nil {
 			continue
 		}
-		name := fmt.Sprintf(a.tr.UI("battle.summon.fallback", "生物 %d"), i+1)
+		name := fmt.Sprintf(a.tr.UI("battle.summon.fallback"), i+1)
 		if i < len(names) {
 			name = a.tr.Event(spellSourceFile, 489+i, names[i])
 		}
@@ -384,11 +381,11 @@ func (a *app) drawSummonMenu(dst *ebiten.Image) {
 		if i == m.cursor {
 			mark = " > "
 		}
-		line(fmt.Sprintf(a.tr.UI("battle.summon.entry", "%s%s %3d 點"),
+		line(fmt.Sprintf(a.tr.UI("battle.summon.entry"),
 			mark, textlayout.PadCells(name, 12), game.SummonCost(e, m.kind)))
 	}
 	line("")
-	line(a.tr.UI("battle.summon.keys", "↑↓：選擇　Enter：召喚　Esc：取消"))
+	line(a.tr.UI("battle.summon.keys"))
 }
 
 // castWithSP 是玩家在輸入框確認投入點數之後進入選目標。
@@ -412,14 +409,14 @@ func (a *app) commitSpell(c *aoeCursor, target *game.Unit) {
 		action = game.ActionUseItem
 	}
 	if _, ok := a.battle.Spend(action); !ok {
-		a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), c.caster.Name)
+		a.logf(a.tr.UI("battle.msg.noap"), c.caster.Name)
 		return
 	}
 	if c.item == nil {
 		c.caster.CurrentSP -= c.sp
 	} else if member := u2c(a.members, c.caster); member != nil {
 		game.UseItemCharge(a.rng, member, c.item.Slot)
-		a.logf(a.tr.UI("battle.item.used", "%s 使用 %s"), c.caster.Name, a.itemLabel(c.item.Item))
+		a.logf(a.tr.UI("battle.item.used"), c.caster.Name, a.itemLabel(c.item.Item))
 	}
 	a.applySpell(c.caster, target, c.entry, c.sp)
 }
@@ -480,17 +477,17 @@ func (a *app) drawSPPrompt(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
-	line(fmt.Sprintf(a.tr.UI("battle.cast.casts", "%s 施放%s"), p.caster.Name, p.entry.name))
+	line(fmt.Sprintf(a.tr.UI("battle.cast.casts"), p.caster.Name, p.entry.name))
 	line("")
-	line(fmt.Sprintf(a.tr.UI("battle.sp.prompt", "投入多少法力？　%d"), p.input.Amount()))
+	line(fmt.Sprintf(a.tr.UI("battle.sp.prompt"), p.input.Amount()))
 	line("")
-	line(fmt.Sprintf(a.tr.UI("battle.sp.range", "可投入 %d–%d（目前法力 %d）"),
+	line(fmt.Sprintf(a.tr.UI("battle.sp.range"),
 		p.input.Min(), p.input.Max(), p.caster.CurrentSP))
 	line("")
-	line(a.tr.UI("battle.sp.keys1", "數字鍵：輸入　↑↓：加減　Backspace：退格"))
-	line(a.tr.UI("battle.sp.keys2", "Enter：施放　Esc：取消"))
+	line(a.tr.UI("battle.sp.keys1"))
+	line(a.tr.UI("battle.sp.keys2"))
 	line("")
-	line(a.tr.UI("battle.sp.note", "※ 投入越多效果越強，法力用完就沒了"))
+	line(a.tr.UI("battle.sp.note"))
 }
 
 // applySpell 套用一個法術的效果。玩家的範圍法術中心來自 aoeCursor；
@@ -511,31 +508,31 @@ func (a *app) applySpellAt(caster, target *game.Unit, e spellEntry, sp, areaX, a
 	switch e.spell.Effect {
 	case game.EffectInstantDeath:
 		if target == nil {
-			a.logf(a.tr.UI("battle.msg.notarget", "%s 正前方沒有目標"), caster.Name)
+			a.logf(a.tr.UI("battle.msg.notarget"), caster.Name)
 			return
 		}
 		if game.CastInstantDeath(a.rng, sp, e.spell, target) {
 			a.battle.Kill(target)
 			a.speaker.Play(pcspeaker.EffectDeath)
-			a.logf(a.tr.UI("battle.msg.spellkilled", "%s 的%s殺死了 %s"), caster.Name, e.name, target.Name)
+			a.logf(a.tr.UI("battle.msg.spellkilled"), caster.Name, e.name, target.Name)
 		} else {
-			a.logf(a.tr.UI("battle.msg.spellnoeffect", "%s 的%s沒有奏效"), caster.Name, e.name)
+			a.logf(a.tr.UI("battle.msg.spellnoeffect"), caster.Name, e.name)
 		}
 
 	case game.EffectBindApply:
 		if target == nil {
-			a.logf(a.tr.UI("battle.msg.notarget", "%s 正前方沒有目標"), caster.Name)
+			a.logf(a.tr.UI("battle.msg.notarget"), caster.Name)
 			return
 		}
 		res := game.CastBind(a.rng, sp, e.spell, target)
 		switch {
 		case res.Applied:
-			a.logf(a.tr.UI("battle.msg.bound", "%s 用%s束縛了 %s（%d 回合）"),
+			a.logf(a.tr.UI("battle.msg.bound"),
 				caster.Name, e.name, target.Name, res.Rounds)
 		case res.AlreadyBound:
-			a.logf(a.tr.UI("battle.msg.alreadybound", "%s 已經被束縛住了"), target.Name)
+			a.logf(a.tr.UI("battle.msg.alreadybound"), target.Name)
 		default:
-			a.logf(a.tr.UI("battle.msg.resisted", "%s 抵抗了%s"), target.Name, e.name)
+			a.logf(a.tr.UI("battle.msg.resisted"), target.Name, e.name)
 		}
 
 	case game.EffectBindRelease:
@@ -543,62 +540,62 @@ func (a *app) applySpellAt(caster, target *game.Unit, e spellEntry, sp, areaX, a
 			target = caster
 		}
 		if game.CastBindRelease(sp, e.spell, target) {
-			a.logf(a.tr.UI("battle.msg.unbound", "%s 的束縛被%s解開"), target.Name, e.name)
+			a.logf(a.tr.UI("battle.msg.unbound"), target.Name, e.name)
 		} else {
-			a.logf(a.tr.UI("battle.msg.unbindweak", "%s 的力度不足以解開束縛"), e.name)
+			a.logf(a.tr.UI("battle.msg.unbindweak"), e.name)
 		}
 
 	case game.EffectWither:
 		if target == nil {
-			a.logf(a.tr.UI("battle.msg.notarget", "%s 正前方沒有目標"), caster.Name)
+			a.logf(a.tr.UI("battle.msg.notarget"), caster.Name)
 			return
 		}
 		if game.CastWither(a.rng, sp, e.spell, target) {
-			a.logf(a.tr.UI("battle.msg.withered", "%s 的%s讓 %s 衰朽"), caster.Name, e.name, target.Name)
+			a.logf(a.tr.UI("battle.msg.withered"), caster.Name, e.name, target.Name)
 		} else {
-			a.logf(a.tr.UI("battle.msg.spellnoeffect", "%s 的%s沒有奏效"), caster.Name, e.name)
+			a.logf(a.tr.UI("battle.msg.spellnoeffect"), caster.Name, e.name)
 		}
 
 	case game.EffectPoison:
 		if target == nil {
-			a.logf(a.tr.UI("battle.msg.notarget", "%s 正前方沒有目標"), caster.Name)
+			a.logf(a.tr.UI("battle.msg.notarget"), caster.Name)
 			return
 		}
 		if game.CastCurePoison(a.rng, sp, e.spell, target) {
-			a.logf(a.tr.UI("battle.msg.cured", "%s 的%s解除了 %s 的中毒"), caster.Name, e.name, target.Name)
+			a.logf(a.tr.UI("battle.msg.cured"), caster.Name, e.name, target.Name)
 		} else {
-			a.logf(a.tr.UI("battle.msg.spellnoeffect", "%s 的%s沒有奏效"), caster.Name, e.name)
+			a.logf(a.tr.UI("battle.msg.spellnoeffect"), caster.Name, e.name)
 		}
 
 	case game.EffectPossession:
 		if target == nil {
-			a.logf(a.tr.UI("battle.msg.notarget", "%s 正前方沒有目標"), caster.Name)
+			a.logf(a.tr.UI("battle.msg.notarget"), caster.Name)
 			return
 		}
 		if game.Possess(a.rng, target, sp) {
-			a.logf(a.tr.UI("battle.msg.possessed", "%s 的%s奪走了 %s 的心智"), caster.Name, e.name, target.Name)
+			a.logf(a.tr.UI("battle.msg.possessed"), caster.Name, e.name, target.Name)
 		} else {
-			a.logf(a.tr.UI("battle.msg.resisted", "%s 抵抗了%s"), target.Name, e.name)
+			a.logf(a.tr.UI("battle.msg.resisted"), target.Name, e.name)
 		}
 
 	case game.EffectAOE:
 		hits := game.CastAOE(a.rng, a.battle, e.spell, sp, areaX, areaY)
 		if len(hits) == 0 {
-			a.logf(a.tr.UI("battle.msg.aoenobody", "%s 的%s沒有波及任何人"), caster.Name, e.name)
+			a.logf(a.tr.UI("battle.msg.aoenobody"), caster.Name, e.name)
 			return
 		}
-		a.logf(a.tr.UI("battle.msg.aoecast", "%s 施放%s（波及 %d 人）"), caster.Name, e.name, len(hits))
+		a.logf(a.tr.UI("battle.msg.aoecast"), caster.Name, e.name, len(hits))
 		for _, h := range hits {
 			switch {
 			case h.Resisted:
-				a.logf(a.tr.UI("battle.msg.immune.indent", "　%s 免疫"), h.Unit.Name)
+				a.logf(a.tr.UI("battle.msg.immune.indent"), h.Unit.Name)
 			case h.Killed:
 				a.speaker.Play(pcspeaker.EffectDeath)
-				a.logf(a.tr.UI("battle.msg.fell.indent", "　%s 倒下了"), h.Unit.Name)
+				a.logf(a.tr.UI("battle.msg.fell.indent"), h.Unit.Name)
 			case h.Delta < 0:
-				a.logf(a.tr.UI("battle.msg.decrease.indent", "　%s 減少 %d"), h.Unit.Name, -h.Delta)
+				a.logf(a.tr.UI("battle.msg.decrease.indent"), h.Unit.Name, -h.Delta)
 			case h.Delta > 0:
-				a.logf(a.tr.UI("battle.msg.increase.indent", "　%s 增加 %d"), h.Unit.Name, h.Delta)
+				a.logf(a.tr.UI("battle.msg.increase.indent"), h.Unit.Name, h.Delta)
 			}
 		}
 
@@ -615,25 +612,25 @@ func (a *app) applySpellAt(caster, target *game.Unit, e spellEntry, sp, areaX, a
 		}
 		delta, ok := game.CastMagnitudeEffect(a.rng, sp, e.spell, who)
 		if !ok {
-			a.logf(a.tr.UI("battle.msg.effectunimpl", "%s 施放%s —— 這類效果尚未實作"), caster.Name, e.name)
+			a.logf(a.tr.UI("battle.msg.effectunimpl"), caster.Name, e.name)
 			return
 		}
 		if who == nil {
-			a.logf(a.tr.UI("battle.msg.notarget", "%s 正前方沒有目標"), caster.Name)
+			a.logf(a.tr.UI("battle.msg.notarget"), caster.Name)
 			return
 		}
 		switch {
 		case delta > 0:
-			a.logf(a.tr.UI("battle.msg.buff", "%s 的%s讓 %s 增加 %d"), caster.Name, e.name, who.Name, delta)
+			a.logf(a.tr.UI("battle.msg.buff"), caster.Name, e.name, who.Name, delta)
 		case delta < 0:
-			a.logf(a.tr.UI("battle.msg.debuff", "%s 的%s讓 %s 減少 %d"), caster.Name, e.name, who.Name, -delta)
+			a.logf(a.tr.UI("battle.msg.debuff"), caster.Name, e.name, who.Name, -delta)
 			if !who.Alive() {
 				a.battle.Kill(who)
 				a.speaker.Play(pcspeaker.EffectDeath)
-				a.logf(a.tr.UI("battle.msg.fell", "%s 倒下了"), who.Name)
+				a.logf(a.tr.UI("battle.msg.fell"), who.Name)
 			}
 		default:
-			a.logf(a.tr.UI("battle.msg.nonoticeable", "%s 的%s沒有明顯效果"), caster.Name, e.name)
+			a.logf(a.tr.UI("battle.msg.nonoticeable"), caster.Name, e.name)
 		}
 	}
 }
@@ -647,9 +644,9 @@ func (a *app) drawSpellMenu(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
-	line(fmt.Sprintf(a.tr.UI("battle.cast.header", "%s 施法　法力 %d"), m.caster.Name, m.caster.CurrentSP))
+	line(fmt.Sprintf(a.tr.UI("battle.cast.header"), m.caster.Name, m.caster.CurrentSP))
 	line("")
-	line(a.tr.UI("battle.cast.columns", "   法術            最低法力"))
+	line(a.tr.UI("battle.cast.columns"))
 
 	const window = 14
 	start := m.cursor - window/2
@@ -670,14 +667,14 @@ func (a *app) drawSpellMenu(dst *ebiten.Image) {
 		}
 		note := ""
 		if m.caster.CurrentSP < e.spell.M {
-			note = a.tr.UI("battle.cast.nosp.mark", "  法力不足")
+			note = a.tr.UI("battle.cast.nosp.mark")
 		}
 		line(fmt.Sprintf("%s%s %5d%s", mark,
 			textlayout.PadCells(e.name, 14), e.spell.M, note))
 	}
 	line("")
-	line(a.tr.UI("battle.cast.keys", "↑↓：選擇　Enter：施放　Esc：取消"))
-	line(a.tr.UI("battle.cast.note", "※ 選好按 Enter 再決定投入多少法力"))
+	line(a.tr.UI("battle.cast.keys"))
+	line(a.tr.UI("battle.cast.note"))
 }
 
 // aoeCursor 是範圍法術的選點狀態。
@@ -712,7 +709,7 @@ func (a *app) updateAOECursor() error {
 	// Esc 取消：行動點與法力都還沒扣，什麼都沒發生（原版的游標回 -5）。
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		a.aoe = nil
-		a.logLine(a.tr.UI("battle.cast.cancelled", "取消施法"))
+		a.logLine(a.tr.UI("battle.cast.cancelled"))
 		return nil
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) ||
@@ -726,7 +723,7 @@ func (a *app) updateAOECursor() error {
 		// 單體法術要真的指到一個人身上才算數。
 		target := a.battle.UnitAt(a.aoeX, a.aoeY)
 		if target == nil {
-			a.logLine(a.tr.UI("battle.msg.emptycell", "那一格沒有人"))
+			a.logLine(a.tr.UI("battle.msg.emptycell"))
 			return nil
 		}
 		a.aoe = nil
@@ -783,13 +780,13 @@ func (a *app) updateItemMenu(u *game.Unit) error {
 func (a *app) useItem(u *game.Unit, e game.UsableItem) {
 	sp, err := a.tables.Spell(e.Item.Effect)
 	if err != nil {
-		a.logf(a.tr.UI("battle.item.noeffectrecord", "%s 使用 %s，但效果 %d 查不到記錄"),
+		a.logf(a.tr.UI("battle.item.noeffectrecord"),
 			u.Name, a.itemLabel(e.Item), e.Item.Effect)
 		return
 	}
 	name, err := a.strings.SpellName(e.Item.Effect)
 	if err != nil {
-		name = fmt.Sprintf(a.tr.UI("battle.item.effect", "效果 %d"), e.Item.Effect)
+		name = fmt.Sprintf(a.tr.UI("battle.item.effect"), e.Item.Effect)
 	}
 	entry := spellEntry{
 		index: e.Item.Effect,
@@ -823,7 +820,7 @@ func (a *app) itemLabel(it scenario.InventorySlot) string {
 	}
 	item, err := a.items.ByIndex(int(it.Type))
 	if err != nil {
-		return fmt.Sprintf(a.tr.UI("battle.item.itemnum", "道具 %d"), it.Type)
+		return fmt.Sprintf(a.tr.UI("battle.item.itemnum"), it.Type)
 	}
 	name := a.tr.Event(itemSourceFile, int(it.Type), item.Name)
 	if it.Enchant != 0 {
@@ -841,25 +838,25 @@ func (a *app) drawItemMenu(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
-	line(fmt.Sprintf(a.tr.UI("battle.item.header", "%s 使用道具"), m.caster.Name))
+	line(fmt.Sprintf(a.tr.UI("battle.item.header"), m.caster.Name))
 	line("")
 	for i, e := range m.entries {
 		mark := "   "
 		if i == m.cursor {
 			mark = " > "
 		}
-		state := fmt.Sprintf(a.tr.UI("battle.item.charges", "（剩 %d 次）"), e.Item.Total-e.Item.Used)
+		state := fmt.Sprintf(a.tr.UI("battle.item.charges"), e.Item.Total-e.Item.Used)
 		if !e.Item.Identified {
-			state = a.tr.UI("battle.item.unidentified", "（未鑑定）")
+			state = a.tr.UI("battle.item.unidentified")
 		}
 		line(fmt.Sprintf("%s%s%s", mark,
 			textlayout.PadCells(a.itemLabel(e.Item), 14), state))
 	}
 	line("")
-	line(a.tr.UI("battle.item.keys", "↑↓：選擇　Enter：使用　Esc：取消"))
+	line(a.tr.UI("battle.item.keys"))
 	line("")
-	line(a.tr.UI("battle.item.note1", "※ 只列得出已裝備的武器／護甲與消耗品，而且要還有次數"))
-	line(a.tr.UI("battle.item.note2", "　 原版的 Use 就是拿來觸發已裝備裝備的特殊能力"))
+	line(a.tr.UI("battle.item.note1"))
+	line(a.tr.UI("battle.item.note2"))
 }
 
 // updatePlayerTurn 處理玩家單位的一次按鍵。
@@ -888,7 +885,7 @@ func (a *app) updatePlayerTurn(u *game.Unit) error {
 	}
 	if inpututil.IsKeyJustPressed(ebiten.KeyEnter) {
 		if !a.battle.Step(u) {
-			a.logf(a.tr.UI("battle.msg.blocked", "%s 前方過不去"), u.Name)
+			a.logf(a.tr.UI("battle.msg.blocked"), u.Name)
 		}
 		return nil
 	}
@@ -916,7 +913,7 @@ func (a *app) faceToward(u *game.Unit, want game.Facing) {
 	cur := game.Facing(u.Facing)
 	if cur == want {
 		if !a.battle.Step(u) {
-			a.logf(a.tr.UI("battle.msg.blocked", "%s 前方過不去"), u.Name)
+			a.logf(a.tr.UI("battle.msg.blocked"), u.Name)
 		}
 		return
 	}
@@ -929,7 +926,7 @@ func (a *app) faceToward(u *game.Unit, want game.Facing) {
 		act = game.ActionTurnCCW
 	}
 	if !a.battle.TurnTo(u, act) {
-		a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), u.Name)
+		a.logf(a.tr.UI("battle.msg.noap"), u.Name)
 	}
 }
 
@@ -941,7 +938,7 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 	switch act {
 	case game.ActionCast:
 		if u.CurrentSP <= 0 {
-			a.logf(a.tr.UI("battle.msg.nosp", "%s 沒有法力"), u.Name)
+			a.logf(a.tr.UI("battle.msg.nosp"), u.Name)
 			return
 		}
 		a.openSpellMenu(u)
@@ -949,7 +946,7 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 	case game.ActionUseItem:
 		items := u2c(a.members, u).UsableItems()
 		if len(items) == 0 {
-			a.logf(a.tr.UI("battle.msg.noitem", "%s 沒有可用的道具"), u.Name)
+			a.logf(a.tr.UI("battle.msg.noitem"), u.Name)
 			return
 		}
 		a.useMenu = &itemMenu{caster: u, entries: items}
@@ -957,11 +954,11 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 	case game.ActionAttack:
 		target := a.battle.TargetInFront(u)
 		if target == nil {
-			a.logf(a.tr.UI("battle.msg.noenemyahead", "%s 正前方沒有敵人"), u.Name)
+			a.logf(a.tr.UI("battle.msg.noenemyahead"), u.Name)
 			return
 		}
 		if _, ok := a.battle.Spend(act); !ok {
-			a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), u.Name)
+			a.logf(a.tr.UI("battle.msg.noap"), u.Name)
 			return
 		}
 		a.reportAttack(u, target, a.battle.ResolveAttack(u, target, 0))
@@ -969,67 +966,67 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 	case game.ActionTurnUndead:
 		target := a.battle.TargetInFront(u)
 		if target == nil {
-			a.logf(a.tr.UI("battle.msg.noenemyahead", "%s 正前方沒有敵人"), u.Name)
+			a.logf(a.tr.UI("battle.msg.noenemyahead"), u.Name)
 			return
 		}
 		if _, ok := a.battle.Spend(act); !ok {
-			a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), u.Name)
+			a.logf(a.tr.UI("battle.msg.noap"), u.Name)
 			return
 		}
 		if game.TurnUndead(a.rng, u, target) {
 			a.battle.Kill(target)
-			a.logf(a.tr.UI("battle.msg.turned", "%s 驅散了 %s"), u.Name, target.Name)
+			a.logf(a.tr.UI("battle.msg.turned"), u.Name, target.Name)
 		} else {
-			a.logf(a.tr.UI("battle.msg.turnfailed", "%s 的驅散無效"), u.Name)
+			a.logf(a.tr.UI("battle.msg.turnfailed"), u.Name)
 		}
 
 	case game.ActionPray:
 		if _, ok := a.battle.Spend(act); !ok {
-			a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), u.Name)
+			a.logf(a.tr.UI("battle.msg.noap"), u.Name)
 			return
 		}
 		granted, next := game.Pray(a.rng, a.prayChance)
 		a.prayChance = next
 		if granted {
-			a.logf(a.tr.UI("battle.msg.prayanswered", "%s 的祈禱得到回應"), u.Name)
+			a.logf(a.tr.UI("battle.msg.prayanswered"), u.Name)
 		} else {
-			a.logf(a.tr.UI("battle.msg.praynotanswered", "%s 的祈禱沒有回應"), u.Name)
+			a.logf(a.tr.UI("battle.msg.praynotanswered"), u.Name)
 		}
 
 	case game.ActionLeech:
 		target := a.battle.TargetInFront(u)
 		if target == nil {
-			a.logf(a.tr.UI("battle.msg.noenemyahead", "%s 正前方沒有敵人"), u.Name)
+			a.logf(a.tr.UI("battle.msg.noenemyahead"), u.Name)
 			return
 		}
 		if _, ok := a.battle.Spend(act); !ok {
-			a.logf(a.tr.UI("battle.msg.noap", "%s 行動點不足"), u.Name)
+			a.logf(a.tr.UI("battle.msg.noap"), u.Name)
 			return
 		}
 		if ok, amount := game.Leech(a.rng, u, target.CurrentSP); ok {
 			target.CurrentSP -= amount
 			u.CurrentSP += amount
-			a.logf(a.tr.UI("battle.msg.leeched", "%s 汲走 %s 的 %d 點法力"), u.Name, target.Name, amount)
+			a.logf(a.tr.UI("battle.msg.leeched"), u.Name, target.Name, amount)
 		} else {
-			a.logf(a.tr.UI("battle.msg.leechfailed", "%s 的汲取失敗"), u.Name)
+			a.logf(a.tr.UI("battle.msg.leechfailed"), u.Name)
 		}
 
 	case game.ActionDodge:
 		bonus := a.battle.DoDodge()
-		a.logf(a.tr.UI("battle.msg.dodging", "%s 進入閃避（命中率 %d）"), u.Name, game.DodgeHitModifier(bonus))
+		a.logf(a.tr.UI("battle.msg.dodging"), u.Name, game.DodgeHitModifier(bonus))
 
 	case game.ActionSound:
 		// 對應原版的 Sound on／Sound off（旗標 [0x1585]）。不耗行動點。
 		a.speaker.SetEnabled(!a.speaker.Enabled())
 		if a.speaker.Enabled() {
-			a.logLine(a.tr.UI("battle.msg.soundon", "音效開啟"))
+			a.logLine(a.tr.UI("battle.msg.soundon"))
 		} else {
-			a.logLine(a.tr.UI("battle.msg.soundoff", "音效關閉"))
+			a.logLine(a.tr.UI("battle.msg.soundoff"))
 		}
 
 	case game.ActionEndTurn:
 		a.battle.Spend(act)
-		a.logf(a.tr.UI("battle.msg.endturn", "%s 結束回合"), u.Name)
+		a.logf(a.tr.UI("battle.msg.endturn"), u.Name)
 	}
 }
 
@@ -1093,15 +1090,15 @@ func (a *app) monsterBreathe(u *game.Unit) bool {
 	}
 	a.breath = &breathAnim{cells: cone, tile: a.battle.LastBreathTile()}
 	a.speaker.Play(pcspeaker.EffectDeath)
-	a.logf(a.tr.UI("battle.msg.breath", "%s 噴出吐息（波及 %d 人）"), u.Name, len(hits))
+	a.logf(a.tr.UI("battle.msg.breath"), u.Name, len(hits))
 	for _, h := range hits {
 		switch {
 		case h.Killed:
-			a.logf(a.tr.UI("battle.msg.fell.indent", "　%s 倒下了"), h.Unit.Name)
+			a.logf(a.tr.UI("battle.msg.fell.indent"), h.Unit.Name)
 		case h.Damage == 0:
-			a.logf(a.tr.UI("battle.msg.immune.indent", "　%s 免疫"), h.Unit.Name)
+			a.logf(a.tr.UI("battle.msg.immune.indent"), h.Unit.Name)
 		default:
-			a.logf(a.tr.UI("battle.msg.breathdamage.indent", "　%s 受到 %d 點傷害"), h.Unit.Name, h.Damage)
+			a.logf(a.tr.UI("battle.msg.breathdamage.indent"), h.Unit.Name, h.Damage)
 		}
 	}
 	return true
@@ -1146,7 +1143,7 @@ func (a *app) monsterCast(u *game.Unit) bool {
 
 	name, err := a.strings.SpellName(id)
 	if err != nil {
-		name = fmt.Sprintf(a.tr.UI("battle.spell.num", "法術 %d"), id)
+		name = fmt.Sprintf(a.tr.UI("battle.spell.num"), id)
 	}
 	e := spellEntry{index: id, name: a.tr.Event(spellSourceFile, id, name), spell: sp}
 	// monsterCastTarget 回傳的就是 AI 挑選並通過誤傷否決的中心。
@@ -1239,19 +1236,19 @@ func (a *app) reportAttack(attacker, target *game.Unit, res game.AttackResult) {
 	switch {
 	case !res.Hit:
 		a.speaker.Play(pcspeaker.EffectC3)
-		a.logf(a.tr.UI("battle.msg.miss", "%s 落空"), attacker.Name)
+		a.logf(a.tr.UI("battle.msg.miss"), attacker.Name)
 	case res.NoEffect:
-		a.logf(a.tr.UI("battle.msg.noeffect", "%s 對 %s 無效"), attacker.Name, target.Name)
+		a.logf(a.tr.UI("battle.msg.noeffect"), attacker.Name, target.Name)
 	case res.Killed:
 		a.speaker.Play(pcspeaker.EffectDeath)
-		a.logf(a.tr.UI("battle.msg.killed", "%s 擊殺 %s（%d 點）"), attacker.Name, target.Name, res.Damage)
+		a.logf(a.tr.UI("battle.msg.killed"), attacker.Name, target.Name, res.Damage)
 	default:
 		a.speaker.Play(pcspeaker.EffectG3)
-		verb := a.tr.UI("battle.hit.normal", "命中")
+		verb := a.tr.UI("battle.hit.normal")
 		if res.Critical {
-			verb = a.tr.UI("battle.hit.critical", "重擊")
+			verb = a.tr.UI("battle.hit.critical")
 		}
-		a.logf(a.tr.UI("battle.msg.hit", "%s %s %s %d 點"), attacker.Name, verb, target.Name, res.Damage)
+		a.logf(a.tr.UI("battle.msg.hit"), attacker.Name, verb, target.Name, res.Damage)
 	}
 }
 
@@ -1461,15 +1458,15 @@ func (a *app) drawBattle(dst *ebiten.Image) {
 		return
 	}
 	if a.summon != nil && a.summon.placing {
-		line(a.tr.UI("battle.summon.place", "選擇召喚生物出現的位置"))
+		line(a.tr.UI("battle.summon.place"))
 		line("")
-		line(a.tr.UI("battle.summon.placekeys", "方向鍵：移動　Enter／Space：放置　Esc：返回"))
+		line(a.tr.UI("battle.summon.placekeys"))
 		return
 	}
 
 	cur := a.battle.Current()
 	if cur != nil {
-		line(fmt.Sprintf(a.tr.UI("battle.header.actor", "%s 行動　%d 點"), cur.Name, a.battle.Points()))
+		line(fmt.Sprintf(a.tr.UI("battle.header.actor"), cur.Name, a.battle.Points()))
 	}
 
 	// 戰鬥紀錄已移到地圖下方；右欄只留行動者與單位名單。
@@ -1492,7 +1489,7 @@ func (a *app) drawBattle(dst *ebiten.Image) {
 		}
 		state := ""
 		if !u.Alive() {
-			state = a.tr.UI("battle.unit.dead", " 陣亡")
+			state = a.tr.UI("battle.unit.dead")
 		}
 		// 中文名要按「格」截、按「格」補 —— `name[:8]` 會切在字元中間，
 		// `%-8s` 依位元組補會讓數字欄歪掉（見 textlayout.PadCells）。
@@ -1500,7 +1497,7 @@ func (a *app) drawBattle(dst *ebiten.Image) {
 			textlayout.PadCells(u.Name, 8), u.HP, u.MaxHP, state))
 	}
 	if hidden > 0 {
-		line(fmt.Sprintf(a.tr.UI("battle.unit.more", " …另有 %d 個單位"), hidden))
+		line(fmt.Sprintf(a.tr.UI("battle.unit.more"), hidden))
 	}
 
 }
@@ -1518,21 +1515,21 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 	}
 
 	if a.battle.Outcome() != game.Ongoing {
-		a.font.Draw(dst, a.tr.UI("battle.over.keys", "戰鬥結束　空白鍵：繼續"), layout.BoxPadX, y)
+		a.font.Draw(dst, a.tr.UI("battle.over.keys"), layout.BoxPadX, y)
 		return
 	}
 	if a.aoe != nil {
-		what, note := a.tr.UI("battle.aim.single", "選目標"), a.tr.UI("battle.aim.single.note", "※ 指到誰就對誰施放，Esc 可以反悔")
+		what, note := a.tr.UI("battle.aim.single"), a.tr.UI("battle.aim.single.note")
 		if a.aoe.area {
-			what, note = a.tr.UI("battle.aim.area", "選 5×5 的中心"), a.tr.UI("battle.aim.area.note", "※ 範圍內敵我都會被波及，Esc 可以反悔")
+			what, note = a.tr.UI("battle.aim.area"), a.tr.UI("battle.aim.area.note")
 		}
-		a.font.Draw(dst, fmt.Sprintf(a.tr.UI("battle.aim.keys", "%s：%s　方向鍵：移動　Enter：施放　Esc：取消"),
+		a.font.Draw(dst, fmt.Sprintf(a.tr.UI("battle.aim.keys"),
 			a.aoe.entry.name, what), layout.BoxPadX, y)
 		a.font.Draw(dst, note, layout.BoxPadX, y+ui.LineHeight)
 		return
 	}
 	if cur == nil || !cur.IsPlayer {
-		a.font.Draw(dst, a.tr.UI("battle.monster.keys", "空白鍵：讓對方行動"), layout.BoxPadX, y)
+		a.font.Draw(dst, a.tr.UI("battle.monster.keys"), layout.BoxPadX, y)
 		return
 	}
 
@@ -1540,19 +1537,20 @@ func (a *app) drawBattleCommands(dst *ebiten.Image) {
 	items := make([]ui.MenuItem, len(playerCommands))
 	for i, c := range playerCommands {
 		items[i] = ui.MenuItem{
-			Label:   a.tr.UI(c.uikey, c.label),
+			Label:   a.tr.UI(c.uikey),
 			Enabled: a.battle.CanAct(c.action),
 		}
 	}
-	a.drawOperationMenu(dst, items, []ui.CommandGroup{
-		commandGroup(a.tr.UI("command.tab.combat", "戰鬥"), 0, items[0:4]),
-		commandGroup(a.tr.UI("command.tab.support", "支援"), 1, items[4:9]),
-	})
+	byKey := make(map[string]ui.MenuItem, len(items))
+	for i, command := range playerCommands {
+		byKey[command.uikey] = items[i]
+	}
+	a.drawOperationMenu(dst, "battle", byKey)
 	hintY := layout.MenuY + len(items)*ui.LineHeight + ui.LineHeight
 	if a.controls == controlsModern {
 		hintY = layout.MenuY + 11*ui.LineHeight
 	}
-	a.font.Draw(dst, a.tr.UI("battle.move.keys", "方向鍵：轉向／前進　Enter：前進　? 檢視"),
+	a.font.Draw(dst, a.tr.UI("battle.move.keys"),
 		layout.StatusX, hintY)
 }
 
@@ -1577,7 +1575,7 @@ func (a *app) awardExperience() {
 		statuses[i] = game.UnitStatus(a.members[i].Status)
 	}
 	if per := game.AwardBattleExp(a.members, statuses, total); per > 0 {
-		a.logf(a.tr.UI("battle.drop.exp", "每人獲得 %d 點經驗"), per)
+		a.logf(a.tr.UI("battle.drop.exp"), per)
 	}
 }
 
@@ -1600,7 +1598,7 @@ func (a *app) awardGold() {
 		return
 	}
 	a.setGold(game.CapValue(a.save.Gold + gold))
-	a.logf(a.tr.UI("battle.drop.gold", "撿到 %d 枚金幣"), gold)
+	a.logf(a.tr.UI("battle.drop.gold"), gold)
 }
 
 // awardDrops 發放戰鬥勝利的戰利品。
@@ -1624,7 +1622,7 @@ func (a *app) awardDrops() {
 	for _, slot := range drops {
 		member, idx := a.freeInventorySlot()
 		if member < 0 {
-			a.logf(a.tr.UI("battle.drop.noroom", "撿到%s，但沒有人放得下了"), a.itemLabel(slot))
+			a.logf(a.tr.UI("battle.drop.noroom"), a.itemLabel(slot))
 			continue
 		}
 		a.members[member].Inventory[idx] = slot
@@ -1632,9 +1630,9 @@ func (a *app) awardDrops() {
 		// 「偵測到靈光」。**擲點在看道具之前**，見 game.DetectAura。
 		aura := ""
 		if game.DetectAura(a.rng, a.members, slot) {
-			aura = "　" + a.tr.UI("battle.aura", "（偵測到靈光）")
+			aura = "　" + a.tr.UI("battle.aura")
 		}
-		a.logf(a.tr.UI("battle.drop.picked", "%s 撿到%s%s"), a.members[member].Name, a.itemLabel(slot), aura)
+		a.logf(a.tr.UI("battle.drop.picked"), a.members[member].Name, a.itemLabel(slot), aura)
 	}
 }
 

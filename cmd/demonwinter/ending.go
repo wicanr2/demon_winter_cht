@@ -141,9 +141,9 @@ func (a *app) drawEnding(dst *ebiten.Image) {
 		}
 		line("　")
 		if e.creditTop+endingLinesPerPage < len(all) {
-			line(a.tr.UI("ending.credits.more", "（按任意鍵繼續）"))
+			line(a.tr.UI("ending.credits.more"))
 		} else {
-			line(a.tr.UI("ending.press", "（按任意鍵）"))
+			line(a.tr.UI("ending.press"))
 		}
 		return
 	case e != nil && e.done && e.page == endingPageAccept:
@@ -161,7 +161,7 @@ func (a *app) drawEnding(dst *ebiten.Image) {
 	a.drawEndingPage(line, page)
 	if page == endingPageOffer {
 		line("　")
-		line(a.tr.UI("ending.offer.choice", "　按 1 接受，按 2 婉拒"))
+		line(a.tr.UI("ending.offer.choice"))
 	}
 }
 
@@ -194,7 +194,7 @@ func (a *app) creditLines() []string {
 // 所以要照同樣的方式切。第一版忘了接，畫面上其他頁都中文了，
 // 只有名單還是英文 —— 而那正好是最後一幕。
 func (a *app) fateFor(class int) string {
-	if zh := a.tr.UI(storyKeyWinFates, ""); zh != "" {
+	if zh := a.tr.UI(storyKeyWinFates); zh != "" {
 		lines := strings.Split(strings.TrimRight(zh, "\n"), "\n")
 		if class >= 0 && class < len(lines) {
 			return lines[class]
@@ -227,7 +227,7 @@ func (a *app) drawEndingPage(line func(string), page int) {
 // 中文的斷點本來就不一樣，逐行對譯會逼譯者遷就英文的斷點。
 // 所以譯文自己帶換行，這裡照它的換行切開就好，不再套 storyLines 的重斷。
 func (a *app) storyPage(file string, page int, src []string) []string {
-	if zh := a.tr.UI(fmt.Sprintf("story.%s.%d", file, page), ""); zh != "" {
+	if zh := a.tr.UI(fmt.Sprintf("story.%s.%d", file, page)); zh != "" {
 		return strings.Split(zh, "\n")
 	}
 	return storyLines(src)
@@ -272,15 +272,15 @@ func storyLines(src []string) []string {
 // 原版是寫死在 `ds:0x066a` 的英文字串，這裡用中文 ——
 // 它不在 `WIN.TXT` 裡（`docs/re/61` §2），所以本來就要自己給。
 func (a *app) drawEndingFallback(line func(string)) {
-	line(a.tr.UI("ending.fallback.congrats", "恭喜！"))
+	line(a.tr.UI("ending.fallback.congrats"))
 	line("　")
-	line(a.tr.UI("ending.fallback.cleared", "你通關了《冬之魔》。"))
+	line(a.tr.UI("ending.fallback.cleared"))
 	line("　")
-	line(a.tr.UI("ending.fallback.sealed", "惡魔已被禁錮，漫長的冬天終於要過去了。"))
-	line(a.tr.UI("ending.fallback.thanks", "希望這趟旅程沒有辜負你的時間。"))
+	line(a.tr.UI("ending.fallback.sealed"))
+	line(a.tr.UI("ending.fallback.thanks"))
 	line("　")
 	line("　")
-	line(a.tr.UI("ending.fallback.exit", "按任意鍵離開"))
+	line(a.tr.UI("ending.fallback.exit"))
 }
 
 // loadWinText 讀結局文字。讀不到不算錯 —— 退回精簡祝賀就好。

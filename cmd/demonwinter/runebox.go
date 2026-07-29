@@ -79,11 +79,11 @@ func (a *app) drawRuneBox(dst *ebiten.Image) {
 		a.font.Draw(dst, s, layout.BoxPadX, y)
 		y += ui.LineHeight
 	}
-	line(a.tr.UI("rune.header", "牆上刻著一段符文"))
+	line(a.tr.UI("rune.header"))
 	line("")
-	line(a.tr.UI("rune.hint1", "這是古代的密語，不是任何一種文字。"))
-	line(a.tr.UI("rune.hint2", "旅途中會遇到已知答案的符文 —— 記下對照，"))
-	line(a.tr.UI("rune.hint3", "其餘的密語就解讀得出來了。"))
+	line(a.tr.UI("rune.hint1"))
+	line(a.tr.UI("rune.hint2"))
+	line(a.tr.UI("rune.hint3"))
 	line("")
-	line(a.tr.UI("rune.dismiss", "按任意鍵繼續"))
+	line(a.tr.UI("rune.dismiss"))
 }

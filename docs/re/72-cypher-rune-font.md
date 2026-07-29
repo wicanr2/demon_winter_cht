@@ -165,7 +165,7 @@ FUN_25be_18fa：從 param_1+1 起，'.' → 0、其他 → char − 0x40，
 | `internal/assets/scenario/events.go` | `RuneGlyphs(text)`：`'.' → 0`、`'A'–'Z' → char − 0x40`，非法字元回 **-1**（不靜默當空白，免得把資料異常偽裝成正常）|
 | `cmd/demonwinter/runebox.go` | 載入 `CYPHER.SHP`、9 欄網格繪製、中文說明 |
 | `cmd/demonwinter/main.go` | `checkEvent` 在 `IsRuneGlyph()` 時走符文畫面 |
-| `assets/lang/zh-Hant/ui.txt` | 五條說明文字（`rune.*`）|
+| `assets/lang/zh-Hant/ui.json` | 五條說明文字（`rune.*`）|
 
 原版共四筆符文事件：`%RING.BELL...AT.....MIDNIGHT`（DATA1）、
 `%YMROS.IS...MINE`（DATA3）、`%.SECRET..ENTRANCE..TO.ICE..CATHEDRAL…`（DATA4）、

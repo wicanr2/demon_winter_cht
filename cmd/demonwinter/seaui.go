@@ -25,9 +25,9 @@ func (a *app) startSeaBattle() {
 	enemies := make([]*game.SeaUnit, 0, count)
 	taken := map[[2]int]bool{{game.SeaCentre, game.SeaCentre}: true}
 	for i := 0; i < count; i++ {
-		kind, name, hp, exp := game.SeaPirate, a.tr.UI("sea.enemy.pirate", "海盜船"), 30, 60
+		kind, name, hp, exp := game.SeaPirate, a.tr.UI("sea.enemy.pirate"), 30, 60
 		if a.rng.Roll(3) == 1 {
-			kind, name, hp, exp = game.SeaMonster, a.tr.UI("sea.enemy.monster", "海怪"), 20, 45
+			kind, name, hp, exp = game.SeaMonster, a.tr.UI("sea.enemy.monster"), 20, 45
 		}
 		x, y, found := 0, 0, false
 		for tries := 0; tries < 32; tries++ {
@@ -56,7 +56,7 @@ func (a *app) startSeaBattle() {
 		})
 	}
 	a.sea = game.NewSeaBattle(a.rng, hull, enemies)
-	a.log = []string{fmt.Sprintf(a.tr.UI("sea.encounter", "海上遭遇：%d 名敵人"), len(enemies))}
+	a.log = []string{fmt.Sprintf(a.tr.UI("sea.encounter"), len(enemies))}
 	a.trace.note("海戰：%d 名敵人，船體 %d", len(enemies), hull)
 }
 
@@ -82,26 +82,26 @@ func (a *app) updateSeaBattle() error {
 	case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 		acted = b.Move(false)
 		if acted {
-			a.logLine(a.tr.UI("sea.move.forward", "船向前航行"))
+			a.logLine(a.tr.UI("sea.move.forward"))
 		}
 	case inpututil.IsKeyJustPressed(ebiten.KeyLeft):
 		acted = b.Turn(-1)
 		if acted {
-			a.logLine(a.tr.UI("sea.move.left", "船向左轉"))
+			a.logLine(a.tr.UI("sea.move.left"))
 		}
 	case inpututil.IsKeyJustPressed(ebiten.KeyRight):
 		acted = b.Turn(1)
 		if acted {
-			a.logLine(a.tr.UI("sea.move.right", "船向右轉"))
+			a.logLine(a.tr.UI("sea.move.right"))
 		}
 	case inpututil.IsKeyJustPressed(ebiten.KeySlash):
 		if ebiten.IsKeyPressed(ebiten.KeyShiftLeft) || ebiten.IsKeyPressed(ebiten.KeyShiftRight) {
 			p := b.PlayerShip()
-			a.logf(a.tr.UI("sea.hull.inspect", "船體：%d / %d"), p.Hull, p.MaxHull)
+			a.logf(a.tr.UI("sea.hull.inspect"), p.Hull, p.MaxHull)
 		} else {
 			acted = b.Move(true)
 			if acted {
-				a.logLine(a.tr.UI("sea.move.reverse", "船倒航"))
+				a.logLine(a.tr.UI("sea.move.reverse"))
 			}
 		}
 	case inpututil.IsKeyJustPressed(ebiten.KeyI):
@@ -119,9 +119,9 @@ func (a *app) updateSeaBattle() error {
 	if acted && b.Outcome == game.SeaOngoing && b.Points == 0 {
 		for _, res := range b.EnemyTurn() {
 			if res.Hit {
-				a.logf(a.tr.UI("sea.enemy.hit", "敵方命中，船體受損 %d"), res.Damage)
+				a.logf(a.tr.UI("sea.enemy.hit"), res.Damage)
 			} else if res.Fired {
-				a.logLine(a.tr.UI("sea.enemy.miss", "敵方砲擊落空"))
+				a.logLine(a.tr.UI("sea.enemy.miss"))
 			}
 		}
 	}
@@ -134,12 +134,12 @@ func (a *app) fireCannon(dir game.Facing) bool {
 		return false
 	}
 	if !res.Hit {
-		a.logLine(a.tr.UI("sea.cannon.miss", "砲彈落入海中"))
+		a.logLine(a.tr.UI("sea.cannon.miss"))
 	} else if res.Sunk {
-		a.logf(a.tr.UI("sea.cannon.sunk", "命中 %s，造成 %d 點傷害並擊沉"),
+		a.logf(a.tr.UI("sea.cannon.sunk"),
 			res.Target.Name, res.Damage)
 	} else {
-		a.logf(a.tr.UI("sea.cannon.hit", "命中 %s，造成 %d 點傷害"),
+		a.logf(a.tr.UI("sea.cannon.hit"),
 			res.Target.Name, res.Damage)
 	}
 	return true
@@ -167,10 +167,10 @@ func (a *app) finishSeaBattle(sunk bool) {
 			statuses[i] = game.UnitStatus(a.members[i].Status)
 		}
 		if per := game.AwardBattleExp(a.members, statuses, b.Experience()); per > 0 {
-			a.message = fmt.Sprintf(a.tr.UI("sea.victory.exp", "海戰勝利，每人獲得 %d 點經驗"), per)
+			a.message = fmt.Sprintf(a.tr.UI("sea.victory.exp"), per)
 		}
 	} else {
-		a.message = a.tr.UI("sea.escaped", "成功駛離戰場")
+		a.message = a.tr.UI("sea.escaped")
 	}
 	a.sea = nil
 }
@@ -222,9 +222,9 @@ func (a *app) drawSeaBattle(dst *ebiten.Image) {
 	y := layout.StatusY
 	line := func(s string) { a.font.Draw(dst, s, layout.StatusX, y); y += ui.LineHeight }
 	p := b.PlayerShip()
-	line(fmt.Sprintf(a.tr.UI("sea.header.round", "海戰　第 %d 回合"), b.Round))
-	line(fmt.Sprintf(a.tr.UI("sea.header.hull", "船體　%d / %d"), p.Hull, p.MaxHull))
-	line(fmt.Sprintf(a.tr.UI("sea.header.points", "移動點　%d"), b.Points))
+	line(fmt.Sprintf(a.tr.UI("sea.header.round"), b.Round))
+	line(fmt.Sprintf(a.tr.UI("sea.header.hull"), p.Hull, p.MaxHull))
+	line(fmt.Sprintf(a.tr.UI("sea.header.points"), b.Points))
 	for _, u := range b.Units[1:] {
 		if u.Alive() {
 			line(fmt.Sprintf("%s　%d/%d", u.Name, u.Hull, u.MaxHull))
@@ -232,16 +232,16 @@ func (a *app) drawSeaBattle(dst *ebiten.Image) {
 	}
 	y = layout.MenuY
 	for _, s := range []string{
-		a.tr.UI("sea.keys.move", "Enter 前進（1）　←→ 轉向（2）"),
-		a.tr.UI("sea.keys.reverse", "/ 倒航（3）"),
-		a.tr.UI("sea.keys.fire", "I/J/K/M 四向砲擊（3）"),
-		a.tr.UI("sea.keys.other", "? 查看船體　Esc 結束回合"),
+		a.tr.UI("sea.keys.move"),
+		a.tr.UI("sea.keys.reverse"),
+		a.tr.UI("sea.keys.fire"),
+		a.tr.UI("sea.keys.other"),
 	} {
 		a.font.Draw(dst, s, layout.StatusX, y)
 		y += ui.LineHeight
 	}
 	if b.Outcome == game.SeaVictory {
-		a.font.Draw(dst, a.tr.UI("sea.victory.dismiss", "敵方全滅（按空白鍵返回）"),
+		a.font.Draw(dst, a.tr.UI("sea.victory.dismiss"),
 			layout.StatusX, y)
 	}
 }

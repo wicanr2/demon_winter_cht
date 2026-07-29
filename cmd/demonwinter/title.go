@@ -60,11 +60,11 @@ func (a *app) drawTitle(dst *ebiten.Image) {
 
 	// 「冬之魔」是 1990 年軟體世界代理版的官方中文標題，
 	// 不是本專案另取的譯名（`translations/glossary.md` §23）。
-	zhTitle := a.tr.UI("title.name", "冬之魔")
+	zhTitle := a.tr.UI("title.name")
 	tw := textlayout.TextWidth(zhTitle)
 	a.font.Draw(dst, zhTitle, (layout.CanvasWidth-tw)/2, (y-ui.LineHeight)/2)
 
 	// 提示放在圖下方的黑邊裡，不蓋到美術。
-	a.font.Draw(dst, a.tr.UI("title.press", "按任意鍵開始"), layout.BoxPadX,
+	a.font.Draw(dst, a.tr.UI("title.press"), layout.BoxPadX,
 		layout.CanvasHeight-ui.LineHeight-2)
 }

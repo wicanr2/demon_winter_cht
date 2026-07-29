@@ -50,12 +50,12 @@ const (
 func (a *app) resetCrushingWalls() {
 	m, err := world.LoadByID(a.saveDir(), a.dataDir, a.mapID)
 	if err != nil {
-		a.message = fmt.Sprintf(a.tr.UI("tombstone.reload_failed", "重載地圖失敗：%v"), err)
+		a.message = fmt.Sprintf(a.tr.UI("tombstone.reload_failed"), err)
 		return
 	}
 	a.tiles = m
 	a.drawTiles = ditheredTiles(a.tiles, uint16(a.ditherSeed), a.save.TempleRuins)
-	a.message = a.tr.UI("crush.machinery", "聽見沉重機械運轉的聲音")
+	a.message = a.tr.UI("crush.machinery")
 	a.trace.note("壓牆走廊：機械復位")
 }
 
@@ -65,7 +65,7 @@ func (a *app) advanceCrushingWalls() {
 	a.drawTiles = ditheredTiles(a.tiles, uint16(a.ditherSeed), a.save.TempleRuins)
 
 	if !res.Crushed {
-		a.message = a.tr.UI("crush.closing", "兩側的牆又逼近了一些")
+		a.message = a.tr.UI("crush.closing")
 		a.trace.note("壓牆走廊：推進到第 %d 列", res.Row)
 		return
 	}
@@ -74,7 +74,7 @@ func (a *app) advanceCrushingWalls() {
 	for i := range a.members {
 		a.members[i].CurrentHP = 0
 	}
-	a.message = a.tr.UI("crush.crushed", "隊伍被牆壓碎了")
+	a.message = a.tr.UI("crush.crushed")
 	a.trace.note("壓牆走廊：全隊被壓死")
 	a.checkPartyDeath()
 }

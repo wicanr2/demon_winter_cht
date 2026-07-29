@@ -42,8 +42,7 @@ type workshopScreen struct {
 
 // openWorkshop 是 case 6 的入口。
 func (a *app) openWorkshop() {
-	a.box = ui.NewMixedTextBox(a.tr.UI("workshop.scene",
-		"你面前是一間了不起的工坊，矮人大師們正在為閃亮的武器附上魔力。"))
+	a.box = ui.NewMixedTextBox(a.tr.UI("workshop.scene"))
 	a.workshop = &workshopScreen{}
 	a.trace.note("附魔工坊：開場")
 }
@@ -93,14 +92,14 @@ func (a *app) updateWorkshop() error {
 				w.plus++
 			} else {
 				// 原版：`Enchantment beyond plus 10 / is not possible`
-				w.msg = a.tr.UI("workshop.max", "附魔不能超過 +10")
+				w.msg = a.tr.UI("workshop.max")
 			}
 		case inpututil.IsKeyJustPressed(ebiten.KeyLeft):
 			if w.plus > cur+1 {
 				w.plus--
 			} else {
 				// 原版：`It is already +%d`
-				w.msg = fmt.Sprintf(a.tr.UI("workshop.already", "它已經是 +%d 了"), cur)
+				w.msg = fmt.Sprintf(a.tr.UI("workshop.already"), cur)
 			}
 		case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 			a.workshopConfirm()
@@ -115,15 +114,15 @@ func (a *app) workshopPickItem() {
 	it := a.members[w.member].Inventory[w.slot]
 	switch {
 	case it.Empty():
-		w.msg = a.tr.UI("workshop.empty", "那一格是空的")
+		w.msg = a.tr.UI("workshop.empty")
 	case !it.Identified:
 		// 原版 `0x0f804`：`Only identified items / may be enchanted.`
-		w.msg = a.tr.UI("workshop.unidentified", "只有已鑑定的道具能附魔。")
+		w.msg = a.tr.UI("workshop.unidentified")
 	case !game.Enchantable(it):
 		// 原版 `0x0f95a`：`Only weapons and armor / may be enchanted`
-		w.msg = a.tr.UI("workshop.wrongtype", "只有武器與護甲能附魔。")
+		w.msg = a.tr.UI("workshop.wrongtype")
 	case it.Enchant >= game.EnchantMax:
-		w.msg = fmt.Sprintf(a.tr.UI("workshop.already", "它已經是 +%d 了"), it.Enchant)
+		w.msg = fmt.Sprintf(a.tr.UI("workshop.already"), it.Enchant)
 	default:
 		w.stage, w.plus, w.msg = workshopPickPlus, it.Enchant+1, ""
 	}
@@ -139,11 +138,11 @@ func (a *app) workshopConfirm() {
 	it := c.Inventory[w.slot]
 	cost := a.enchantCost(it, w.plus)
 	if cost <= 0 {
-		w.msg = a.tr.UI("workshop.nocost", "這一件不用附魔")
+		w.msg = a.tr.UI("workshop.nocost")
 		return
 	}
 	if a.gold() < cost {
-		w.msg = a.tr.UI("workshop.nogold", "你付不起這個價錢。")
+		w.msg = a.tr.UI("workshop.nogold")
 		a.trace.note("附魔工坊：錢不夠（要 %d，有 %d）", cost, a.gold())
 		return
 	}
@@ -153,7 +152,7 @@ func (a *app) workshopConfirm() {
 	a.setGold(a.gold() - cost)
 	it.Enchant = w.plus
 	c.Inventory[w.slot] = it
-	a.message = fmt.Sprintf(a.tr.UI("workshop.done", "%s 的%s附魔到 +%d，花了 %d 金"),
+	a.message = fmt.Sprintf(a.tr.UI("workshop.done"),
 		c.Name, label, w.plus, cost)
 	a.trace.note("附魔工坊：%s 第 %d 格 → +%d，花 %d 金",
 		c.Name, w.slot, w.plus, cost)
@@ -179,19 +178,19 @@ func (a *app) drawWorkshop(dst *ebiten.Image) {
 
 	switch w.stage {
 	case workshopPickMember:
-		line(a.tr.UI("workshop.who", "誰要附魔？"))
+		line(a.tr.UI("workshop.who"))
 		line("")
 		for i := range a.members {
 			line(memberMark(w.member, i) + a.members[i].Name)
 		}
 
 	case workshopPickItem:
-		line(a.tr.UI("workshop.which", "要附魔哪一件？"))
+		line(a.tr.UI("workshop.which"))
 		line("")
 		inv := a.members[w.member].Inventory
 		for i := range inv {
 			// itemLabel 本身就會附上 `+n`（battleui.go），不要再加一次。
-			label := a.tr.UI("workshop.slotempty", "（空）")
+			label := a.tr.UI("workshop.slotempty")
 			if !inv[i].Empty() {
 				label = a.itemLabel(inv[i])
 			}
@@ -200,13 +199,13 @@ func (a *app) drawWorkshop(dst *ebiten.Image) {
 
 	case workshopPickPlus:
 		it := a.members[w.member].Inventory[w.slot]
-		line(fmt.Sprintf(a.tr.UI("workshop.raise", "要把%s附魔到 +%d"),
+		line(fmt.Sprintf(a.tr.UI("workshop.raise"),
 			a.itemLabel(it), w.plus))
 		line("")
-		line(fmt.Sprintf(a.tr.UI("workshop.cost", "費用 %d 金（你有 %d）"),
+		line(fmt.Sprintf(a.tr.UI("workshop.cost"),
 			a.enchantCost(it, w.plus), a.gold()))
 		line("")
-		line(a.tr.UI("workshop.pluskeys", "←→：調整　Enter：確定　Esc：返回"))
+		line(a.tr.UI("workshop.pluskeys"))
 	}
 
 	if w.msg != "" {
@@ -215,6 +214,6 @@ func (a *app) drawWorkshop(dst *ebiten.Image) {
 	}
 	if w.stage != workshopPickPlus {
 		line("")
-		line(a.tr.UI("dungeon.keys", "↑↓：選擇　Enter：確定　Esc：返回"))
+		line(a.tr.UI("dungeon.keys"))
 	}
 }

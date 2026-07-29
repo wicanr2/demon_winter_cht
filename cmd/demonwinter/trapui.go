@@ -46,30 +46,30 @@ func (a *app) springTrap(hit *scenario.SpecialHit) bool {
 // 的語意化 key（與死亡畫面同一個做法）。
 func (a *app) trapLines(c game.TrapCase, noticed bool, res game.TrapResult) []string {
 	if res.Avoided {
-		return []string{a.tr.UI("trap.avoided", "小心翼翼地避開了陷阱")}
+		return []string{a.tr.UI("trap.avoided")}
 	}
 
 	var out []string
 	if noticed {
 		out = append(out,
-			a.tr.UI("trap.careful", "即使再小心"),
-			a.tr.UI("trap.triggered", "還是觸動了陷阱"))
+			a.tr.UI("trap.careful"),
+			a.tr.UI("trap.triggered"))
 	}
-	out = append(out, a.tr.UI(trapNameKey(c), trapNameZH[c]))
+	out = append(out, a.tr.UI(trapNameKey(c)))
 
 	for _, h := range res.Hits {
 		out = append(out, a.trapHitLine(c, h))
 	}
 	if res.AlarmCountdown > 0 {
 		out = append(out, fmt.Sprintf(
-			a.tr.UI("trap.alarm.steps", "%d 步之內必定遇敵"), res.AlarmCountdown))
+			a.tr.UI("trap.alarm.steps"), res.AlarmCountdown))
 	}
 	return out
 }
 
 // trapHitLine 是一下的敘述。四種陷阱落空時說法各不相同，照原版分開。
 func (a *app) trapHitLine(c game.TrapCase, h game.TrapHit) string {
-	name := a.tr.UI("trap.member.default", "隊員")
+	name := a.tr.UI("trap.member.default")
 	if h.Member >= 0 && h.Member < len(a.members) {
 		name = a.members[h.Member].Name
 	}
@@ -78,22 +78,22 @@ func (a *app) trapHitLine(c game.TrapCase, h game.TrapHit) string {
 		switch c {
 		case game.TrapPunjiPit, game.TrapPoisonPit:
 			// 原版 `: safe`
-			return name + a.tr.UI("trap.pit.safe", "：沒事")
+			return name + a.tr.UI("trap.pit.safe")
 		case game.TrapPool, game.TrapAcidPool:
 			// 原版 `swims out.`
-			return name + a.tr.UI("trap.pool.escape", "游了出來")
+			return name + a.tr.UI("trap.pool.escape")
 		case game.TrapSpears:
-			return a.tr.UI("trap.spear.miss", "長矛落空")
+			return a.tr.UI("trap.spear.miss")
 		case game.TrapDarts:
-			return a.tr.UI("trap.dart.miss", "飛鏢落空")
+			return a.tr.UI("trap.dart.miss")
 		}
-		return a.tr.UI("trap.miss", "落空")
+		return a.tr.UI("trap.miss")
 	}
 
 	line := fmt.Sprintf("%s%s%d", name,
-		a.tr.UI("trap.damage", " 受到傷害 "), h.Damage)
+		a.tr.UI("trap.damage"), h.Damage)
 	if h.Died {
-		line += a.tr.UI("trap.died", "，倒下了")
+		line += a.tr.UI("trap.died")
 	}
 	return line
 }
@@ -131,17 +131,17 @@ func (a *app) lookForTraps() {
 
 	a.trapSpots = scan.Spots
 	if len(scan.Spots) == 0 {
-		a.message = a.tr.UI("trap.none", "沒有發現陷阱")
+		a.message = a.tr.UI("trap.none")
 		a.trace.note("查看陷阱：沒有")
 		return
 	}
 
-	verb := a.tr.UI("trap.noticed", "已注意")
+	verb := a.tr.UI("trap.noticed")
 	if scan.HasDisarm {
-		verb = a.tr.UI("trap.disarmed", "已解除")
+		verb = a.tr.UI("trap.disarmed")
 	}
 	a.message = fmt.Sprintf("%s　%s %d %s",
-		verb, a.tr.UI("trap.found.prefix", "找到"), len(scan.Spots),
-		a.tr.UI("trap.found.suffix", "個陷阱"))
+		verb, a.tr.UI("trap.found.prefix"), len(scan.Spots),
+		a.tr.UI("trap.found.suffix"))
 	a.trace.note("查看陷阱：%d 個（%s）", len(scan.Spots), verb)
 }

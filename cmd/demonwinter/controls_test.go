@@ -14,7 +14,6 @@ func TestParseControlMode(t *testing.T) {
 		{"modern", controlsModern},
 		{"MODERN", controlsModern},
 		{"retro", controlsRetro},
-		{"復古", controlsRetro},
 	} {
 		got, err := parseControlMode(tc.in)
 		if err != nil || got != tc.want {

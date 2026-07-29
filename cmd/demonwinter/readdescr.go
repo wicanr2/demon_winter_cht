@@ -28,7 +28,7 @@ func (a *app) readDescription() {
 	if !ok {
 		// 原版就是靜默回 `0xfffd` —— 沒有「這裡沒有東西可讀」這種訊息。
 		// 本專案補一則，因為缺了它玩家分不出「沒事」與「按錯鍵」。
-		a.message = a.tr.UI("read.nothing", "這裡沒有值得再看一次的東西")
+		a.message = a.tr.UI("read.nothing")
 		return
 	}
 	under, ok := a.world.TileUnder(a.party)

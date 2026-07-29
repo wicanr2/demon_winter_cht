@@ -27,17 +27,17 @@ func (a *app) viewRoom() {
 	case res.NoSkill:
 		// **原版什麼都不印。** 這裡補一句 —— 玩家按了鍵卻毫無反應
 		// 會以為是壞掉了，而這個差異不影響任何規則。
-		a.message = a.tr.UI("viewroom.noskill", "隊伍裡沒有人會觀室")
+		a.message = a.tr.UI("viewroom.noskill")
 		a.trace.note("觀室：沒人會")
 		return
 
 	case res.Exhausted:
-		a.message = a.tr.UI("viewroom.weak", "你們的靈視之力已經耗盡")
+		a.message = a.tr.UI("viewroom.weak")
 		a.trace.note("觀室：次數用完")
 		return
 
 	case res.Hit == nil:
-		a.message = a.tr.UI("viewroom.nothing", "什麼也沒看到")
+		a.message = a.tr.UI("viewroom.nothing")
 		a.trace.note("觀室：什麼都沒有（剩 %d 次）",
 			game.PsychicUsesPerDay-int(a.save.ViewRoomUses))
 		return
@@ -55,7 +55,7 @@ func (a *app) peekSpecial(hit *scenario.SpecialHit) {
 	switch cls := hit.Tile.Class(); {
 	case cls == scenario.SpecialClassTrap || cls == scenario.SpecialClassTrapAlt:
 		// 原版 `0x19a68`：印 `A trap!`、等按鍵、回傳 2。**到此為止。**
-		a.message = a.tr.UI("viewroom.trap", "前方有陷阱")
+		a.message = a.tr.UI("viewroom.trap")
 		return
 
 	case hit.Tile.PlotCase() >= 0:

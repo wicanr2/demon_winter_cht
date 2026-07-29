@@ -15,7 +15,7 @@ import (
 func (a *app) shiftTombstones() {
 	m, err := world.LoadByID(a.saveDir(), a.dataDir, a.mapID)
 	if err != nil {
-		a.message = fmt.Sprintf(a.tr.UI("tombstone.reload_failed", "重載地圖失敗：%v"), err)
+		a.message = fmt.Sprintf(a.tr.UI("tombstone.reload_failed"), err)
 		return
 	}
 	a.tiles = m
@@ -23,6 +23,6 @@ func (a *app) shiftTombstones() {
 	a.drawTiles = ditheredTiles(a.tiles, uint16(a.ditherSeed), a.save.TempleRuins)
 
 	// 原版印兩行（`The tombstones` / `shift before you`），這裡併成一句。
-	a.message = a.tr.UI("tombstone.shift", "墓碑在你面前挪動了起來")
+	a.message = a.tr.UI("tombstone.shift")
 	a.trace.note("墓園：重排，長出 %d 塊擋路石", len(stones))
 }

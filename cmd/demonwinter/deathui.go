@@ -60,11 +60,11 @@ func (a *app) drawDeath(dst *ebiten.Image) {
 		a.font.Draw(dst, s, layout.BoxPadX*2, y)
 		y += ui.LineHeight
 	}
-	for i, orig := range game.PartyDeathLines {
-		line(a.tr.UI(deathLineKey(i), orig))
+	for i := range game.PartyDeathLines {
+		line(a.tr.UI(deathLineKey(i)))
 	}
 	line("　")
-	line(a.tr.UI("death.dismiss", "（按任意鍵離開）"))
+	line(a.tr.UI("death.dismiss"))
 }
 
 // deathLineKey 是第 i 行的翻譯 key。

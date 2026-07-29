@@ -58,20 +58,20 @@ type campScreen struct {
 }
 
 var campMenuLabels = []uiLabel{
-	{"camp.menu.party", "[P] 角色卡"},
-	{"camp.menu.reorder", "[R] 排陣"},
-	{"camp.menu.sleep", "[S] 睡覺"},
-	{"camp.menu.identify", "[I] 鑑定"},
-	{"camp.menu.worship", "[W] 敬拜"},
-	{"camp.menu.exorcise", "[X] 驅邪"},
-	{"camp.menu.viewland", "[V] 觀地"},
-	{"camp.menu.trade", "[T] 交出"},
-	{"camp.menu.drop", "[D] 丟棄"},
-	{"camp.menu.equip", "[E] 換裝"},
-	{"camp.menu.use", "[U] 使用"},
-	{"camp.menu.hunt", "[H] 打獵"},
-	{"camp.menu.cast", "[C] 施法"},
-	{"camp.menu.quit", "[Esc] 收帳"},
+	{"camp.menu.party"},
+	{"camp.menu.reorder"},
+	{"camp.menu.sleep"},
+	{"camp.menu.identify"},
+	{"camp.menu.worship"},
+	{"camp.menu.exorcise"},
+	{"camp.menu.viewland"},
+	{"camp.menu.trade"},
+	{"camp.menu.drop"},
+	{"camp.menu.equip"},
+	{"camp.menu.use"},
+	{"camp.menu.hunt"},
+	{"camp.menu.cast"},
+	{"camp.menu.quit"},
 }
 
 // openCamp 進入紮營畫面。
@@ -118,13 +118,13 @@ func (a *app) updateCamp() error {
 		a.campSleep()
 	case inpututil.IsKeyJustPressed(ebiten.KeyH):
 		if len(a.members) == 0 {
-			c.message = a.tr.UI("camp.empty", "隊伍是空的")
+			c.message = a.tr.UI("camp.empty")
 			return nil
 		}
 		c.hunter = 0
 	case inpututil.IsKeyJustPressed(ebiten.KeyE):
 		if len(a.members) == 0 {
-			c.message = a.tr.UI("camp.empty", "隊伍是空的")
+			c.message = a.tr.UI("camp.empty")
 			return nil
 		}
 		c.equipMember, c.equipSlot = 0, -1
@@ -185,7 +185,7 @@ func (a *app) updateEquipPicker() error {
 			c.message = why
 			return nil
 		}
-		c.message = fmt.Sprintf(a.tr.UI("camp.equip.done", "%s 換上%s"), m.Name,
+		c.message = fmt.Sprintf(a.tr.UI("camp.equip.done"), m.Name,
 			a.itemLabel(m.Inventory[c.equipSlot]))
 		c.equipMember, c.equipSlot = -1, -1
 	}
@@ -196,7 +196,7 @@ func (a *app) updateEquipPicker() error {
 func (a *app) campSleep() {
 	c := a.camp
 	if !a.clock.CanSleep() {
-		c.message = a.tr.UI("camp.sleep.blocked", "現在睡不著（原版：You are restless）")
+		c.message = a.tr.UI("camp.sleep.blocked")
 		return
 	}
 	rations := int(a.save.Rations)
@@ -212,16 +212,16 @@ func (a *app) campSleep() {
 	// 兩個靈視技能的每日次數也在同一段清 0（`0x1ef68`–`0x1ef7c`）。
 	game.ResetPsychicUses(a.save)
 
-	msg := fmt.Sprintf(a.tr.UI("camp.sleep.result", "睡了 %d 個時辰，%d 日 %d 時醒來"),
+	msg := fmt.Sprintf(a.tr.UI("camp.sleep.result"),
 		res.Hours, a.clock.Day(), a.clock.Hour())
 	switch {
 	case res.Starved:
-		msg += a.tr.UI("camp.sleep.starved", "　沒有糧食，全隊受餓")
+		msg += a.tr.UI("camp.sleep.starved")
 	case res.AteFood:
-		msg += fmt.Sprintf(a.tr.UI("camp.sleep.ate", "　吃掉一份糧食（剩 %d）"), rations)
+		msg += fmt.Sprintf(a.tr.UI("camp.sleep.ate"), rations)
 	}
 	for _, i := range res.Died {
-		msg += "　" + a.members[i].Name + a.tr.UI("camp.sleep.died", " 沒有醒來")
+		msg += "　" + a.members[i].Name + a.tr.UI("camp.sleep.died")
 	}
 	c.message = msg
 
@@ -276,9 +276,9 @@ func (a *app) updateHuntPicker() error {
 		case res.Reason != "":
 			c.message = res.Reason
 		case res.Gained == 0:
-			c.message = a.tr.UI("camp.hunt.empty", "這趟打獵一無所獲")
+			c.message = a.tr.UI("camp.hunt.empty")
 		default:
-			c.message = fmt.Sprintf(a.tr.UI("camp.hunt.gained", "打到 %d 份糧食（共 %d 份）"), res.Gained, rations)
+			c.message = fmt.Sprintf(a.tr.UI("camp.hunt.gained"), res.Gained, rations)
 		}
 	}
 	return nil
@@ -302,12 +302,12 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 	cellW, cellH, _ := a.tileMetrics()
 	drawMapFrame(dst, cellW, cellH)
 
-	line(fmt.Sprintf(a.tr.UI("camp.header", "紮營　%s月 %d 日 %d 時　糧食 %d 份"),
+	line(fmt.Sprintf(a.tr.UI("camp.header"),
 		a.monthName(), a.clock.Day(), a.clock.Hour(), a.save.Rations))
 	line("")
 
 	if c.hunter >= 0 {
-		line(a.tr.UI("camp.hunt.who", "誰去打獵？"))
+		line(a.tr.UI("camp.hunt.who"))
 		line("")
 		for i, m := range a.members {
 			mark := "   "
@@ -316,13 +316,13 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 			}
 			note := ""
 			if !m.Skills[game.SkillHunting] {
-				note = a.tr.UI("camp.hunt.cannot", "（不會狩獵）")
+				note = a.tr.UI("camp.hunt.cannot")
 			}
 			line(fmt.Sprintf("%s%s%s", mark,
 				textlayout.PadCells(m.Name, 10), note))
 		}
 		line("")
-		line(a.tr.UI("camp.hunt.keys", "↑↓：選擇　Enter：出發　Esc：取消"))
+		line(a.tr.UI("camp.hunt.keys"))
 		return
 	}
 
@@ -363,7 +363,7 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 
 	items := make([]ui.MenuItem, len(campMenuLabels))
 	for i, l := range campMenuLabels {
-		items[i] = ui.MenuItem{Label: a.tr.UI(l.key, l.zh), Enabled: true}
+		items[i] = ui.MenuItem{Label: a.tr.UI(l.key), Enabled: true}
 	}
 	items[2].Enabled = a.clock.CanSleep()
 	if len(a.members) == 0 {
@@ -371,12 +371,11 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 			items[i].Enabled = false
 		}
 	}
-	a.drawOperationMenu(dst, items, []ui.CommandGroup{
-		commandGroup(a.tr.UI("command.tab.party", "隊伍"), 0, items[0:2]),
-		commandGroup(a.tr.UI("command.tab.rest", "休整"), 0, items[2:7]),
-		commandGroup(a.tr.UI("command.tab.inventory", "裝備物品"), 1, items[7:11]),
-		commandGroup(a.tr.UI("command.tab.actions", "行動"), 1, items[11:14]),
-	})
+	byKey := make(map[string]ui.MenuItem, len(items))
+	for i, label := range campMenuLabels {
+		byKey[label.key] = items[i]
+	}
+	a.drawOperationMenu(dst, "camp", byKey)
 
 	if c.message != "" {
 		for _, l := range strings.Split(c.message, "\n") {
@@ -389,24 +388,24 @@ func (a *app) drawCamp(dst *ebiten.Image) {
 func (a *app) drawEquipPicker(line func(string)) {
 	c := a.camp
 	if c.equipSlot < 0 {
-		line(a.tr.UI("camp.equip.who", "誰要換裝？"))
+		line(a.tr.UI("camp.equip.who"))
 		line("")
 		for i, m := range a.members {
 			mark := "   "
 			if i == c.equipMember {
 				mark = " > "
 			}
-			line(fmt.Sprintf(a.tr.UI("camp.equip.row", "%s%s%s　護甲 %d"), mark,
+			line(fmt.Sprintf(a.tr.UI("camp.equip.row"), mark,
 				textlayout.PadCells(m.Name, 10),
 				textlayout.PadCells(a.weaponLabel(m), 8), m.ArmorRating()))
 		}
 		line("")
-		line(a.tr.UI("camp.equip.keys1", "↑↓：選擇　Enter：確定　Esc：取消"))
+		line(a.tr.UI("camp.equip.keys1"))
 		return
 	}
 
 	m := a.members[c.equipMember]
-	line(fmt.Sprintf(a.tr.UI("camp.equip.which", "%s 要換上哪一件？"), m.Name))
+	line(fmt.Sprintf(a.tr.UI("camp.equip.which"), m.Name))
 	line("")
 	for i := 0; i < game.InventorySlots; i++ {
 		mark := "   "
@@ -414,25 +413,25 @@ func (a *app) drawEquipPicker(line func(string)) {
 			mark = " > "
 		}
 		it := m.Inventory[i]
-		name, note := a.tr.UI("camp.equip.empty", "（空）"), ""
+		name, note := a.tr.UI("camp.equip.empty"), ""
 		if !it.Empty() {
 			name = a.itemLabel(it)
 			switch {
 			case i == m.EquippedWeapon:
-				note = a.tr.UI("camp.equip.weapon", "（武器）")
+				note = a.tr.UI("camp.equip.weapon")
 			case i == m.EquippedArmor:
-				note = a.tr.UI("camp.equip.armor", "（護甲）")
+				note = a.tr.UI("camp.equip.armor")
 			case !game.CanEquipAsWeapon(it) && !game.CanEquipAsArmor(it):
-				note = a.tr.UI("camp.equip.cannot", "（不能裝備）")
+				note = a.tr.UI("camp.equip.cannot")
 			// 型別上是護甲、但這個職業穿不上（原版：You're the wrong class.）。
 			case game.CanEquipAsArmor(it) && !game.ClassCanWear(m.Class, it):
-				note = a.tr.UI("camp.equip.heavy", "（太重）")
+				note = a.tr.UI("camp.equip.heavy")
 			}
 		}
 		line(fmt.Sprintf("%s%s%s", mark, textlayout.PadCells(name, 12), note))
 	}
 	line("")
-	line(a.tr.UI("camp.equip.keys2", "↑↓：選擇　Enter：換上　Esc：返回"))
+	line(a.tr.UI("camp.equip.keys2"))
 	// 換不上時的理由要在這裡印 —— 原本只寫進 c.message，而這一層
 	// 沒有印它，玩家按下去只會看到「什麼都沒發生」。
 	if c.message != "" {

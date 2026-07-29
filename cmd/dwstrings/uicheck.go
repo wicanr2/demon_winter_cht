@@ -8,8 +8,8 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
-	"sort"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -21,20 +21,16 @@ import (
 
 // `dwstrings uicheck` —— 介面文案的遷移狀態檢查
 //
-// **為什麼需要這一支。** `ui.txt` 是唯一沒有自動檢查的翻譯檔：事件目錄
+// **為什麼需要這一支。** `ui.json` 沒有原版索引可拿來交叉比對：事件目錄
 // 有 `dwstrings check` 拿原文當 key 比對，介面文案的 key 是自己取的名字，
-// **打錯一個字的後果是靜默退回 fallback** —— 畫面看起來一模一樣，
-// 只是那一條永遠不走目錄。六百多條要遷的時候，這種錯會累積到沒人查得完。
+// **打錯一個字的後果會顯示 `⟦key⟧`**；發行前仍應在靜態階段擋掉。
 //
 // 檢查四件事：
 //
-//	1. 程式碼裡每一個 `tr.UI(key, fallback)` 的 key 都在 `ui.txt` 裡
-//	2. `ui.txt` 裡沒有孤兒 key（程式碼已經不用了）
-//	3. 目錄裡的譯文與程式碼裡的 fallback 一致（不一致代表有人只改了一邊）
-//	4. `cmd/demonwinter/` 還剩幾條硬編的中文字面值（＝ D1 的進度）
-//
-// 第 3 項是刻意的：本專案的 fallback 一律是中文，兩邊本來就該一樣。
-// 允許它們漂開等於允許「畫面上的字」有兩個真相來源。
+//	1. 程式碼裡每一個 `tr.UI(key)` 的 key 都在 `ui.json` 裡
+//	2. `ui.json` 裡沒有孤兒 key（程式碼已經不用了）
+//	3. JSON 譯文無換行且倚天 Big5 字型可顯示
+//	4. `cmd/demonwinter/` 不得再有玩家可見的硬編中文字面值
 
 // uiSkipCallees 是「這一層呼叫裡的中文字串不算介面文案」的函式。
 // 偵錯輸出、旗標說明、錯誤訊息都不上畫面。
@@ -44,7 +40,9 @@ import (
 // 而且驗收流程會拿前後兩份 trace 做比對 —— 把它中文化（或讓它可換語言）
 // 等於讓一個內部訊號跟著介面語言漂。
 var uiSkipFiles = map[string]bool{
-	"trace.go": true,
+	"trace.go":       true,
+	"debugscene.go":  true,
+	"debugbattle.go": true,
 }
 
 // uiSkipCallees 裡再加軌跡的兩支輸出函式，因為它們散在各個畫面檔裡。
@@ -60,8 +58,8 @@ var uiSkipCallees = map[string]bool{
 }
 
 type uiCall struct {
-	key, fallback string
-	pos           token.Position
+	key string
+	pos token.Position
 }
 
 type uiHardcoded struct {
@@ -82,7 +80,7 @@ func uiCheck(args []string) {
 	srcDir := fs.String("src", "cmd/demonwinter", "要掃的原始碼目錄")
 	langDir := fs.String("lang", "assets/lang/zh-Hant", "翻譯目錄")
 	list := fs.Bool("list", false, "把還沒遷的字串逐條列出來（給遷移用）")
-	fix := fs.Bool("fix", false, "把缺的 key 照程式碼的 fallback 補進 ui.txt")
+	fix := fs.Bool("fix", false, "已停用；JSON 模式缺文案必須明確編輯資料檔")
 	_ = fs.Parse(args)
 
 	calls, hard, stems, err := scanUIStrings(*srcDir)
@@ -90,16 +88,13 @@ func uiCheck(args []string) {
 		fatal(err)
 	}
 
-	cat, err := i18n.LoadCatalog(filepath.Join(*langDir, "ui.txt"))
+	cat, err := i18n.LoadUICatalogJSON(filepath.Join(*langDir, "ui.json"))
 	if err != nil {
-		fatal(fmt.Errorf("載入 ui.txt：%w", err))
+		fatal(fmt.Errorf("載入 ui.json：%w", err))
 	}
 	inCatalog := map[string]string{}
 	for _, e := range cat.Entries {
-		if e.Name == "" {
-			continue
-		}
-		inCatalog[e.Name] = e.Target
+		inCatalog[e.Key] = e.Text
 	}
 
 	var problems int
@@ -109,20 +104,7 @@ func uiCheck(args []string) {
 	}
 
 	if *fix {
-		if err := uiAppendMissing(filepath.Join(*langDir, "ui.txt"), calls, inCatalog); err != nil {
-			fatal(err)
-		}
-		// 補完重讀一次，後面的檢查才看得到新條目。
-		cat, err = i18n.LoadCatalog(filepath.Join(*langDir, "ui.txt"))
-		if err != nil {
-			fatal(err)
-		}
-		inCatalog = map[string]string{}
-		for _, e := range cat.Entries {
-			if e.Name != "" {
-				inCatalog[e.Name] = e.Target
-			}
-		}
+		fatal(fmt.Errorf("-fix 已停用：請直接編輯 ui.json，避免自動發明玩家文案"))
 	}
 
 	used := map[string]bool{}
@@ -131,38 +113,37 @@ func uiCheck(args []string) {
 		target, ok := inCatalog[c.key]
 		switch {
 		case !ok:
-			report("%s:%d 的 key %q 不在 ui.txt 裡 —— 會靜默退回 fallback",
+			report("%s:%d 的 key %q 不在 ui.json 裡",
 				filepath.Base(c.pos.Filename), c.pos.Line, c.key)
-		case target != c.fallback:
-			report("%s:%d 的 key %q：目錄譯文與程式碼 fallback 不一致\n"+
-				"      目錄 %q\n      程式 %q",
-				filepath.Base(c.pos.Filename), c.pos.Line, c.key, target, c.fallback)
+		case target == "":
+			report("ui.json 的 key %q 沒有 text", c.key)
+		}
+	}
+	// commandLayouts 本身就是呼叫端：順序、tab title 與 item key 都從 JSON
+	// 驅動，不會在 Go 出現字面 key。
+	for _, layout := range cat.CommandLayouts {
+		for _, key := range layout.Retro {
+			used[key] = true
+		}
+		for _, group := range layout.Groups {
+			used[group.TitleKey] = true
+			for _, key := range group.Items {
+				used[key] = true
+			}
 		}
 	}
 	// 非 Big5 字會變豆腐。倚天字型只有 Big5 的字，`。`／`—`／`…` 這些
 	// 全形標點在 Big5 裡有，但「𨑨」「腚」「啧」這類就沒有 ——
 	// 執行期 `MixedFont.Missing()` 抓得到，可是要有人去看；
 	// 靜態擋在這裡便宜得多（同 `retro-cht` 那份 skill 的教訓）。
-	// **fallback 不能含換行。** `ui.txt` 是行導向的格式，譯文裡的 `\n`
-	// 存不回去（寫進去會被當成條目結束，讀回來只剩第一行）。
-	// 換行是排版不是文案，寫在字串外面：`"\n" + tr.UI(...)`。
-	for _, c := range calls {
-		if strings.ContainsAny(c.fallback, "\n\r") {
-			report("%s:%d 的 %q 含換行 —— ui.txt 存不回去，把 `\\n` 移到字串外面",
-				filepath.Base(c.pos.Filename), c.pos.Line, c.key)
-		}
-	}
-
+	// 換行是排版而不是短介面文案；JSON 條目若含換行就在這裡擋下。
 	enc := traditionalchinese.Big5.NewEncoder()
-	for _, c := range calls {
-		if bad := notBig5(enc, c.fallback); bad != "" {
-			report("%s:%d 的 %q 有 Big5 打不出來的字 %q —— 畫面上會是豆腐",
-				filepath.Base(c.pos.Filename), c.pos.Line, c.key, bad)
-		}
-	}
 	for name, target := range inCatalog {
+		if strings.ContainsAny(target, "\n\r") {
+			report("ui.json 的 %q 含換行 —— 排版換行必須留在引擎結構，不放進文案", name)
+		}
 		if bad := notBig5(enc, target); bad != "" {
-			report("ui.txt 的 %q 有 Big5 打不出來的字 %q", name, bad)
+			report("ui.json 的 %q 有 Big5 打不出來的字 %q", name, bad)
 		}
 	}
 
@@ -188,7 +169,7 @@ func uiCheck(args []string) {
 	}
 	sort.Strings(orphans)
 	for _, o := range orphans {
-		report("ui.txt 的 key %q 沒有任何呼叫端 —— 孤兒條目", o)
+		report("ui.json 的 key %q 沒有任何呼叫端 —— 孤兒條目", o)
 	}
 
 	fmt.Printf("介面文案：已遷 %d 條（其中 %d 條 key 是算出來的）／目錄 %d 條／還硬編 %d 條\n",
@@ -252,22 +233,20 @@ func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 					return true
 				}
 				sel, ok := call.Fun.(*ast.SelectorExpr)
-				if !ok || sel.Sel.Name != "UI" || len(call.Args) != 2 {
+				if !ok || sel.Sel.Name != "UI" || len(call.Args) != 1 {
 					return true
 				}
-				k, ok1 := stringLit(call.Args[0])
-				f, ok2 := foldString(call.Args[1], consumed)
-				if !ok1 || !ok2 {
+				k, ok := stringLit(call.Args[0])
+				if !ok {
 					return true
 				}
 				consumed[call.Args[0]] = true
-				calls = append(calls, uiCall{k, f, fset.Position(call.Pos())})
+				calls = append(calls, uiCall{key: k, pos: fset.Position(call.Pos())})
 				return true
 			})
 
-			// `//ui:dynamic <前綴>` 標記的宣告：裡面的中文是**動態 key**
-			// 查表時的 fallback（`tr.UI(trapNameKey(c), trapNameZH[c])`
-			// 這種），已經走翻譯層了，只是 key 算出來的、靜態看不到配對。
+			// `//ui:dynamic <前綴>` 標記宣告動態 key；完整文字仍只在 JSON，
+			// 但靜態掃描看不到組合後的每個 key。
 			//
 			// 為什麼要有這個標記而不是寫死一份清單在這裡：清單會漂，
 			// 標記跟著程式碼走。而且它同時是給讀程式的人的說明。
@@ -288,24 +267,6 @@ func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 					dynSkip[l] = true
 				}
 			}
-
-			// 套件層的表（例如 playerCommands）不能在 init 時翻譯 ——
-			// 那時還沒有 translator。那種表的寫法是「key 與中文並列」，
-			// 翻譯發生在畫的時候。判準：**同一行有 key 形狀的字面值**
-			// 就算這一行的中文已經配好 key 了。
-			paired := map[int]string{}
-			ast.Inspect(file, func(n ast.Node) bool {
-				lit, ok := n.(*ast.BasicLit)
-				if !ok || lit.Kind != token.STRING {
-					return true
-				}
-				v, err := strconv.Unquote(lit.Value)
-				if err != nil || !uiKeyStem.MatchString(v) {
-					return true
-				}
-				paired[fset.Position(lit.Pos()).Line] = v
-				return true
-			})
 
 			// 再掃硬編。`skip` 是「目前在某個不上畫面的呼叫裡」的深度計數。
 			var skip int
@@ -338,13 +299,6 @@ func scanUIStrings(dir string) ([]uiCall, []uiHardcoded, []string, error) {
 				}
 				pos := fset.Position(lit.Pos())
 				if dynSkip[pos.Line] {
-					return true
-				}
-				if k := paired[pos.Line]; k != "" {
-					// 「key 與中文並列」的表：當成一般的 UI 條目來檢查，
-					// 否則這一類永遠沒有人核實（key 與 fallback 都是變數，
-					// 靜態掃不到 `.UI(...)` 那個形式）。
-					calls = append(calls, uiCall{k, s, pos})
 					return true
 				}
 				hard = append(hard, uiHardcoded{s, pos})
@@ -419,45 +373,6 @@ func hasCJK(s string) bool {
 	return false
 }
 
-
-// uiAppendMissing 把程式碼裡有、目錄裡沒有的 key 追加到 ui.txt。
-//
-// 譯文直接用程式碼裡的 fallback —— 本專案的 fallback 一律是中文，
-// 它就是現在畫面上的字。`:: en` 留空：原版英文有對應的話由人補，
-// 自動填一個猜的英文比留空更糟。
-func uiAppendMissing(path string, calls []uiCall, inCatalog map[string]string) error {
-	seen := map[string]bool{}
-	var add []uiCall
-	for _, c := range calls {
-		if _, ok := inCatalog[c.key]; ok || seen[c.key] {
-			continue
-		}
-		seen[c.key] = true
-		add = append(add, c)
-	}
-	if len(add) == 0 {
-		fmt.Println("沒有缺的 key")
-		return nil
-	}
-	sort.Slice(add, func(i, j int) bool { return add[i].key < add[j].key })
-
-	var b strings.Builder
-	for _, c := range add {
-		b.WriteString("\n## " + c.key + "\n:: zh\n" + c.fallback + "\n")
-	}
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0o644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	if _, err := f.WriteString(b.String()); err != nil {
-		return err
-	}
-	fmt.Printf("補了 %d 條進 %s\n", len(add), path)
-	return nil
-}
-
-
 // notBig5 回傳字串裡第一批 Big5 編不出來的字；全都編得出來時回空字串。
 func notBig5(enc interface{ String(string) (string, error) }, s string) string {
 	var bad []rune
@@ -471,7 +386,6 @@ func notBig5(enc interface{ String(string) (string, error) }, s string) string {
 	}
 	return string(bad)
 }
-
 
 // uiQuote 把字串印成**與原始碼一致**的 Go 字面值。
 //
@@ -499,36 +413,4 @@ func uiQuote(s string) string {
 	}
 	b.WriteByte('"')
 	return b.String()
-}
-
-
-// foldString 把 `"a" + "b" + "c"` 這種**跨行折行的字面值**摺成一個字串，
-// 並把每一段都記進 consumed。
-//
-// 為什麼需要：長句子在 Go 原始碼裡常寫成加號串接，`tr.UI(key, "上半"+"下半")`
-// 的第二個參數就不是單一 BasicLit。不摺的話那兩段會被當成「還沒遷」——
-// 而它們其實早就在 `tr.UI` 裡面了（`blacksmith.scene`、`armory.scene` 就是
-// 這樣被誤報的）。
-func foldString(e ast.Expr, consumed map[ast.Node]bool) (string, bool) {
-	switch v := e.(type) {
-	case *ast.BasicLit:
-		s, ok := stringLit(v)
-		if ok {
-			consumed[e] = true
-		}
-		return s, ok
-	case *ast.ParenExpr:
-		return foldString(v.X, consumed)
-	case *ast.BinaryExpr:
-		if v.Op != token.ADD {
-			return "", false
-		}
-		l, ok1 := foldString(v.X, consumed)
-		r, ok2 := foldString(v.Y, consumed)
-		if !ok1 || !ok2 {
-			return "", false
-		}
-		return l + r, true
-	}
-	return "", false
 }

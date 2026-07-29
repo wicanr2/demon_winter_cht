@@ -88,7 +88,7 @@ func (in *amountInput) draw(a *app, line func(string)) {
 	}
 	line("　" + shown)
 	line("")
-	line(a.tr.UI("townsvc.amount.keys", "數字鍵輸入　Backspace：刪除　Enter：確定　Esc：取消"))
+	line(a.tr.UI("townsvc.amount.keys"))
 }
 
 // sellPicker 是出售的兩層選擇器：先選人、再選要賣哪一格。
@@ -143,7 +143,7 @@ func (a *app) healCurrent(t *townScreen) {
 	svc, res := game.Heal(t.visit.Economy, c, a.gold())
 	if !res.OK {
 		if res.Cost > 0 {
-			t.message = fmt.Sprintf(a.tr.UI("townsvc.heal.cost_note", "%s（%s 要 %d 金）"),
+			t.message = fmt.Sprintf(a.tr.UI("townsvc.heal.cost_note"),
 				res.Reason, a.healerServiceName(svc), res.Cost)
 			return
 		}
@@ -151,7 +151,7 @@ func (a *app) healCurrent(t *townScreen) {
 		return
 	}
 	a.setGold(res.Gold)
-	t.message = fmt.Sprintf(a.tr.UI("townsvc.heal.done", "%s %s，付 %d 金（剩 %d）"),
+	t.message = fmt.Sprintf(a.tr.UI("townsvc.heal.done"),
 		c.Name, a.healerServiceName(svc), res.Cost, res.Gold)
 }
 
@@ -160,7 +160,7 @@ func (a *app) healCurrent(t *townScreen) {
 func (a *app) openRationInput(t *townScreen) {
 	unit := t.visit.Economy.RationUnitPrice()
 	t.amount = &amountInput{
-		prompt: fmt.Sprintf(a.tr.UI("townsvc.tavern.prompt", "要買幾份糧食？（每份 %d 金，最多 %d 份）"),
+		prompt: fmt.Sprintf(a.tr.UI("townsvc.tavern.prompt"),
 			unit, game.MaxRations),
 		max: game.MaxRations,
 		apply: func(n int) {
@@ -172,7 +172,7 @@ func (a *app) openRationInput(t *townScreen) {
 			}
 			a.setGold(res.Gold)
 			a.save.Rations = byte(rations + n)
-			t.message = fmt.Sprintf(a.tr.UI("townsvc.tavern.done", "買了 %d 份糧食，付 %d 金（共 %d 份，剩 %d 金）"),
+			t.message = fmt.Sprintf(a.tr.UI("townsvc.tavern.done"),
 				n, res.Cost, a.save.Rations, res.Gold)
 		},
 	}
@@ -186,7 +186,7 @@ func (a *app) openDonateInput(t *townScreen) {
 		return
 	}
 	t.amount = &amountInput{
-		prompt: fmt.Sprintf(a.tr.UI("townsvc.temple.donate_prompt", "%s 要捐多少金幣？（1 金換 1 點經驗，身上 %d 金）"),
+		prompt: fmt.Sprintf(a.tr.UI("townsvc.temple.donate_prompt"),
 			c.Name, a.gold()),
 		max: a.gold(),
 		apply: func(n int) {
@@ -196,7 +196,7 @@ func (a *app) openDonateInput(t *townScreen) {
 				return
 			}
 			a.setGold(res.Gold)
-			t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.donate_done", "%s 捐了 %d 金，經驗值來到 %d"),
+			t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.donate_done"),
 				c.Name, n, c.Experience)
 		},
 	}
@@ -210,14 +210,14 @@ func (a *app) prayCurrent(t *townScreen) {
 	res := game.PrayAtTemple(c, a.gold(), t.visit.Town.Facilities.Church)
 	if !res.OK {
 		if res.Cost > 0 {
-			t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.pray_cost_note", "%s（要 %d 金）"), res.Reason, res.Cost)
+			t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.pray_cost_note"), res.Reason, res.Cost)
 			return
 		}
 		t.message = res.Reason
 		return
 	}
 	a.setGold(res.Gold)
-	t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.pray_done", "%s 祈禱完畢，付 %d 金，呼喚成功率回到 %d%%"),
+	t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.pray_done"),
 		c.Name, res.Cost, c.PrayChance)
 }
 
@@ -226,11 +226,11 @@ func (a *app) prayCurrent(t *townScreen) {
 // 神祇名是 FILES.DTT 的 `[153:164]`，索引是編號減一（見 docs/re/27 §4）。
 func (a *app) deityName(id int) string {
 	if id == 0 {
-		return a.tr.UI("townsvc.temple.no_deity", "（無）")
+		return a.tr.UI("townsvc.temple.no_deity")
 	}
 	names := a.strings.DeityNames()
 	if id < 1 || id > len(names) {
-		return fmt.Sprintf(a.tr.UI("townsvc.temple.deity_fallback", "神祇 %d"), id)
+		return fmt.Sprintf(a.tr.UI("townsvc.temple.deity_fallback"), id)
 	}
 	return names[id-1]
 }
@@ -245,22 +245,22 @@ func (a *app) levelUpCurrent(t *townScreen) {
 	ok, short := c.CanLevelUp()
 	if !ok {
 		if short == 0 {
-			t.message = fmt.Sprintf(a.tr.UI("townsvc.guild.max_level", "%s 已經是最高等級"), c.Name)
+			t.message = fmt.Sprintf(a.tr.UI("townsvc.guild.max_level"), c.Name)
 			return
 		}
-		t.message = fmt.Sprintf(a.tr.UI("townsvc.guild.need_exp", "公會認為 %s 還需要 %d 點經驗才能升級"),
+		t.message = fmt.Sprintf(a.tr.UI("townsvc.guild.need_exp"),
 			c.Name, short)
 		return
 	}
 	res, err := game.LevelUp(a.rng, a.tables, c)
 	if err != nil {
-		t.message = fmt.Sprintf(a.tr.UI("townsvc.guild.levelup_error", "升級失敗：%v"), err)
+		t.message = fmt.Sprintf(a.tr.UI("townsvc.guild.levelup_error"), err)
 		return
 	}
-	msg := fmt.Sprintf(a.tr.UI("townsvc.guild.levelup_done", "%s 升到 %d 級　生命 +%d　法力 +%d"),
+	msg := fmt.Sprintf(a.tr.UI("townsvc.guild.levelup_done"),
 		c.Name, c.Level, res.HPGain, res.SPGain)
 	if res.Skipped {
-		msg += a.tr.UI("townsvc.guild.trait_capped", "　（屬性已達種族上限）")
+		msg += a.tr.UI("townsvc.guild.trait_capped")
 	} else {
 		var gains []string
 		for i, g := range res.TraitGains {
@@ -269,7 +269,7 @@ func (a *app) levelUpCurrent(t *townScreen) {
 			}
 		}
 		if len(gains) > 0 {
-			msg += "\n" + a.tr.UI("townsvc.guild.traitgains", "　　屬性成長：") + strings.Join(gains, "　")
+			msg += "\n" + a.tr.UI("townsvc.guild.traitgains") + strings.Join(gains, "　")
 		}
 	}
 	t.message = msg
@@ -310,12 +310,12 @@ func (a *app) sellCurrent(t *townScreen) {
 	s := t.sell
 	it := a.members[s.member].Inventory[s.slot]
 	if it.Empty() {
-		t.message = a.tr.UI("townsvc.sell.slot_empty", "那一格是空的")
+		t.message = a.tr.UI("townsvc.sell.slot_empty")
 		return
 	}
 	item, err := a.items.ByIndex(int(it.Type))
 	if err != nil {
-		t.message = a.tr.UI("townsvc.sell.unknown_item", "認不出這件道具")
+		t.message = a.tr.UI("townsvc.sell.unknown_item")
 		return
 	}
 	// 售價是基礎價的一半，**不套城鎮係數、不受議價影響**（docs/re/19 §7.4）。
@@ -326,7 +326,7 @@ func (a *app) sellCurrent(t *townScreen) {
 		return
 	}
 	a.setGold(res.Gold)
-	t.message = fmt.Sprintf(a.tr.UI("townsvc.sell.done", "%s 賣掉%s，得 %d 金（共 %d）"),
+	t.message = fmt.Sprintf(a.tr.UI("townsvc.sell.done"),
 		a.members[s.member].Name,
 		a.tr.Event(itemSourceFile, int(it.Type), item.Name), price, res.Gold)
 	t.sell = nil
@@ -335,40 +335,40 @@ func (a *app) sellCurrent(t *townScreen) {
 func (a *app) drawSellPicker(t *townScreen, line func(string)) {
 	s := t.sell
 	if s.slot < 0 {
-		line(a.tr.UI("townsvc.sell.who", "誰要賣東西？"))
+		line(a.tr.UI("townsvc.sell.who"))
 		line("")
 		for i, m := range a.members {
 			line(fmt.Sprintf("%s%s", memberMark(s.member, i),
 				textlayout.PadCells(m.Name, 10)))
 		}
 		line("")
-		line(a.tr.UI("townsvc.sell.keys_confirm", "↑↓：選擇　Enter：確定　Esc：取消"))
+		line(a.tr.UI("townsvc.sell.keys_confirm"))
 		return
 	}
 
 	m := a.members[s.member]
-	line(fmt.Sprintf(a.tr.UI("townsvc.sell.slot_prompt", "%s 要賣哪一件？（售價是底價的一半）"), m.Name))
+	line(fmt.Sprintf(a.tr.UI("townsvc.sell.slot_prompt"), m.Name))
 	line("")
 	for i := 0; i < game.InventorySlots; i++ {
 		it := m.Inventory[i]
-		name, note := a.tr.UI("townsvc.sell.item_empty", "（空）"), ""
+		name, note := a.tr.UI("townsvc.sell.item_empty"), ""
 		if !it.Empty() {
 			name = a.itemLabel(it)
 			if item, err := a.items.ByIndex(int(it.Type)); err == nil {
-				note = fmt.Sprintf(a.tr.UI("townsvc.sell.price_note", "%d 金"), t.visit.Economy.SellPrice(item.Price))
+				note = fmt.Sprintf(a.tr.UI("townsvc.sell.price_note"), t.visit.Economy.SellPrice(item.Price))
 			}
 			switch i {
 			case m.EquippedWeapon:
-				note = a.tr.UI("townsvc.sell.weapon_locked", "（武器，不能賣）")
+				note = a.tr.UI("townsvc.sell.weapon_locked")
 			case m.EquippedArmor:
-				note = a.tr.UI("townsvc.sell.armor_locked", "（護甲，不能賣）")
+				note = a.tr.UI("townsvc.sell.armor_locked")
 			}
 		}
 		line(fmt.Sprintf("%s%s%s", memberMark(s.slot, i),
 			textlayout.PadCells(name, 14), note))
 	}
 	line("")
-	line(a.tr.UI("townsvc.sell.keys_sell", "↑↓：選擇　Enter：賣出　Esc：返回"))
+	line(a.tr.UI("townsvc.sell.keys_sell"))
 }
 
 // traitName 依索引取屬性名（表在 createui.go）。
@@ -382,18 +382,18 @@ func (a *app) traitName(i int) string { return a.label(traitNames, i) }
 // 因為放不下的時候本來就不扣錢。
 func (a *app) buyShip(t *townScreen) {
 	if !t.visit.HasDocks() {
-		t.message = a.tr.UI("townsvc.dock.no_ship", "這座城鎮沒有船可買")
+		t.message = a.tr.UI("townsvc.dock.no_ship")
 		return
 	}
 	price := t.visit.Economy.ShipPrice()
 	res := game.BuyShip(&a.save.Ships, a.tileAt,
 		a.party.X(), a.party.Y(), a.mapID, a.gold(), price)
 	if !res.OK {
-		t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.buy_cost_note", "%s（船價 %d 金）"), res.Reason, price)
+		t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.buy_cost_note"), res.Reason, price)
 		return
 	}
 	a.setGold(res.Gold)
-	t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.buy_done", "船與船員都備妥了，付 %d 金（剩 %d）"), res.Cost, res.Gold)
+	t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.buy_done"), res.Cost, res.Gold)
 }
 
 // repairShip 修好腳邊的船。
@@ -402,14 +402,14 @@ func (a *app) repairShip(t *townScreen) {
 		a.party.X(), a.party.Y(), a.gold())
 	if !res.OK {
 		if res.Cost > 0 {
-			t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.repair_cost_note", "%s（修好要 %d 金）"), res.Reason, res.Cost)
+			t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.repair_cost_note"), res.Reason, res.Cost)
 			return
 		}
 		t.message = res.Reason
 		return
 	}
 	a.setGold(res.Gold)
-	t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.repair_done", "修好了，付 %d 金（剩 %d）"), res.Cost, res.Gold)
+	t.message = fmt.Sprintf(a.tr.UI("townsvc.dock.repair_done"), res.Cost, res.Gold)
 }
 
 // tileAt 回傳地圖座標的地形值，超出範圍回 0。
@@ -458,18 +458,18 @@ func (a *app) learnCurrent(t *townScreen) {
 	skill := gamedata.SkillID(colleges[t.college])
 	res, err := game.LearnSkill(a.tables, c, a.gold(), skill)
 	if err != nil {
-		t.message = fmt.Sprintf(a.tr.UI("townsvc.college.learn_error", "學院出錯：%v"), err)
+		t.message = fmt.Sprintf(a.tr.UI("townsvc.college.learn_error"), err)
 		return
 	}
 	if !res.OK {
 		t.message = res.Reason
 		if res.Cost > 0 {
-			t.message += fmt.Sprintf(a.tr.UI("townsvc.college.cost_note", "（學費 %d 金）"), res.Cost)
+			t.message += fmt.Sprintf(a.tr.UI("townsvc.college.cost_note"), res.Cost)
 		}
 		return
 	}
 	a.setGold(res.Gold)
-	t.message = fmt.Sprintf(a.tr.UI("townsvc.college.learn_done", "%s 學會了%s，付 %d 金（剩 %d）"),
+	t.message = fmt.Sprintf(a.tr.UI("townsvc.college.learn_done"),
 		c.Name, a.skillName(skill), res.Cost, res.Gold)
 }
 
@@ -485,7 +485,7 @@ func (a *app) skillName(s gamedata.SkillID) string {
 	}
 	names := a.strings.SkillNames()
 	if int(s) < 0 || int(s) >= len(names) {
-		return fmt.Sprintf(a.tr.UI("townsvc.skill.fallback", "技能 %d"), s)
+		return fmt.Sprintf(a.tr.UI("townsvc.skill.fallback"), s)
 	}
 	return a.tr.Event(skillSourceFile, int(s), names[s])
 }
@@ -497,16 +497,16 @@ func (a *app) drawCollege(t *townScreen, line func(string)) {
 	colleges := t.visit.Town.Facilities.Colleges
 	c := a.currentMember(t)
 	if len(colleges) == 0 || c == nil {
-		line(a.tr.UI("townsvc.college.none", "這座城鎮沒有學院"))
+		line(a.tr.UI("townsvc.college.none"))
 		return
 	}
 
 	remaining, err := c.RemainingSkillPoints(a.tables)
 	if err != nil {
-		line(fmt.Sprintf(a.tr.UI("townsvc.college.points_error", "算不出剩餘點數：%v"), err))
+		line(fmt.Sprintf(a.tr.UI("townsvc.college.points_error"), err))
 		return
 	}
-	line(fmt.Sprintf(a.tr.UI("townsvc.college.header", "學生：%s（%s）　剩餘智力點數 %d"),
+	line(fmt.Sprintf(a.tr.UI("townsvc.college.header"),
 		c.Name, a.label(className, int(c.Class)), remaining))
 	line("")
 
@@ -516,15 +516,15 @@ func (a *app) drawCollege(t *townScreen, line func(string)) {
 		if err != nil {
 			continue
 		}
-		note := fmt.Sprintf(a.tr.UI("townsvc.college.cost_points", "%d 點　%d 金"), points, game.CollegeGoldCost(points))
+		note := fmt.Sprintf(a.tr.UI("townsvc.college.cost_points"), points, game.CollegeGoldCost(points))
 		if c.HasSkill(skill) {
-			note = a.tr.UI("townsvc.college.learned", "已學會")
+			note = a.tr.UI("townsvc.college.learned")
 		}
 		line(fmt.Sprintf("%s%s%s", memberMark(t.college, i),
 			textlayout.PadCells(a.skillName(skill), 14), note))
 	}
 	line("")
-	line(a.tr.UI("townsvc.college.keys", "↑↓：選學院　Tab：換學生　L：學下去"))
+	line(a.tr.UI("townsvc.college.keys"))
 }
 
 // convertCurrent 讓游標指的隊員改信這座神殿的神。
@@ -538,13 +538,13 @@ func (a *app) convertCurrent(t *townScreen) {
 	deity := t.visit.Town.Facilities.Church
 	res, err := game.ConvertAtTemple(a.tables, c, a.gold(), deity)
 	if err != nil {
-		t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.convert_error", "改宗出錯：%v"), err)
+		t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.convert_error"), err)
 		return
 	}
 	if !res.OK {
 		t.message = res.Reason
 		return
 	}
-	t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.convert_done", "%s 改信 %s，學會了%s（花 %d 點智力）"),
+	t.message = fmt.Sprintf(a.tr.UI("townsvc.temple.convert_done"),
 		c.Name, a.deityName(deity), a.skillName(game.DeityOrder(deity)), res.Cost)
 }

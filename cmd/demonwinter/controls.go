@@ -18,9 +18,9 @@ const (
 
 func parseControlMode(s string) (controlMode, error) {
 	switch strings.ToLower(strings.TrimSpace(s)) {
-	case "modern", "現代":
+	case "modern":
 		return controlsModern, nil
-	case "retro", "復古":
+	case "retro":
 		return controlsRetro, nil
 	default:
 		return controlsModern, fmt.Errorf("只接受 modern 或 retro，收到 %q", s)
@@ -34,11 +34,11 @@ func (m controlMode) next() controlMode {
 	return controlsModern
 }
 
-func (m controlMode) label() string {
+func (m controlMode) labelKey() string {
 	if m == controlsRetro {
-		return "復古"
+		return "controls.mode.retro"
 	}
-	return "現代"
+	return "controls.mode.modern"
 }
 
 func turnFacing(f game.Facing, delta int) game.Facing {

@@ -38,13 +38,11 @@ func (a *app) openBlacksmith() {
 		// 拿過了就整格沒反應 —— 原版 `0x1a105` 直接回 2。
 		return
 	}
-	a.box = ui.NewMixedTextBox(a.tr.UI("blacksmith.scene",
-		"你走進一間鐵匠鋪。鐵匠是個年邁的巨魔，一邊的眼睛永遠閉著，"+
-			"臉孔扭曲得嚇人。他先是一驚，隨即咧嘴笑了起來。") +
+	a.box = ui.NewMixedTextBox(a.tr.UI("blacksmith.scene") +
 		"\n\n" +
-		a.tr.UI("blacksmith.line1", "「我一直在打一把新武器。") + "\n" +
-		a.tr.UI("blacksmith.line2", "　它是為了那些想殺掉 Xeres 的人") + "\n" +
-		a.tr.UI("blacksmith.line3", "　準備的！」"))
+		a.tr.UI("blacksmith.line1") + "\n" +
+		a.tr.UI("blacksmith.line2") + "\n" +
+		a.tr.UI("blacksmith.line3"))
 	a.plotGift = &plotGiftScreen{id: game.PlotGiftBlacksmith}
 	a.trace.note("鐵匠鋪：開場")
 }
@@ -57,13 +55,13 @@ func (a *app) openBlacksmith() {
 func (a *app) armoryItemName(id game.PlotGiftID) string {
 	switch id {
 	case game.PlotGiftArmoryChain:
-		return a.tr.UI("armory.item.chain", "一件銀製鏈甲")
+		return a.tr.UI("armory.item.chain")
 	case game.PlotGiftArmoryMace:
-		return a.tr.UI("armory.item.mace", "一把釘頭鎚")
+		return a.tr.UI("armory.item.mace")
 	case game.PlotGiftArmoryDagger:
-		return a.tr.UI("armory.item.dagger", "一把水晶匕首")
+		return a.tr.UI("armory.item.dagger")
 	case game.PlotGiftArmorySword:
-		return a.tr.UI("armory.item.sword", "一把冰藍色的短劍")
+		return a.tr.UI("armory.item.sword")
 	}
 	return ""
 }
@@ -78,12 +76,9 @@ func (a *app) openArmory(x, y int) {
 		// 拿過了 —— 原版 `0x1a083` 檢查 `+0xb3 + idx`，不為 0 就回 2。
 		return
 	}
-	a.box = ui.NewMixedTextBox(a.tr.UI("armory.scene",
-		"你走進一間兵器庫，裡頭堆滿了陳舊的武器與甲冑。房間中央的台座上"+
-			"放著一件特別的東西：") +
+	a.box = ui.NewMixedTextBox(a.tr.UI("armory.scene") +
 		a.armoryItemName(id) +
-		a.tr.UI("armory.spheres",
-			"。幾團發光的球體懸在台座上方，似乎很不歡迎你的到來。"))
+		a.tr.UI("armory.spheres"))
 	a.plotGift = &plotGiftScreen{id: id, ask: true}
 	a.trace.note("兵器庫：(%d,%d) 台座 %d", x, y, id)
 }
@@ -109,7 +104,7 @@ func (a *app) updatePlotGift() error {
 			// 原版答是之後才印「球體亮了起來」（`0x1aa02`），
 			// 那一句只有兵器庫這條路會印。
 			g.ask = false
-			a.message = a.tr.UI("armory.brighter", "球體的光亮了起來。")
+			a.message = a.tr.UI("armory.brighter")
 			a.trace.note("兵器庫：靠近")
 		case inpututil.IsKeyJustPressed(ebiten.KeyN),
 			inpututil.IsKeyJustPressed(ebiten.KeyEscape):
@@ -146,7 +141,7 @@ func (a *app) takePlotGift(member int) {
 	res := game.TakePlotGift(a.save, &a.members[member], g.id)
 	if res.Full {
 		// 欄位滿了 → 旗標沒動，等一下還能再拿。畫面留著。
-		a.message = a.tr.UI("dungeon.noroom", "放不下了")
+		a.message = a.tr.UI("dungeon.noroom")
 		a.trace.note("劇情道具：%s 道具欄滿了", a.members[member].Name)
 		return
 	}
@@ -155,7 +150,7 @@ func (a *app) takePlotGift(member int) {
 		return
 	}
 	// 名字本身就帶量詞（「一把釘頭鎚」），所以中間不留空白。
-	a.message = fmt.Sprintf(a.tr.UI("plotgift.taken", "%s 收下了%s"),
+	a.message = fmt.Sprintf(a.tr.UI("plotgift.taken"),
 		a.members[member].Name, a.plotGiftLabel(g.id))
 	a.trace.note("劇情道具：%s 第 %d 格拿到 %d 號", a.members[member].Name, res.Slot, g.id)
 }
@@ -164,10 +159,10 @@ func (a *app) takePlotGift(member int) {
 func (a *app) plotGiftLabel(id game.PlotGiftID) string {
 	switch id {
 	case game.PlotGiftBlacksmith:
-		return a.tr.UI("blacksmith.sword", "那把武器")
+		return a.tr.UI("blacksmith.sword")
 	case game.PlotGiftDemonCrystal:
 		// 譯名對齊主線提示鏈既有的用字（`translations/glossary.md`）。
-		return a.tr.UI("plotgift.democrystal", "惡魔水晶")
+		return a.tr.UI("plotgift.democrystal")
 	}
 	return a.armoryItemName(id)
 }
@@ -181,20 +176,20 @@ func (a *app) drawPlotGift(dst *ebiten.Image) {
 	}
 
 	if g.ask {
-		line(a.tr.UI("armory.approach", "你要靠近嗎？"))
+		line(a.tr.UI("armory.approach"))
 		line("")
-		line(a.tr.UI("armory.keys", "Y：靠近　N／Esc：離開"))
+		line(a.tr.UI("armory.keys"))
 		return
 	}
-	line(a.tr.UI("plotgift.who", "誰來收下？"))
+	line(a.tr.UI("plotgift.who"))
 	line("")
 	for i := range a.members {
 		c := &a.members[i]
-		line(fmt.Sprintf(a.tr.UI("dungeon.member.freeslots", "%s%s　空 %d 格"),
+		line(fmt.Sprintf(a.tr.UI("dungeon.member.freeslots"),
 			memberMark(g.cursor, i), c.Name, freeSlots(c)))
 	}
 	line("")
-	line(a.tr.UI("dungeon.keys", "↑↓：選擇　Enter：確定　Esc：返回"))
+	line(a.tr.UI("dungeon.keys"))
 }
 
 // openOrb 是地點劇情 case 8（地圖 2 的 (42,28)，`docs/re/101` §3）。
@@ -219,7 +214,7 @@ func (a *app) takeOrb(member int) {
 	res, slot := game.TakeOrbOfEvertime(a.save, &a.members[member])
 	if res == game.OrbNoRoom {
 		// **階段沒動**，等一下還能再拿。畫面留著。
-		a.message = a.tr.UI("dungeon.noroom", "放不下了")
+		a.message = a.tr.UI("dungeon.noroom")
 		a.trace.note("恆世寶珠：%s 道具欄滿了", a.members[member].Name)
 		return
 	}
@@ -227,7 +222,7 @@ func (a *app) takeOrb(member int) {
 	if res != game.OrbTaken {
 		return
 	}
-	a.message = fmt.Sprintf(a.tr.UI("orb.taken", "%s 收下了恆世寶珠"),
+	a.message = fmt.Sprintf(a.tr.UI("orb.taken"),
 		a.members[member].Name)
 	a.trace.note("恆世寶珠：%s 第 %d 格拿到，劇情階段 → %d",
 		a.members[member].Name, slot, a.save.PlotStage)

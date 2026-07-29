@@ -17,6 +17,8 @@ type Translator struct {
 
 	// byName 是介面文案的查表（語意化 key，見 Entry.Name）。
 	byName map[string]string
+	// commandLayouts 是復古順序與現代兩欄分組；與介面文字同屬 UI 資料。
+	commandLayouts map[string]UICommandLayoutJSON
 
 	// mismatched 記錄原文對不上的條目，代表翻譯檔與資料脫節。
 	mismatched []Mismatch
@@ -37,7 +39,11 @@ func key(source string, index int) string {
 // 目錄不存在時回傳一個空的 Translator 而不是錯誤：沒有翻譯檔就是全英文，
 // 那是合法狀態（例如原文模式），不該讓遊戲起不來。
 func Load(dir string) (*Translator, error) {
-	t := &Translator{byIndex: map[string]string{}, byName: map[string]string{}}
+	t := &Translator{
+		byIndex:        map[string]string{},
+		byName:         map[string]string{},
+		commandLayouts: map[string]UICommandLayoutJSON{},
+	}
 
 	ents, err := os.ReadDir(dir)
 	if err != nil {
@@ -48,7 +54,23 @@ func Load(dir string) (*Translator, error) {
 	}
 
 	for _, e := range ents {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".txt") {
+		if e.IsDir() {
+			continue
+		}
+		if e.Name() == "ui.json" {
+			c, err := LoadUICatalogJSON(filepath.Join(dir, e.Name()))
+			if err != nil {
+				return nil, err
+			}
+			for _, ent := range c.Entries {
+				t.byName[ent.Key] = ent.Text
+			}
+			for name, layout := range c.CommandLayouts {
+				t.commandLayouts[name] = layout
+			}
+			continue
+		}
+		if !strings.HasSuffix(e.Name(), ".txt") {
 			continue
 		}
 		c, err := LoadCatalog(filepath.Join(dir, e.Name()))
@@ -85,20 +107,23 @@ func (t *Translator) Event(source string, index int, original string) string {
 	return got
 }
 
-// UI 回傳一條介面文案的譯文；沒有譯文就回 fallback。
-//
-// fallback 一律傳**中文**而不是英文 —— 這個專案的介面本來就是中文寫的，
-// 翻譯檔的作用是「把它抽出來好維護、日後好換語言」，不是「英文轉中文」。
-// 所以缺一條的後果是「還是中文，只是沒走目錄」，不是畫面變英文。
-func (t *Translator) UI(name, fallback string) string {
+// UI 回傳一條介面文案。缺 key 時故意顯示醒目的 key，而不是從程式碼內
+// 靜默拿中文 fallback；發行前的 uicheck 會把缺漏擋住。
+func (t *Translator) UI(name string) string {
 	if got, ok := t.byName[name]; ok && got != "" {
 		return got
 	}
-	return fallback
+	return "⟦" + name + "⟧"
 }
 
 // UICount 回報載入了幾條介面文案。給啟動時的自檢用。
 func (t *Translator) UICount() int { return len(t.byName) }
+
+// CommandLayout 回傳資料化的命令順序與分組。
+func (t *Translator) CommandLayout(name string) (UICommandLayoutJSON, bool) {
+	got, ok := t.commandLayouts[name]
+	return got, ok
+}
 
 // Verify 逐條比對翻譯檔的原文與現在的資料，回報對不上的條目。
 //

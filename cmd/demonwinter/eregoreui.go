@@ -76,7 +76,7 @@ func (a *app) locationPlot(c int) {
 		}
 		a.openEregore(a.save.EregoreMet == 1)
 	default:
-		a.message = fmt.Sprintf(a.tr.UI("eregore.plot.unhandled", "（地點劇情 %d 還沒接，見 docs/re/65）"), c)
+		a.message = fmt.Sprintf(a.tr.UI("eregore.plot.unhandled"), c)
 	}
 }
 
@@ -147,7 +147,7 @@ func (a *app) finishEregore(step game.EregoreStep) {
 		a.save.ShardShattered = 1
 		// 城鎮變廢墟是同一個旗標的下游效果，畫面要跟著換。
 		a.drawTiles = ditheredTiles(a.tiles, uint16(a.ditherSeed), a.save.TempleRuins)
-		a.message = a.tr.UI("eregore.shattered", "春之石碎了。冬天開始了。")
+		a.message = a.tr.UI("eregore.shattered")
 	}
 }
 
@@ -172,13 +172,13 @@ func (a *app) drawEregore(dst *ebiten.Image) {
 	// 所以這裡只提示按哪些鍵，不重印選項。
 	if e.shown == len(e.step.Pages)-1 && e.step.Outcome == game.EregoreAsk {
 		if e.step.Choices == 2 {
-			line(a.tr.UI("eregore.choice.two", "　按 1 或 2"))
+			line(a.tr.UI("eregore.choice.two"))
 			return
 		}
-		line(a.tr.UI("eregore.choice.three", "　按 1、2 或 3"))
+		line(a.tr.UI("eregore.choice.three"))
 		return
 	}
-	line(a.tr.UI("ending.press", "（按任意鍵）"))
+	line(a.tr.UI("ending.press"))
 }
 
 // loadEregoreText 讀艾瑞戈爾那一場的文字。

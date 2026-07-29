@@ -26,7 +26,7 @@ type worshipScreen struct {
 
 func (a *app) openWorship() {
 	if len(a.members) == 0 {
-		a.camp.message = a.tr.UI("campcast.worship.empty", "隊伍是空的")
+		a.camp.message = a.tr.UI("campcast.worship.empty")
 		return
 	}
 	a.camp.message = ""
@@ -73,31 +73,31 @@ func (a *app) doWorship(w *worshipScreen) {
 		return
 	}
 	if !res.Answered {
-		a.camp.message = fmt.Sprintf(a.tr.UI("campcast.worship.noanswer", "%s 的祈求沒有回應（成功率 %d%%）"),
+		a.camp.message = fmt.Sprintf(a.tr.UI("campcast.worship.noanswer"),
 			caster.Name, res.Chance)
 		a.camp.worship = nil
 		return
 	}
 
-	name := fmt.Sprintf(a.tr.UI("campcast.worship.spellname", "法術 %d"), res.SpellID)
+	name := fmt.Sprintf(a.tr.UI("campcast.worship.spellname"), res.SpellID)
 	if n, err := a.strings.SpellName(res.SpellID); err == nil {
 		name = a.tr.Event(spellSourceFile, res.SpellID, n)
 	}
-	msg := fmt.Sprintf(a.tr.UI("campcast.worship.answered", "%s 聽見了 %s 的祈求，降下%s")+"\n",
+	msg := fmt.Sprintf(a.tr.UI("campcast.worship.answered")+"\n",
 		a.deityName(caster.Deity), caster.Name, name)
 	switch {
 	case !res.Cast.OK:
 		msg += "　" + res.Cast.Reason
 	case res.Cast.Delta > 0:
-		msg += fmt.Sprintf(a.tr.UI("campcast.worship.heal", "　%s 回復 %d"), target.Name, res.Cast.Delta)
+		msg += fmt.Sprintf(a.tr.UI("campcast.worship.heal"), target.Name, res.Cast.Delta)
 	case res.Cast.Delta < 0:
-		msg += fmt.Sprintf(a.tr.UI("campcast.worship.damage", "　%s 受到 %d"), target.Name, -res.Cast.Delta)
+		msg += fmt.Sprintf(a.tr.UI("campcast.worship.damage"), target.Name, -res.Cast.Delta)
 	case res.Cast.Released:
-		msg += a.tr.UI("campcast.worship.released", "　束縛解開了")
+		msg += a.tr.UI("campcast.worship.released")
 	case res.Cast.Withered:
-		msg += a.tr.UI("campcast.worship.withered", "　枯萎生效")
+		msg += a.tr.UI("campcast.worship.withered")
 	}
-	a.camp.message = msg + fmt.Sprintf("\n"+a.tr.UI("campcast.pray.chancedrop", "祈禱成功率降為 %d%%"), caster.PrayChance)
+	a.camp.message = msg + fmt.Sprintf("\n"+a.tr.UI("campcast.pray.chancedrop"), caster.PrayChance)
 	a.camp.worship = nil
 }
 
@@ -105,7 +105,7 @@ func (a *app) drawWorship(line func(string)) {
 	w := a.camp.worship
 
 	if !w.picked {
-		line(a.tr.UI("campcast.worship.who", "誰來祈求？"))
+		line(a.tr.UI("campcast.worship.who"))
 		line("")
 		a.drawMemberList(line, w.caster, func(i int) string {
 			c := a.members[i]
@@ -115,16 +115,16 @@ func (a *app) drawWorship(line func(string)) {
 			return fmt.Sprintf("%s　%d%%", a.deityName(c.Deity), c.PrayChance)
 		})
 		line("")
-		line(a.tr.UI("campcast.worship.keys1", "↑↓：選擇　Enter：祈求　Esc：取消"))
+		line(a.tr.UI("campcast.worship.keys1"))
 	} else {
-		line(fmt.Sprintf(a.tr.UI("campcast.worship.target", "%s 的祈求要落在誰身上？"), a.members[w.caster].Name))
+		line(fmt.Sprintf(a.tr.UI("campcast.worship.target"), a.members[w.caster].Name))
 		line("")
 		a.drawMemberList(line, w.target, func(i int) string {
 			m := a.members[i]
-			return fmt.Sprintf(a.tr.UI("campcast.worship.hp", "生命 %d/%d"), m.CurrentHP, m.MaxHP)
+			return fmt.Sprintf(a.tr.UI("campcast.worship.hp"), m.CurrentHP, m.MaxHP)
 		})
 		line("")
-		line(a.tr.UI("campcast.worship.keys2", "↑↓：選擇　Enter：確定　Esc：返回"))
+		line(a.tr.UI("campcast.worship.keys2"))
 	}
 
 	if a.camp.message != "" {
@@ -170,7 +170,7 @@ const (
 
 func (a *app) openCampCast() {
 	if len(a.members) == 0 {
-		a.camp.message = a.tr.UI("campcast.worship.empty", "隊伍是空的")
+		a.camp.message = a.tr.UI("campcast.worship.empty")
 		return
 	}
 	c := &castScreen{}
@@ -222,7 +222,7 @@ func (a *app) updateCampCast() error {
 		case inpututil.IsKeyJustPressed(ebiten.KeyEnter):
 			a.rebuildCampSpells(c)
 			if len(c.entries) == 0 {
-				a.camp.message = fmt.Sprintf(a.tr.UI("campcast.cast.nospell", "%s 沒有能在營地放的法術"),
+				a.camp.message = fmt.Sprintf(a.tr.UI("campcast.cast.nospell"),
 					a.members[c.caster].Name)
 				return nil
 			}
@@ -300,12 +300,12 @@ func (a *app) doCampCast(c *castScreen) {
 		a.camp.message = res.Reason
 		return
 	}
-	msg := fmt.Sprintf(a.tr.UI("campcast.cast.cast", "%s 對 %s 施放%s"), caster.Name, target.Name, e.name)
+	msg := fmt.Sprintf(a.tr.UI("campcast.cast.cast"), caster.Name, target.Name, e.name)
 	switch {
 	case res.Light > 0:
 		a.torch = byte(res.Light)
 		a.save.LightSource = byte(res.Light)
-		msg = fmt.Sprintf(a.tr.UI("campcast.cast.light", "%s 施放%s　光源提升為 %d"),
+		msg = fmt.Sprintf(a.tr.UI("campcast.cast.light"),
 			caster.Name, e.name, res.Light)
 	case res.WindWalk:
 		if a.save.ShardShattered == 0 {
@@ -313,26 +313,26 @@ func (a *app) doCampCast(c *castScreen) {
 		} else {
 			a.changeMap(43, 39, 35)
 		}
-		msg = a.tr.UI("campcast.cast.windwalk", "風托起整支隊伍，將眾人送到安全地點")
+		msg = a.tr.UI("campcast.cast.windwalk")
 	case res.Resurrected:
-		msg += a.tr.UI("campcast.cast.resurrected", "　死者恢復了呼吸與 1 點生命")
+		msg += a.tr.UI("campcast.cast.resurrected")
 	case res.Cured:
-		msg += a.tr.UI("campcast.cast.cured", "　毒素消退了")
+		msg += a.tr.UI("campcast.cast.cured")
 	case res.Reason != "":
 		msg += "　" + res.Reason
 	case res.Delta > 0:
-		msg += fmt.Sprintf(a.tr.UI("campcast.cast.heal", "　回復 %d"), res.Delta)
+		msg += fmt.Sprintf(a.tr.UI("campcast.cast.heal"), res.Delta)
 	case res.Delta < 0:
-		msg += fmt.Sprintf(a.tr.UI("campcast.cast.damage", "　造成 %d"), -res.Delta)
+		msg += fmt.Sprintf(a.tr.UI("campcast.cast.damage"), -res.Delta)
 	case res.Released:
-		msg += a.tr.UI("campcast.worship.released", "　束縛解開了")
+		msg += a.tr.UI("campcast.worship.released")
 	case res.Withered:
-		msg += a.tr.UI("campcast.worship.withered", "　枯萎生效")
+		msg += a.tr.UI("campcast.worship.withered")
 	default:
-		msg += a.tr.UI("campcast.cast.noeffect", "　沒有明顯的變化")
+		msg += a.tr.UI("campcast.cast.noeffect")
 	}
 	if res.Died {
-		msg += "　" + target.Name + a.tr.UI("campcast.cast.died", " 倒下了")
+		msg += "　" + target.Name + a.tr.UI("campcast.cast.died")
 	}
 	a.camp.message = msg
 	a.camp.cast = nil
@@ -343,16 +343,16 @@ func (a *app) drawCampCast(line func(string)) {
 
 	switch c.step {
 	case castPickCaster:
-		line(a.tr.UI("campcast.cast.who", "誰來施法？"))
+		line(a.tr.UI("campcast.cast.who"))
 		line("")
 		a.drawMemberList(line, c.caster, func(i int) string {
-			return fmt.Sprintf(a.tr.UI("campcast.cast.sp", "法力 %d/%d"), a.members[i].CurrentSP, a.members[i].MaxSP)
+			return fmt.Sprintf(a.tr.UI("campcast.cast.sp"), a.members[i].CurrentSP, a.members[i].MaxSP)
 		})
 		line("")
-		line(a.tr.UI("campcast.cast.keys1", "↑↓：選擇　Enter：確定　Esc：取消"))
+		line(a.tr.UI("campcast.cast.keys1"))
 
 	case castPickSpell:
-		line(fmt.Sprintf(a.tr.UI("campcast.cast.which", "%s 要放什麼？"), a.members[c.caster].Name))
+		line(fmt.Sprintf(a.tr.UI("campcast.cast.which"), a.members[c.caster].Name))
 		line("")
 		for i, e := range c.entries {
 			mark := "   "
@@ -364,32 +364,32 @@ func (a *app) drawCampCast(line func(string)) {
 				// 主線動作是固定花費，不走法術表的最低法力
 				cost = plotCost(e.plot)
 			}
-			line(fmt.Sprintf(a.tr.UI("campcast.cast.entry", "%s%s最低 %d 點"),
+			line(fmt.Sprintf(a.tr.UI("campcast.cast.entry"),
 				mark, textlayout.PadCells(e.name, 14), cost))
 		}
 		line("")
-		line(a.tr.UI("campcast.worship.keys2", "↑↓：選擇　Enter：確定　Esc：返回"))
+		line(a.tr.UI("campcast.worship.keys2"))
 
 	case castPickPower:
 		e := c.entries[c.spell]
-		line(fmt.Sprintf(a.tr.UI("campcast.cast.power_ask", "%s：投入多少法力？"), e.name))
+		line(fmt.Sprintf(a.tr.UI("campcast.cast.power_ask"), e.name))
 		line("")
-		line(fmt.Sprintf(a.tr.UI("campcast.cast.power", "　%d（最低 %d，最多 %d）"),
+		line(fmt.Sprintf(a.tr.UI("campcast.cast.power"),
 			c.power, e.spell.M, a.members[c.caster].CurrentSP))
 		line("")
-		line(a.tr.UI("campcast.cast.keys2", "↑↓：加減　Enter：確定　Esc：返回"))
+		line(a.tr.UI("campcast.cast.keys2"))
 
 	default:
-		line(fmt.Sprintf(a.tr.UI("campcast.cast.target", "%s 的%s要放在誰身上？"),
+		line(fmt.Sprintf(a.tr.UI("campcast.cast.target"),
 			a.members[c.caster].Name, c.entries[c.spell].name))
 		line("")
 		a.drawMemberList(line, c.target, func(i int) string {
 			m := a.members[i]
-			return fmt.Sprintf(a.tr.UI("campcast.cast.hpsp", "生命 %d/%d　法力 %d/%d"),
+			return fmt.Sprintf(a.tr.UI("campcast.cast.hpsp"),
 				m.CurrentHP, m.MaxHP, m.CurrentSP, m.MaxSP)
 		})
 		line("")
-		line(a.tr.UI("campcast.cast.keys3", "↑↓：選擇　Enter：施放　Esc：返回"))
+		line(a.tr.UI("campcast.cast.keys3"))
 	}
 
 	if a.camp.message != "" {
@@ -415,13 +415,13 @@ func (a *app) plotCastEntries() []spellEntry {
 	var out []spellEntry
 	tile, err := a.tiles.TileAt(a.party.X(), a.party.Y())
 	if err == nil && tile == game.GlyphTile && game.GlyphIndexFor(a.mapID) >= 0 {
-		out = append(out, spellEntry{name: a.tr.UI("plot.uncurse", "解咒"), plot: plotUncurse})
+		out = append(out, spellEntry{name: a.tr.UI("plot.uncurse"), plot: plotUncurse})
 	}
 	// 禁錮的出現條件是「三個符印都解完」，**不是「這裡施放得會成功」** ——
 	// 後者會讓 "The spell fizzles..." 永遠走不到，等於幫玩家擋掉原版
 	// 「在錯地方施放白扣 100 點」的損失，那是改遊戲不是移植。
 	if game.CircleOfLightOpen(a.save.GlyphFlags) {
-		out = append(out, spellEntry{name: a.tr.UI("plot.imprison", "禁錮"), plot: plotImprison})
+		out = append(out, spellEntry{name: a.tr.UI("plot.imprison"), plot: plotImprison})
 	}
 	return out
 }
@@ -453,24 +453,24 @@ func (a *app) doPlotCast(c *castScreen) bool {
 		}
 		switch game.Uncurse(caster, tile, a.mapID, &a.save.GlyphFlags) {
 		case game.GlyphNoGlyph:
-			a.camp.message = a.tr.UI("plot.noglyph", "這裡沒有符印")
+			a.camp.message = a.tr.UI("plot.noglyph")
 		case game.GlyphAlreadyDone:
-			a.camp.message = a.tr.UI("plot.inactive", "這個符印已經失效了")
+			a.camp.message = a.tr.UI("plot.inactive")
 		case game.GlyphNotEnoughSP:
-			a.camp.message = fmt.Sprintf(a.tr.UI("plot.needsp", "那需要 %d 點法力"), game.UncurseCost)
+			a.camp.message = fmt.Sprintf(a.tr.UI("plot.needsp"), game.UncurseCost)
 		case game.GlyphDestroyed:
-			a.camp.message = a.tr.UI("plot.destroyed", "力量閃現，符印的魔法被摧毀了")
+			a.camp.message = a.tr.UI("plot.destroyed")
 		}
 
 	case plotImprison:
 		switch game.Imprison(caster, a.mapID, a.party.Y()) {
 		case game.ImprisonNotEnoughSP:
-			a.camp.message = fmt.Sprintf(a.tr.UI("plot.needsp", "那需要 %d 點法力"), game.ImprisonCost)
+			a.camp.message = fmt.Sprintf(a.tr.UI("plot.needsp"), game.ImprisonCost)
 		case game.ImprisonFizzles:
-			a.camp.message = a.tr.UI("plot.fizzles", "法術消散了……")
+			a.camp.message = a.tr.UI("plot.fizzles")
 		case game.ImprisonWon:
 			a.won = true
-			a.camp.message = a.tr.UI("plot.won", "惡魔被禁錮了")
+			a.camp.message = a.tr.UI("plot.won")
 		}
 
 	default:

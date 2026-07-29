@@ -62,7 +62,7 @@
 ## 驗收證據
 
 - `controls_test.go` 驗證參數解析、模式輪替與四方向環繞；
-- `dwstrings uicheck`：752/752；
+- `dwstrings uicheck`：766/766，玩家程式硬編中文 0 條；
 - 固定 `map 34 / (28,50) / seed 11` 實跑復古／現代命令區、`F1` 與 `F6`；
 - 模擬視窗管理器 close request 後，確認程式結束前寫出
   `PARTY.DAT`、`nSS.DAT` 與 `ITEMLOCB.DAT`。

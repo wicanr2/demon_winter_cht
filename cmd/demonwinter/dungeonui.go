@@ -100,15 +100,15 @@ func (a *app) openViewItem() {
 	switch res := game.BeginViewItem(a.rng, a.members, &a.save.ViewItemUses); {
 	case res.NoSkill:
 		// 原版什麼都不印。這裡說一句，不然按了沒反應像壞掉。
-		a.message = a.tr.UI("viewitem.noskill", "隊伍裡沒有人會鑑物")
+		a.message = a.tr.UI("viewitem.noskill")
 		a.trace.note("鑑物：沒有人會")
 		return
 	case res.Exhausted:
-		a.message = a.tr.UI("viewroom.weak", "你們的靈視之力已經耗盡")
+		a.message = a.tr.UI("viewroom.weak")
 		a.trace.note("鑑物：額度用完")
 		return
 	case res.Failed:
-		a.message = a.tr.UI("viewitem.fails", "看不出所以然")
+		a.message = a.tr.UI("viewitem.fails")
 		a.trace.note("鑑物：擲點失敗（剩 %d 次）", game.PsychicUsesPerDay-a.save.ViewItemUses)
 		return
 	}
@@ -122,7 +122,7 @@ func (a *app) openUnderfootPicker(mode dungeonMode, what string) {
 	spots := game.ItemsUnderfoot(a.itemloc, a.dungeonItems,
 		byte(a.party.X()), byte(a.party.Y()), byte(a.mapID))
 	if len(spots) == 0 {
-		a.message = a.tr.UI("dungeon.nothing", "這裡沒有東西")
+		a.message = a.tr.UI("dungeon.nothing")
 		return
 	}
 	a.dungeon = &dungeonScreen{mode: mode, spots: spots}
@@ -143,7 +143,7 @@ func (a *app) openCarriedPicker(mode dungeonMode, what string) {
 	}
 	carried := game.CarriedDungeonItems(a.members, a.dungeonItems)
 	if len(carried) == 0 {
-		a.message = a.tr.UI("dungeon.carry.none", "身上沒有地城道具")
+		a.message = a.tr.UI("dungeon.carry.none")
 		return
 	}
 	a.dungeon = &dungeonScreen{mode: mode, carried: carried}
@@ -253,7 +253,7 @@ func (a *app) takeDungeonItem(spot game.DungeonSpot, member int) {
 		a.trace.note("拾取 %s 失敗：%s", spot.Item.Name, a.message)
 		return
 	}
-	a.message = fmt.Sprintf(a.tr.UI("dungeon.taken", "%s 拿走了 %s"),
+	a.message = fmt.Sprintf(a.tr.UI("dungeon.taken"),
 		a.members[member].Name, a.dungeonName(spot.Item.Name))
 	a.trace.note("拾取 %s → %s 第 %d 格",
 		spot.Item.Name, a.members[member].Name, res.Slot)
@@ -266,11 +266,11 @@ func (a *app) dropDungeonItem(c game.CarriedDungeonItem) {
 	if !res.OK {
 		// 走到這裡代表選單給了一個不該出現的項目 —— 那是本專案的 bug，
 		// 不是玩家做錯什麼，所以訊息說得直白一點。
-		a.message = a.tr.UI("dungeon.drop.failed", "放不下去")
+		a.message = a.tr.UI("dungeon.drop.failed")
 		a.trace.note("丟棄 %s 失敗（選單給了無效項目）", c.Name)
 		return
 	}
-	a.message = fmt.Sprintf(a.tr.UI("dungeon.dropped", "放下了 %s"),
+	a.message = fmt.Sprintf(a.tr.UI("dungeon.dropped"),
 		a.dungeonName(c.Name))
 	a.trace.note("丟棄 %s 於 (%d,%d) 地圖%d",
 		c.Name, a.party.X(), a.party.Y(), a.mapID)
@@ -290,7 +290,7 @@ func (a *app) pickUseTarget(mode dungeonMode) {
 			}
 		}
 		if len(others) == 0 {
-			a.message = a.tr.UI("dungeon.use.noother", "身上沒有別的地城道具")
+			a.message = a.tr.UI("dungeon.use.noother")
 			a.dungeon = nil
 			return
 		}
@@ -299,7 +299,7 @@ func (a *app) pickUseTarget(mode dungeonMode) {
 		spots := game.ItemsUnderfoot(a.itemloc, a.dungeonItems,
 			byte(a.party.X()), byte(a.party.Y()), byte(a.mapID))
 		if len(spots) == 0 {
-			a.message = a.tr.UI("dungeon.nothing", "這裡沒有東西")
+			a.message = a.tr.UI("dungeon.nothing")
 			a.dungeon = nil
 			return
 		}
@@ -323,7 +323,7 @@ func (a *app) useDungeonItem(target int, targetName string, onCharacter bool) {
 	res := game.UseDungeonItem(a.dungeonItems, src.Name, target)
 	if res.Outcome == game.DungeonUseNothing {
 		// **什麼都不消耗** —— 用錯東西不該懲罰玩家。
-		a.message = a.tr.UI("dungeon.nothing.happens", "什麼也沒發生")
+		a.message = a.tr.UI("dungeon.nothing.happens")
 		a.trace.note("使用 %s → %s：什麼也沒發生", src.Name, targetName)
 		return
 	}
@@ -339,10 +339,10 @@ func (a *app) useDungeonItem(target int, targetName string, onCharacter bool) {
 		a.teleportTo(res.X, res.Y, int(res.MapID))
 	case game.DungeonUsePassage:
 		if err := a.writeTile(res.X, res.Y, res.Tile); err != nil {
-			a.message = fmt.Sprintf(a.tr.UI("dungeon.map.writefailed", "改寫地圖失敗：%v"), err)
+			a.message = fmt.Sprintf(a.tr.UI("dungeon.map.writefailed"), err)
 			return
 		}
-		a.message = a.tr.UI("dungeon.something", "發生了什麼事……")
+		a.message = a.tr.UI("dungeon.something")
 	case game.DungeonUseStory:
 		a.runDungeonStory(res.Story)
 	}
@@ -381,7 +381,7 @@ func (a *app) becomeDungeonItem(src game.CarriedDungeonItem, target int,
 			a.itemloc.Drop(i, byte(a.party.X()), byte(a.party.Y()), byte(a.mapID))
 		}
 	}
-	a.message = fmt.Sprintf(a.tr.UI("dungeon.yousee", "你看到 %s"),
+	a.message = fmt.Sprintf(a.tr.UI("dungeon.yousee"),
 		a.dungeonName(newName))
 }
 
@@ -405,11 +405,11 @@ func (a *app) runDungeonStory(n int) {
 	case 1:
 		// 冰之祭壇 ＋ 祈禱卷軸 ＝ 結局的不朽／凡人抉擇。
 		if a.save.PlotStage == 0 {
-			a.message = a.tr.UI("dungeon.story.notyet", "什麼也沒發生")
+			a.message = a.tr.UI("dungeon.story.notyet")
 			return
 		}
 		if a.save.EndingOffered != 0 {
-			a.message = a.tr.UI("dungeon.story.done", "已經沒有下文了")
+			a.message = a.tr.UI("dungeon.story.done")
 			return
 		}
 		a.save.EndingOffered = 1
@@ -435,7 +435,7 @@ func (a *app) teleportTo(x, y, mapID int) {
 	} else {
 		a.party.TeleportTo(x, y)
 	}
-	a.message = a.tr.UI("dungeon.something", "發生了什麼事……")
+	a.message = a.tr.UI("dungeon.something")
 	a.trace.note("傳送到 (%d,%d) 地圖%d", x, y, mapID)
 }
 
@@ -447,12 +447,12 @@ func (a *app) viewItemHint(spot game.DungeonSpot) {
 	a.dungeon = nil
 	with, ok := game.ViewItemHint(a.dungeonItems, spot.Index)
 	if !ok {
-		a.message = a.tr.UI("viewitem.nothing", "看不出什麼名堂")
+		a.message = a.tr.UI("viewitem.nothing")
 		a.trace.note("鑑物 %s：沒有搭配對象", spot.Item.Name)
 		return
 	}
 	// 原版是 `An image of %s` ＋ `comes to you` 兩行。
-	a.message = fmt.Sprintf(a.tr.UI("viewitem.image", "%s 的影像浮現在腦海裡"),
+	a.message = fmt.Sprintf(a.tr.UI("viewitem.image"),
 		a.dungeonName(with))
 	a.trace.note("鑑物 %s → %s", spot.Item.Name, with)
 }
@@ -468,18 +468,18 @@ func (a *app) moveDungeonItem(spot game.DungeonSpot) {
 
 	switch res.Kind {
 	case game.MoveCant:
-		a.message = a.tr.UI("dungeon.cant", "你辦不到")
+		a.message = a.tr.UI("dungeon.cant")
 		a.trace.note("移動 %s：推不動", spot.Item.Name)
 	case game.MoveNothingHappens:
-		a.message = a.tr.UI("dungeon.nothing.happens", "什麼也沒發生")
+		a.message = a.tr.UI("dungeon.nothing.happens")
 		a.trace.note("移動 %s：什麼也沒發生", spot.Item.Name)
 	case game.MoveChanged:
 		if err := a.writeTile(res.X, res.Y, res.Tile); err != nil {
-			a.message = fmt.Sprintf(a.tr.UI("dungeon.map.writefailed", "改寫地圖失敗：%v"), err)
+			a.message = fmt.Sprintf(a.tr.UI("dungeon.map.writefailed"), err)
 			a.trace.note("移動 %s 失敗：%v", spot.Item.Name, err)
 			return
 		}
-		a.message = a.tr.UI("dungeon.something", "發生了什麼事……")
+		a.message = a.tr.UI("dungeon.something")
 		a.trace.note("移動 %s：(%d,%d) → tile %d",
 			spot.Item.Name, res.X, res.Y, res.Tile)
 	}
@@ -508,7 +508,7 @@ func (a *app) examineDungeonItem(c game.CarriedDungeonItem) {
 	if !ok {
 		// 原版 ds:0x241a `You see nothing special about the %s`。
 		a.message = fmt.Sprintf(
-			a.tr.UI("dungeon.nothing.special", "%s 看不出有什麼特別"),
+			a.tr.UI("dungeon.nothing.special"),
 			a.dungeonName(c.Name))
 		a.trace.note("檢視 %s：沒什麼特別", c.Name)
 		return
@@ -541,11 +541,11 @@ func (a *app) dungeonName(name string) string {
 func (a *app) refusalText(index int, r game.DungeonRefusal, msg string) string {
 	switch r {
 	case game.TakeSilent:
-		return a.tr.UI("dungeon.cant", "你辦不到")
+		return a.tr.UI("dungeon.cant")
 	case game.TakeNoRoom:
-		return a.tr.UI("dungeon.noroom", "放不下了")
+		return a.tr.UI("dungeon.noroom")
 	case game.TakeGone:
-		return a.tr.UI("dungeon.gone", "那件東西已經不在這裡了")
+		return a.tr.UI("dungeon.gone")
 	case game.TakeFromData:
 		return a.tr.Event(dungeonSourceFile,
 			gamedata.DungeonItemFirstString+index*gamedata.DungeonItemFields+1, msg)
@@ -589,28 +589,28 @@ func (a *app) drawDungeon(dst *ebiten.Image) {
 
 	// 「用在哪」那一頁自成一格，先擋在前面。
 	if d.onMenu {
-		line(fmt.Sprintf(a.tr.UI("dungeon.use.on", "%s 要用在哪？"),
+		line(fmt.Sprintf(a.tr.UI("dungeon.use.on"),
 			a.dungeonName(d.source.Name)))
 		line("")
 		for i, t := range useTargets {
 			line(memberMark(d.cursor, i) + t.key + "：" +
-				a.tr.UI("dungeon.use.target."+t.key, t.label))
+				a.tr.UI("dungeon.use.target."+t.key))
 		}
 		line("")
-		line(a.tr.UI("dungeon.keys", "↑↓：選擇　Enter：確定　Esc：返回"))
+		line(a.tr.UI("dungeon.keys"))
 		return
 	}
 
 	switch {
 	case d.mode.fromInventory():
-		title := a.tr.UI("dungeon.drop.title", "放下哪一件？")
+		title := a.tr.UI("dungeon.drop.title")
 		switch d.mode {
 		case dungeonExamine:
-			title = a.tr.UI("dungeon.examine.title", "看哪一件？")
+			title = a.tr.UI("dungeon.examine.title")
 		case dungeonUse:
-			title = a.tr.UI("dungeon.use.title", "用哪一件？")
+			title = a.tr.UI("dungeon.use.title")
 		case dungeonUseChar:
-			title = fmt.Sprintf(a.tr.UI("dungeon.use.onwhat", "%s 用在哪一件？"),
+			title = fmt.Sprintf(a.tr.UI("dungeon.use.onwhat"),
 				a.dungeonName(d.source.Name))
 		}
 		line(title)
@@ -621,24 +621,24 @@ func (a *app) drawDungeon(dst *ebiten.Image) {
 				a.members[c.Member].Name))
 		}
 	case d.stage == 1:
-		line(fmt.Sprintf(a.tr.UI("dungeon.take.who", "誰來拿 %s？"),
+		line(fmt.Sprintf(a.tr.UI("dungeon.take.who"),
 			a.dungeonName(d.spots[d.pick].Item.Name)))
 		line("")
 		for i := range a.members {
 			c := &a.members[i]
-			line(fmt.Sprintf(a.tr.UI("dungeon.member.freeslots", "%s%s　空 %d 格"),
+			line(fmt.Sprintf(a.tr.UI("dungeon.member.freeslots"),
 				memberMark(d.cursor, i), c.Name, freeSlots(c)))
 		}
 	default:
-		title := a.tr.UI("dungeon.take.title", "拿哪一件？")
+		title := a.tr.UI("dungeon.take.title")
 		switch d.mode {
 		case dungeonMove:
-			title = a.tr.UI("dungeon.move.title", "推哪一件？")
+			title = a.tr.UI("dungeon.move.title")
 		case dungeonUseRoom:
-			title = fmt.Sprintf(a.tr.UI("dungeon.use.onwhat", "%s 用在哪一件？"),
+			title = fmt.Sprintf(a.tr.UI("dungeon.use.onwhat"),
 				a.dungeonName(d.source.Name))
 		case dungeonViewItem:
-			title = a.tr.UI("viewitem.title", "鑑定哪一件？")
+			title = a.tr.UI("viewitem.title")
 		}
 		line(title)
 		line("")
@@ -651,7 +651,7 @@ func (a *app) drawDungeon(dst *ebiten.Image) {
 		}
 	}
 	line("")
-	line(a.tr.UI("dungeon.keys", "↑↓：選擇　Enter：確定　Esc：返回"))
+	line(a.tr.UI("dungeon.keys"))
 }
 
 // freeSlots 是這名角色還有幾個空格 —— 拿之前先看得到，

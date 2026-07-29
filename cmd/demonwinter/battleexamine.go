@@ -70,33 +70,33 @@ func (a *app) drawExamine(line func(string)) {
 	line("")
 
 	if card.Stats {
-		line(fmt.Sprintf("%s：%3d", a.tr.UI("examine.strength", "力量"), card.Strength))
-		line(fmt.Sprintf("%s：%3d", a.tr.UI("examine.skill", "技巧"), card.Skill))
-		line(fmt.Sprintf("%s：%3d", a.tr.UI("examine.speed", "速度"), card.Speed))
+		line(fmt.Sprintf("%s：%3d", a.tr.UI("examine.strength"), card.Strength))
+		line(fmt.Sprintf("%s：%3d", a.tr.UI("examine.skill"), card.Skill))
+		line(fmt.Sprintf("%s：%3d", a.tr.UI("examine.speed"), card.Speed))
 		line(fmt.Sprintf("%s：%3d %s",
-			a.tr.UI("examine.armor", "護甲"), card.Armor,
-			a.tr.UI("examine.armor.unit", "點")))
+			a.tr.UI("examine.armor"), card.Armor,
+			a.tr.UI("examine.armor.unit")))
 		line(fmt.Sprintf("%s：%s",
-			a.tr.UI("examine.weapon", "武器"), a.weaponName(card.WeaponIndex)))
+			a.tr.UI("examine.weapon"), a.weaponName(card.WeaponIndex)))
 	} else {
 		// 原版在沒有怪物學識時整組屬性都不印。這裡多說一句為什麼 ——
 		// 不然玩家只會看到一片空白，以為是壞掉了。
-		line(a.tr.UI("examine.nolore", "（沒有人具備怪物學識，看不出牠的能耐）"))
+		line(a.tr.UI("examine.nolore"))
 	}
 
 	if card.ShowHPSP {
 		line(fmt.Sprintf("%s：%3d　%s：%3d",
-			a.tr.UI("examine.hp", "生命"), card.HP,
-			a.tr.UI("examine.sp", "法力"), card.SP))
+			a.tr.UI("examine.hp"), card.HP,
+			a.tr.UI("examine.sp"), card.SP))
 	}
 	if card.TargetName != "" {
 		line("")
-		line(fmt.Sprintf(a.tr.UI("examine.target", "牠打算攻擊 %s"), card.TargetName))
+		line(fmt.Sprintf(a.tr.UI("examine.target"), card.TargetName))
 	}
 
 	line("")
 	line(fmt.Sprintf("%d / %d", a.examine.at+1, len(a.examine.order)))
-	line(a.tr.UI("examine.keys", "C：下一個　B：上一個　Q／Esc：離開"))
+	line(a.tr.UI("examine.keys"))
 }
 
 // examineStatusLine 是狀態那一行。束縛才帶等級（原版 `1 < 狀態 < 5`）。
@@ -104,7 +104,7 @@ func (a *app) examineStatusLine(card game.ExamineCard) string {
 	if card.Status == game.StatusNormal {
 		return ""
 	}
-	name := a.tr.UI(examineStatusKey(card.Status), examineStatusZH(card.Status))
+	name := a.tr.UI(examineStatusKey(card.Status))
 	if card.ShowBindLevel {
 		return fmt.Sprintf("%s>%d", name, card.BindLevel)
 	}
@@ -143,13 +143,13 @@ func (a *app) weaponName(idx int) string {
 		idx = -idx
 	}
 	names := a.strings.WeaponTypeNames()
-	name := a.tr.UI("examine.weapon.none", "徒手")
+	name := a.tr.UI("examine.weapon.none")
 	if idx > 0 && idx <= len(names) {
 		// 武器類型 idx（1 起算）對應 ITEMS.DAT 索引 idx−1。
 		name = a.tr.Event(itemSourceFile, idx-1, names[idx-1])
 	}
 	if poisoned {
-		name += a.tr.UI("examine.weapon.poison", "（附毒）")
+		name += a.tr.UI("examine.weapon.poison")
 	}
 	return name
 }

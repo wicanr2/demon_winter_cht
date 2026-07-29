@@ -104,11 +104,11 @@ func (a *app) writeSpecialTiles() error {
 // saveNow 存檔並把結果寫進狀態訊息。
 func (a *app) saveNow() {
 	if err := a.writeSave(); err != nil {
-		a.message = fmt.Sprintf(a.tr.UI("save.error", "存檔失敗：%v"), err)
+		a.message = fmt.Sprintf(a.tr.UI("save.error"), err)
 		return
 	}
 	// 訊息要塞進狀態欄的 21 格，完整路徑放不下（會被裁一半，看起來像壞掉）。
-	a.message = a.tr.UI("save.done", "已存檔")
+	a.message = a.tr.UI("save.done")
 	if logToStderr {
 		log.Printf("存檔寫到 %s", a.savePath)
 	}
@@ -130,7 +130,7 @@ func (a *app) updateQuitDialog() (bool, error) {
 		if err := a.writeSave(); err != nil {
 			// 存不進去就別走 —— 直接退出等於把進度丟了還不告訴人。
 			a.quitting = false
-			a.message = fmt.Sprintf(a.tr.UI("save.error_stay", "存檔失敗，沒有離開：%v"), err)
+			a.message = fmt.Sprintf(a.tr.UI("save.error_stay"), err)
 			return true, nil
 		}
 		return true, ebiten.Termination
@@ -152,10 +152,10 @@ func (a *app) drawQuitDialog(dst *ebiten.Image) {
 	ui.StrokeRect(dst, x, y, w, h, markerColor)
 
 	tx, ty := x+ui.LineHeight, y+ui.LineHeight
-	a.font.Draw(dst, a.tr.UI("save.quit.header", "要離開遊戲嗎？"), tx, ty)
-	a.font.Draw(dst, a.tr.UI("save.quit.yes", "Y：存檔後離開"), tx, ty+ui.LineHeight*3/2)
-	a.font.Draw(dst, a.tr.UI("save.quit.no", "N：不存檔直接離開"), tx, ty+ui.LineHeight*5/2)
-	a.font.Draw(dst, a.tr.UI("save.quit.cancel", "Esc：繼續玩"), tx, ty+ui.LineHeight*7/2)
+	a.font.Draw(dst, a.tr.UI("save.quit.header"), tx, ty)
+	a.font.Draw(dst, a.tr.UI("save.quit.yes"), tx, ty+ui.LineHeight*3/2)
+	a.font.Draw(dst, a.tr.UI("save.quit.no"), tx, ty+ui.LineHeight*5/2)
+	a.font.Draw(dst, a.tr.UI("save.quit.cancel"), tx, ty+ui.LineHeight*7/2)
 }
 
 // quitDialogBG 是確認框的底色。刻意不透明 —— 蓋住底下的畫面才看得清楚在問什麼。

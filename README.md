@@ -127,6 +127,9 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 按視窗關閉鈕時會先寫入完整進度，任一存檔步驟失敗就留在遊戲並顯示錯誤；
 詳細按鍵、資料邊界與實機證據見
 [`操作模式、F1 說明與安全離開`](docs/ui/04-control-modes-and-safe-exit.md)。
+兩套命令的文字、復古順序、tab 與左右欄配置均由
+[`ui.json`](assets/lang/zh-Hant/ui.json) 驅動；遷移前後固定畫面像素差異為 0，
+見 [`docs/playtest/28`](docs/playtest/28-ui-json-data-separation.md)。
 
 實際樹木索引 `0x04` 單株古樹、`0x07` 前後雙樹、`0x0b` 低矮林緣已各自重畫，
 並完成常態／冬季配對；它們不是共用一張森林圖：
@@ -218,7 +221,7 @@ tools/package-release.sh 2026.07.29
 | 反組譯筆記 | 115 篇；主線、海戰、時間進位、arena、命中修正、營地法術、魔法物品充能與幻象行動前 20% 消失均有位址證據 |
 | 資料格式 | 地圖、事件、道具、怪物、存檔、字型、圖形、音效皆已解 |
 | Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、音效 |
-| 遊戲內文字中文化 | **500/500（100%）** 資料字串，另有 **749 條**中文介面文案 |
+| 遊戲內文字中文化 | **500/500（100%）** 原版資料字串；另有 **766 條** JSON 介面文案，玩家程式硬編中文 0 條 |
 | 試玩驗收 | **完成前期垂直切片與後期高風險抽樣**；可重播腳本與 trace 工具在 `tools/playthrough/` |
 
 ---
@@ -257,6 +260,8 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 | 檔案 | 內容 |
 |---|---|
 | [`translations/glossary.md`](translations/glossary.md) | 統一譯名表。種族、職業、技能、法術、裝備、附魔、神祇、城鎮、介面指令等。全專案唯一的譯名真相來源 |
+| [`assets/lang/zh-Hant/ui.json`](assets/lang/zh-Hant/ui.json) | 766 條玩家介面文案；Go 只保留 key、熱鍵與 action |
+| [`docs/i18n/ui-catalog.md`](docs/i18n/ui-catalog.md) | JSON schema、嚴格缺 key 行為與 `uicheck` 發行閘門 |
 
 譯名以 `DEMON.INT` 內的實際字串為準，因此收錄的是原版拼字（`Shamen`、`Xorcise`、`Small ax`），
 而非手冊上的正確拼法。手冊與遊戲用語不同處（例如 Apple II 版 `Sense magic` 對 DOS 版 `Detect aura`）

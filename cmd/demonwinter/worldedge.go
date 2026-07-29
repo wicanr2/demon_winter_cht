@@ -43,7 +43,7 @@ func (a *app) crossSubMapEdge(prevX, prevY int) bool {
 
 	if res.Blocked {
 		a.party.TeleportTo(prevX, prevY)
-		a.message = a.tr.UI("world.edge", "船員拒絕再往前航行了……")
+		a.message = a.tr.UI("world.edge")
 		a.trace.note("世界邊緣：子地圖 %d 擋住，退回 (%d,%d)", a.mapID, prevX, prevY)
 		return true
 	}

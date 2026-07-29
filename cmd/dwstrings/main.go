@@ -99,8 +99,8 @@ func dumpEvents(args []string) {
 			// 一筆記錄，是同一筆的第二段，沒有自己的記錄索引可用。
 			if ev.IsChainRedraw() && strings.TrimSpace(ev.ChainRedrawText()) != "" {
 				cat.Entries = append(cat.Entries, i18n.Entry{
-					Index: -1,
-					Name:  fmt.Sprintf("chain.%s.%d", strings.ToUpper(name), i),
+					Index:  -1,
+					Name:   fmt.Sprintf("chain.%s.%d", strings.ToUpper(name), i),
 					Source: ev.ChainRedrawText(),
 				})
 			}

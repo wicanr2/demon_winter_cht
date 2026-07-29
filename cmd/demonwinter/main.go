@@ -331,8 +331,7 @@ func (a *app) update() error {
 	// SetWindowClosingHandled(true) 讓存檔失敗時可以留在遊戲，不丟進度。
 	if ebiten.IsWindowBeingClosed() {
 		if err := a.writeSave(); err != nil {
-			a.message = fmt.Sprintf(a.tr.UI("save.close_error_stay",
-				"自動存檔失敗，沒有關閉：%v"), err)
+			a.message = fmt.Sprintf(a.tr.UI("save.close_error_stay"), err)
 			return nil
 		}
 		return ebiten.Termination
@@ -343,13 +342,13 @@ func (a *app) update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyF8) {
 		if err := a.toggleVideoTheme(); err != nil {
 			log.Printf("切換顯示主題：%v", err)
-			a.message = fmt.Sprintf(a.tr.UI("theme.failed", "切換顯示主題失敗：%v"), err)
+			a.message = fmt.Sprintf(a.tr.UI("theme.failed"), err)
 		}
 	}
 	// F6：操作配置是玩家偏好，不是規則狀態；切換後不改座標、面向或存檔。
 	if inpututil.IsKeyJustPressed(ebiten.KeyF6) {
 		a.controls = a.controls.next()
-		a.message = fmt.Sprintf(a.tr.UI("controls.changed", "操作模式：%s"), a.controls.label())
+		a.message = fmt.Sprintf(a.tr.UI("controls.changed"), a.tr.UI(a.controls.labelKey()))
 	}
 	// F1 永遠是玩家說明。它刻意放在各畫面分派之前，因此戰鬥、城鎮、
 	// 地城與其他模態中都能開啟，關掉後回到原畫面。
@@ -538,14 +537,14 @@ func (a *app) update() error {
 
 		switch res {
 		case game.MoveBlocked:
-			a.message = a.tr.UI("world.blocked", "前方無法通行")
+			a.message = a.tr.UI("world.blocked")
 		case game.MoveExitedSubmap:
-			a.message = a.tr.UI("world.leftsubmap", "離開子地圖")
+			a.message = a.tr.UI("world.leftsubmap")
 		default:
 			a.message = ""
 		}
 		if advanced {
-			a.message = fmt.Sprintf(a.tr.UI("world.hour", "時間來到 %d 時"), a.clock.Hour())
+			a.message = fmt.Sprintf(a.tr.UI("world.hour"), a.clock.Hour())
 		}
 		if res == game.MoveOK {
 			a.stepBoat(tile)
@@ -559,7 +558,7 @@ func (a *app) update() error {
 			// 沒接這一格的話玩家可以一路走到 37 時，與手冊「太暗時會被
 			// 強制紮營」及原版 `1000:018b` 的 "You are sleepy" 不符。
 			if advanced && a.clock.ForcedCamp() {
-				a.message = a.tr.UI("world.sleepy", "你睏了，必須紮營休息。")
+				a.message = a.tr.UI("world.sleepy")
 				a.openCamp()
 				return nil
 			}
@@ -1031,12 +1030,12 @@ func drawMapFrame(dst *ebiten.Image, cellW, cellH int) {
 // drawTopBar 畫全寬第 0 列。世界畫面顯示資源，戰鬥畫面改以回合為首要資訊；
 // 日期留在右側，切換畫面時不必猜時間是否推進。
 func (a *app) drawTopBar(dst *ebiten.Image, battle bool) {
-	left := fmt.Sprintf(a.tr.UI("status.goldfood", "金幣 %d　糧食 %d"),
+	left := fmt.Sprintf(a.tr.UI("status.goldfood"),
 		a.gold(), a.save.Rations)
 	if battle && a.battle != nil {
-		left = fmt.Sprintf(a.tr.UI("battle.header.round", "戰鬥　第 %d 回合"), a.battle.Round())
+		left = fmt.Sprintf(a.tr.UI("battle.header.round"), a.battle.Round())
 	}
-	right := fmt.Sprintf(a.tr.UI("status.datetime", "%2d時 %2d日 %s月"),
+	right := fmt.Sprintf(a.tr.UI("status.datetime"),
 		a.clock.Hour(), a.clock.Day(), a.monthName())
 	a.font.Draw(dst, left, layout.LogX, 0)
 	a.font.Draw(dst, right, layout.StatusX, 0)
@@ -1132,7 +1131,7 @@ func (a *app) checkRandomEncounter(tile byte) {
 	if len(mons) == 0 {
 		return
 	}
-	a.logf(a.tr.UI("world.encounter", "在%s遭遇了敵人"), terrain.Name())
+	a.logf(a.tr.UI("world.encounter"), terrain.Name())
 	a.startBattle(mons)
 }
 
@@ -1222,7 +1221,7 @@ func (a *app) checkEvent(tile byte) {
 		case game.SiteTown:
 			a.enterTownAt(a.party.X(), a.party.Y())
 		case game.SiteRuins:
-			a.message = a.tr.UI("site.ruins", "隊伍走過一片廢墟")
+			a.message = a.tr.UI("site.ruins")
 		case game.SiteTemple:
 			a.openWorldTemple(a.party.X(), a.party.Y())
 		case game.SiteCollege:
@@ -1261,7 +1260,7 @@ func (a *app) checkEvent(tile byte) {
 		}
 		if hit.Teleport {
 			a.party.TeleportTo(int(hit.Dest.X), int(hit.Dest.Y))
-			a.message = fmt.Sprintf(a.tr.UI("world.teleported", "被傳送到 (%d,%d)"), hit.Dest.X, hit.Dest.Y)
+			a.message = fmt.Sprintf(a.tr.UI("world.teleported"), hit.Dest.X, hit.Dest.Y)
 			return
 		}
 		// 類別 5 走完全不同的一條：那張 16 格地點劇情表
@@ -1299,7 +1298,7 @@ func (a *app) checkEvent(tile byte) {
 func (a *app) showEvent(idx int) {
 	ev, err := a.events.ByIndex(idx)
 	if err != nil {
-		a.message = fmt.Sprintf(a.tr.UI("event.outofrange", "事件 %d 超出範圍"), idx)
+		a.message = fmt.Sprintf(a.tr.UI("event.outofrange"), idx)
 		return
 	}
 
@@ -1316,11 +1315,10 @@ func (a *app) showEvent(idx int) {
 	// 與符文（`docs/re/72`）是同一類「解碼做完沒接上」的洞。
 	a.pendingChain = ""
 	if ev.IsChainRedraw() {
-		orig := ev.ChainRedrawText()
 		// 名稱型 key —— 第二段不是獨立記錄，沒有自己的索引
 		// （`cmd/dwstrings` 產生的是 `chain.<檔名>.<索引>`）。
 		a.pendingChain = a.tr.UI(
-			fmt.Sprintf("chain.%s.%d", strings.ToUpper(a.eventsFile), idx), orig)
+			fmt.Sprintf("chain.%s.%d", strings.ToUpper(a.eventsFile), idx))
 	}
 
 	// Count != 0 代表這一格帶遭遇；文字讀完才開打。
@@ -1343,7 +1341,7 @@ var debugBattleMonsters = []int{2, 3, 4, 1}
 func (a *app) terrainForBattle() *game.BattleTerrain {
 	t, err := game.NewBattleTerrain(a.tiles, a.party.X(), a.party.Y())
 	if err != nil {
-		a.message = fmt.Sprintf(a.tr.UI("battle.terrainfailed", "戰場地形切不出來：%v"), err)
+		a.message = fmt.Sprintf(a.tr.UI("battle.terrainfailed"), err)
 		return nil
 	}
 	return t
@@ -1481,16 +1479,14 @@ var logToStderr = os.Getenv("DW_LOG") != ""
 
 const battleLogLines = 8
 
-// uiLabel 是「key ＋ 中文 fallback」的一組。套件層的表 init 時還沒有
-// translator，所以不能在那裡就翻好 —— 翻譯發生在用的時候。
-// `dwstrings uicheck` 認得這個形式（同一行有 key 形狀的字面值）。
-type uiLabel struct{ key, zh string }
+// uiLabel 只保存資料 key；玩家看得到的文字全部在 ui.json。
+type uiLabel struct{ key string }
 
 var facingName = []uiLabel{
-	{"facing.north", "北"},
-	{"facing.east", "東"},
-	{"facing.south", "南"},
-	{"facing.west", "西"},
+	{"facing.north"},
+	{"facing.east"},
+	{"facing.south"},
+	{"facing.west"},
 }
 
 // facingLabel 回傳面向的中文名。
@@ -1499,7 +1495,7 @@ func (a *app) facingLabel(f game.Facing) string {
 	if i < 0 || i >= len(facingName) {
 		return "?"
 	}
-	return a.tr.UI(facingName[i].key, facingName[i].zh)
+	return a.tr.UI(facingName[i].key)
 }
 
 // monthSourceFile 是月份名稱翻譯目錄的 key，與 dwstrings 產生時一致。
@@ -1522,36 +1518,36 @@ func (a *app) monthName() string {
 }
 
 var statusDebugKeys = []uiLabel{
-	{"status.debug.header", "── 偵錯　F12 收起"},
-	{"status.debug.keys1", "B 開打　F3 進城"},
-	{"status.debug.keys2", "F4 商隊"},
+	{"status.debug.header"},
+	{"status.debug.keys1"},
+	{"status.debug.keys2"},
 }
 
 var worldMenuLabels = []uiLabel{
-	{"world.menu.move", "方向鍵 行走"},
-	{"world.menu.party", "[P] 隊伍"},
-	{"world.menu.save", "[S] 存檔"},
-	{"world.menu.camp", "[C] 紮營"},
-	{"world.menu.take", "[T] 拿取"},
-	{"world.menu.drop", "[D] 丟棄"},
-	{"world.menu.examine", "[E] 檢視"},
-	{"world.menu.moveitem", "[M] 推開"},
-	{"world.menu.use", "[U] 使用"},
-	{"world.menu.inspect", "[I] 探查"},
-	{"world.menu.reread", "[R] 重讀"},
-	{"world.menu.traps", "[L] 陷阱"},
-	{"world.menu.viewroom", "[V] 觀室"},
-	{"world.menu.viewitem", "[X] 鑑物"},
-	{"world.menu.manual", "[F1] 說明"},
-	{"world.menu.controls", "[F6] 模式"},
-	{"world.menu.quit", "[F10] 離開"},
+	{"world.menu.move"},
+	{"world.menu.party"},
+	{"world.menu.save"},
+	{"world.menu.camp"},
+	{"world.menu.take"},
+	{"world.menu.drop"},
+	{"world.menu.examine"},
+	{"world.menu.moveitem"},
+	{"world.menu.use"},
+	{"world.menu.inspect"},
+	{"world.menu.reread"},
+	{"world.menu.traps"},
+	{"world.menu.viewroom"},
+	{"world.menu.viewitem"},
+	{"world.menu.manual"},
+	{"world.menu.controls"},
+	{"world.menu.quit"},
 }
 
 // hintLines 把一組 uiLabel 翻成可以直接畫的字串。
 func (a *app) hintLines(list []uiLabel) []string {
 	out := make([]string, len(list))
 	for i, l := range list {
-		out[i] = a.tr.UI(l.key, l.zh)
+		out[i] = a.tr.UI(l.key)
 	}
 	return out
 }
@@ -1587,7 +1583,7 @@ func (a *app) drawWorldMenu(dst *ebiten.Image) {
 	dungeon := a.mapID < worldMapMinID
 	items := make([]ui.MenuItem, len(worldMenuLabels))
 	for i, l := range worldMenuLabels {
-		items[i] = ui.MenuItem{Label: a.tr.UI(l.key, l.zh), Enabled: true}
+		items[i] = ui.MenuItem{Label: a.tr.UI(l.key), Enabled: true}
 	}
 	// 地城物件與靈視命令在世界地圖上沒有目標；重讀只在目前踩過
 	// 可重讀事件時可用。保留項目並畫網點，不把功能藏起來。
@@ -1595,12 +1591,11 @@ func (a *app) drawWorldMenu(dst *ebiten.Image) {
 		items[i].Enabled = dungeon
 	}
 	items[10].Enabled = a.reread > 0
-	a.drawOperationMenu(dst, items, []ui.CommandGroup{
-		commandGroup(a.tr.UI("command.tab.common", "常用"), 0, items[0:4]),
-		commandGroup(a.tr.UI("command.tab.explore", "探索"), 0, items[10:14]),
-		commandGroup(a.tr.UI("command.tab.items", "物品"), 1, items[4:10]),
-		commandGroup(a.tr.UI("command.tab.system", "系統"), 1, items[14:17]),
-	})
+	byKey := make(map[string]ui.MenuItem, len(items))
+	for i, label := range worldMenuLabels {
+		byKey[label.key] = items[i]
+	}
+	a.drawOperationMenu(dst, "world", byKey)
 }
 
 // 常駐隊伍表的欄寬（排版格）。表頭與資料列**共用這組常數** ——
@@ -1632,7 +1627,7 @@ func (a *app) partyStatusLines() []string {
 			textlayout.PadCellsLeft(hp, partyColHP) + " " +
 			textlayout.PadCellsLeft(sp, partyColSP)
 	}
-	out := []string{"", row("#", a.tr.UI("status.col.name", "名字"), a.tr.UI("status.col.hp", "生命"), a.tr.UI("status.col.sp", "法力"))}
+	out := []string{"", row("#", a.tr.UI("status.col.name"), a.tr.UI("status.col.hp"), a.tr.UI("status.col.sp"))}
 	for i := range a.members {
 		c := &a.members[i]
 		out = append(out, row(
@@ -1647,42 +1642,42 @@ func (a *app) partyStatusLines() []string {
 // 這幾行原本常駐在狀態欄最上面、字最大的位置，而 `圖塊 DEMON.SHE`
 // 對玩家沒有任何意義 —— 它們讓畫面看起來像工具而不像遊戲。
 func (a *app) debugStatusLines() []string {
-	out := []string{a.tr.UI(statusDebugKeys[0].key, statusDebugKeys[0].zh)}
+	out := []string{a.tr.UI(statusDebugKeys[0].key)}
 	out = append(out,
 		// **標「內縮」不標「光照」。** 印的是視窗四邊各縮掉幾格
 		// （原版 `ds:0x4c86`），那是 `4 − 光照`，方向相反 ——
 		// 標成「光照」的話「光照 3」看起來像很亮，其實是只剩中央 3×3。
-		fmt.Sprintf(a.tr.UI("status.debug.steps", "步數 %2d  內縮 %d"),
+		fmt.Sprintf(a.tr.UI("status.debug.steps"),
 			a.clock.Steps(), a.viewInset()),
-		fmt.Sprintf(a.tr.UI("status.debug.pos", "座標 %2d,%-2d 面向%s"),
+		fmt.Sprintf(a.tr.UI("status.debug.pos"),
 			a.party.X(), a.party.Y(), a.facingLabel(a.party.Facing())),
-		fmt.Sprintf(a.tr.UI("status.debug.tile", "地形 %3d  深度 %d"),
+		fmt.Sprintf(a.tr.UI("status.debug.tile"),
 			a.lastTile, a.party.Depth()),
-		fmt.Sprintf(a.tr.UI("status.debug.tileset", "圖塊 %s"), a.tileset().Name()),
+		fmt.Sprintf(a.tr.UI("status.debug.tileset"), a.tileset().Name()),
 	)
 	return append(out, a.hintLines(statusDebugKeys[1:])...)
 }
 
 // raceName／className 的索引就是角色記錄的種族／職業值。
 var raceName = []uiLabel{
-	{"race.human", "人類"},
-	{"race.elf", "精靈"},
-	{"race.dwarf", "矮人"},
-	{"race.darkelf", "黑暗精靈"},
-	{"race.troll", "巨魔"},
+	{"race.human"},
+	{"race.elf"},
+	{"race.dwarf"},
+	{"race.darkelf"},
+	{"race.troll"},
 }
 
 var className = []uiLabel{
-	{"class.ranger", "遊俠"},
-	{"class.paladin", "聖騎士"},
-	{"class.barbarian", "蠻族"},
-	{"class.monk", "武僧"},
-	{"class.cleric", "牧師"},
-	{"class.thief", "盜賊"},
-	{"class.wizard", "巫師"},
-	{"class.sorcerer", "術士"},
-	{"class.visionary", "靈視者"},
-	{"class.scholar", "學者"},
+	{"class.ranger"},
+	{"class.paladin"},
+	{"class.barbarian"},
+	{"class.monk"},
+	{"class.cleric"},
+	{"class.thief"},
+	{"class.wizard"},
+	{"class.sorcerer"},
+	{"class.visionary"},
+	{"class.scholar"},
 }
 
 // label 從「key ＋ 中文」的表裡取一項，索引超界回 `?`。
@@ -1690,7 +1685,7 @@ func (a *app) label(list []uiLabel, i int) string {
 	if i < 0 || i >= len(list) {
 		return "?"
 	}
-	return a.tr.UI(list[i].key, list[i].zh)
+	return a.tr.UI(list[i].key)
 }
 
 // drawRoster 顯示隊伍五人的基本資料。
@@ -1703,7 +1698,7 @@ func (a *app) drawRoster(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
-	line(a.tr.UI("roster.header", "隊伍名冊"))
+	line(a.tr.UI("roster.header"))
 	for _, c := range a.members {
 		pts, err := c.RemainingSkillPoints(a.tables)
 		if err != nil {
@@ -1711,16 +1706,16 @@ func (a *app) drawRoster(dst *ebiten.Image) {
 		}
 		// 種族名 2–4 格（人類／黑暗精靈）、武器名 2–3 格 —— 不補到固定寬度，
 		// 後面的「生命」「護甲」欄會跟著左右跳。
-		line(fmt.Sprintf(a.tr.UI("roster.nameline", "%s %d級 %s"),
+		line(fmt.Sprintf(a.tr.UI("roster.nameline"),
 			textlayout.PadCells(c.Name, 8), c.Level, a.label(className, int(c.Class))))
-		line(fmt.Sprintf(a.tr.UI("roster.hpline", " %s 生命 %3d/%3d"),
+		line(fmt.Sprintf(a.tr.UI("roster.hpline"),
 			textlayout.PadCells(a.label(raceName, int(c.Race)), 4), c.CurrentHP, c.MaxHP))
-		line(fmt.Sprintf(a.tr.UI("roster.spline", " 法力 %3d/%3d 未用點數 %d"), c.CurrentSP, c.MaxSP, pts))
-		line(fmt.Sprintf(a.tr.UI("roster.armorline", " %s 護甲 %d"),
+		line(fmt.Sprintf(a.tr.UI("roster.spline"), c.CurrentSP, c.MaxSP, pts))
+		line(fmt.Sprintf(a.tr.UI("roster.armorline"),
 			textlayout.PadCells(a.weaponLabel(c), 6), c.ArmorRating()))
 	}
 	line("")
-	line(a.tr.UI("roster.back", "P：返回"))
+	line(a.tr.UI("roster.back"))
 }
 
 func (a *app) Layout(int, int) (int, int) {
@@ -2001,6 +1996,11 @@ func main() {
 	tr, err := i18n.Load(*langDir)
 	if err != nil {
 		log.Fatalf("載入翻譯：%v", err)
+	}
+	for _, name := range []string{"world", "camp", "battle", "town"} {
+		if _, ok := tr.CommandLayout(name); !ok {
+			log.Fatalf("介面 JSON 缺少 commandLayouts.%s", name)
+		}
 	}
 	// 五張地城各有自己的 DATA 表。全部在啟動時載入與核對，換圖只切指標；
 	// 這樣不會玩到第二座地城才發現檔案或譯文壞了。
@@ -2329,7 +2329,7 @@ func main() {
 	}
 
 	ebiten.SetWindowSize(layout.CanvasWidth*scale, layout.CanvasHeight*scale)
-	ebiten.SetWindowTitle(a.tr.UI("window.title", "冬之魔 Demon's Winter"))
+	ebiten.SetWindowTitle(a.tr.UI("window.title"))
 	ebiten.SetWindowClosingHandled(true)
 
 	defer a.trace.close()
@@ -2344,7 +2344,7 @@ func main() {
 func (a *app) weaponLabel(c game.Character) string {
 	w := c.Weapon()
 	if w.Empty() {
-		return a.tr.UI("item.weapon.none", "徒手")
+		return a.tr.UI("item.weapon.none")
 	}
 	return a.itemLabel(w)
 }
@@ -2427,9 +2427,9 @@ func (a *app) stepBoat(tile byte) {
 
 	switch res {
 	case game.BoardOn:
-		a.message = a.tr.UI("world.boardon", "登船")
+		a.message = a.tr.UI("world.boardon")
 	case game.BoardOff:
-		a.message = a.tr.UI("world.boardoff", "上岸")
+		a.message = a.tr.UI("world.boardoff")
 	}
 }
 
@@ -2445,12 +2445,12 @@ func (a *app) stepHPTick() {
 		return
 	}
 	for _, i := range res.Died {
-		a.message = fmt.Sprintf(a.tr.UI("plot.fell", "%s 倒下了"), a.members[i].Name)
+		a.message = fmt.Sprintf(a.tr.UI("plot.fell"), a.members[i].Name)
 	}
 	if mode == game.StepHPDrain && len(res.Died) == 0 {
-		a.message = a.tr.UI("plot.glyphdrain", "符印的力量侵蝕著隊伍")
+		a.message = a.tr.UI("plot.glyphdrain")
 	}
 	if res.AllDead {
-		a.message = a.tr.UI("plot.allfell", "全隊都倒下了")
+		a.message = a.tr.UI("plot.allfell")
 	}
 }

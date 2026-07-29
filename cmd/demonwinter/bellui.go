@@ -11,16 +11,15 @@ import (
 
 // ringBell 是地點劇情 case 12（地圖 1 的 (26,8)）。
 func (a *app) ringBell() {
-	a.askConfirm(a.tr.UI("bell.ask", "你要敲那口鐘嗎？"), func() {
+	a.askConfirm(a.tr.UI("bell.ask"), func() {
 		if game.RingBell(a.clock.Hour()) == game.BellNothing {
-			a.message = a.tr.UI("bell.nothing", "什麼事都沒發生。")
+			a.message = a.tr.UI("bell.nothing")
 			a.trace.note("鐘：%d 時，還沒入夜", a.clock.Hour())
 			return
 		}
 		opened := game.OpenBellDoor(a.tiles)
 		a.drawTiles = ditheredTiles(a.tiles, uint16(a.ditherSeed), a.save.TempleRuins)
-		a.message = a.tr.UI("bell.angels",
-			"天使的哭聲自天上傳來，隨後一切又歸於寂靜")
+		a.message = a.tr.UI("bell.angels")
 		a.trace.note("鐘：%d 時，(%d,%d) 的門%s",
 			a.clock.Hour(), game.BellDoor.X, game.BellDoor.Y,
 			map[bool]string{true: "開了", false: "本來就開著"}[opened])
@@ -35,15 +34,14 @@ func (a *app) sleepAtNpc() {
 		a.trace.note("旅人的床：%d 時，已經太晚了", a.clock.Hour())
 		return
 	}
-	a.askConfirm(a.tr.UI("npcbed.ask", "你要在這裡睡一覺嗎？"), func() {
+	a.askConfirm(a.tr.UI("npcbed.ask"), func() {
 		// **只撥時鐘，不回血、不回法力、不換日。**
 		// 原版就只有 `party[+0x9f] = 25` 這一行 —— 與紮營睡覺是兩套機制。
 		a.clock.SleepUntil(game.BellSleepHour, false)
-		a.message = a.tr.UI("npcbed.slept", "你睡了一覺……")
+		a.message = a.tr.UI("npcbed.slept")
 		a.trace.note("旅人的床：睡到 %d 時", a.clock.Hour())
 	}, func() {
-		a.message = a.tr.UI("npcbed.farewell",
-			"她向你道別，又補了一句「願遠古種族保護你……」")
+		a.message = a.tr.UI("npcbed.farewell")
 		a.trace.note("旅人的床：婉拒")
 	})
 }

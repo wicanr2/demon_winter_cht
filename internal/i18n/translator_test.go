@@ -142,45 +142,32 @@ func TestLoad_RejectsCatalogWithoutSourceHeader(t *testing.T) {
 // TestUICatalog 釘住介面文案目錄（語意化 key，`docs/i18n/ui-catalog.md`）。
 func TestUICatalog(t *testing.T) {
 	dir := t.TempDir()
-	body := `@@ UI
-
-## plot.uncurse
-:: en
-UNCURSE
-:: zh
-解咒
-
-## plot.needsp
-:: zh
-那需要 %d 點法力
-
-## plot.untranslated
-:: en
-Something
-`
-	if err := os.WriteFile(filepath.Join(dir, "ui.txt"), []byte(body), 0o644); err != nil {
+	body := `{
+  "locale": "zh-Hant",
+  "entries": [
+    {"key":"plot.uncurse","en":"UNCURSE","text":"解咒"},
+    {"key":"plot.needsp","text":"那需要 %d 點法力"}
+  ]
+}`
+	if err := os.WriteFile(filepath.Join(dir, "ui.json"), []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	tr, err := Load(dir)
 	if err != nil {
 		t.Fatalf("Load 失敗：%v", err)
 	}
-	if got := tr.UI("plot.uncurse", "FALLBACK"); got != "解咒" {
+	if got := tr.UI("plot.uncurse"); got != "解咒" {
 		t.Errorf("UI(plot.uncurse) = %q", got)
 	}
-	if got := tr.UI("plot.needsp", "FALLBACK"); got != "那需要 %d 點法力" {
+	if got := tr.UI("plot.needsp"); got != "那需要 %d 點法力" {
 		t.Errorf("UI(plot.needsp) = %q", got)
 	}
-	// 沒有譯文 → 回 fallback，**不是空字串**
-	if got := tr.UI("plot.untranslated", "FALLBACK"); got != "FALLBACK" {
-		t.Errorf("未翻譯的條目應回 fallback，得到 %q", got)
-	}
-	// 完全不存在的 key 同理
-	if got := tr.UI("nope", "FALLBACK"); got != "FALLBACK" {
-		t.Errorf("不存在的 key 應回 fallback，得到 %q", got)
+	// 不存在的 key 必須醒目，不能靜默退回藏在程式裡的另一份文字。
+	if got := tr.UI("nope"); got != "⟦nope⟧" {
+		t.Errorf("不存在的 key 應醒目顯示，得到 %q", got)
 	}
 	if n := tr.UICount(); n != 2 {
-		t.Errorf("UICount = %d，預期 2（未翻譯的不算）", n)
+		t.Errorf("UICount = %d，預期 2", n)
 	}
 }
 
@@ -192,14 +179,14 @@ func TestUIAndIndexCoexist(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	must("ui.txt", "@@ UI\n\n## a.b\n:: zh\n介面\n")
+	must("ui.json", `{"locale":"zh-Hant","entries":[{"key":"a.b","text":"介面"}]}`)
 	must("data1.txt", "@@ DATA1.TXT\n\n## 0\n:: en\nOrig\n:: zh\n事件\n")
 
 	tr, err := Load(dir)
 	if err != nil {
 		t.Fatalf("Load 失敗：%v", err)
 	}
-	if got := tr.UI("a.b", "X"); got != "介面" {
+	if got := tr.UI("a.b"); got != "介面" {
 		t.Errorf("UI = %q", got)
 	}
 	if got := tr.Event("DATA1.TXT", 0, "Orig"); got != "事件" {
@@ -244,7 +231,7 @@ Two guards are in the room
 	if n := len(tr.Mismatched()); n != 0 {
 		t.Errorf("名稱型條目不該被判定脫節，卻回報了 %d 條", n)
 	}
-	if got := tr.UI("chain.DATA1.TXT.3", "X"); got != "續接碼第二段" {
+	if got := tr.UI("chain.DATA1.TXT.3"); got != "續接碼第二段" {
 		t.Errorf("名稱型譯文應保留，得到 %q", got)
 	}
 }

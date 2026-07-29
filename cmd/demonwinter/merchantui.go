@@ -109,15 +109,15 @@ func (a *app) updateMerchant() error {
 // **一支商隊只能用一次** —— 原版用過再按就印 "Only usable once"。
 func (a *app) viewMerchantMind(s *merchantScreen) {
 	if s.mindRead {
-		s.message = a.tr.UI("merchant.mind.once", "只能用一次")
+		s.message = a.tr.UI("merchant.mind.once")
 		return
 	}
 	s.mindRead = true
 	switch n := game.ViewMind(a.rng, &s.m); n {
 	case 0:
-		s.message = a.tr.UI("merchant.mind.nothing", "你讀不出什麼")
+		s.message = a.tr.UI("merchant.mind.nothing")
 	default:
-		s.message = fmt.Sprintf(a.tr.UI("merchant.mind.lies", "你看穿了 %d 件貨的假話"), n)
+		s.message = fmt.Sprintf(a.tr.UI("merchant.mind.lies"), n)
 	}
 }
 
@@ -126,17 +126,17 @@ func (a *app) haggleWithMerchant(s *merchantScreen) {
 	label := a.itemLabel(s.m.Wares[s.cursor].Item)
 	outcome, ok := game.HaggleWith(a.rng, &s.m, s.cursor)
 	if !ok {
-		s.message = a.tr.UI("merchant.haggle.refused", "這件沒得談了")
+		s.message = a.tr.UI("merchant.haggle.refused")
 		return
 	}
 	switch outcome {
 	case game.HaggleSuccess:
-		s.message = fmt.Sprintf(a.tr.UI("merchant.haggle.success", "殺價成功，%s 降到 %d 金幣"),
+		s.message = fmt.Sprintf(a.tr.UI("merchant.haggle.success"),
 			label, s.m.Wares[s.cursor].WarePrice())
 	case game.HaggleUnmoved:
-		s.message = a.tr.UI("merchant.haggle.unmoved", "商人不為所動")
+		s.message = a.tr.UI("merchant.haggle.unmoved")
 	default:
-		s.message = fmt.Sprintf(a.tr.UI("merchant.haggle.offended", "你冒犯了商人，%s 他不賣了"), label)
+		s.message = fmt.Sprintf(a.tr.UI("merchant.haggle.offended"), label)
 	}
 }
 
@@ -148,7 +148,7 @@ func (a *app) buyFromMerchant(s *merchantScreen) {
 		return
 	}
 	a.setGold(res.Gold)
-	s.message = fmt.Sprintf(a.tr.UI("merchant.buy.done", "買下%s，%s 收著（剩 %d 金幣）"),
+	s.message = fmt.Sprintf(a.tr.UI("merchant.buy.done"),
 		label, a.members[res.Member].Name, res.Gold)
 }
 
@@ -165,18 +165,18 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 		return
 	}
 
-	line(fmt.Sprintf(a.tr.UI("merchant.intro", "你看到一群%s的商人"), a.merchantAdjective(s.m.Size)))
+	line(fmt.Sprintf(a.tr.UI("merchant.intro"), a.merchantAdjective(s.m.Size)))
 	line("")
 
 	if !s.greeted {
-		line(a.tr.UI("merchant.greet.hail", "  G 打招呼"))
-		line(a.tr.UI("merchant.greet.ignore", "  I 無視他們"))
+		line(a.tr.UI("merchant.greet.hail"))
+		line(a.tr.UI("merchant.greet.ignore"))
 		line("")
-		line(a.tr.UI("merchant.greet.leave", "Esc：走開"))
+		line(a.tr.UI("merchant.greet.leave"))
 		return
 	}
 
-	line(fmt.Sprintf(a.tr.UI("merchant.wares.header", "他們把貨攤開來看　金幣 %d"), a.gold()))
+	line(fmt.Sprintf(a.tr.UI("merchant.wares.header"), a.gold()))
 	line("")
 	for i, w := range s.m.Wares {
 		mark := "   "
@@ -186,11 +186,11 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 		price := fmt.Sprintf("%d", w.WarePrice())
 		switch {
 		case w.Sold:
-			price = a.tr.UI("merchant.wares.sold", "已售出")
+			price = a.tr.UI("merchant.wares.sold")
 		case w.Exposed:
-			price = a.tr.UI("merchant.wares.lied", "謊報")
+			price = a.tr.UI("merchant.wares.lied")
 		case w.Haggle.Refused():
-			price = a.tr.UI("merchant.wares.refused", "不賣")
+			price = a.tr.UI("merchant.wares.refused")
 		}
 		note := ""
 		if w.Item.Enchant != 0 {
@@ -205,7 +205,7 @@ func (a *app) drawMerchant(dst *ebiten.Image) {
 		line(s.message)
 		line("")
 	}
-	line(a.tr.UI("merchant.keys", "↑↓：選擇　Enter：買下　H：殺價　V：讀心　I：檢視隊員　Esc：走開"))
+	line(a.tr.UI("merchant.keys"))
 }
 
 // merchantAdjective 回傳商隊規模的形容詞（已翻譯）。

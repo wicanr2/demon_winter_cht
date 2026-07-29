@@ -1,0 +1,3281 @@
+{
+  "locale": "zh-Hant",
+  "commandLayouts": {
+    "world": {
+      "retro": [
+        "world.menu.move",
+        "world.menu.party",
+        "world.menu.save",
+        "world.menu.camp",
+        "world.menu.take",
+        "world.menu.drop",
+        "world.menu.examine",
+        "world.menu.moveitem",
+        "world.menu.use",
+        "world.menu.inspect",
+        "world.menu.reread",
+        "world.menu.traps",
+        "world.menu.viewroom",
+        "world.menu.viewitem",
+        "world.menu.manual",
+        "world.menu.controls",
+        "world.menu.quit"
+      ],
+      "groups": [
+        {
+          "titleKey": "command.tab.common",
+          "column": 0,
+          "items": ["world.menu.move", "world.menu.party", "world.menu.save", "world.menu.camp"]
+        },
+        {
+          "titleKey": "command.tab.explore",
+          "column": 0,
+          "items": ["world.menu.reread", "world.menu.traps", "world.menu.viewroom", "world.menu.viewitem"]
+        },
+        {
+          "titleKey": "command.tab.items",
+          "column": 1,
+          "items": ["world.menu.take", "world.menu.drop", "world.menu.examine", "world.menu.moveitem", "world.menu.use", "world.menu.inspect"]
+        },
+        {
+          "titleKey": "command.tab.system",
+          "column": 1,
+          "items": ["world.menu.manual", "world.menu.controls", "world.menu.quit"]
+        }
+      ]
+    },
+    "camp": {
+      "retro": [
+        "camp.menu.party", "camp.menu.reorder", "camp.menu.sleep", "camp.menu.identify",
+        "camp.menu.worship", "camp.menu.exorcise", "camp.menu.viewland", "camp.menu.trade",
+        "camp.menu.drop", "camp.menu.equip", "camp.menu.use", "camp.menu.hunt",
+        "camp.menu.cast", "camp.menu.quit"
+      ],
+      "groups": [
+        {
+          "titleKey": "command.tab.party",
+          "column": 0,
+          "items": ["camp.menu.party", "camp.menu.reorder"]
+        },
+        {
+          "titleKey": "command.tab.rest",
+          "column": 0,
+          "items": ["camp.menu.sleep", "camp.menu.identify", "camp.menu.worship", "camp.menu.exorcise", "camp.menu.viewland"]
+        },
+        {
+          "titleKey": "command.tab.inventory",
+          "column": 1,
+          "items": ["camp.menu.trade", "camp.menu.drop", "camp.menu.equip", "camp.menu.use"]
+        },
+        {
+          "titleKey": "command.tab.actions",
+          "column": 1,
+          "items": ["camp.menu.hunt", "camp.menu.cast", "camp.menu.quit"]
+        }
+      ]
+    },
+    "battle": {
+      "retro": [
+        "battle.cmd.attack", "battle.cmd.cast", "battle.cmd.useitem",
+        "battle.cmd.turnundead", "battle.cmd.pray", "battle.cmd.leech",
+        "battle.cmd.dodge", "battle.cmd.sound", "battle.cmd.endturn"
+      ],
+      "groups": [
+        {
+          "titleKey": "command.tab.combat",
+          "column": 0,
+          "items": ["battle.cmd.attack", "battle.cmd.cast", "battle.cmd.useitem", "battle.cmd.turnundead"]
+        },
+        {
+          "titleKey": "command.tab.support",
+          "column": 1,
+          "items": ["battle.cmd.pray", "battle.cmd.leech", "battle.cmd.dodge", "battle.cmd.sound", "battle.cmd.endturn"]
+        }
+      ]
+    },
+    "town": {
+      "retro": [
+        "town.menu.label_market", "town.menu.label_healers", "town.menu.label_inn",
+        "town.menu.label_guild", "town.menu.label_temple", "town.menu.label_docks",
+        "town.menu.label_pub", "town.menu.label_college", "town.menu.keys"
+      ],
+      "groups": [
+        {
+          "titleKey": "command.tab.town",
+          "column": 0,
+          "items": ["town.menu.label_market", "town.menu.label_healers", "town.menu.label_inn", "town.menu.label_guild", "town.menu.label_temple"]
+        },
+        {
+          "titleKey": "command.tab.services",
+          "column": 1,
+          "items": ["town.menu.label_docks", "town.menu.label_pub", "town.menu.label_college", "town.menu.keys"]
+        }
+      ]
+    }
+  },
+  "entries": [
+    {
+      "key": "armory.approach",
+      "text": "你要靠近嗎？"
+    },
+    {
+      "key": "armory.brighter",
+      "text": "球體的光亮了起來。"
+    },
+    {
+      "key": "armory.item.chain",
+      "text": "一件銀製鏈甲"
+    },
+    {
+      "key": "armory.item.dagger",
+      "text": "一把水晶匕首"
+    },
+    {
+      "key": "armory.item.mace",
+      "text": "一把釘頭鎚"
+    },
+    {
+      "key": "armory.item.sword",
+      "text": "一把冰藍色的短劍"
+    },
+    {
+      "key": "armory.keys",
+      "text": "Y：靠近　N／Esc：離開"
+    },
+    {
+      "key": "armory.scene",
+      "text": "你走進一間兵器庫，裡頭堆滿了陳舊的武器與甲冑。房間中央的台座上放著一件特別的東西："
+    },
+    {
+      "key": "armory.spheres",
+      "text": "。幾團發光的球體懸在台座上方，似乎很不歡迎你的到來。"
+    },
+    {
+      "key": "battle.aim.area",
+      "text": "選 5×5 的中心"
+    },
+    {
+      "key": "battle.aim.area.note",
+      "text": "※ 範圍內敵我都會被波及，Esc 可以反悔"
+    },
+    {
+      "key": "battle.aim.keys",
+      "text": "%s：%s　方向鍵：移動　Enter：施放　Esc：取消"
+    },
+    {
+      "key": "battle.aim.single",
+      "text": "選目標"
+    },
+    {
+      "key": "battle.aim.single.note",
+      "text": "※ 指到誰就對誰施放，Esc 可以反悔"
+    },
+    {
+      "key": "battle.aura",
+      "text": "（偵測到靈光）"
+    },
+    {
+      "key": "battle.cast.cancelled",
+      "text": "取消施法"
+    },
+    {
+      "key": "battle.cast.casts",
+      "text": "%s 施放%s"
+    },
+    {
+      "key": "battle.cast.columns",
+      "text": "   法術            最低法力"
+    },
+    {
+      "key": "battle.cast.header",
+      "text": "%s 施法　法力 %d"
+    },
+    {
+      "key": "battle.cast.keys",
+      "text": "↑↓：選擇　Enter：施放　Esc：取消"
+    },
+    {
+      "key": "battle.cast.nosp",
+      "text": "%s 的法力不足以施放%s（需要 %d 點）"
+    },
+    {
+      "key": "battle.cast.nosp.mark",
+      "text": "  法力不足"
+    },
+    {
+      "key": "battle.cast.note",
+      "text": "※ 選好按 Enter 再決定投入多少法力"
+    },
+    {
+      "key": "battle.cmd.attack",
+      "text": "A 攻擊"
+    },
+    {
+      "key": "battle.cmd.cast",
+      "text": "C 施法"
+    },
+    {
+      "key": "battle.cmd.dodge",
+      "text": "D 閃避"
+    },
+    {
+      "key": "battle.cmd.endturn",
+      "text": "Esc 結束回合"
+    },
+    {
+      "key": "battle.cmd.leech",
+      "text": "L 汲取法力"
+    },
+    {
+      "key": "battle.cmd.pray",
+      "text": "P 祈禱"
+    },
+    {
+      "key": "battle.cmd.sound",
+      "text": "S 音效開關"
+    },
+    {
+      "key": "battle.cmd.turnundead",
+      "text": "T 驅散不死"
+    },
+    {
+      "key": "battle.cmd.useitem",
+      "text": "U 使用道具"
+    },
+    {
+      "key": "battle.drop.exp",
+      "text": "每人獲得 %d 點經驗"
+    },
+    {
+      "key": "battle.drop.gold",
+      "text": "撿到 %d 枚金幣"
+    },
+    {
+      "key": "battle.drop.noroom",
+      "text": "撿到%s，但沒有人放得下了"
+    },
+    {
+      "key": "battle.drop.picked",
+      "text": "%s 撿到%s%s"
+    },
+    {
+      "key": "battle.header.actor",
+      "text": "%s 行動　%d 點"
+    },
+    {
+      "key": "battle.header.round",
+      "text": "戰鬥　第 %d 回合"
+    },
+    {
+      "key": "battle.hit.critical",
+      "text": "重擊"
+    },
+    {
+      "key": "battle.hit.normal",
+      "text": "命中"
+    },
+    {
+      "key": "battle.item.charges",
+      "text": "（剩 %d 次）"
+    },
+    {
+      "key": "battle.item.effect",
+      "text": "效果 %d"
+    },
+    {
+      "key": "battle.item.header",
+      "text": "%s 使用道具"
+    },
+    {
+      "key": "battle.item.itemnum",
+      "text": "道具 %d"
+    },
+    {
+      "key": "battle.item.keys",
+      "text": "↑↓：選擇　Enter：使用　Esc：取消"
+    },
+    {
+      "key": "battle.item.noeffectrecord",
+      "text": "%s 使用 %s，但效果 %d 查不到記錄"
+    },
+    {
+      "key": "battle.item.note1",
+      "text": "※ 只列得出已裝備的武器／護甲與消耗品，而且要還有次數"
+    },
+    {
+      "key": "battle.item.note2",
+      "text": "　 原版的 Use 就是拿來觸發已裝備裝備的特殊能力"
+    },
+    {
+      "key": "battle.item.unidentified",
+      "text": "（未鑑定）"
+    },
+    {
+      "key": "battle.item.used",
+      "text": "%s 使用 %s"
+    },
+    {
+      "key": "battle.log.round",
+      "text": "── 第 %d 回合 ──"
+    },
+    {
+      "key": "battle.monster.keys",
+      "text": "空白鍵：讓對方行動"
+    },
+    {
+      "key": "battle.move.keys",
+      "text": "方向鍵：轉向／前進　Enter：前進　? 檢視"
+    },
+    {
+      "key": "battle.msg.alreadybound",
+      "text": "%s 已經被束縛住了"
+    },
+    {
+      "key": "battle.msg.aoecast",
+      "text": "%s 施放%s（波及 %d 人）"
+    },
+    {
+      "key": "battle.msg.aoenobody",
+      "text": "%s 的%s沒有波及任何人"
+    },
+    {
+      "key": "battle.msg.blocked",
+      "text": "%s 前方過不去"
+    },
+    {
+      "key": "battle.msg.bound",
+      "text": "%s 用%s束縛了 %s（%d 回合）"
+    },
+    {
+      "key": "battle.msg.breath",
+      "text": "%s 噴出吐息（波及 %d 人）"
+    },
+    {
+      "key": "battle.msg.breathdamage.indent",
+      "text": "　%s 受到 %d 點傷害"
+    },
+    {
+      "key": "battle.msg.buff",
+      "text": "%s 的%s讓 %s 增加 %d"
+    },
+    {
+      "key": "battle.msg.cured",
+      "text": "%s 的%s解除了 %s 的中毒"
+    },
+    {
+      "key": "battle.msg.debuff",
+      "text": "%s 的%s讓 %s 減少 %d"
+    },
+    {
+      "key": "battle.msg.decrease.indent",
+      "text": "　%s 減少 %d"
+    },
+    {
+      "key": "battle.msg.dodging",
+      "text": "%s 進入閃避（命中率 %d）"
+    },
+    {
+      "key": "battle.msg.effectunimpl",
+      "text": "%s 施放%s —— 這類效果尚未實作"
+    },
+    {
+      "key": "battle.msg.emptycell",
+      "text": "那一格沒有人"
+    },
+    {
+      "key": "battle.msg.endturn",
+      "text": "%s 結束回合"
+    },
+    {
+      "key": "battle.msg.fell",
+      "text": "%s 倒下了"
+    },
+    {
+      "key": "battle.msg.fell.indent",
+      "text": "　%s 倒下了"
+    },
+    {
+      "key": "battle.msg.hit",
+      "text": "%s %s %s %d 點"
+    },
+    {
+      "key": "battle.msg.illusiondies",
+      "text": "%s 消散了"
+    },
+    {
+      "key": "battle.msg.immune.indent",
+      "text": "　%s 免疫"
+    },
+    {
+      "key": "battle.msg.increase.indent",
+      "text": "　%s 增加 %d"
+    },
+    {
+      "key": "battle.msg.killed",
+      "text": "%s 擊殺 %s（%d 點）"
+    },
+    {
+      "key": "battle.msg.leeched",
+      "text": "%s 汲走 %s 的 %d 點法力"
+    },
+    {
+      "key": "battle.msg.leechfailed",
+      "text": "%s 的汲取失敗"
+    },
+    {
+      "key": "battle.msg.miss",
+      "text": "%s 落空"
+    },
+    {
+      "key": "battle.msg.monstersdead",
+      "text": "怪物全滅"
+    },
+    {
+      "key": "battle.msg.noap",
+      "text": "%s 行動點不足"
+    },
+    {
+      "key": "battle.msg.noeffect",
+      "text": "%s 對 %s 無效"
+    },
+    {
+      "key": "battle.msg.noenemyahead",
+      "text": "%s 正前方沒有敵人"
+    },
+    {
+      "key": "battle.msg.noitem",
+      "text": "%s 沒有可用的道具"
+    },
+    {
+      "key": "battle.msg.nonoticeable",
+      "text": "%s 的%s沒有明顯效果"
+    },
+    {
+      "key": "battle.msg.nosp",
+      "text": "%s 沒有法力"
+    },
+    {
+      "key": "battle.msg.notarget",
+      "text": "%s 正前方沒有目標"
+    },
+    {
+      "key": "battle.msg.partydead",
+      "text": "隊伍全滅"
+    },
+    {
+      "key": "battle.msg.possessed",
+      "text": "%s 的%s奪走了 %s 的心智"
+    },
+    {
+      "key": "battle.msg.prayanswered",
+      "text": "%s 的祈禱得到回應"
+    },
+    {
+      "key": "battle.msg.praynotanswered",
+      "text": "%s 的祈禱沒有回應"
+    },
+    {
+      "key": "battle.msg.resisted",
+      "text": "%s 抵抗了%s"
+    },
+    {
+      "key": "battle.msg.soundoff",
+      "text": "音效關閉"
+    },
+    {
+      "key": "battle.msg.soundon",
+      "text": "音效開啟"
+    },
+    {
+      "key": "battle.msg.spellkilled",
+      "text": "%s 的%s殺死了 %s"
+    },
+    {
+      "key": "battle.msg.spellnoeffect",
+      "text": "%s 的%s沒有奏效"
+    },
+    {
+      "key": "battle.msg.turned",
+      "text": "%s 驅散了 %s"
+    },
+    {
+      "key": "battle.msg.turnfailed",
+      "text": "%s 的驅散無效"
+    },
+    {
+      "key": "battle.msg.unbindweak",
+      "text": "%s 的力度不足以解開束縛"
+    },
+    {
+      "key": "battle.msg.unbound",
+      "text": "%s 的束縛被%s解開"
+    },
+    {
+      "key": "battle.msg.withered",
+      "text": "%s 的%s讓 %s 衰朽"
+    },
+    {
+      "key": "battle.over.keys",
+      "text": "戰鬥結束　空白鍵：繼續"
+    },
+    {
+      "key": "battle.sp.keys1",
+      "text": "數字鍵：輸入　↑↓：加減　Backspace：退格"
+    },
+    {
+      "key": "battle.sp.keys2",
+      "text": "Enter：施放　Esc：取消"
+    },
+    {
+      "key": "battle.sp.note",
+      "text": "※ 投入越多效果越強，法力用完就沒了"
+    },
+    {
+      "key": "battle.sp.prompt",
+      "text": "投入多少法力？　%d"
+    },
+    {
+      "key": "battle.sp.range",
+      "text": "可投入 %d–%d（目前法力 %d）"
+    },
+    {
+      "key": "battle.spell.num",
+      "text": "法術 %d"
+    },
+    {
+      "key": "battle.summon.badentry",
+      "text": "召喚資料錯誤：%v"
+    },
+    {
+      "key": "battle.summon.badplace",
+      "text": "那一格不能放置召喚生物"
+    },
+    {
+      "key": "battle.summon.done",
+      "text": "%s 召來了 %s"
+    },
+    {
+      "key": "battle.summon.entry",
+      "text": "%s%s %3d 點"
+    },
+    {
+      "key": "battle.summon.fallback",
+      "text": "生物 %d"
+    },
+    {
+      "key": "battle.summon.full",
+      "text": "同時只能維持三隻召喚／幻化生物"
+    },
+    {
+      "key": "battle.summon.itemweak",
+      "text": "這件道具的力量不足（需要 %d，只有 %d）"
+    },
+    {
+      "key": "battle.summon.keys",
+      "text": "↑↓：選擇　Enter：召喚　Esc：取消"
+    },
+    {
+      "key": "battle.summon.nosp",
+      "text": "%s 的法力不足（需要 %d）"
+    },
+    {
+      "key": "battle.summon.place",
+      "text": "選擇召喚生物出現的位置"
+    },
+    {
+      "key": "battle.summon.placekeys",
+      "text": "方向鍵：移動　Enter／Space：放置　Esc：返回"
+    },
+    {
+      "key": "battle.summon.which",
+      "text": "%s 要召來哪種生物？"
+    },
+    {
+      "key": "battle.terrainfailed",
+      "text": "戰場地形切不出來：%v"
+    },
+    {
+      "key": "battle.unit.dead",
+      "text": " 陣亡"
+    },
+    {
+      "key": "battle.unit.more",
+      "text": " …另有 %d 個單位"
+    },
+    {
+      "key": "bell.angels",
+      "text": "天使的哭聲自天上傳來，隨後一切又歸於寂靜"
+    },
+    {
+      "key": "bell.ask",
+      "text": "你要敲那口鐘嗎？"
+    },
+    {
+      "key": "bell.nothing",
+      "text": "什麼事都沒發生。"
+    },
+    {
+      "key": "blacksmith.line1",
+      "en": "I have been working on a new weapon.",
+      "text": "「我一直在打一把新武器。"
+    },
+    {
+      "key": "blacksmith.line2",
+      "en": "It is designed for the ones",
+      "text": "　它是為了那些想殺掉 Xeres 的人"
+    },
+    {
+      "key": "blacksmith.line3",
+      "en": "who wish to kill Xeres!",
+      "text": "　準備的！」"
+    },
+    {
+      "key": "blacksmith.scene",
+      "en": "You have entered a blacksmith's shop. The blacksmith, an old troll, has a hideously disfigured face with one eye permenantly closed. He is surprised when you first enter, but then he smiles and speaks.",
+      "text": "你走進一間鐵匠鋪。鐵匠是個年邁的巨魔，一邊的眼睛永遠閉著，臉孔扭曲得嚇人。他先是一驚，隨即咧嘴笑了起來。"
+    },
+    {
+      "key": "blacksmith.sword",
+      "text": "那把武器"
+    },
+    {
+      "key": "camp.empty",
+      "text": "隊伍是空的"
+    },
+    {
+      "key": "camp.equip.armor",
+      "text": "（護甲）"
+    },
+    {
+      "key": "camp.equip.cannot",
+      "text": "（不能裝備）"
+    },
+    {
+      "key": "camp.equip.done",
+      "text": "%s 換上%s"
+    },
+    {
+      "key": "camp.equip.empty",
+      "text": "（空）"
+    },
+    {
+      "key": "camp.equip.heavy",
+      "text": "（太重）"
+    },
+    {
+      "key": "camp.equip.keys1",
+      "text": "↑↓：選擇　Enter：確定　Esc：取消"
+    },
+    {
+      "key": "camp.equip.keys2",
+      "text": "↑↓：選擇　Enter：換上　Esc：返回"
+    },
+    {
+      "key": "camp.equip.row",
+      "text": "%s%s%s　護甲 %d"
+    },
+    {
+      "key": "camp.equip.weapon",
+      "text": "（武器）"
+    },
+    {
+      "key": "camp.equip.which",
+      "text": "%s 要換上哪一件？"
+    },
+    {
+      "key": "camp.equip.who",
+      "text": "誰要換裝？"
+    },
+    {
+      "key": "camp.header",
+      "text": "紮營　%s月 %d 日 %d 時　糧食 %d 份"
+    },
+    {
+      "key": "camp.hunt.cannot",
+      "text": "（不會狩獵）"
+    },
+    {
+      "key": "camp.hunt.empty",
+      "text": "這趟打獵一無所獲"
+    },
+    {
+      "key": "camp.hunt.gained",
+      "text": "打到 %d 份糧食（共 %d 份）"
+    },
+    {
+      "key": "camp.hunt.keys",
+      "text": "↑↓：選擇　Enter：出發　Esc：取消"
+    },
+    {
+      "key": "camp.hunt.who",
+      "text": "誰去打獵？"
+    },
+    {
+      "key": "camp.menu.cast",
+      "text": "[C] 施法"
+    },
+    {
+      "key": "camp.menu.drop",
+      "text": "[D] 丟棄"
+    },
+    {
+      "key": "camp.menu.equip",
+      "text": "[E] 換裝"
+    },
+    {
+      "key": "camp.menu.exorcise",
+      "text": "[X] 驅邪"
+    },
+    {
+      "key": "camp.menu.hunt",
+      "text": "[H] 打獵"
+    },
+    {
+      "key": "camp.menu.identify",
+      "text": "[I] 鑑定"
+    },
+    {
+      "key": "camp.menu.party",
+      "text": "[P] 角色卡"
+    },
+    {
+      "key": "camp.menu.quit",
+      "text": "[Esc] 收帳"
+    },
+    {
+      "key": "camp.menu.reorder",
+      "text": "[R] 排陣"
+    },
+    {
+      "key": "camp.menu.sleep",
+      "text": "[S] 睡覺"
+    },
+    {
+      "key": "camp.menu.trade",
+      "text": "[T] 交出"
+    },
+    {
+      "key": "camp.menu.use",
+      "text": "[U] 使用"
+    },
+    {
+      "key": "camp.menu.viewland",
+      "text": "[V] 觀地"
+    },
+    {
+      "key": "camp.menu.worship",
+      "text": "[W] 敬拜"
+    },
+    {
+      "key": "camp.sleep.ate",
+      "text": "　吃掉一份糧食（剩 %d）"
+    },
+    {
+      "key": "camp.sleep.blocked",
+      "text": "現在睡不著（原版：You are restless）"
+    },
+    {
+      "key": "camp.sleep.died",
+      "text": " 沒有醒來"
+    },
+    {
+      "key": "camp.sleep.result",
+      "text": "睡了 %d 個時辰，%d 日 %d 時醒來"
+    },
+    {
+      "key": "camp.sleep.starved",
+      "text": "　沒有糧食，全隊受餓"
+    },
+    {
+      "key": "campcast.cast.cast",
+      "text": "%s 對 %s 施放%s"
+    },
+    {
+      "key": "campcast.cast.cured",
+      "text": "　毒素消退了"
+    },
+    {
+      "key": "campcast.cast.damage",
+      "text": "　造成 %d"
+    },
+    {
+      "key": "campcast.cast.died",
+      "text": " 倒下了"
+    },
+    {
+      "key": "campcast.cast.entry",
+      "text": "%s%s最低 %d 點"
+    },
+    {
+      "key": "campcast.cast.heal",
+      "text": "　回復 %d"
+    },
+    {
+      "key": "campcast.cast.hpsp",
+      "text": "生命 %d/%d　法力 %d/%d"
+    },
+    {
+      "key": "campcast.cast.keys1",
+      "text": "↑↓：選擇　Enter：確定　Esc：取消"
+    },
+    {
+      "key": "campcast.cast.keys2",
+      "text": "↑↓：加減　Enter：確定　Esc：返回"
+    },
+    {
+      "key": "campcast.cast.keys3",
+      "text": "↑↓：選擇　Enter：施放　Esc：返回"
+    },
+    {
+      "key": "campcast.cast.light",
+      "text": "%s 施放%s　光源提升為 %d"
+    },
+    {
+      "key": "campcast.cast.noeffect",
+      "text": "　沒有明顯的變化"
+    },
+    {
+      "key": "campcast.cast.nospell",
+      "text": "%s 沒有能在營地放的法術"
+    },
+    {
+      "key": "campcast.cast.power",
+      "text": "　%d（最低 %d，最多 %d）"
+    },
+    {
+      "key": "campcast.cast.power_ask",
+      "text": "%s：投入多少法力？"
+    },
+    {
+      "key": "campcast.cast.resurrected",
+      "text": "　死者恢復了呼吸與 1 點生命"
+    },
+    {
+      "key": "campcast.cast.sp",
+      "text": "法力 %d/%d"
+    },
+    {
+      "key": "campcast.cast.target",
+      "text": "%s 的%s要放在誰身上？"
+    },
+    {
+      "key": "campcast.cast.which",
+      "text": "%s 要放什麼？"
+    },
+    {
+      "key": "campcast.cast.who",
+      "text": "誰來施法？"
+    },
+    {
+      "key": "campcast.cast.windwalk",
+      "text": "風托起整支隊伍，將眾人送到安全地點"
+    },
+    {
+      "key": "campcast.pray.chancedrop",
+      "text": "祈禱成功率降為 %d%%"
+    },
+    {
+      "key": "campcast.worship.answered",
+      "text": "%s 聽見了 %s 的祈求，降下%s"
+    },
+    {
+      "key": "campcast.worship.damage",
+      "text": "　%s 受到 %d"
+    },
+    {
+      "key": "campcast.worship.empty",
+      "text": "隊伍是空的"
+    },
+    {
+      "key": "campcast.worship.heal",
+      "text": "　%s 回復 %d"
+    },
+    {
+      "key": "campcast.worship.hp",
+      "text": "生命 %d/%d"
+    },
+    {
+      "key": "campcast.worship.keys1",
+      "text": "↑↓：選擇　Enter：祈求　Esc：取消"
+    },
+    {
+      "key": "campcast.worship.keys2",
+      "text": "↑↓：選擇　Enter：確定　Esc：返回"
+    },
+    {
+      "key": "campcast.worship.noanswer",
+      "text": "%s 的祈求沒有回應（成功率 %d%%）"
+    },
+    {
+      "key": "campcast.worship.released",
+      "text": "　束縛解開了"
+    },
+    {
+      "key": "campcast.worship.spellname",
+      "text": "法術 %d"
+    },
+    {
+      "key": "campcast.worship.target",
+      "text": "%s 的祈求要落在誰身上？"
+    },
+    {
+      "key": "campcast.worship.who",
+      "text": "誰來祈求？"
+    },
+    {
+      "key": "campcast.worship.withered",
+      "text": "　枯萎生效"
+    },
+    {
+      "key": "campitem.exorcise.no_skill",
+      "text": "（不會驅邪）"
+    },
+    {
+      "key": "campitem.exorcise.used_today",
+      "text": "（今天驅過了）"
+    },
+    {
+      "key": "campitem.exorcise.who",
+      "text": "誰來驅邪？"
+    },
+    {
+      "key": "campitem.keys.confirm_back",
+      "text": "↑↓：選擇　Enter：確定　Esc：返回"
+    },
+    {
+      "key": "campitem.keys.confirm_cancel",
+      "text": "↑↓：選擇　Enter：確定　Esc：取消"
+    },
+    {
+      "key": "campitem.keys.confirm_give",
+      "text": "↑↓：選擇　Enter：交出　Esc：返回"
+    },
+    {
+      "key": "campitem.msg.bad_effect",
+      "text": "%s 的效果 %d 找不到"
+    },
+    {
+      "key": "campitem.msg.cured",
+      "text": "　%s 的毒素消退了"
+    },
+    {
+      "key": "campitem.msg.destroyed",
+      "text": "　道具隨之損毀"
+    },
+    {
+      "key": "campitem.msg.dropped",
+      "text": "%s 丟掉了%s"
+    },
+    {
+      "key": "campitem.msg.exorcise_failed",
+      "text": "%s 驅不動%s（成功率 %d%%）"
+    },
+    {
+      "key": "campitem.msg.exorcised",
+      "text": "%s 解開了%s的詛咒（成功率 %d%%）"
+    },
+    {
+      "key": "campitem.msg.gained",
+      "text": "　%s 回復 %d"
+    },
+    {
+      "key": "campitem.msg.given",
+      "text": "%s 把%s交給 %s"
+    },
+    {
+      "key": "campitem.msg.identified",
+      "text": "%s 看懂了%s（成功率 %d%%）"
+    },
+    {
+      "key": "campitem.msg.identify_failed",
+      "text": "%s 研究了一整天也看不出名堂（成功率 %d%%）"
+    },
+    {
+      "key": "campitem.msg.invoked",
+      "text": "%s 啟動了%s"
+    },
+    {
+      "key": "campitem.msg.lit",
+      "text": "%s 點起了%s（光源 %d）"
+    },
+    {
+      "key": "campitem.msg.lost",
+      "text": "　%s 受到 %d"
+    },
+    {
+      "key": "campitem.msg.magic_light",
+      "text": "（光源 %d）"
+    },
+    {
+      "key": "campitem.msg.no_effect",
+      "text": "　沒有明顯效果"
+    },
+    {
+      "key": "campitem.msg.no_party",
+      "text": "隊伍是空的"
+    },
+    {
+      "key": "campitem.msg.released",
+      "text": "　%s 的束縛解開了"
+    },
+    {
+      "key": "campitem.msg.resurrected",
+      "text": "　%s 恢復了呼吸與 1 點生命"
+    },
+    {
+      "key": "campitem.msg.skills_freed",
+      "text": "　%s 找回 %d 項技能"
+    },
+    {
+      "key": "campitem.msg.windwalk",
+      "text": "　風將整支隊伍送到安全地點"
+    },
+    {
+      "key": "campitem.msg.withered",
+      "text": "　%s 被枯萎侵襲"
+    },
+    {
+      "key": "campitem.owner.who_prefix",
+      "text": "誰要"
+    },
+    {
+      "key": "campitem.slot.armor",
+      "text": "（護甲）"
+    },
+    {
+      "key": "campitem.slot.armor_exorcisable",
+      "text": "（護甲，可驅）"
+    },
+    {
+      "key": "campitem.slot.dungeon_item",
+      "text": "（地城道具）"
+    },
+    {
+      "key": "campitem.slot.empty",
+      "text": "（空）"
+    },
+    {
+      "key": "campitem.slot.head_drop",
+      "text": "要丟掉哪一件？"
+    },
+    {
+      "key": "campitem.slot.head_exorcise",
+      "text": "要驅哪一件？"
+    },
+    {
+      "key": "campitem.slot.head_identify",
+      "text": "要研究哪一件？"
+    },
+    {
+      "key": "campitem.slot.head_trade",
+      "text": "要交出哪一件？"
+    },
+    {
+      "key": "campitem.slot.head_use",
+      "text": "要用哪一件？"
+    },
+    {
+      "key": "campitem.slot.identified",
+      "text": "（已鑑定）"
+    },
+    {
+      "key": "campitem.slot.light_source",
+      "text": "（點起來，光源 %d）"
+    },
+    {
+      "key": "campitem.slot.magic_item",
+      "text": "（魔法物品）"
+    },
+    {
+      "key": "campitem.slot.not_worn",
+      "text": "（沒穿在身上）"
+    },
+    {
+      "key": "campitem.slot.unidentified",
+      "text": "（未鑑定）"
+    },
+    {
+      "key": "campitem.slot.unreadable",
+      "text": "（看不懂）"
+    },
+    {
+      "key": "campitem.slot.unusable",
+      "text": "（用不了）"
+    },
+    {
+      "key": "campitem.slot.weapon",
+      "text": "（武器）"
+    },
+    {
+      "key": "campitem.slot.weapon_exorcisable",
+      "text": "（武器，可驅）"
+    },
+    {
+      "key": "campitem.target.full",
+      "text": "（道具欄滿了）"
+    },
+    {
+      "key": "campitem.target.self",
+      "text": "（本人）"
+    },
+    {
+      "key": "campitem.target.who",
+      "text": "%s 的%s要給誰？"
+    },
+    {
+      "key": "campitem.trade.equipped",
+      "text": "那件裝備還在身上"
+    },
+    {
+      "key": "campitem.trade.self",
+      "text": "不能給自己"
+    },
+    {
+      "key": "campitem.trade.slot_empty",
+      "text": "這一格是空的"
+    },
+    {
+      "key": "campitem.use.keys",
+      "text": "↑↓：選擇　Enter：使用　Esc：返回"
+    },
+    {
+      "key": "campitem.use.target_status",
+      "text": "生命 %d/%d　狀態 %d"
+    },
+    {
+      "key": "campitem.use.target_who",
+      "text": "%s 要對誰使用%s？"
+    },
+    {
+      "key": "campitem.verb.drop",
+      "text": "丟東西"
+    },
+    {
+      "key": "campitem.verb.exorcise",
+      "text": "被驅邪"
+    },
+    {
+      "key": "campitem.verb.identify",
+      "text": "研究道具"
+    },
+    {
+      "key": "campitem.verb.trade",
+      "text": "交出東西"
+    },
+    {
+      "key": "campitem.verb.use",
+      "text": "用東西"
+    },
+    {
+      "key": "class.barbarian",
+      "text": "蠻族"
+    },
+    {
+      "key": "class.cleric",
+      "text": "牧師"
+    },
+    {
+      "key": "class.monk",
+      "text": "武僧"
+    },
+    {
+      "key": "class.paladin",
+      "text": "聖騎士"
+    },
+    {
+      "key": "class.ranger",
+      "text": "遊俠"
+    },
+    {
+      "key": "class.scholar",
+      "text": "學者"
+    },
+    {
+      "key": "class.sorcerer",
+      "text": "術士"
+    },
+    {
+      "key": "class.thief",
+      "text": "盜賊"
+    },
+    {
+      "key": "class.visionary",
+      "text": "靈視者"
+    },
+    {
+      "key": "class.wizard",
+      "text": "巫師"
+    },
+    {
+      "key": "command.tab.actions",
+      "text": "行動"
+    },
+    {
+      "key": "command.tab.combat",
+      "text": "戰鬥"
+    },
+    {
+      "key": "command.tab.common",
+      "text": "常用"
+    },
+    {
+      "key": "command.tab.explore",
+      "text": "探索"
+    },
+    {
+      "key": "command.tab.inventory",
+      "text": "裝備物品"
+    },
+    {
+      "key": "command.tab.items",
+      "text": "物品"
+    },
+    {
+      "key": "command.tab.party",
+      "text": "隊伍"
+    },
+    {
+      "key": "command.tab.rest",
+      "text": "休整"
+    },
+    {
+      "key": "command.tab.services",
+      "text": "服務與離開"
+    },
+    {
+      "key": "command.tab.support",
+      "text": "支援"
+    },
+    {
+      "key": "command.tab.system",
+      "text": "系統"
+    },
+    {
+      "key": "command.tab.town",
+      "text": "城鎮設施"
+    },
+    {
+      "key": "confirm.keys",
+      "text": "Y：是　N／Esc：否"
+    },
+    {
+      "key": "controls.changed",
+      "text": "操作模式：%s"
+    },
+    {
+      "key": "controls.mode.modern",
+      "text": "現代"
+    },
+    {
+      "key": "controls.mode.retro",
+      "text": "復古"
+    },
+    {
+      "key": "create.class.header",
+      "text": "選擇職業："
+    },
+    {
+      "key": "create.done",
+      "text": "隊伍組好了。按 S 存檔。"
+    },
+    {
+      "key": "create.forced.remaining",
+      "text": "開新遊戲要建滿 %d 個角色（還剩 %d 個）"
+    },
+    {
+      "key": "create.header",
+      "text": "建立角色"
+    },
+    {
+      "key": "create.header.en",
+      "text": "Character Creation"
+    },
+    {
+      "key": "create.name.keys",
+      "text": "Enter：確定　Backspace：刪除　Esc：回上一步"
+    },
+    {
+      "key": "create.name.label",
+      "text": "姓名："
+    },
+    {
+      "key": "create.name.note1",
+      "text": "※ 姓名只收英數字：存檔的姓名欄是 12 bytes，"
+    },
+    {
+      "key": "create.name.note2",
+      "text": "　 中文塞不下，原版也讀不回來"
+    },
+    {
+      "key": "create.nav.keys",
+      "text": "↑↓：選擇　Enter：確定　Esc：回上一步"
+    },
+    {
+      "key": "create.race.header",
+      "text": "選擇種族："
+    },
+    {
+      "key": "create.race.keys",
+      "text": "數字鍵：選擇　Esc：取消"
+    },
+    {
+      "key": "create.race.rollfail",
+      "text": "擲點失敗：%v"
+    },
+    {
+      "key": "create.slot.added",
+      "text": "%s 已加入隊伍第 %d 位（按 S 存檔才會留下）"
+    },
+    {
+      "key": "create.slot.header",
+      "text": "放進隊伍第幾位？（會覆蓋原本的角色）"
+    },
+    {
+      "key": "create.slot.row",
+      "text": "%s%d  %-10s %d 級 %s"
+    },
+    {
+      "key": "create.trait.advice",
+      "text": "  ← 建議重擲"
+    },
+    {
+      "key": "create.trait.col_avg",
+      "text": "該種族平均"
+    },
+    {
+      "key": "create.trait.col_name",
+      "text": "屬性"
+    },
+    {
+      "key": "create.trait.col_rolled",
+      "text": "擲出"
+    },
+    {
+      "key": "create.trait.header",
+      "text": "種族：%s　剩餘重擲 %d 次"
+    },
+    {
+      "key": "create.trait.intelligence",
+      "text": "智力"
+    },
+    {
+      "key": "create.trait.keys",
+      "text": "數字鍵：勾選要重擲的屬性（可複選）"
+    },
+    {
+      "key": "create.trait.keys2",
+      "text": "R：重擲勾選的項目　Enter：接受並選職業"
+    },
+    {
+      "key": "create.trait.note1",
+      "text": "※ 原版是選好按 ESC 重擲；本作 ESC 一律是「退回上一步」，"
+    },
+    {
+      "key": "create.trait.note2",
+      "text": "　 所以改用 R，免得按錯就退出建角"
+    },
+    {
+      "key": "create.trait.pick_first",
+      "text": "先用數字鍵勾選要重擲的屬性"
+    },
+    {
+      "key": "create.trait.stamina",
+      "text": "耐力"
+    },
+    {
+      "key": "crush.closing",
+      "text": "兩側的牆又逼近了一些"
+    },
+    {
+      "key": "crush.crushed",
+      "en": "Your party has been crushed by the walls.",
+      "text": "隊伍被牆壓碎了"
+    },
+    {
+      "key": "crush.machinery",
+      "en": "You hear the whirring of massive machinery",
+      "text": "聽見沉重機械運轉的聲音"
+    },
+    {
+      "key": "death.dismiss",
+      "text": "（按任意鍵離開）"
+    },
+    {
+      "key": "death.line0",
+      "en": "A cold breeze",
+      "text": "一陣冷風"
+    },
+    {
+      "key": "death.line1",
+      "en": "chills the air...",
+      "text": "讓空氣凝結……"
+    },
+    {
+      "key": "death.line2",
+      "en": "...all characters",
+      "text": "……全隊"
+    },
+    {
+      "key": "death.line3",
+      "en": "have died.",
+      "text": "都死了。"
+    },
+    {
+      "key": "dungeon.cant",
+      "en": "You can't",
+      "text": "你辦不到"
+    },
+    {
+      "key": "dungeon.carry.none",
+      "en": "You carry no dungeon items.",
+      "text": "身上沒有地城道具"
+    },
+    {
+      "key": "dungeon.drop.failed",
+      "text": "放不下去"
+    },
+    {
+      "key": "dungeon.drop.title",
+      "en": "Drop",
+      "text": "放下哪一件？"
+    },
+    {
+      "key": "dungeon.dropped",
+      "en": "%s Dropped.",
+      "text": "放下了 %s"
+    },
+    {
+      "key": "dungeon.examine.title",
+      "en": "Examine ",
+      "text": "看哪一件？"
+    },
+    {
+      "key": "dungeon.gone",
+      "text": "那件東西已經不在這裡了"
+    },
+    {
+      "key": "dungeon.keys",
+      "en": "Up/Down: select  Enter: confirm  Esc: back",
+      "text": "↑↓：選擇　Enter：確定　Esc：返回"
+    },
+    {
+      "key": "dungeon.map.writefailed",
+      "text": "改寫地圖失敗：%v"
+    },
+    {
+      "key": "dungeon.member.freeslots",
+      "text": "%s%s　空 %d 格"
+    },
+    {
+      "key": "dungeon.move.title",
+      "en": "Move:",
+      "text": "推哪一件？"
+    },
+    {
+      "key": "dungeon.noroom",
+      "en": "No more room.",
+      "text": "放不下了"
+    },
+    {
+      "key": "dungeon.nothing",
+      "en": "There's nothing here.",
+      "text": "這裡沒有東西"
+    },
+    {
+      "key": "dungeon.nothing.happens",
+      "en": "Nothing happens.",
+      "text": "什麼也沒發生"
+    },
+    {
+      "key": "dungeon.nothing.special",
+      "en": "You see nothing special about the %s",
+      "text": "%s 看不出有什麼特別"
+    },
+    {
+      "key": "dungeon.something",
+      "en": "Something happened...",
+      "text": "發生了什麼事……"
+    },
+    {
+      "key": "dungeon.story.done",
+      "text": "已經沒有下文了"
+    },
+    {
+      "key": "dungeon.story.notyet",
+      "en": "Nothing happens",
+      "text": "什麼也沒發生"
+    },
+    {
+      "key": "dungeon.take.title",
+      "en": "Take:",
+      "text": "拿哪一件？"
+    },
+    {
+      "key": "dungeon.take.who",
+      "en": "Character to take",
+      "text": "誰來拿 %s？"
+    },
+    {
+      "key": "dungeon.taken",
+      "en": "Taken.",
+      "text": "%s 拿走了 %s"
+    },
+    {
+      "key": "dungeon.use.noother",
+      "text": "身上沒有別的地城道具"
+    },
+    {
+      "key": "dungeon.use.on",
+      "en": "Use on:",
+      "text": "%s 要用在哪？"
+    },
+    {
+      "key": "dungeon.use.onwhat",
+      "text": "%s 用在哪一件？"
+    },
+    {
+      "key": "dungeon.use.target.C",
+      "en": "Character",
+      "text": "身上的另一件"
+    },
+    {
+      "key": "dungeon.use.target.Q",
+      "en": "Quit",
+      "text": "取消"
+    },
+    {
+      "key": "dungeon.use.target.R",
+      "en": "Room",
+      "text": "這個房間裡的"
+    },
+    {
+      "key": "dungeon.use.title",
+      "en": "Use ",
+      "text": "用哪一件？"
+    },
+    {
+      "key": "dungeon.yousee",
+      "en": "You see a %s",
+      "text": "你看到 %s"
+    },
+    {
+      "key": "ending.credits.more",
+      "text": "（按任意鍵繼續）"
+    },
+    {
+      "key": "ending.fallback.cleared",
+      "text": "你通關了《冬之魔》。"
+    },
+    {
+      "key": "ending.fallback.congrats",
+      "text": "恭喜！"
+    },
+    {
+      "key": "ending.fallback.exit",
+      "text": "按任意鍵離開"
+    },
+    {
+      "key": "ending.fallback.sealed",
+      "text": "惡魔已被禁錮，漫長的冬天終於要過去了。"
+    },
+    {
+      "key": "ending.fallback.thanks",
+      "text": "希望這趟旅程沒有辜負你的時間。"
+    },
+    {
+      "key": "ending.offer.choice",
+      "text": "　按 1 接受，按 2 婉拒"
+    },
+    {
+      "key": "ending.press",
+      "text": "（按任意鍵）"
+    },
+    {
+      "key": "eregore.choice.three",
+      "text": "　按 1、2 或 3"
+    },
+    {
+      "key": "eregore.choice.two",
+      "text": "　按 1 或 2"
+    },
+    {
+      "key": "eregore.plot.unhandled",
+      "text": "（地點劇情 %d 還沒接，見 docs/re/65）"
+    },
+    {
+      "key": "eregore.shattered",
+      "text": "春之石碎了。冬天開始了。"
+    },
+    {
+      "key": "event.outofrange",
+      "text": "事件 %d 超出範圍"
+    },
+    {
+      "key": "examine.armor",
+      "en": "Armor",
+      "text": "護甲"
+    },
+    {
+      "key": "examine.armor.unit",
+      "en": "pts.",
+      "text": "點"
+    },
+    {
+      "key": "examine.hp",
+      "en": "HP",
+      "text": "生命"
+    },
+    {
+      "key": "examine.keys",
+      "en": "Continue  Back  Quit",
+      "text": "C：下一個　B：上一個　Q／Esc：離開"
+    },
+    {
+      "key": "examine.nolore",
+      "text": "（沒有人具備怪物學識，看不出牠的能耐）"
+    },
+    {
+      "key": "examine.skill",
+      "en": "Skl",
+      "text": "技巧"
+    },
+    {
+      "key": "examine.sp",
+      "en": "SP",
+      "text": "法力"
+    },
+    {
+      "key": "examine.speed",
+      "en": "Spd",
+      "text": "速度"
+    },
+    {
+      "key": "examine.status1",
+      "text": "中毒"
+    },
+    {
+      "key": "examine.status2",
+      "text": "被束縛"
+    },
+    {
+      "key": "examine.status3",
+      "text": "被束縛"
+    },
+    {
+      "key": "examine.status4",
+      "text": "被束縛"
+    },
+    {
+      "key": "examine.status5",
+      "text": "已死亡"
+    },
+    {
+      "key": "examine.strength",
+      "en": "Str",
+      "text": "力量"
+    },
+    {
+      "key": "examine.target",
+      "text": "牠打算攻擊 %s"
+    },
+    {
+      "key": "examine.weapon",
+      "text": "武器"
+    },
+    {
+      "key": "examine.weapon.none",
+      "text": "徒手"
+    },
+    {
+      "key": "examine.weapon.poison",
+      "text": "（附毒）"
+    },
+    {
+      "key": "facing.east",
+      "text": "東"
+    },
+    {
+      "key": "facing.north",
+      "text": "北"
+    },
+    {
+      "key": "facing.south",
+      "text": "南"
+    },
+    {
+      "key": "facing.west",
+      "text": "西"
+    },
+    {
+      "key": "item.weapon.none",
+      "text": "徒手"
+    },
+    {
+      "key": "manual.reading.back",
+      "text": "Esc 回目錄"
+    },
+    {
+      "key": "manual.reading.header",
+      "text": "手札　%s"
+    },
+    {
+      "key": "manual.reading.scroll",
+      "text": "第 %d–%d 行／共 %d　空白鍵翻頁　Esc 回目錄"
+    },
+    {
+      "key": "manual.title",
+      "text": "手札"
+    },
+    {
+      "key": "manual.toc.keys",
+      "text": "↑↓ 選擇　Enter 翻開　Esc 收起"
+    },
+    {
+      "key": "manual.unavailable",
+      "text": "手札讀不到（assets/manual/）"
+    },
+    {
+      "key": "mapchange.entered",
+      "text": "進入地圖 %d 的 (%d,%d)"
+    },
+    {
+      "key": "mapchange.error",
+      "text": "換地圖 %d 失敗：%v"
+    },
+    {
+      "key": "merchant.buy.done",
+      "text": "買下%s，%s 收著（剩 %d 金幣）"
+    },
+    {
+      "key": "merchant.greet.hail",
+      "text": "  G 打招呼"
+    },
+    {
+      "key": "merchant.greet.ignore",
+      "text": "  I 無視他們"
+    },
+    {
+      "key": "merchant.greet.leave",
+      "text": "Esc：走開"
+    },
+    {
+      "key": "merchant.haggle.offended",
+      "text": "你冒犯了商人，%s 他不賣了"
+    },
+    {
+      "key": "merchant.haggle.refused",
+      "text": "這件沒得談了"
+    },
+    {
+      "key": "merchant.haggle.success",
+      "text": "殺價成功，%s 降到 %d 金幣"
+    },
+    {
+      "key": "merchant.haggle.unmoved",
+      "text": "商人不為所動"
+    },
+    {
+      "key": "merchant.intro",
+      "text": "你看到一群%s的商人"
+    },
+    {
+      "key": "merchant.keys",
+      "text": "↑↓：選擇　Enter：買下　H：殺價　V：讀心　I：檢視隊員　Esc：走開"
+    },
+    {
+      "key": "merchant.mind.lies",
+      "text": "你看穿了 %d 件貨的假話"
+    },
+    {
+      "key": "merchant.mind.nothing",
+      "text": "你讀不出什麼"
+    },
+    {
+      "key": "merchant.mind.once",
+      "text": "只能用一次"
+    },
+    {
+      "key": "merchant.wares.header",
+      "text": "他們把貨攤開來看　金幣 %d"
+    },
+    {
+      "key": "merchant.wares.lied",
+      "text": "謊報"
+    },
+    {
+      "key": "merchant.wares.refused",
+      "text": "不賣"
+    },
+    {
+      "key": "merchant.wares.sold",
+      "text": "已售出"
+    },
+    {
+      "key": "npcbed.ask",
+      "text": "你要在這裡睡一覺嗎？"
+    },
+    {
+      "key": "npcbed.farewell",
+      "text": "她向你道別，又補了一句「願遠古種族保護你……」"
+    },
+    {
+      "key": "npcbed.slept",
+      "text": "你睡了一覺……"
+    },
+    {
+      "key": "orb.taken",
+      "text": "%s 收下了恆世寶珠"
+    },
+    {
+      "key": "partysheet.bind",
+      "text": "　束縛 %d 級"
+    },
+    {
+      "key": "partysheet.equip",
+      "text": "　武器 %s　護甲 %d"
+    },
+    {
+      "key": "partysheet.exp",
+      "text": "　經驗 %s"
+    },
+    {
+      "key": "partysheet.exp_max",
+      "text": "已達上限"
+    },
+    {
+      "key": "partysheet.faith",
+      "text": "%s　祈禱 %d%%"
+    },
+    {
+      "key": "partysheet.faith_label",
+      "text": "　信仰 "
+    },
+    {
+      "key": "partysheet.faith_none",
+      "text": "無信仰"
+    },
+    {
+      "key": "partysheet.header",
+      "text": "%s　%s　%s　%d 級"
+    },
+    {
+      "key": "partysheet.hpsp",
+      "text": "　生命 %3d/%3d　法力 %3d/%3d"
+    },
+    {
+      "key": "partysheet.keys",
+      "text": "↑↓：選擇　Enter：攤開　Esc：取消"
+    },
+    {
+      "key": "partysheet.keys2",
+      "text": "↑↓：換人　Enter／Esc：收起"
+    },
+    {
+      "key": "partysheet.skills_label",
+      "text": "　技能"
+    },
+    {
+      "key": "partysheet.skills_none",
+      "text": "　　（無）"
+    },
+    {
+      "key": "partysheet.who",
+      "text": "要看誰？"
+    },
+    {
+      "key": "plot.allfell",
+      "text": "全隊都倒下了"
+    },
+    {
+      "key": "plot.destroyed",
+      "en": "In a flash of power the magic of the glyph is destroyed.",
+      "text": "力量閃現，符印的魔法被摧毀了"
+    },
+    {
+      "key": "plot.fell",
+      "text": "%s 倒下了"
+    },
+    {
+      "key": "plot.fizzles",
+      "en": "The spell fizzles...",
+      "text": "法術消散了……"
+    },
+    {
+      "key": "plot.forcefield",
+      "en": "A crimson forcefield bars your entry to the Circle of Light",
+      "text": "緋紅的力場擋住了通往光之環的路"
+    },
+    {
+      "key": "plot.glyphdrain",
+      "text": "符印的力量侵蝕著隊伍"
+    },
+    {
+      "key": "plot.imprison",
+      "en": "IMPRISON",
+      "text": "禁錮"
+    },
+    {
+      "key": "plot.inactive",
+      "en": "It is already inactive",
+      "text": "這個符印已經失效了"
+    },
+    {
+      "key": "plot.needsp",
+      "en": "That requires %d SP!",
+      "text": "那需要 %d 點法力"
+    },
+    {
+      "key": "plot.noglyph",
+      "en": "I see no glyph!",
+      "text": "這裡沒有符印"
+    },
+    {
+      "key": "plot.uncurse",
+      "en": "UNCURSE",
+      "text": "解咒"
+    },
+    {
+      "key": "plot.won",
+      "text": "惡魔被禁錮了"
+    },
+    {
+      "key": "plotgift.democrystal",
+      "text": "惡魔水晶"
+    },
+    {
+      "key": "plotgift.taken",
+      "text": "%s 收下了%s"
+    },
+    {
+      "key": "plotgift.who",
+      "text": "誰來收下？"
+    },
+    {
+      "key": "pool.empty",
+      "en": "The pool is empty",
+      "text": "水池乾了"
+    },
+    {
+      "key": "pool.healed",
+      "en": "He is healed %d",
+      "text": "%s 回復了 %d 點"
+    },
+    {
+      "key": "pool.keys",
+      "text": "↑↓：選人　Enter：喝　Esc：離開"
+    },
+    {
+      "key": "pool.left",
+      "text": "今天還能喝 %d 口"
+    },
+    {
+      "key": "pool.title",
+      "text": "一池清水"
+    },
+    {
+      "key": "pool.who",
+      "text": "誰要喝？"
+    },
+    {
+      "key": "proving.blessing",
+      "text": "「這位%s —— 讓他在將來的日子裡證明自己的價值。」"
+    },
+    {
+      "key": "proving.colour",
+      "text": "你身處一間%s的房間，地板與牆壁磨得發亮，空無一物。"
+    },
+    {
+      "key": "proving.colour.beige",
+      "en": "beige",
+      "text": "米色"
+    },
+    {
+      "key": "proving.colour.black",
+      "en": "black",
+      "text": "黑色"
+    },
+    {
+      "key": "proving.colour.blue",
+      "en": "blue",
+      "text": "藍色"
+    },
+    {
+      "key": "proving.colour.brown",
+      "en": "brown",
+      "text": "棕色"
+    },
+    {
+      "key": "proving.colour.crimson",
+      "en": "crimson",
+      "text": "緋紅"
+    },
+    {
+      "key": "proving.colour.green",
+      "en": "green",
+      "text": "綠色"
+    },
+    {
+      "key": "proving.colour.grey",
+      "en": "grey",
+      "text": "灰色"
+    },
+    {
+      "key": "proving.colour.silver",
+      "en": "silver",
+      "text": "銀色"
+    },
+    {
+      "key": "proving.colour.violet",
+      "en": "violet",
+      "text": "紫色"
+    },
+    {
+      "key": "proving.colour.white",
+      "en": "white",
+      "text": "白色"
+    },
+    {
+      "key": "proving.fight",
+      "text": "「這位%s —— 讓他在殊死戰中證明自己。」"
+    },
+    {
+      "key": "proving.flood",
+      "text": "房間忽然被光灌滿，一個宏大的聲音說道："
+    },
+    {
+      "key": "proving.lore",
+      "text": "「這位%s —— 讓他知道這件事。」"
+    },
+    {
+      "key": "proving.nopass",
+      "text": "「既然你沒有%s，我就讓你過。」"
+    },
+    {
+      "key": "proving.room",
+      "text": "%s的試煉室。"
+    },
+    {
+      "key": "proving.taunt",
+      "text": "「這位%s —— 他要是踩上了那個陷阱，可就丟臉了！」"
+    },
+    {
+      "key": "proving.unwell",
+      "text": "「等你的%s好了再回來。」"
+    },
+    {
+      "key": "race.darkelf",
+      "text": "黑暗精靈"
+    },
+    {
+      "key": "race.dwarf",
+      "text": "矮人"
+    },
+    {
+      "key": "race.elf",
+      "text": "精靈"
+    },
+    {
+      "key": "race.human",
+      "text": "人類"
+    },
+    {
+      "key": "race.troll",
+      "text": "巨魔"
+    },
+    {
+      "key": "read.nothing",
+      "text": "這裡沒有值得再看一次的東西"
+    },
+    {
+      "key": "reorder.done",
+      "text": "全員就位。Enter：收工"
+    },
+    {
+      "key": "reorder.header",
+      "text": "排列陣型"
+    },
+    {
+      "key": "reorder.kept",
+      "text": "維持原本的陣型"
+    },
+    {
+      "key": "reorder.keys",
+      "text": "Esc：取消，維持原本的陣型"
+    },
+    {
+      "key": "reorder.occupied",
+      "text": "%s 格已經有人了"
+    },
+    {
+      "key": "reorder.prompt",
+      "text": "%s 站哪一格？（A–I）"
+    },
+    {
+      "key": "reorder.updated",
+      "text": "陣型已更新"
+    },
+    {
+      "key": "riddle.answer",
+      "text": "答案（英文，按 Enter 送出）："
+    },
+    {
+      "key": "riddle.cancel",
+      "text": "Esc：離開"
+    },
+    {
+      "key": "riddle.door.error",
+      "text": "開牆失敗：%v"
+    },
+    {
+      "key": "riddle.priest.0",
+      "en": "A spectral priest utters a chant:",
+      "text": "一位幽靈司祭低聲吟誦："
+    },
+    {
+      "key": "riddle.priest.1",
+      "en": "'Power, Divinity, Spirit...' and",
+      "text": "「力量、神性、靈魂……」"
+    },
+    {
+      "key": "riddle.priest.2",
+      "en": "awaits the final word of the spell",
+      "text": "然後等著你說出咒文的最後一個詞。"
+    },
+    {
+      "key": "riddle.priest.wrong",
+      "en": "The priest fades away into mist",
+      "text": "司祭化成霧氣散去了。"
+    },
+    {
+      "key": "riddle.temple.0",
+      "en": "A voice from nowhere speaks: 'Only",
+      "text": "不知何處傳來一個聲音："
+    },
+    {
+      "key": "riddle.temple.1",
+      "en": "those who worship Malifon may enter",
+      "text": "「唯有信奉馬利馮的人能進這座神殿。"
+    },
+    {
+      "key": "riddle.temple.2",
+      "en": "this temple. What is thy name?'",
+      "text": "　報上你的名字。」"
+    },
+    {
+      "key": "riddle.temple.right",
+      "en": "You may enter.",
+      "text": "你可以進去。"
+    },
+    {
+      "key": "riddle.temple.wrong0",
+      "en": "You are not known to this temple.",
+      "text": "這座神殿不認得你。"
+    },
+    {
+      "key": "riddle.temple.wrong1",
+      "en": " Leave at once.",
+      "text": "立刻離開。"
+    },
+    {
+      "key": "roster.armorline",
+      "text": " %s 護甲 %d"
+    },
+    {
+      "key": "roster.back",
+      "text": "P：返回"
+    },
+    {
+      "key": "roster.header",
+      "text": "隊伍名冊"
+    },
+    {
+      "key": "roster.hpline",
+      "text": " %s 生命 %3d/%3d"
+    },
+    {
+      "key": "roster.nameline",
+      "text": "%s %d級 %s"
+    },
+    {
+      "key": "roster.spline",
+      "text": " 法力 %3d/%3d 未用點數 %d"
+    },
+    {
+      "key": "rune.dismiss",
+      "text": "按任意鍵繼續"
+    },
+    {
+      "key": "rune.header",
+      "text": "牆上刻著一段符文"
+    },
+    {
+      "key": "rune.hint1",
+      "text": "這是古代的密語，不是任何一種文字。"
+    },
+    {
+      "key": "rune.hint2",
+      "text": "旅途中會遇到已知答案的符文 —— 記下對照，"
+    },
+    {
+      "key": "rune.hint3",
+      "text": "其餘的密語就解讀得出來了。"
+    },
+    {
+      "key": "save.close_error_stay",
+      "text": "自動存檔失敗，沒有關閉：%v"
+    },
+    {
+      "key": "save.done",
+      "text": "已存檔"
+    },
+    {
+      "key": "save.error",
+      "text": "存檔失敗：%v"
+    },
+    {
+      "key": "save.error_stay",
+      "text": "存檔失敗，沒有離開：%v"
+    },
+    {
+      "key": "save.quit.cancel",
+      "text": "Esc：繼續玩"
+    },
+    {
+      "key": "save.quit.header",
+      "text": "要離開遊戲嗎？"
+    },
+    {
+      "key": "save.quit.no",
+      "text": "N：不存檔直接離開"
+    },
+    {
+      "key": "save.quit.yes",
+      "text": "Y：存檔後離開"
+    },
+    {
+      "key": "sea.cannon.hit",
+      "text": "命中 %s，造成 %d 點傷害"
+    },
+    {
+      "key": "sea.cannon.miss",
+      "text": "砲彈落入海中"
+    },
+    {
+      "key": "sea.cannon.sunk",
+      "text": "命中 %s，造成 %d 點傷害並擊沉"
+    },
+    {
+      "key": "sea.encounter",
+      "text": "海上遭遇：%d 名敵人"
+    },
+    {
+      "key": "sea.enemy.hit",
+      "text": "敵方命中，船體受損 %d"
+    },
+    {
+      "key": "sea.enemy.miss",
+      "text": "敵方砲擊落空"
+    },
+    {
+      "key": "sea.enemy.monster",
+      "text": "海怪"
+    },
+    {
+      "key": "sea.enemy.pirate",
+      "text": "海盜船"
+    },
+    {
+      "key": "sea.escaped",
+      "text": "成功駛離戰場"
+    },
+    {
+      "key": "sea.header.hull",
+      "text": "船體　%d / %d"
+    },
+    {
+      "key": "sea.header.points",
+      "text": "移動點　%d"
+    },
+    {
+      "key": "sea.header.round",
+      "text": "海戰　第 %d 回合"
+    },
+    {
+      "key": "sea.hull.inspect",
+      "text": "船體：%d / %d"
+    },
+    {
+      "key": "sea.keys.fire",
+      "text": "I/J/K/M 四向砲擊（3）"
+    },
+    {
+      "key": "sea.keys.move",
+      "text": "Enter 前進（1）　←→ 轉向（2）"
+    },
+    {
+      "key": "sea.keys.other",
+      "text": "? 查看船體　Esc 結束回合"
+    },
+    {
+      "key": "sea.keys.reverse",
+      "text": "/ 倒航（3）"
+    },
+    {
+      "key": "sea.move.forward",
+      "text": "船向前航行"
+    },
+    {
+      "key": "sea.move.left",
+      "text": "船向左轉"
+    },
+    {
+      "key": "sea.move.reverse",
+      "text": "船倒航"
+    },
+    {
+      "key": "sea.move.right",
+      "text": "船向右轉"
+    },
+    {
+      "key": "sea.victory.dismiss",
+      "text": "敵方全滅（按空白鍵返回）"
+    },
+    {
+      "key": "sea.victory.exp",
+      "text": "海戰勝利，每人獲得 %d 點經驗"
+    },
+    {
+      "key": "site.college.gap",
+      "text": "(%d,%d) 是學院格，但不在 35 筆學院表裡"
+    },
+    {
+      "key": "site.college.name",
+      "text": "%s學院"
+    },
+    {
+      "key": "site.enter",
+      "text": "進入"
+    },
+    {
+      "key": "site.ruins",
+      "en": "You are walking through ruins",
+      "text": "隊伍走過一片廢墟"
+    },
+    {
+      "key": "site.temple.gap",
+      "text": "(%d,%d) 是神殿格，但不在 19 筆神殿表裡"
+    },
+    {
+      "key": "site.temple.name",
+      "text": "%s的神殿"
+    },
+    {
+      "key": "status.col.hp",
+      "text": "生命"
+    },
+    {
+      "key": "status.col.name",
+      "text": "名字"
+    },
+    {
+      "key": "status.col.sp",
+      "text": "法力"
+    },
+    {
+      "key": "status.datetime",
+      "text": "%2d時 %2d日 %s月"
+    },
+    {
+      "key": "status.debug.header",
+      "text": "── 偵錯　F12 收起"
+    },
+    {
+      "key": "status.debug.keys1",
+      "text": "B 開打　F3 進城"
+    },
+    {
+      "key": "status.debug.keys2",
+      "text": "F4 商隊"
+    },
+    {
+      "key": "status.debug.pos",
+      "text": "座標 %2d,%-2d 面向%s"
+    },
+    {
+      "key": "status.debug.steps",
+      "text": "步數 %2d  內縮 %d"
+    },
+    {
+      "key": "status.debug.tile",
+      "text": "地形 %3d  深度 %d"
+    },
+    {
+      "key": "status.debug.tileset",
+      "text": "圖塊 %s"
+    },
+    {
+      "key": "status.goldfood",
+      "text": "金幣 %d　糧食 %d"
+    },
+    {
+      "key": "theme.changed",
+      "text": "顯示主題："
+    },
+    {
+      "key": "theme.failed",
+      "text": "切換顯示主題失敗：%v"
+    },
+    {
+      "key": "title.name",
+      "text": "冬之魔"
+    },
+    {
+      "key": "title.press",
+      "text": "按任意鍵開始"
+    },
+    {
+      "key": "tombstone.reload_failed",
+      "text": "重載地圖失敗：%v"
+    },
+    {
+      "key": "tombstone.shift",
+      "text": "墓碑在你面前挪動了起來"
+    },
+    {
+      "key": "town.church.convert",
+      "text": "改宗要 %s 的智力點數，不收金幣"
+    },
+    {
+      "key": "town.church.header",
+      "text": "供奉 %s　捐獻 1 金換 1 點經驗"
+    },
+    {
+      "key": "town.church.keys",
+      "text": "↑↓：選擇隊員　P：祈禱　D：捐獻　V：改宗"
+    },
+    {
+      "key": "town.church.member_row",
+      "text": "%s%s 信 %s　成功率 %d%%　祈禱 %d 金"
+    },
+    {
+      "key": "town.docks.buy_price",
+      "text": "買船　%d 金"
+    },
+    {
+      "key": "town.docks.keys",
+      "text": "B：買船　R：修船"
+    },
+    {
+      "key": "town.docks.no_sale",
+      "text": "這座城鎮沒有船可買"
+    },
+    {
+      "key": "town.docks.no_ship",
+      "text": "腳邊沒有船"
+    },
+    {
+      "key": "town.docks.repair_price",
+      "text": "修船　每點船體 %d 金（滿值 %d）"
+    },
+    {
+      "key": "town.docks.ship_here",
+      "text": "腳邊有一艘船，船體 %d／%d"
+    },
+    {
+      "key": "town.enter.entered",
+      "text": "進入%s"
+    },
+    {
+      "key": "town.enter.gap",
+      "text": "(%d,%d) 是城鎮格，但不在 25 筆城鎮座標表裡"
+    },
+    {
+      "key": "town.enter.left",
+      "text": "離開%s"
+    },
+    {
+      "key": "town.facility.back",
+      "text": "Esc：回到設施選單"
+    },
+    {
+      "key": "town.facility.exit",
+      "text": "Esc：離開"
+    },
+    {
+      "key": "town.guild.header",
+      "text": "升級　免費"
+    },
+    {
+      "key": "town.guild.keys",
+      "text": "↑↓：選擇隊員　L：升級"
+    },
+    {
+      "key": "town.guild.maxed",
+      "text": "已達頂級"
+    },
+    {
+      "key": "town.guild.member_row",
+      "text": "%s%s %2d 級　經驗 %-8d %s"
+    },
+    {
+      "key": "town.guild.ready",
+      "text": "可升級"
+    },
+    {
+      "key": "town.guild.short",
+      "text": "還差 %d"
+    },
+    {
+      "key": "town.healers.heal_rate",
+      "text": "治療　每點傷害 %d 金"
+    },
+    {
+      "key": "town.healers.healthy",
+      "text": "%s%s 狀態良好"
+    },
+    {
+      "key": "town.healers.keys",
+      "text": "↑↓：選擇隊員　H：接受治療"
+    },
+    {
+      "key": "town.healers.quote",
+      "text": "%s%s %s %d 金"
+    },
+    {
+      "key": "town.healers.resurrect_rate",
+      "text": "復活　每級 %d 金"
+    },
+    {
+      "key": "town.healers.service_heal",
+      "text": "治療"
+    },
+    {
+      "key": "town.healers.service_resurrect",
+      "text": "復活"
+    },
+    {
+      "key": "town.healers.service_unbind",
+      "text": "解除束縛"
+    },
+    {
+      "key": "town.healers.service_unpoison",
+      "text": "解毒"
+    },
+    {
+      "key": "town.healers.unbind_rate",
+      "text": "解除束縛　每級 %d 金"
+    },
+    {
+      "key": "town.healers.unpoison_rate",
+      "text": "解毒　%d 金"
+    },
+    {
+      "key": "town.inn.cannot_sleep",
+      "text": "現在睡不著。"
+    },
+    {
+      "key": "town.inn.died",
+      "text": " 沒有醒來"
+    },
+    {
+      "key": "town.inn.free_note",
+      "text": "※ 讀到的休息常式沒有扣金錢，所以這裡是免費的"
+    },
+    {
+      "key": "town.inn.hour",
+      "text": "目前 %d 時（睡覺要在 15–24 時之間）"
+    },
+    {
+      "key": "town.inn.restless",
+      "text": "現在睡不著（原版：You are restless）"
+    },
+    {
+      "key": "town.inn.sleep_option",
+      "text": "R：睡一晚（HP +2、法力 +10）"
+    },
+    {
+      "key": "town.inn.slept",
+      "text": "睡了 %d 個時辰，%d 日 %d 時醒來"
+    },
+    {
+      "key": "town.market.bought",
+      "text": "%s 買下%s，付 %d 金（剩 %d）"
+    },
+    {
+      "key": "town.market.cell_refused",
+      "text": "拒賣"
+    },
+    {
+      "key": "town.market.col_buy",
+      "text": "買價"
+    },
+    {
+      "key": "town.market.col_item",
+      "text": "   商品"
+    },
+    {
+      "key": "town.market.col_sell",
+      "text": "賣價"
+    },
+    {
+      "key": "town.market.empty",
+      "text": "隊伍是空的"
+    },
+    {
+      "key": "town.market.haggle_offended",
+      "text": "你惹惱了商人，這件他不賣了"
+    },
+    {
+      "key": "town.market.haggle_refused",
+      "text": "商人不肯再賣這件給你"
+    },
+    {
+      "key": "town.market.haggle_success",
+      "text": "商人讓步了"
+    },
+    {
+      "key": "town.market.haggle_unmoved",
+      "text": "商人不為所動（再談就會惹惱他）"
+    },
+    {
+      "key": "town.market.identify",
+      "text": "鑑定　%d 金"
+    },
+    {
+      "key": "town.market.keys",
+      "text": "↑↓：選商品　H：議價　B：買下　S：出售　（金幣 %d）"
+    },
+    {
+      "key": "town.market.refused",
+      "text": "商人不肯賣這件給你"
+    },
+    {
+      "key": "town.menu.header",
+      "text": "%s　物價指數 %d"
+    },
+    {
+      "key": "town.menu.keys",
+      "text": "Esc：離開城鎮"
+    },
+    {
+      "key": "town.menu.label_college",
+      "text": "L 學院"
+    },
+    {
+      "key": "town.menu.label_docks",
+      "text": "D 碼頭"
+    },
+    {
+      "key": "town.menu.label_guild",
+      "text": "G 城鎮公會"
+    },
+    {
+      "key": "town.menu.label_healers",
+      "text": "H 治療所"
+    },
+    {
+      "key": "town.menu.label_inn",
+      "text": "I 旅店"
+    },
+    {
+      "key": "town.menu.label_market",
+      "text": "M 市集"
+    },
+    {
+      "key": "town.menu.label_pub",
+      "text": "B 酒館"
+    },
+    {
+      "key": "town.menu.label_temple",
+      "text": "C 神殿"
+    },
+    {
+      "key": "town.menu.no_ship",
+      "text": "（這裡沒有船）"
+    },
+    {
+      "key": "town.picker.docks_mark",
+      "text": "　碼頭"
+    },
+    {
+      "key": "town.picker.header",
+      "text": "進入哪座城鎮？"
+    },
+    {
+      "key": "town.picker.keys",
+      "text": "↑↓：選擇　Enter：進城　Esc：取消"
+    },
+    {
+      "key": "town.picker.note",
+      "text": "（偵錯用。正常玩法是走到城鎮格自動進城）"
+    },
+    {
+      "key": "town.picker.row",
+      "text": "%s%s 物價 %2d%s"
+    },
+    {
+      "key": "town.pub.keys",
+      "text": "B：買糧"
+    },
+    {
+      "key": "town.pub.price",
+      "text": "糧食　每份 %d 金（一次可買 %d–%d 份）"
+    },
+    {
+      "key": "town.pub.stock",
+      "text": "隊伍目前 %d 份"
+    },
+    {
+      "key": "townsvc.amount.keys",
+      "text": "數字鍵輸入　Backspace：刪除　Enter：確定　Esc：取消"
+    },
+    {
+      "key": "townsvc.college.cost_note",
+      "text": "（學費 %d 金）"
+    },
+    {
+      "key": "townsvc.college.cost_points",
+      "text": "%d 點　%d 金"
+    },
+    {
+      "key": "townsvc.college.header",
+      "text": "學生：%s（%s）　剩餘智力點數 %d"
+    },
+    {
+      "key": "townsvc.college.keys",
+      "text": "↑↓：選學院　Tab：換學生　L：學下去"
+    },
+    {
+      "key": "townsvc.college.learn_done",
+      "text": "%s 學會了%s，付 %d 金（剩 %d）"
+    },
+    {
+      "key": "townsvc.college.learn_error",
+      "text": "學院出錯：%v"
+    },
+    {
+      "key": "townsvc.college.learned",
+      "text": "已學會"
+    },
+    {
+      "key": "townsvc.college.none",
+      "text": "這座城鎮沒有學院"
+    },
+    {
+      "key": "townsvc.college.points_error",
+      "text": "算不出剩餘點數：%v"
+    },
+    {
+      "key": "townsvc.dock.buy_cost_note",
+      "text": "%s（船價 %d 金）"
+    },
+    {
+      "key": "townsvc.dock.buy_done",
+      "text": "船與船員都備妥了，付 %d 金（剩 %d）"
+    },
+    {
+      "key": "townsvc.dock.no_ship",
+      "text": "這座城鎮沒有船可買"
+    },
+    {
+      "key": "townsvc.dock.repair_cost_note",
+      "text": "%s（修好要 %d 金）"
+    },
+    {
+      "key": "townsvc.dock.repair_done",
+      "text": "修好了，付 %d 金（剩 %d）"
+    },
+    {
+      "key": "townsvc.guild.levelup_done",
+      "text": "%s 升到 %d 級　生命 +%d　法力 +%d"
+    },
+    {
+      "key": "townsvc.guild.levelup_error",
+      "text": "升級失敗：%v"
+    },
+    {
+      "key": "townsvc.guild.max_level",
+      "text": "%s 已經是最高等級"
+    },
+    {
+      "key": "townsvc.guild.need_exp",
+      "text": "公會認為 %s 還需要 %d 點經驗才能升級"
+    },
+    {
+      "key": "townsvc.guild.trait_capped",
+      "text": "　（屬性已達種族上限）"
+    },
+    {
+      "key": "townsvc.guild.traitgains",
+      "text": "　　屬性成長："
+    },
+    {
+      "key": "townsvc.heal.cost_note",
+      "text": "%s（%s 要 %d 金）"
+    },
+    {
+      "key": "townsvc.heal.done",
+      "text": "%s %s，付 %d 金（剩 %d）"
+    },
+    {
+      "key": "townsvc.sell.armor_locked",
+      "text": "（護甲，不能賣）"
+    },
+    {
+      "key": "townsvc.sell.done",
+      "text": "%s 賣掉%s，得 %d 金（共 %d）"
+    },
+    {
+      "key": "townsvc.sell.item_empty",
+      "text": "（空）"
+    },
+    {
+      "key": "townsvc.sell.keys_confirm",
+      "text": "↑↓：選擇　Enter：確定　Esc：取消"
+    },
+    {
+      "key": "townsvc.sell.keys_sell",
+      "text": "↑↓：選擇　Enter：賣出　Esc：返回"
+    },
+    {
+      "key": "townsvc.sell.price_note",
+      "text": "%d 金"
+    },
+    {
+      "key": "townsvc.sell.slot_empty",
+      "text": "那一格是空的"
+    },
+    {
+      "key": "townsvc.sell.slot_prompt",
+      "text": "%s 要賣哪一件？（售價是底價的一半）"
+    },
+    {
+      "key": "townsvc.sell.unknown_item",
+      "text": "認不出這件道具"
+    },
+    {
+      "key": "townsvc.sell.weapon_locked",
+      "text": "（武器，不能賣）"
+    },
+    {
+      "key": "townsvc.sell.who",
+      "text": "誰要賣東西？"
+    },
+    {
+      "key": "townsvc.skill.fallback",
+      "text": "技能 %d"
+    },
+    {
+      "key": "townsvc.tavern.done",
+      "text": "買了 %d 份糧食，付 %d 金（共 %d 份，剩 %d 金）"
+    },
+    {
+      "key": "townsvc.tavern.prompt",
+      "text": "要買幾份糧食？（每份 %d 金，最多 %d 份）"
+    },
+    {
+      "key": "townsvc.temple.convert_done",
+      "text": "%s 改信 %s，學會了%s（花 %d 點智力）"
+    },
+    {
+      "key": "townsvc.temple.convert_error",
+      "text": "改宗出錯：%v"
+    },
+    {
+      "key": "townsvc.temple.deity_fallback",
+      "text": "神祇 %d"
+    },
+    {
+      "key": "townsvc.temple.donate_done",
+      "text": "%s 捐了 %d 金，經驗值來到 %d"
+    },
+    {
+      "key": "townsvc.temple.donate_prompt",
+      "text": "%s 要捐多少金幣？（1 金換 1 點經驗，身上 %d 金）"
+    },
+    {
+      "key": "townsvc.temple.no_deity",
+      "text": "（無）"
+    },
+    {
+      "key": "townsvc.temple.pray_cost_note",
+      "text": "%s（要 %d 金）"
+    },
+    {
+      "key": "townsvc.temple.pray_done",
+      "text": "%s 祈禱完畢，付 %d 金，呼喚成功率回到 %d%%"
+    },
+    {
+      "key": "trap.alarm.steps",
+      "text": "%d 步之內必定遇敵"
+    },
+    {
+      "key": "trap.avoided",
+      "en": "You carefully avoid the trap",
+      "text": "小心翼翼地避開了陷阱"
+    },
+    {
+      "key": "trap.careful",
+      "en": "Even being extra careful",
+      "text": "即使再小心"
+    },
+    {
+      "key": "trap.damage",
+      "text": " 受到傷害 "
+    },
+    {
+      "key": "trap.dart.miss",
+      "en": "Dart misses",
+      "text": "飛鏢落空"
+    },
+    {
+      "key": "trap.died",
+      "en": " died.",
+      "text": "，倒下了"
+    },
+    {
+      "key": "trap.disarmed",
+      "en": "Disarmed.",
+      "text": "已解除"
+    },
+    {
+      "key": "trap.found.prefix",
+      "text": "找到"
+    },
+    {
+      "key": "trap.found.suffix",
+      "en": " traps found.",
+      "text": "個陷阱"
+    },
+    {
+      "key": "trap.member.default",
+      "text": "隊員"
+    },
+    {
+      "key": "trap.miss",
+      "text": "落空"
+    },
+    {
+      "key": "trap.name0",
+      "en": "Something you cannot",
+      "text": "有什麼東西你看不見"
+    },
+    {
+      "key": "trap.name1",
+      "en": "Poison needle hits ",
+      "text": "毒針射中了"
+    },
+    {
+      "key": "trap.name2",
+      "en": "A Bungei pit!",
+      "text": "竹籤陷阱！"
+    },
+    {
+      "key": "trap.name3",
+      "en": "Poison pit!",
+      "text": "毒坑！"
+    },
+    {
+      "key": "trap.name4",
+      "en": "Spear trap!",
+      "text": "長矛陷阱！"
+    },
+    {
+      "key": "trap.name5",
+      "en": "Darts shoot from holes in the wall",
+      "text": "飛鏢從牆上的孔洞射出"
+    },
+    {
+      "key": "trap.name6",
+      "en": "A pool!",
+      "text": "一池水！"
+    },
+    {
+      "key": "trap.name7",
+      "en": "An acid pool!",
+      "text": "一池酸液！"
+    },
+    {
+      "key": "trap.name8",
+      "en": "You set off an alarm!",
+      "text": "觸動了警報！"
+    },
+    {
+      "key": "trap.none",
+      "en": "No traps found.",
+      "text": "沒有發現陷阱"
+    },
+    {
+      "key": "trap.noticed",
+      "en": "Noticed.",
+      "text": "已注意"
+    },
+    {
+      "key": "trap.pit.safe",
+      "en": ": safe",
+      "text": "：沒事"
+    },
+    {
+      "key": "trap.pool.escape",
+      "en": "swims out.",
+      "text": "游了出來"
+    },
+    {
+      "key": "trap.spear.miss",
+      "en": "Spear misses",
+      "text": "長矛落空"
+    },
+    {
+      "key": "trap.triggered",
+      "en": "you set off the trap",
+      "text": "還是觸動了陷阱"
+    },
+    {
+      "key": "viewitem.fails",
+      "en": "Fails",
+      "text": "看不出所以然"
+    },
+    {
+      "key": "viewitem.image",
+      "en": "An image of %s comes to you",
+      "text": "%s 的影像浮現在腦海裡"
+    },
+    {
+      "key": "viewitem.noskill",
+      "text": "隊伍裡沒有人會鑑物"
+    },
+    {
+      "key": "viewitem.nothing",
+      "en": "You can discern nothing",
+      "text": "看不出什麼名堂"
+    },
+    {
+      "key": "viewitem.title",
+      "en": "View item:",
+      "text": "鑑定哪一件？"
+    },
+    {
+      "key": "viewland.climbed",
+      "text": "%s 爬上高處張望"
+    },
+    {
+      "key": "viewland.coord",
+      "text": "座標 %d,%d"
+    },
+    {
+      "key": "viewland.header",
+      "text": "觀地"
+    },
+    {
+      "key": "viewland.keys",
+      "text": "↑↓：選擇　Enter：確定　Esc：取消"
+    },
+    {
+      "key": "viewland.keys_down",
+      "text": "Esc：下來"
+    },
+    {
+      "key": "viewland.keys_look",
+      "text": "方向鍵：張望"
+    },
+    {
+      "key": "viewland.mapid",
+      "text": "子地圖 %d"
+    },
+    {
+      "key": "viewland.no_skill",
+      "text": "（不會觀地）"
+    },
+    {
+      "key": "viewland.who",
+      "text": "誰爬上去看？"
+    },
+    {
+      "key": "viewroom.noskill",
+      "text": "隊伍裡沒有人會觀室"
+    },
+    {
+      "key": "viewroom.nothing",
+      "en": "You see nothing",
+      "text": "什麼也沒看到"
+    },
+    {
+      "key": "viewroom.trap",
+      "en": "A trap!",
+      "text": "前方有陷阱"
+    },
+    {
+      "key": "viewroom.weak",
+      "en": "Your psychic powers are weak",
+      "text": "你們的靈視之力已經耗盡"
+    },
+    {
+      "key": "window.title",
+      "text": "冬之魔 Demon's Winter"
+    },
+    {
+      "key": "workshop.already",
+      "text": "它已經是 +%d 了"
+    },
+    {
+      "key": "workshop.cost",
+      "text": "費用 %d 金（你有 %d）"
+    },
+    {
+      "key": "workshop.done",
+      "text": "%s 的%s附魔到 +%d，花了 %d 金"
+    },
+    {
+      "key": "workshop.empty",
+      "text": "那一格是空的"
+    },
+    {
+      "key": "workshop.max",
+      "text": "附魔不能超過 +10"
+    },
+    {
+      "key": "workshop.nocost",
+      "text": "這一件不用附魔"
+    },
+    {
+      "key": "workshop.nogold",
+      "text": "你付不起這個價錢。"
+    },
+    {
+      "key": "workshop.pluskeys",
+      "text": "←→：調整　Enter：確定　Esc：返回"
+    },
+    {
+      "key": "workshop.raise",
+      "text": "要把%s附魔到 +%d"
+    },
+    {
+      "key": "workshop.scene",
+      "text": "你面前是一間了不起的工坊，矮人大師們正在為閃亮的武器附上魔力。"
+    },
+    {
+      "key": "workshop.slotempty",
+      "text": "（空）"
+    },
+    {
+      "key": "workshop.unidentified",
+      "text": "只有已鑑定的道具能附魔。"
+    },
+    {
+      "key": "workshop.which",
+      "text": "要附魔哪一件？"
+    },
+    {
+      "key": "workshop.who",
+      "text": "誰要附魔？"
+    },
+    {
+      "key": "workshop.wrongtype",
+      "text": "只有武器與護甲能附魔。"
+    },
+    {
+      "key": "world.blocked",
+      "text": "前方無法通行"
+    },
+    {
+      "key": "world.boardoff",
+      "text": "上岸"
+    },
+    {
+      "key": "world.boardon",
+      "text": "登船"
+    },
+    {
+      "key": "world.edge",
+      "text": "船員拒絕再往前航行了……"
+    },
+    {
+      "key": "world.encounter",
+      "text": "在%s遭遇了敵人"
+    },
+    {
+      "key": "world.hour",
+      "text": "時間來到 %d 時"
+    },
+    {
+      "key": "world.leftsubmap",
+      "text": "離開子地圖"
+    },
+    {
+      "key": "world.menu.camp",
+      "text": "[C] 紮營"
+    },
+    {
+      "key": "world.menu.controls",
+      "text": "[F6] 模式"
+    },
+    {
+      "key": "world.menu.drop",
+      "text": "[D] 丟棄"
+    },
+    {
+      "key": "world.menu.examine",
+      "text": "[E] 檢視"
+    },
+    {
+      "key": "world.menu.inspect",
+      "text": "[I] 探查"
+    },
+    {
+      "key": "world.menu.manual",
+      "text": "[F1] 說明"
+    },
+    {
+      "key": "world.menu.move",
+      "text": "方向鍵 行走"
+    },
+    {
+      "key": "world.menu.moveitem",
+      "text": "[M] 推開"
+    },
+    {
+      "key": "world.menu.party",
+      "text": "[P] 隊伍"
+    },
+    {
+      "key": "world.menu.quit",
+      "text": "[F10] 離開"
+    },
+    {
+      "key": "world.menu.reread",
+      "text": "[R] 重讀"
+    },
+    {
+      "key": "world.menu.save",
+      "text": "[S] 存檔"
+    },
+    {
+      "key": "world.menu.take",
+      "text": "[T] 拿取"
+    },
+    {
+      "key": "world.menu.traps",
+      "text": "[L] 陷阱"
+    },
+    {
+      "key": "world.menu.use",
+      "text": "[U] 使用"
+    },
+    {
+      "key": "world.menu.viewitem",
+      "text": "[X] 鑑物"
+    },
+    {
+      "key": "world.menu.viewroom",
+      "text": "[V] 觀室"
+    },
+    {
+      "key": "world.sleepy",
+      "text": "你睏了，必須紮營休息。"
+    },
+    {
+      "key": "world.teleported",
+      "text": "被傳送到 (%d,%d)"
+    }
+  ]
+}

@@ -45,11 +45,11 @@ type createScreen struct {
 // 同樣那三項，同一句話只給一個 key。智力與耐力在既有目錄裡沒有對應
 // （檢視面板只列三項），所以新造 `create.trait.*`。
 var traitNames = []uiLabel{
-	{"examine.speed", "速度"},
-	{"examine.strength", "力量"},
-	{"create.trait.intelligence", "智力"},
-	{"create.trait.stamina", "耐力"},
-	{"examine.skill", "技巧"},
+	{"examine.speed"},
+	{"examine.strength"},
+	{"create.trait.intelligence"},
+	{"create.trait.stamina"},
+	{"examine.skill"},
 }
 
 // digitKeys 是 1–9 的按鍵，用來選種族／職業／屬性編號。
@@ -108,7 +108,7 @@ func (a *app) updateCreate() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		if c.stage == stageRace {
 			if a.newGamePending() {
-				c.message = fmt.Sprintf(a.tr.UI("create.forced.remaining", "開新遊戲要建滿 %d 個角色（還剩 %d 個）"),
+				c.message = fmt.Sprintf(a.tr.UI("create.forced.remaining"),
 					len(a.members), a.newGameSlots)
 				return nil
 			}
@@ -125,7 +125,7 @@ func (a *app) updateCreate() error {
 		if d := pressedDigit(); d >= 0 && d < len(raceName) {
 			cr, err := game.NewCharacterCreation(a.rng, a.tables, gamedata.Race(d))
 			if err != nil {
-				c.message = fmt.Sprintf(a.tr.UI("create.race.rollfail", "擲點失敗：%v"), err)
+				c.message = fmt.Sprintf(a.tr.UI("create.race.rollfail"), err)
 				return nil
 			}
 			c.create = cr
@@ -149,7 +149,7 @@ func (a *app) updateCreate() error {
 				}
 			}
 			if len(which) == 0 {
-				c.message = a.tr.UI("create.trait.pick_first", "先用數字鍵勾選要重擲的屬性")
+				c.message = a.tr.UI("create.trait.pick_first")
 				return nil
 			}
 			if err := c.create.Reroll(which); err != nil {
@@ -211,7 +211,7 @@ func (a *app) updateCreate() error {
 				f.AddMember(c.cursor)
 				a.save.Formation = f
 			}
-			a.message = fmt.Sprintf(a.tr.UI("create.slot.added", "%s 已加入隊伍第 %d 位（按 S 存檔才會留下）"),
+			a.message = fmt.Sprintf(a.tr.UI("create.slot.added"),
 				string(c.name), c.cursor+1)
 			a.create = nil
 			a.advanceNewGameParty()
@@ -244,25 +244,25 @@ func (a *app) drawCreate(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
-	line(a.tr.UI("create.header", "建立角色"))
-	a.gotFont.Draw(dst, a.tr.UI("create.header.en", "Character Creation"),
+	line(a.tr.UI("create.header"))
+	a.gotFont.Draw(dst, a.tr.UI("create.header.en"),
 		layout.StatusX, layout.StatusY)
 	line("")
 
 	switch c.stage {
 	case stageRace:
-		line(a.tr.UI("create.race.header", "選擇種族："))
+		line(a.tr.UI("create.race.header"))
 		for i := range raceName {
 			line(fmt.Sprintf("  %d  %s", i+1, a.label(raceName, i)))
 		}
 		line("")
-		line(a.tr.UI("create.race.keys", "數字鍵：選擇　Esc：取消"))
+		line(a.tr.UI("create.race.keys"))
 
 	case stageTraits:
 		a.drawTraitStage(c, line)
 
 	case stageClass:
-		line(a.tr.UI("create.class.header", "選擇職業："))
+		line(a.tr.UI("create.class.header"))
 		for i := range className {
 			mark := "   "
 			if i == c.cursor {
@@ -271,36 +271,36 @@ func (a *app) drawCreate(dst *ebiten.Image) {
 			line(fmt.Sprintf("%s%s", mark, a.label(className, i)))
 		}
 		line("")
-		line(a.tr.UI("create.nav.keys", "↑↓：選擇　Enter：確定　Esc：回上一步"))
+		line(a.tr.UI("create.nav.keys"))
 
 	case stageName:
 		line(fmt.Sprintf("%s %s", a.label(raceName, int(c.create.Race)),
 			a.label(className, int(c.class))))
 		line("")
-		nameLabel := a.tr.UI("create.name.label", "姓名：")
+		nameLabel := a.tr.UI("create.name.label")
 		a.font.Draw(dst, nameLabel, layout.BoxPadX, y)
 		a.gotFont.Draw(dst, string(c.name)+"_",
 			layout.BoxPadX+textlayout.TextWidth(nameLabel), y)
 		y += ui.LineHeight
 		line("")
-		line(a.tr.UI("create.name.note1", "※ 姓名只收英數字：存檔的姓名欄是 12 bytes，"))
-		line(a.tr.UI("create.name.note2", "　 中文塞不下，原版也讀不回來"))
+		line(a.tr.UI("create.name.note1"))
+		line(a.tr.UI("create.name.note2"))
 		line("")
-		line(a.tr.UI("create.name.keys", "Enter：確定　Backspace：刪除　Esc：回上一步"))
+		line(a.tr.UI("create.name.keys"))
 
 	case stageSlot:
-		line(a.tr.UI("create.slot.header", "放進隊伍第幾位？（會覆蓋原本的角色）"))
+		line(a.tr.UI("create.slot.header"))
 		line("")
 		for i, m := range a.members {
 			mark := "   "
 			if i == c.cursor {
 				mark = " > "
 			}
-			line(fmt.Sprintf(a.tr.UI("create.slot.row", "%s%d  %-10s %d 級 %s"), mark, i+1, m.Name, m.Level,
+			line(fmt.Sprintf(a.tr.UI("create.slot.row"), mark, i+1, m.Name, m.Level,
 				a.label(className, int(m.Class))))
 		}
 		line("")
-		line(a.tr.UI("create.nav.keys", "↑↓：選擇　Enter：確定　Esc：回上一步"))
+		line(a.tr.UI("create.nav.keys"))
 	}
 
 	if c.message != "" {
@@ -310,13 +310,13 @@ func (a *app) drawCreate(dst *ebiten.Image) {
 }
 
 func (a *app) drawTraitStage(c *createScreen, line func(string)) {
-	line(fmt.Sprintf(a.tr.UI("create.trait.header", "種族：%s　剩餘重擲 %d 次"),
+	line(fmt.Sprintf(a.tr.UI("create.trait.header"),
 		a.label(raceName, int(c.create.Race)), c.create.RerollsLeft()))
 	line("")
 	// 表頭與資料列用同一組欄寬產生 —— 手動數空格對齊，改一次格式就歪一次。
 	// 混排字型每個字元都是一格，所以 Go 的 %-4s（按 rune 計）剛好等於 4 格。
 	const traitRow = "%s%s %-4s %4s %10s%s"
-	line(fmt.Sprintf(traitRow, "   ", " ", a.tr.UI("create.trait.col_name", "屬性"), a.tr.UI("create.trait.col_rolled", "擲出"), a.tr.UI("create.trait.col_avg", "該種族平均"), ""))
+	line(fmt.Sprintf(traitRow, "   ", " ", a.tr.UI("create.trait.col_name"), a.tr.UI("create.trait.col_rolled"), a.tr.UI("create.trait.col_avg"), ""))
 
 	for i := range traitNames {
 		n := a.traitName(i)
@@ -332,18 +332,18 @@ func (a *app) drawTraitStage(c *createScreen, line func(string)) {
 		// 手冊建議低於 6 就重擲。標出來，但不擋玩家重擲比較高的值。
 		advice := ""
 		if c.create.BelowAdvice(tr) {
-			advice = a.tr.UI("create.trait.advice", "  ← 建議重擲")
+			advice = a.tr.UI("create.trait.advice")
 		}
 		line(fmt.Sprintf(traitRow, mark, strconv.Itoa(i+1), n,
 			strconv.Itoa(c.create.Traits[i]), strconv.Itoa(avg), advice))
 	}
 
 	line("")
-	line(a.tr.UI("create.trait.keys", "數字鍵：勾選要重擲的屬性（可複選）"))
-	line(a.tr.UI("create.trait.keys2", "R：重擲勾選的項目　Enter：接受並選職業"))
+	line(a.tr.UI("create.trait.keys"))
+	line(a.tr.UI("create.trait.keys2"))
 	line("")
-	line(a.tr.UI("create.trait.note1", "※ 原版是選好按 ESC 重擲；本作 ESC 一律是「退回上一步」，"))
-	line(a.tr.UI("create.trait.note2", "　 所以改用 R，免得按錯就退出建角"))
+	line(a.tr.UI("create.trait.note1"))
+	line(a.tr.UI("create.trait.note2"))
 }
 
 // advanceNewGameParty 在強制流程裡接著建下一個角色。
@@ -357,7 +357,7 @@ func (a *app) advanceNewGameParty() {
 	// 那條路加人數會愈換愈多。
 	a.save.PartySize = byte(len(a.members) - a.newGameSlots)
 	if a.newGameSlots == 0 {
-		a.message = a.tr.UI("create.done", "隊伍組好了。按 S 存檔。")
+		a.message = a.tr.UI("create.done")
 		return
 	}
 	a.createSlot++

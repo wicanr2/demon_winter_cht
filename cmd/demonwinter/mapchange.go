@@ -66,7 +66,7 @@ func (a *app) changeMap(id, x, y int) {
 	if err != nil {
 		// 換不過去就留在原地並說清楚 —— 靜默失敗會讓玩家
 		// 以為那一格本來就沒事，然後在樓梯上反覆踩。
-		a.message = fmt.Sprintf(a.tr.UI("mapchange.error", "換地圖 %d 失敗：%v"), id, err)
+		a.message = fmt.Sprintf(a.tr.UI("mapchange.error"), id, err)
 		return
 	}
 
@@ -83,7 +83,7 @@ func (a *app) changeMap(id, x, y int) {
 	a.party.TeleportTo(x, y)
 	// 存檔要跟著走，不然存檔讀回來會在新座標配舊地圖。
 	a.save.MapID = byte(id)
-	a.message = fmt.Sprintf(a.tr.UI("mapchange.entered", "進入地圖 %d 的 (%d,%d)"), id, x, y)
+	a.message = fmt.Sprintf(a.tr.UI("mapchange.entered"), id, x, y)
 	a.trace.note("換地圖 → %d (%d,%d)", id, x, y)
 }
 

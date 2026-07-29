@@ -27,7 +27,7 @@ type partyScreen struct {
 
 func (a *app) openPartySheet() {
 	if len(a.members) == 0 {
-		a.camp.message = a.tr.UI("camp.empty", "隊伍是空的")
+		a.camp.message = a.tr.UI("camp.empty")
 		return
 	}
 	a.camp.message = ""
@@ -69,16 +69,16 @@ func (a *app) updatePartySheet(p *partyScreen) (closed bool) {
 
 func (a *app) drawPartySheet(p *partyScreen, line func(string)) {
 	if p.showing < 0 {
-		line(a.tr.UI("partysheet.who", "要看誰？"))
+		line(a.tr.UI("partysheet.who"))
 		line("")
 		a.drawMemberList(line, p.member, nil)
 		line("")
-		line(a.tr.UI("partysheet.keys", "↑↓：選擇　Enter：攤開　Esc：取消"))
+		line(a.tr.UI("partysheet.keys"))
 		return
 	}
 
 	c := a.members[p.showing]
-	line(fmt.Sprintf(a.tr.UI("partysheet.header", "%s　%s　%s　%d 級"),
+	line(fmt.Sprintf(a.tr.UI("partysheet.header"),
 		c.Name, a.label(raceName, int(c.Race)), a.label(className, int(c.Class)), c.Level))
 	line("")
 
@@ -89,29 +89,29 @@ func (a *app) drawPartySheet(p *partyScreen, line func(string)) {
 	}
 	line("　" + strings.Join(traits, "　"))
 
-	line(fmt.Sprintf(a.tr.UI("partysheet.hpsp", "　生命 %3d/%3d　法力 %3d/%3d"),
+	line(fmt.Sprintf(a.tr.UI("partysheet.hpsp"),
 		c.CurrentHP, c.MaxHP, c.CurrentSP, c.MaxSP))
-	line(fmt.Sprintf(a.tr.UI("partysheet.equip", "　武器 %s　護甲 %d"), a.weaponLabel(c), c.ArmorRating()))
+	line(fmt.Sprintf(a.tr.UI("partysheet.equip"), a.weaponLabel(c), c.ArmorRating()))
 
-	exp := a.tr.UI("partysheet.exp_max", "已達上限")
+	exp := a.tr.UI("partysheet.exp_max")
 	if next := game.ExpForNextLevel(c.Level); next > 0 {
 		exp = fmt.Sprintf("%d / %d", c.Experience, next)
 	}
-	line(fmt.Sprintf(a.tr.UI("partysheet.exp", "　經驗 %s"), exp))
+	line(fmt.Sprintf(a.tr.UI("partysheet.exp"), exp))
 
-	faith := a.tr.UI("partysheet.faith_none", "無信仰")
+	faith := a.tr.UI("partysheet.faith_none")
 	if c.Deity > 0 {
-		faith = fmt.Sprintf(a.tr.UI("partysheet.faith", "%s　祈禱 %d%%"), a.deityName(c.Deity), c.PrayChance)
+		faith = fmt.Sprintf(a.tr.UI("partysheet.faith"), a.deityName(c.Deity), c.PrayChance)
 	}
-	line(a.tr.UI("partysheet.faith_label", "　信仰 ") + faith)
+	line(a.tr.UI("partysheet.faith_label") + faith)
 	if c.BindLevel > 0 {
-		line(fmt.Sprintf(a.tr.UI("partysheet.bind", "　束縛 %d 級"), c.BindLevel))
+		line(fmt.Sprintf(a.tr.UI("partysheet.bind"), c.BindLevel))
 	}
 
 	line("")
-	line(a.tr.UI("partysheet.skills_label", "　技能"))
+	line(a.tr.UI("partysheet.skills_label"))
 	if names := a.learnedSkillNames(c); len(names) == 0 {
-		line(a.tr.UI("partysheet.skills_none", "　　（無）"))
+		line(a.tr.UI("partysheet.skills_none"))
 	} else {
 		for _, row := range chunkStrings(names, 3) {
 			line("　　" + strings.Join(row, "　"))
@@ -119,7 +119,7 @@ func (a *app) drawPartySheet(p *partyScreen, line func(string)) {
 	}
 
 	line("")
-	line(a.tr.UI("partysheet.keys2", "↑↓：換人　Enter／Esc：收起"))
+	line(a.tr.UI("partysheet.keys2"))
 }
 
 // learnedSkillNames 列出這名角色的技能名稱（已翻譯）。

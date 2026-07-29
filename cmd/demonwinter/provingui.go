@@ -37,18 +37,16 @@ func (a *app) enterProvingRoom() {
 	classLabel := a.label(className, int(room.Class))
 
 	// 開場敘述：房間名 ＋ 顏色的光 ＋ 那個聲音。三段都是原版的字串。
-	intro := fmt.Sprintf(a.tr.UI("proving.room", "%s的試煉室。"), classLabel) + "\n" +
-		fmt.Sprintf(a.tr.UI("proving.colour",
-			"你身處一間%s的房間，地板與牆壁磨得發亮，空無一物。"),
+	intro := fmt.Sprintf(a.tr.UI("proving.room"), classLabel) + "\n" +
+		fmt.Sprintf(a.tr.UI("proving.colour"),
 			provingColour(a.tr, room.Colour)) + "\n" +
-		a.tr.UI("proving.flood", "房間忽然被光灌滿，一個宏大的聲音說道：")
+		a.tr.UI("proving.flood")
 
 	switch entry {
 	case game.ProvingFreePass:
 		// 原版 `0x1f56`：「Since you have no %s / I will let you pass.」
 		a.box = ui.NewMixedTextBox(intro + "\n" +
-			fmt.Sprintf(a.tr.UI("proving.nopass",
-				"「既然你沒有%s，我就讓你過。」"), classLabel))
+			fmt.Sprintf(a.tr.UI("proving.nopass"), classLabel))
 		a.passProvingRoom(idx)
 		a.trace.note("試煉室 %d（%s）：隊伍裡沒有這個職業，直接過", idx, classLabel)
 		return
@@ -56,8 +54,7 @@ func (a *app) enterProvingRoom() {
 	case game.ProvingComeBackWhenWell:
 		// 原版 `0x1ed1`：「Return when your %s is well.」→ 趕到 (42,19)。
 		a.box = ui.NewMixedTextBox(intro + "\n" +
-			fmt.Sprintf(a.tr.UI("proving.unwell",
-				"「等你的%s好了再回來。」"), classLabel))
+			fmt.Sprintf(a.tr.UI("proving.unwell"), classLabel))
 		a.party.TeleportTo(game.ProvingEjectTo.X, game.ProvingEjectTo.Y)
 		a.save.ProvingRoom = 0
 		a.trace.note("試煉室 %d（%s）：人都倒了，趕到 (%d,%d)",
@@ -72,16 +69,14 @@ func (a *app) enterProvingRoom() {
 	case game.ProvingTaunt:
 		// 盜賊那間：`Let the %s / Be ashamed if he fell into that trap!`
 		a.box = ui.NewMixedTextBox(intro + "\n" +
-			fmt.Sprintf(a.tr.UI("proving.taunt",
-				"「這位%s —— 他要是踩上了那個陷阱，可就丟臉了！」"), classLabel))
+			fmt.Sprintf(a.tr.UI("proving.taunt"), classLabel))
 		a.passProvingRoom(idx)
 		a.trace.note("試煉室 %d（%s）：只有一句話", idx, classLabel)
 
 	case game.ProvingBlessing:
 		// 靈視者那間：`Let the %s / prove his worth / in the times ahead.`
 		a.box = ui.NewMixedTextBox(intro + "\n" +
-			fmt.Sprintf(a.tr.UI("proving.blessing",
-				"「這位%s —— 讓他在將來的日子裡證明自己的價值。」"), classLabel))
+			fmt.Sprintf(a.tr.UI("proving.blessing"), classLabel))
 		a.passProvingRoom(idx)
 		a.trace.note("試煉室 %d（%s）：只有一句話", idx, classLabel)
 
@@ -89,8 +84,7 @@ func (a *app) enterProvingRoom() {
 		// 學者那間：`Let the %s / know this.` ＋ 一段符文密語。
 		// **提示本身不翻**（worklist D2）—— 那是要玩家自己解的符文。
 		a.box = ui.NewMixedTextBox(intro + "\n" +
-			fmt.Sprintf(a.tr.UI("proving.lore",
-				"「這位%s —— 讓他知道這件事。」"), classLabel))
+			fmt.Sprintf(a.tr.UI("proving.lore"), classLabel))
 		a.pendingRunes = game.ProvingLoreHint
 		a.passProvingRoom(idx)
 		a.trace.note("試煉室 %d（%s）：給了符文提示", idx, classLabel)
@@ -100,8 +94,7 @@ func (a *app) enterProvingRoom() {
 		a.save.FormationBackup = a.save.Formation
 		a.save.Formation = game.ProvingFormation(fighters)
 		a.box = ui.NewMixedTextBox(intro + "\n" +
-			fmt.Sprintf(a.tr.UI("proving.fight",
-				"「這位%s —— 讓他在殊死戰中證明自己。」"), classLabel))
+			fmt.Sprintf(a.tr.UI("proving.fight"), classLabel))
 		a.pendingIDs = room.Monsters
 		a.trace.note("試煉室 %d（%s）：%d 人上場，怪 %v",
 			idx, classLabel, len(fighters), room.Monsters)
@@ -151,8 +144,8 @@ func (a *app) restoreProvingFormation() {
 // 顏色與職業一對一，所以它是**房間的識別**而不只是裝飾 ——
 // 玩家拿攻略對畫面時是靠顏色認房間的。
 func provingColour(tr *i18n.Translator, c string) string {
-	if s, ok := provingColourNames[c]; ok {
-		return tr.UI("proving.colour."+c, s)
+	if _, ok := provingColourNames[c]; ok {
+		return tr.UI("proving.colour." + c)
 	}
 	return c
 }

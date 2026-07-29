@@ -51,5 +51,5 @@ func (a *app) drawConfirm(dst *ebiten.Image) {
 	}
 	line(a.confirm.prompt)
 	line("")
-	line(a.tr.UI("confirm.keys", "Y：是　N／Esc：否"))
+	line(a.tr.UI("confirm.keys"))
 }

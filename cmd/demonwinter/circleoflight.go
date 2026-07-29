@@ -17,7 +17,7 @@ func (a *app) circleOfLightDoor() {
 	if game.CircleOfLightOpen(a.save.GlyphFlags) {
 		return
 	}
-	a.message = a.tr.UI("plot.forcefield", "緋紅的力場擋住了通往光之環的路")
+	a.message = a.tr.UI("plot.forcefield")
 	x, y := game.CircleOfLightPushBack(a.party.X(), a.party.Y(), a.party.Facing())
 	a.party.TeleportTo(x, y)
 }

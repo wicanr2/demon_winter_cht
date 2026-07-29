@@ -89,11 +89,11 @@ func (a *app) answerRiddle(s *riddleScreen) {
 	if !s.riddle.Correct(string(s.input)) {
 		switch s.plotCase {
 		case game.RiddleCaseSpectralPriest:
-			s.result = []string{a.tr.UI(k+".wrong", s.riddle.Wrong[0])}
+			s.result = []string{a.tr.UI(k + ".wrong")}
 		case game.RiddleCaseTempleName:
 			s.result = []string{
-				a.tr.UI(k+".wrong0", s.riddle.Wrong[0]),
-				a.tr.UI(k+".wrong1", s.riddle.Wrong[1]),
+				a.tr.UI(k + ".wrong0"),
+				a.tr.UI(k + ".wrong1"),
 			}
 			// 答錯神殿那一題會被推回一格（原版 `party+0xa2 = 0x26`）。
 			a.party.TeleportTo(a.party.X(), game.TempleRejectY)
@@ -110,10 +110,10 @@ func (a *app) answerRiddle(s *riddleScreen) {
 		// 而畫面上看不出原因。
 		d := game.SpectralPriestDoor
 		if err := a.writeTile(d.X, d.Y, game.SpectralPriestDoorOpen); err != nil {
-			a.message = fmt.Sprintf(a.tr.UI("riddle.door.error", "開牆失敗：%v"), err)
+			a.message = fmt.Sprintf(a.tr.UI("riddle.door.error"), err)
 		}
 	case game.RiddleCaseTempleName:
-		s.result = []string{a.tr.UI(k+".right", s.riddle.Right[0])}
+		s.result = []string{a.tr.UI(k + ".right")}
 	}
 }
 
@@ -126,8 +126,8 @@ func (a *app) drawRiddle(dst *ebiten.Image) {
 	}
 
 	k := riddleKeys(s.plotCase)
-	for i, orig := range s.riddle.Prompt {
-		line(a.tr.UI(promptKey(k, i), orig))
+	for i := range s.riddle.Prompt {
+		line(a.tr.UI(promptKey(k, i)))
 	}
 	line("　")
 
@@ -136,13 +136,13 @@ func (a *app) drawRiddle(dst *ebiten.Image) {
 			line(t)
 		}
 		line("　")
-		line(a.tr.UI("ending.press", "（按任意鍵）"))
+		line(a.tr.UI("ending.press"))
 		return
 	}
 
-	line(a.tr.UI("riddle.answer", "答案（英文，按 Enter 送出）：") + string(s.input) + "_")
+	line(a.tr.UI("riddle.answer") + string(s.input) + "_")
 	line("　")
-	line(a.tr.UI("riddle.cancel", "Esc：離開"))
+	line(a.tr.UI("riddle.cancel"))
 }
 
 // promptKey 是題目第 i 行的翻譯 key。

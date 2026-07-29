@@ -58,7 +58,7 @@ func (a *app) drinkFromPool() {
 	sip := game.DrinkFromPool(a.rng, a.members, p.cursor, &a.save.PoolDrinks)
 	if sip.Empty {
 		// 原版在迴圈頂端就印這一行然後回傳 —— 額度用完畫面就結束。
-		a.message = a.tr.UI("pool.empty", "水池乾了")
+		a.message = a.tr.UI("pool.empty")
 		a.pool = nil
 		a.trace.note("水池：乾了")
 		return
@@ -66,7 +66,7 @@ func (a *app) drinkFromPool() {
 	// 原版的字串是 `He is healed %d`。**0 是合法結果**（滿血的人喝一口
 	// 照樣扣一次額度），所以這一行不做「沒回血就不印」的優化。
 	p.lines = append(p.lines, fmt.Sprintf(
-		a.tr.UI("pool.healed", "%s 回復了 %d 點"),
+		a.tr.UI("pool.healed"),
 		a.members[sip.Member].Name, sip.Healed))
 	a.trace.note("水池：%s 回復 %d，剩 %d 口",
 		a.members[sip.Member].Name, sip.Healed, a.save.PoolDrinks)
@@ -80,10 +80,10 @@ func (a *app) drawPool(dst *ebiten.Image) {
 		y += ui.LineHeight
 	}
 
-	line(a.tr.UI("pool.title", "一池清水"))
-	line(fmt.Sprintf(a.tr.UI("pool.left", "今天還能喝 %d 口"), a.save.PoolDrinks))
+	line(a.tr.UI("pool.title"))
+	line(fmt.Sprintf(a.tr.UI("pool.left"), a.save.PoolDrinks))
 	line("")
-	line(a.tr.UI("pool.who", "誰要喝？"))
+	line(a.tr.UI("pool.who"))
 	for i := range a.members {
 		c := &a.members[i]
 		line(fmt.Sprintf("%s%s　%d/%d",
@@ -94,5 +94,5 @@ func (a *app) drawPool(dst *ebiten.Image) {
 		line(l)
 	}
 	line("")
-	line(a.tr.UI("pool.keys", "↑↓：選人　Enter：喝　Esc：離開"))
+	line(a.tr.UI("pool.keys"))
 }
