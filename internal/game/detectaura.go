@@ -64,7 +64,7 @@ func ElvesInParty(members []Character) int {
 // 只長 B 那一組的道具偵測不到。照抄，不要補齊。
 func HasAura(slot scenario.InventorySlot) bool {
 	return slot.SpellAPower != 0 || slot.Power != 0 ||
-		slot.EffectAByte != 0 || slot.Enchant != 0
+		slot.EffectValueAByte != 0 || slot.Enchant != 0
 }
 
 // DetectAura 擲一次「這件戰利品要不要標上靈光」。

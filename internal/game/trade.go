@@ -21,7 +21,7 @@ import "github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 //
 // 角色記錄的 `+0x100`／`+0x101` 存的是「裝備在哪一格」的**槽位索引**，
 // 不是道具型別（`docs/re/16` §4.3 的過濾規則就是拿槽位索引去比對的）。
-// 所以換裝只要改那兩個索引，道具本身不動。
+// 換裝除了改索引，也要由常駐效果重建有效屬性（docs/re/109）。
 
 // TradeResult 說明一次買賣為什麼沒成。
 type TradeResult struct {
@@ -120,6 +120,7 @@ func (c *Character) Equip(slot int) (bool, string) {
 		return false, "那一格是空的"
 	case CanEquipAsWeapon(it):
 		c.EquippedWeapon = slot
+		c.RecomputeEquipmentBonuses()
 		return true, ""
 	case CanEquipAsArmor(it):
 		// 型別過了還要過職業（`1000:283d`）。原版的訊息是
@@ -128,6 +129,7 @@ func (c *Character) Equip(slot int) (bool, string) {
 			return false, "你的職業穿不了這麼重的護甲"
 		}
 		c.EquippedArmor = slot
+		c.RecomputeEquipmentBonuses()
 		return true, ""
 	}
 	return false, "這件不是武器也不是護甲"

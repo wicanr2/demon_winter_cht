@@ -11,10 +11,10 @@ package scenario
 //	+0x06  已用次數（與 +0x05 相等代表用完）
 //	+0x07  效果索引 —— 與法術共用同一張效果記錄表
 //	+0x08  效果強度，同時當「可不可用」旗標（0 = 不可用）
-//	+0x09  條件旗標 A，值 0x15 時啟用 +0x0a
-//	+0x0a  武器特效值 A（以 +10 偏移儲存）
-//	+0x0b  條件旗標 B，值 0x15 時啟用 +0x0c
-//	+0x0c  武器特效值 B（以 +10 偏移儲存）
+//	+0x09  裝備常駐效果類型 A
+//	+0x0a  裝備常駐效果值 A（以 +10 偏移儲存）
+//	+0x0b  裝備常駐效果類型 B
+//	+0x0c  裝備常駐效果值 B（以 +10 偏移儲存）
 //	+0x0d  驅邪成功率（只有掉落生的詛咒品才寫）
 //	+0x0e  附魔加成（以 +10 偏移儲存，10 = 無附魔）
 //	+0x0f  材質／品質類別，決定名稱前綴與價格倍率
@@ -55,18 +55,18 @@ const (
 	//
 	// 估價把兩個強度相加乘 270 當已鑑定加價（`docs/re/44` §3）——
 	// 那個「語意未解的兩個 byte」就是這裡的強度。
-	slotSpellA      = 0x01
-	slotSpellAPower = 0x02
-	slotSpellB      = 0x03
-	slotSpellBPower = 0x04
-	slotTotal       = 0x05
-	slotUsed        = 0x06
-	slotEffect      = 0x07
-	slotPower       = 0x08
-	slotCondA       = 0x09
-	slotEffectA     = 0x0a
-	slotCondB       = 0x0b
-	slotEffectB     = 0x0c
+	slotSpellA       = 0x01
+	slotSpellAPower  = 0x02
+	slotSpellB       = 0x03
+	slotSpellBPower  = 0x04
+	slotTotal        = 0x05
+	slotUsed         = 0x06
+	slotEffect       = 0x07
+	slotPower        = 0x08
+	slotEffectTypeA  = 0x09
+	slotEffectValueA = 0x0a
+	slotEffectTypeB  = 0x0b
+	slotEffectValueB = 0x0c
 
 	// slotExorcise 是驅邪成功率（`1000:19c8`：`rnd(100) > 它` 就失敗）。
 	// 值越大越好驅。這個 byte 一度標在「語意未解」那一排。
@@ -114,11 +114,19 @@ const (
 	slotMaterialClass        = 0x0f
 	slotMaterialClassDefault = 1
 
-	// effectCondEnabled 是「下一個位元組有效」的條件值。
-	effectCondEnabled = 0x15
-
 	// storedOffset 是特效值與附魔共用的儲存偏移：存的是實際值 +10。
 	storedOffset = 10
+)
+
+// 裝備常駐效果類型。`DEMON.INT` 的 `sub_11CBF` 逐一處理裝備槽的
+// `+0x09/+0x0b`，再把下一 byte 減 10 加進角色欄位（docs/re/109）。
+// 0x15 不進屬性常式；它在戰鬥建單位時另行變成武器傷害特效。
+const (
+	EquipmentEffectMaxSP    = 0x11
+	EquipmentEffectSpeed    = 0x12
+	EquipmentEffectStrength = 0x13
+	EquipmentEffectSkill    = 0x14
+	EquipmentEffectWeapon   = 0x15
 )
 
 // SlotEmpty 是空槽的型別值，給 game 層清空用。
@@ -136,7 +144,7 @@ type InventorySlot struct {
 	Type byte
 	// Enchant 是附魔加成（已扣掉 +10 的儲存偏移）。
 	Enchant int
-	// WeaponEffect 是武器特效值（已扣掉 +10）。兩個條件旗標都沒啟用時為 0。
+	// WeaponEffect 是 0x15 武器特效的合計值（已扣掉 +10）。
 	WeaponEffect int
 	// Identified 是已鑑定旗標。
 	Identified bool
@@ -159,14 +167,15 @@ type InventorySlot struct {
 	SpellA, SpellAPower int
 	SpellB, SpellBPower int
 
-	// CondA／CondB 是兩組特效的條件旗標（`+0x09`／`+0x0b`），
-	// EffectAByte／EffectBByte 是各自的**原始值**（沒扣掉 storedOffset）。
+	// EffectTypeA／EffectTypeB 是兩組裝備常駐效果的類型
+	//（`+0x09`／`+0x0b`）；EffectValueAByte／EffectValueBByte 是各自的
+	// **原始值**（沒扣掉 storedOffset）。
 	//
-	// `WeaponEffect` 是「條件旗標為 0x15 時把值算進去」的衍生結果，
-	// 拆不回來；估價的第四項要的是 `EffectAByte` 這個原始 byte
+	// `WeaponEffect` 是「類型為 0x15 時把值算進去」的衍生結果，
+	// 拆不回來；估價的第四項要的是 `EffectValueAByte` 這個原始 byte
 	// （`docs/re/46` §4）。四個 byte 都留原值才寫得回存檔。
-	CondA, EffectAByte int
-	CondB, EffectBByte int
+	EffectTypeA, EffectValueAByte int
+	EffectTypeB, EffectValueBByte int
 
 	// DungeonName 是**地城道具的名字**（`Type == SlotDungeon` 時才有意義）。
 	//
@@ -201,6 +210,19 @@ func (s InventorySlot) Empty() bool { return s.Type == slotEmpty }
 // Dungeon 回報這格裝的是不是地城道具（型別 `0xfe`）。
 func (s InventorySlot) Dungeon() bool { return s.Type == slotDungeon }
 
+// EquipmentBonus 回傳這件道具指定類型的兩組常駐加成總和。
+// 每組的儲存值都是實際值 +10；負值代表詛咒品的減益。
+func (s InventorySlot) EquipmentBonus(effectType int) int {
+	bonus := 0
+	if s.EffectTypeA == effectType && s.EffectValueAByte != 0 {
+		bonus += s.EffectValueAByte - storedOffset
+	}
+	if s.EffectTypeB == effectType && s.EffectValueBByte != 0 {
+		bonus += s.EffectValueBByte - storedOffset
+	}
+	return bonus
+}
+
 // NewDungeonSlot 造一格地城道具。名字超過 16 bytes 就截掉 ——
 // 原版的槽只有這麼大，而 50 件的名字實際上最長 14 個字元。
 func NewDungeonSlot(name string) InventorySlot {
@@ -212,9 +234,8 @@ func NewDungeonSlot(name string) InventorySlot {
 
 // parseInventorySlot 解出一格的已解欄位。
 //
-// **特效值有兩組（A/B），各自有一個條件旗標。** 原版是
-// `if (slot[+0x09] == 0x15) 讀 slot[+0x0a]`，B 組同理。
-// 兩組都啟用時相加 —— 一件武器可以帶兩個特效。
+// **常駐效果有兩組（A/B）**。類型 0x11–0x14 由換裝常式加進角色欄位；
+// 0x15 在戰鬥建單位時衍生成武器特效。兩組同類時依序相加。
 func parseInventorySlot(raw []byte) InventorySlot {
 	if len(raw) < inventorySlotLen {
 		return InventorySlot{Type: slotEmpty}
@@ -242,16 +263,16 @@ func parseInventorySlot(raw []byte) InventorySlot {
 	out.SpellAPower = int(raw[slotSpellAPower])
 	out.SpellB = int(raw[slotSpellB])
 	out.SpellBPower = int(raw[slotSpellBPower])
-	out.CondA = int(raw[slotCondA])
-	out.EffectAByte = int(raw[slotEffectA])
-	out.CondB = int(raw[slotCondB])
-	out.EffectBByte = int(raw[slotEffectB])
+	out.EffectTypeA = int(raw[slotEffectTypeA])
+	out.EffectValueAByte = int(raw[slotEffectValueA])
+	out.EffectTypeB = int(raw[slotEffectTypeB])
+	out.EffectValueBByte = int(raw[slotEffectValueB])
 	out.Enchant = int(raw[slotEnchant]) - storedOffset
-	if raw[slotCondA] == effectCondEnabled {
-		out.WeaponEffect += int(raw[slotEffectA]) - storedOffset
+	if raw[slotEffectTypeA] == EquipmentEffectWeapon {
+		out.WeaponEffect += int(raw[slotEffectValueA]) - storedOffset
 	}
-	if raw[slotCondB] == effectCondEnabled {
-		out.WeaponEffect += int(raw[slotEffectB]) - storedOffset
+	if raw[slotEffectTypeB] == EquipmentEffectWeapon {
+		out.WeaponEffect += int(raw[slotEffectValueB]) - storedOffset
 	}
 	return out
 }
@@ -262,8 +283,9 @@ func parseInventorySlot(raw []byte) InventorySlot {
 // 掉寶生成器讀通之後（`docs/re/48`）都有了名字，改成照欄位寫回 ——
 // 讀出來是什麼就寫回什麼，逐位元組往返仍然相同。
 //
-// `WeaponEffect` 仍然不寫：它是兩組「條件旗標＋特效值」算出來的**衍生值**，
-// 拆不回去（3 = 3+0 還是 1+2？）。要改武器特效請動 CondA／EffectAByte 那四個。
+// `WeaponEffect` 仍然不寫：它是兩組「效果類型＋效果值」算出來的**衍生值**，
+// 拆不回去（3 = 3+0 還是 1+2？）。要改武器特效請動
+// EffectTypeA／EffectValueAByte 那四個。
 //
 // 空槽只寫型別。這是照原版做的：交出道具時它也只把 `+0x00` 寫成 0xFF，
 // 剩下的 bytes 就留在那裡（兩份原版存檔都看得到這種殘值）。
@@ -289,10 +311,10 @@ func (s InventorySlot) encodeInto(raw []byte) {
 	raw[slotSpellAPower] = byte(s.SpellAPower)
 	raw[slotSpellB] = byte(s.SpellB)
 	raw[slotSpellBPower] = byte(s.SpellBPower)
-	raw[slotCondA] = byte(s.CondA)
-	raw[slotEffectA] = byte(s.EffectAByte)
-	raw[slotCondB] = byte(s.CondB)
-	raw[slotEffectB] = byte(s.EffectBByte)
+	raw[slotEffectTypeA] = byte(s.EffectTypeA)
+	raw[slotEffectValueA] = byte(s.EffectValueAByte)
+	raw[slotEffectTypeB] = byte(s.EffectTypeB)
+	raw[slotEffectValueB] = byte(s.EffectValueBByte)
 	raw[slotEnchant] = byte(s.Enchant + storedOffset)
 	if s.Identified {
 		raw[slotIdentified] = 1

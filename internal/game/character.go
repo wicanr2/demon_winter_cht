@@ -70,20 +70,13 @@ type Character struct {
 	// Status 是戰鬥狀態（存檔 +0x102）。中毒的人睡覺會掉血，見 Rest。
 	Status scenario.CombatStatus
 
-	// TraitsWithBonus 是「含裝備加成」的那一組屬性欄位
-	// （存檔 `+0x33`／`+0x34`／`+0x37`、`+0x26`）。
-	//
-	// **本引擎不用它們算任何東西** —— 規則層一律用 `Traits`（天生值），
-	// 裝備效果在使用時現算（`ArmorRating`、武器骰）。留著是為了
-	// **存檔往返不掉欄位**：`ApplyTo` 不寫它們的話，那幾個 byte 會留著
-	// 載入時的舊值，而新建的角色「載入時的舊值」是別人的角色。
-	//
-	// 這正是 `-newgame` 抓到的第二個 bug（`docs/re/89`）：
-	// 名冊上顯示的是自己擲的點（規則層用 `Traits`），
-	// 存檔裡的「含加成」欄位卻是出貨那五個人的數字 —— **重讀存檔就換人**。
+	// TraitsWithBonus 保存原版角色記錄裡三個「含裝備加成」欄位，以及
+	// 天生法力上限（存檔 `+0x33`／`+0x34`／`+0x37`、`+0x26`）。
+	// 換裝時 RecomputeEquipmentBonuses 會先從天生值重建，再套用兩件裝備的
+	// 0x11–0x14 常駐效果；戰鬥單位使用重建後的值（docs/re/109）。
 	TraitsWithBonus struct {
 		Strength, Skill, Speed byte
-		// MaxSP 是「天生法力上限」（`+0x26`），與上面三個同一類。
+		// MaxSP 是「天生法力上限」（`+0x26`）；有效上限放在 Character.MaxSP。
 		MaxSP byte
 	}
 
@@ -172,6 +165,94 @@ func FromSave(c scenario.Character) Character {
 		out.CursedSkills[i] = on == skillFlagCursed
 	}
 	return out
+}
+
+// RecomputeEquipmentBonuses 依原版換裝常式重建四個有效數值。
+//
+// `sub_11959` 先把速度／力量／技巧／MaxSP 複製回天生值，再依序處理武器與
+// 護甲；`sub_11CBF` 對每件的 A/B 兩組效果各自做 `目前值 + raw − 10`，
+// 每一步都鉗在 3..255。0x15 是武器戰鬥特效，不在這裡處理。
+func (c *Character) RecomputeEquipmentBonuses() {
+	c.TraitsWithBonus.Speed = byte(c.Traits[gamedata.Speed])
+	c.TraitsWithBonus.Strength = byte(c.Traits[gamedata.Strength])
+	c.TraitsWithBonus.Skill = byte(c.Traits[gamedata.Skill])
+	c.MaxSP = int(c.TraitsWithBonus.MaxSP)
+	// 原版換裝入口先把技能旗標 2 清回 0，再由仍穿著的裝備重套。
+	for i := range c.CursedSkills {
+		c.CursedSkills[i] = false
+	}
+
+	seen := map[int]bool{}
+	for _, slot := range []int{c.EquippedWeapon, c.EquippedArmor} {
+		if slot < 0 || slot >= InventorySlots || seen[slot] {
+			continue
+		}
+		seen[slot] = true
+		it := c.Inventory[slot]
+		c.applyEquipmentEffect(it.EffectTypeA, it.EffectValueAByte)
+		c.applyEquipmentEffect(it.EffectTypeB, it.EffectValueBByte)
+	}
+}
+
+func (c *Character) applyEquipmentEffect(effectType, rawValue int) {
+	if rawValue == 0 {
+		return
+	}
+	delta := rawValue - 10
+	switch effectType {
+	case scenario.EquipmentEffectMaxSP:
+		c.MaxSP = clampEquipmentValue(c.MaxSP + delta)
+	case scenario.EquipmentEffectSpeed:
+		c.TraitsWithBonus.Speed = byte(clampEquipmentValue(int(c.TraitsWithBonus.Speed) + delta))
+	case scenario.EquipmentEffectStrength:
+		c.TraitsWithBonus.Strength = byte(clampEquipmentValue(int(c.TraitsWithBonus.Strength) + delta))
+	case scenario.EquipmentEffectSkill:
+		c.TraitsWithBonus.Skill = byte(clampEquipmentValue(int(c.TraitsWithBonus.Skill) + delta))
+	default:
+		c.applyEquipmentFlagEffect(effectType)
+	}
+}
+
+// applyEquipmentFlagEffect 照 `sub_11CBF` 的低代碼映射。這些類型不讀
+// 數值大小，rawValue 只充當「這組存在」的 gate。
+func (c *Character) applyEquipmentFlagEffect(effectType int) {
+	if effectType < 0 || effectType >= scenario.EquipmentEffectMaxSP {
+		return
+	}
+	index := effectType
+	switch {
+	case index == 5:
+		index = 0x19
+	case index == 6 || index == 7:
+		index += 0x1d
+	case index < 5:
+		index += 6
+	}
+
+	switch index {
+	case 0x23: // 角色 +C8+23h = +EB，PrayChance
+		if c.PrayChance != 1 {
+			c.PrayChance = 2
+		}
+	case 0x24: // 角色 +C8+24h = +EC，BindLevel
+		if c.BindLevel != 1 {
+			c.BindLevel = 2
+		}
+	default:
+		if index >= 0 && index < gamedata.NumSkills && !c.Skills[index] {
+			c.CursedSkills[index] = true
+		}
+	}
+}
+
+func clampEquipmentValue(v int) int {
+	if v < 3 {
+		return 3
+	}
+	if v > 255 {
+		return 255
+	}
+	return v
 }
 
 // HasSkill 回報是否已學某項技能。
@@ -292,7 +373,8 @@ func LevelUp(r *rng.RNG, t *gamedata.Tables, c *Character) (LevelUpResult, error
 	// SP：N = 智慧 / 2 + 1，同樣擲兩次取較大。
 	n = c.Traits[gamedata.Intellect]/2 + 1
 	res.SPGain = maxRoll(r, n)
-	c.MaxSP = min(maxSPCap, c.MaxSP+res.SPGain)
+	naturalMaxSP := min(maxSPCap, int(c.TraitsWithBonus.MaxSP)+res.SPGain)
+	c.TraitsWithBonus.MaxSP = byte(naturalMaxSP)
 
 	gains, skipped, err := allocateTraitPoints(r, t, c)
 	if err != nil {
@@ -300,6 +382,7 @@ func LevelUp(r *rng.RNG, t *gamedata.Tables, c *Character) (LevelUpResult, error
 	}
 	res.TraitGains = gains
 	res.Skipped = skipped
+	c.RecomputeEquipmentBonuses()
 	return res, nil
 }
 
@@ -485,9 +568,9 @@ func (c *Character) CombatUnit(slot, x, y int, facing Facing) *Unit {
 	return &Unit{
 		Slot: slot, Name: c.Name,
 		X: x, Y: y, Facing: int(facing),
-		Speed:        c.Traits[gamedata.Speed],
-		Strength:     c.Traits[gamedata.Strength],
-		Skill:        c.Traits[gamedata.Skill],
+		Speed:        int(c.TraitsWithBonus.Speed),
+		Strength:     int(c.TraitsWithBonus.Strength),
+		Skill:        int(c.TraitsWithBonus.Skill),
 		Intellect:    c.Traits[gamedata.Intellect],
 		Level:        c.Level,
 		HP:           c.CurrentHP,

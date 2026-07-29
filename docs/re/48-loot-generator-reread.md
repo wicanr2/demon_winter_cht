@@ -170,9 +170,10 @@ if T < 底價 → 重擲型別
 級數怎麼爬：`k = 1`，只要 `rnd(15) − 1 < 等級 − k` 就再加一級。
 詛咒品取負，存進去的是 `k + 10`。
 
-**只有條件碼 21（`0x15`）會讓那個值真的生效**（`docs/re/26` 早就記下
-`+0x09 == 0x15` 才讀 `+0x0a`），而 21 對護甲是禁止的（`型別+1 > 8` 就重擲）。
-所以**護甲永遠拿不到會生效的特效**，它那一格寫的是 17–20 的裝飾。
+**2026-07-29 更正：17–21 全都有作用，不是只有 21。** `sub_11CBF`
+證明 17／18／19／20 分別是 MaxSP／速度／力量／技巧，21 才是戰鬥碼另讀的
+武器特效（`docs/re/109`）。21 對護甲禁止，所以護甲拿不到的是**武器傷害特效**；
+17–20 正是護甲仍能持有的常駐屬性效果。舊結論只追到戰鬥消費端，漏了換裝常式。
 
 估價第四項那個 `n = 槽[+0x0a] − 10` 加上取絕對值（`docs/re/46` §3）
 到這裡才對得起來：`n` 就是這個級數 `k`，負號來自詛咒。
@@ -219,7 +220,7 @@ if T < 底價 → 重擲型別
 —— 詛咒本來就不是呼叫端能指定的東西，那個參數從一開始就是錯的抽象。
 
 `internal/assets/scenario`：`InventorySlot` 補上 `SpellA/SpellAPower`、
-`SpellB/SpellBPower`、`CondA/CondB`、`EffectBByte`，`Unknown02/Unknown04`
+`SpellB/SpellBPower`、`EffectTypeA/EffectTypeB`、`EffectValueBByte`，`Unknown02/Unknown04`
 改名成 `SpellAPower/SpellBPower`。這幾個 byte 原本標「語意未解、寫回時留原值」，
 現在照欄位寫回，存檔往返仍然逐位元組相同。
 

@@ -83,8 +83,9 @@ remake 已用 `EXITS.DAT` 的第六 byte 更新 `MerchantBase`，這一格應結
   record 同構與 runtime 行為已有交叉證據。
 - trailer `+09h`：位於九格 formation 與 32-bit gold 之間，兩份原版存檔皆 0，
   沒有 consumer；remake 原樣 round-trip，不賦予玩法。
-- C13：裝備槽 `+09/+0A` 很像「常駐效果 id/偏移值」，但只有兵器庫釘頭鎚
-  一個非 `15h` 資料點。未找到第二件前不改欄位名、不新增加速效果。
+- ~~C13~~：**已由 `sub_11CBF` 結案**。`11h`–`14h` 分別修改
+  MaxSP／速度／力量／技巧，`15h` 是獨立的武器戰鬥效果；兵器庫釘頭鎚
+  `12h/0Ch` 因而確定是速度 +2（`docs/re/109`）。
 
-這四項是 provenance/命名或 oracle 強化，不是已知的破關缺口。若往後取得新存檔
+其餘三項是 provenance/命名或 oracle 強化，不是已知的破關缺口。若往後取得新存檔
 或第二份同引擎遊戲，應優先用資料差異交叉驗證，而不是讓 remake 猜出新規則。

@@ -105,10 +105,16 @@ func GiveItem(from, to *Character, slot int) ItemMoveResult {
 
 // unequipIfSlot 在指定格被清空時解除裝備索引。
 func (c *Character) unequipIfSlot(slot int) {
+	changed := false
 	if c.EquippedWeapon == slot {
 		c.EquippedWeapon = -1
+		changed = true
 	}
 	if c.EquippedArmor == slot {
 		c.EquippedArmor = -1
+		changed = true
+	}
+	if changed {
+		c.RecomputeEquipmentBonuses()
 	}
 }

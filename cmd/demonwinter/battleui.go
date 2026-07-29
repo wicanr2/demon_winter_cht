@@ -327,11 +327,21 @@ func (a *app) drawSPPrompt(dst *ebiten.Image) {
 	line(a.tr.UI("battle.sp.note", "※ 投入越多效果越強，法力用完就沒了"))
 }
 
-// applySpell 套用一個法術的效果。
+// applySpell 套用一個法術的效果。玩家的範圍法術中心來自 aoeCursor；
+// 怪物 AI 必須走 applySpellAt，把它自己挑出的中心明確傳進來。
 //
-// 只實作 spec 標 READY 的四類特殊效果與通式；其餘 effect_type
-// 顯示「尚未實作」而不是靜默沒反應 —— 看不出有沒有生效比沒有功能更糟。
+// 已知的特殊效果與通式都在這條共用路徑；資料若出現未知 effect_type，
+// 仍顯示「尚未實作」而不是靜默沒反應。
 func (a *app) applySpell(caster, target *game.Unit, e spellEntry, sp int) {
+	a.applySpellAt(caster, target, e, sp, a.aoeX, a.aoeY)
+}
+
+// applySpellAt 與 applySpell 相同，但由呼叫端明確指定範圍效果中心。
+//
+// 不能讓怪物 AI 共用 a.aoeX/a.aoeY：那兩格是玩家游標的 UI 狀態，
+// AI 在 monsterCastTarget 挑出的中心可能完全不同。舊碼因此會把怪物的
+// 5×5 法術套到 (0,0) 或玩家上一次選過的位置。
+func (a *app) applySpellAt(caster, target *game.Unit, e spellEntry, sp, areaX, areaY int) {
 	switch e.spell.Effect {
 	case game.EffectInstantDeath:
 		if target == nil {
@@ -395,8 +405,7 @@ func (a *app) applySpell(caster, target *game.Unit, e spellEntry, sp int) {
 		}
 
 	case game.EffectAOE:
-		// 走到這裡代表游標已經選好中心點（見 aoeCursor）。
-		hits := game.CastAOE(a.rng, a.battle, e.spell, sp, a.aoeX, a.aoeY)
+		hits := game.CastAOE(a.rng, a.battle, e.spell, sp, areaX, areaY)
 		if len(hits) == 0 {
 			a.logf(a.tr.UI("battle.msg.aoenobody", "%s 的%s沒有波及任何人"), caster.Name, e.name)
 			return
@@ -957,15 +966,29 @@ func (a *app) monsterCast(u *game.Unit) bool {
 		name = fmt.Sprintf(a.tr.UI("battle.spell.num", "法術 %d"), id)
 	}
 	e := spellEntry{index: id, name: a.tr.Event(spellSourceFile, id, name), spell: sp}
-	a.applySpell(u, target, e, invested)
+	// monsterCastTarget 回傳的就是 AI 挑選並通過誤傷否決的中心。
+	// 明確傳入座標，不能讀玩家 aoeCursor 留下的 UI 狀態。
+	areaX, areaY := monsterSpellAreaCentre(sp.Effect, target)
+	a.applySpellAt(u, target, e, invested, areaX, areaY)
 	return true
+}
+
+// monsterSpellAreaCentre 把 AI 的範圍中心固定在它挑中的目標。
+//
+// 非範圍效果不讀座標，回傳零值即可。獨立成純函式是為了用回歸測試釘住：
+// 這裡若再次改成 a.aoeX/a.aoeY，怪物法術會受玩家游標的舊狀態污染。
+func monsterSpellAreaCentre(effect int, target *game.Unit) (int, int) {
+	if !game.AIEffectIsArea(effect) || target == nil {
+		return 0, 0
+	}
+	return target.X, target.Y
 }
 
 // monsterCastTarget 依效果類型挑這次施法要打誰。
 //
 // 效果 1 是範圍：先隨機挑一個敵人當中心，數過方框裡兩邊各幾個，誤傷太多
-// 就放棄（原版 0x09ae 的 `己方×2 > 敵方`）。這裡回傳的是中心那個單位，
-// 範圍效果本身還沒接上，先以單體套用 —— 缺的是效果套用端，不是選目標端。
+// 就放棄（原版 0x09ae 的 `己方×2 > 敵方`）。這裡回傳的是中心那個單位；
+// monsterCast 會把它的座標傳給共用的 5×5 效果套用端。
 func (a *app) monsterCastTarget(u *game.Unit, sp gamedata.Spell) *game.Unit {
 	if game.AIEffectIsArea(sp.Effect) {
 		center := a.battle.AIPickTarget(u, false, -1)

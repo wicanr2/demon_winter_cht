@@ -58,7 +58,7 @@
 > `206a:000a` 是絕對值、`206a:0020` 是正負號，第四項 =
 > `trunc(1.4 × |n| × 250) × sign(n)`。`ItemValue` 的 `exact` 已經拿掉。
 
-用原始 byte 而不是 `WeaponEffect`：後者是「兩組條件旗標＋特效值」相加出來的
+用原始 byte 而不是 `WeaponEffect`：後者是「兩組類型 15h 的效果值」相加出來的
 衍生值，拆不回去（`docs/re/25`），而估價要的就是那個原始 byte。
 
 ---
@@ -66,7 +66,8 @@
 ## 4. 本專案的實作範圍
 
 `internal/game/price.go` 的 `chargeBonus` 與 `ItemValue`；
-`internal/assets/scenario` 新增 `InventorySlot.EffectAByte`（`+0x0a` 原始值）。
+`internal/assets/scenario` 的現名是 `InventorySlot.EffectValueAByte`
+（`+0x0a` 原始值；類型分派後續見 `docs/re/109`）。
 
 測試釘住三條分支各自的算式、`上限 = 100 / 101` 的分界（除數剛好是 1），
 以及「`+0x0a` 不為 0 就回報 `exact = false`」。

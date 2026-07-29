@@ -325,25 +325,40 @@ func TestInventory_EmptySlotHasNoEnchant(t *testing.T) {
 	}
 }
 
-// 兩組特效各有一個條件旗標，都啟用時相加。
+// 兩組效果類型都是 0x15 時，武器戰鬥特效相加。
 func TestInventory_WeaponEffectConditions(t *testing.T) {
-	mk := func(condA, effA, condB, effB byte) InventorySlot {
+	mk := func(typeA, valueA, typeB, valueB byte) InventorySlot {
 		raw := make([]byte, inventorySlotLen)
 		raw[slotType] = 5
 		raw[slotEnchant] = storedOffset
-		raw[slotCondA], raw[slotEffectA] = condA, effA
-		raw[slotCondB], raw[slotEffectB] = condB, effB
+		raw[slotEffectTypeA], raw[slotEffectValueA] = typeA, valueA
+		raw[slotEffectTypeB], raw[slotEffectValueB] = typeB, valueB
 		return parseInventorySlot(raw)
 	}
 
 	if got := mk(0, 13, 0, 14).WeaponEffect; got != 0 {
-		t.Errorf("條件旗標都沒啟用時特效應為 0，得到 %d", got)
+		t.Errorf("兩組都不是武器效果時應為 0，得到 %d", got)
 	}
-	if got := mk(effectCondEnabled, 13, 0, 14).WeaponEffect; got != 3 {
+	if got := mk(EquipmentEffectWeapon, 13, 0, 14).WeaponEffect; got != 3 {
 		t.Errorf("只啟用 A 組時特效 = %d，預期 13−10 = 3", got)
 	}
-	if got := mk(effectCondEnabled, 13, effectCondEnabled, 14).WeaponEffect; got != 7 {
+	if got := mk(EquipmentEffectWeapon, 13, EquipmentEffectWeapon, 14).WeaponEffect; got != 7 {
 		t.Errorf("兩組都啟用時特效 = %d，預期 3+4 = 7", got)
+	}
+}
+
+func TestInventory_EquipmentBonusTypes(t *testing.T) {
+	s := InventorySlot{
+		EffectTypeA:      EquipmentEffectSpeed,
+		EffectValueAByte: 12,
+		EffectTypeB:      EquipmentEffectSpeed,
+		EffectValueBByte: 8,
+	}
+	if got := s.EquipmentBonus(EquipmentEffectSpeed); got != 0 {
+		t.Errorf("速度加成 = %d，預期 +2−2 = 0", got)
+	}
+	if got := s.EquipmentBonus(EquipmentEffectStrength); got != 0 {
+		t.Errorf("沒有力量效果卻得到 %d", got)
 	}
 }
 

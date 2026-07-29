@@ -134,13 +134,13 @@ func TestItemValue_EffectTerms(t *testing.T) {
 		{7, -1163}, // n = −3
 	}
 	for _, tc := range cases {
-		slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectAByte: tc.raw}
+		slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectValueAByte: tc.raw}
 		if got := ItemValue(0, slot); got != max0(tc.want) {
 			t.Errorf("+0x0a = %d 的估價 %d，預期 %d", tc.raw, got, max0(tc.want))
 		}
 	}
 	// 兩組是獨立相加的。
-	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectAByte: 11, EffectBByte: 11}
+	slot := scenario.InventorySlot{Type: 3, MaterialClass: 1, EffectValueAByte: 11, EffectValueBByte: 11}
 	if got := ItemValue(0, slot); got != 500 {
 		t.Errorf("兩組各 +1 的估價 %d，預期 500", got)
 	}

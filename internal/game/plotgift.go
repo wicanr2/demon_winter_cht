@@ -135,15 +135,13 @@ var armoryGifts = map[PlotGiftID]scenario.InventorySlot{
 		MaterialClass: 3,
 		Identified:    true,
 	},
-	// 釘頭錘。材質是普通的，特別之處在那組**特效條件旗標**。
-	// `CondA`／`EffectAByte` 照抄原始位元組 —— 條件 0x12 不是
-	// 估價那條路認得的 0x15，語意還沒定案（`docs/re/46` §4），
-	// 所以不推導成 `WeaponEffect`。
+	// 釘頭錘。0x12 是「恆常：速度」、0x0c − 10 = +2；
+	// 裝備後由 Character.RecomputeEquipmentBonuses 套用（docs/re/109）。
 	PlotGiftArmoryMace: {
-		Type:        0x03,
-		CondA:       0x12,
-		EffectAByte: 0x0c,
-		Identified:  true,
+		Type:             0x03,
+		EffectTypeA:      scenario.EquipmentEffectSpeed,
+		EffectValueAByte: 0x0c,
+		Identified:       true,
 	},
 	// 水晶匕首。**型別 0 是「沒被覆寫」的結果，不是漏寫。**
 	PlotGiftArmoryDagger: {

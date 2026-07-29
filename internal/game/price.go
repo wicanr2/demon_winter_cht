@@ -175,8 +175,8 @@ func ItemValue(basePrice int, slot scenario.InventorySlot) int {
 	if slot.Power != 0 {
 		value += chargeBonus(slot)
 	}
-	value += effectValueTerm(slot.EffectAByte)
-	value += effectValueTerm(slot.EffectBByte)
+	value += effectValueTerm(slot.EffectValueAByte)
+	value += effectValueTerm(slot.EffectValueBByte)
 	value += enchantValueTerm(slot)
 
 	if slot.ExorciseResist != 0 {

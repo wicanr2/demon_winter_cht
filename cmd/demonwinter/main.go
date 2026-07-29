@@ -1017,8 +1017,6 @@ func (a *app) logTop() int {
 
 // checkEvent 走 docs/spec/03-events.md 的觸發鏈：
 // 落點 tile 決定要不要查表 → 查 EXITS.DAT 取事件索引 → 讀 DATA*.TXT 顯示文字。
-//
-// 戰鬥（記錄的 Count != 0）與傳送尚未實作，目前只把它們寫進狀態列。
 // checkRandomEncounter 擲野外隨機遭遇。
 //
 // 原版每走一步 1/64（`rnd_raw() & 0x3f == 0x34`），只在戶外、且不在船上時擲；

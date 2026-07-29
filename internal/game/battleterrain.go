@@ -30,10 +30,12 @@ import (
 //
 // 本專案的地形緩衝唯讀，佔位由 `Battle.UnitAt` 負責，判定拆成兩半。
 //
-// # 尚未實作
+// # tile 4 的窄道
 //
-// tile 值為 4 的區塊會在區塊之間開／封一道口子（`ds:0x0a20`／`0x0a32`
-// 兩張鄰接位移表），條件與語意未解。這裡照抄區塊的 tile，不猜那個分支。
+// 原版對 tile 4 有一條額外分支（`17c5:17cb`–`17ed`；完整證據見
+// `docs/re/108`）。它先看同列的相鄰區塊：若相鄰值是 0，就改用同欄相鄰
+// 區塊作為 5×5 底色，並在中央橫向寫五格 0；否則以 tile 4 填底，中央
+// 縱向寫五格 0。最後把正中央寫回 4。這是原指令與兩張 word 表的逐格重現。
 
 // BattleTerrainSize 是地形緩衝的邊長，與 BattleGridWidth 相同（含牆）。
 const BattleTerrainSize = BattleGridWidth
@@ -45,6 +47,20 @@ const BattleTerrainSize = BattleGridWidth
 // `BattleWallLow`–`BattleWallHigh` 以內都有，以外沒有。
 // 世界地圖界外的區塊填成牆，不是留 0。
 type BattleTerrain [BattleTerrainSize * BattleTerrainSize]byte
+
+// tile 4 分支的兩張相鄰索引表，直接來自 DS:0A20 與 DS:0A32。
+// 每格是 3×3 世界區塊的一維索引增量。
+var battleTile4Across = [BattleBlocks * BattleBlocks]int{
+	1, 1, -1,
+	1, 1, -1,
+	1, 1, -1,
+}
+
+var battleTile4Perpendicular = [BattleBlocks * BattleBlocks]int{
+	3, 3, 3,
+	3, 3, 3,
+	-3, -3, -3,
+}
 
 // InArena 回報這一格在不在戰場（含牆框）之內 —— 也就是**畫不畫得出來**。
 // 別用「地形值是不是 0」來判斷，0 是合法的地形。
@@ -107,6 +123,7 @@ func NewBattleTerrain(m *world.Map, cx, cy int) (*BattleTerrain, error) {
 	}
 
 	half := BattleBlocks / 2
+	var blocks [BattleBlocks * BattleBlocks]byte
 	for by := 0; by < BattleBlocks; by++ {
 		for bx := 0; bx < BattleBlocks; bx++ {
 			v := byte(BattleWallTile) // 界外當牆：站不上去，而且畫得出來
@@ -116,14 +133,50 @@ func NewBattleTerrain(m *world.Map, cx, cy int) (*BattleTerrain, error) {
 					v = tv
 				}
 			}
+			blocks[by*BattleBlocks+bx] = v
+		}
+	}
+
+	for by := 0; by < BattleBlocks; by++ {
+		for bx := 0; bx < BattleBlocks; bx++ {
+			i := by*BattleBlocks + bx
+			original := blocks[i]
+			fill := original
+			if original == 4 {
+				across := i + battleTile4Across[i]
+				if blocks[across] == 0 {
+					fill = blocks[i+battleTile4Perpendicular[i]]
+				}
+			}
 			ox := BattleFieldMin + bx*BattleBlockSize
 			oy := BattleFieldMin + by*BattleBlockSize
 			for dy := 0; dy < BattleBlockSize; dy++ {
 				for dx := 0; dx < BattleBlockSize; dx++ {
-					t[(oy+dy)*BattleTerrainSize+ox+dx] = v
+					t[(oy+dy)*BattleTerrainSize+ox+dx] = fill
 				}
+			}
+			if original == 4 {
+				carveTile4NarrowWay(&t, blocks, i, ox, oy)
 			}
 		}
 	}
 	return &t, nil
+}
+
+// carveTile4NarrowWay 重現 `17c5:17e59`–`17ecb`。
+func carveTile4NarrowWay(t *BattleTerrain, blocks [BattleBlocks * BattleBlocks]byte, i, ox, oy int) {
+	across := i + battleTile4Across[i]
+	if blocks[across] == 0 {
+		// blockStart + 0x84，再倒寫五格：中央橫列。
+		for dx := 0; dx < BattleBlockSize; dx++ {
+			t[(oy+BattleBlockSize/2)*BattleTerrainSize+ox+dx] = 0
+		}
+	} else {
+		// blockStart + 2，再每次 +0x40：中央直欄。
+		for dy := 0; dy < BattleBlockSize; dy++ {
+			t[(oy+dy)*BattleTerrainSize+ox+BattleBlockSize/2] = 0
+		}
+	}
+	// blockStart + 0x82：無論方向都把正中央恢復成 tile 4。
+	t[(oy+BattleBlockSize/2)*BattleTerrainSize+ox+BattleBlockSize/2] = 4
 }

@@ -37,12 +37,12 @@ func TestHasAura(t *testing.T) {
 		{scenario.InventorySlot{Type: 3}, false, "什麼都沒有"},
 		{scenario.InventorySlot{Type: 3, SpellAPower: 4}, true, "附帶法術 A 的強度"},
 		{scenario.InventorySlot{Type: 3, Power: 6}, true, "效果強度"},
-		{scenario.InventorySlot{Type: 3, EffectAByte: 12}, true, "特效值 A"},
+		{scenario.InventorySlot{Type: 3, EffectValueAByte: 12}, true, "特效值 A"},
 		{scenario.InventorySlot{Type: 3, Enchant: 1}, true, "附魔"},
 		{scenario.InventorySlot{Type: 3, Enchant: -1}, true, "負附魔也算"},
 		// 只長 B 那一組的偵測不到 —— 原版就沒查，照抄。
 		{scenario.InventorySlot{Type: 3, SpellBPower: 4}, false, "只有附帶法術 B"},
-		{scenario.InventorySlot{Type: 3, EffectBByte: 12}, false, "只有特效值 B"},
+		{scenario.InventorySlot{Type: 3, EffectValueBByte: 12}, false, "只有特效值 B"},
 	} {
 		if got := HasAura(c.slot); got != c.want {
 			t.Errorf("%s：%v，預期 %v", c.label, got, c.want)

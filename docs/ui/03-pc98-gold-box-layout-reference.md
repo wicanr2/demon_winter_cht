@@ -4,7 +4,7 @@
 > 640×400 畫布、16×15 倚天字與資訊分區是否合理。這是**版面參考**，
 > 不是遊戲規則或美術素材的 oracle。
 
-## 1. 為什麼選這兩作
+## 1. 核心案例與系列交叉檢查
 
 使用者指定的《克萊恩英豪》與《幽靈騎士》分別對應：
 
@@ -17,12 +17,29 @@
 《冬之魔》同屬「美式隊伍制 CRPG 如何容納 CJK 文字」的直接案例。
 它們比一般 PC-98 JRPG 更適合回答本專案的排版問題。
 
-公開截圖來源：
+為避免只看兩款 Krynn 作品而誤把單一移植批次的做法當成通則，另以四款
+Forgotten Realms 系列作交叉檢查：
+
+| 作品 | PC-98 公開圖庫涵蓋的可比畫面 |
+|---|---|
+| *Pool of Radiance* | 建角、對話、城鎮、automap、營地、遭遇與戰鬥 |
+| *Curse of the Azure Bonds* | 日文長文、隊伍狀態、城鎮、目標資訊與戰鬥 |
+| *Secret of the Silver Blades* | 對話、寶物、探索、automap、商店與大規模戰鬥 |
+| *Pools of Darkness* | 港口、室內／城市、商店、對話、世界地圖與室內外戰鬥 |
+
+這六款橫跨 Forgotten Realms 與 Dragonlance，且畫面種類互補。它們共同證明的
+才列為系列規律；個別作品的框飾、題頭色與插畫比例只當視覺靈感。
+
+公開截圖來源（第三方頁面，不收入 repo）：
 
 - [Champions of Krynn：PC-98 版介紹與三張遊戲截圖](https://retroarchives.fr/champions-of-krynn/)
 - [Champions of Krynn：PC-98 截圖集（16 張、640×400）](https://www.mobygames.com/game/833/champions-of-krynn/screenshots/pc98/)
 - [Death Knights of Krynn：PC-98 版介紹與兩張遊戲截圖](https://retroarchives.fr/death-knights-of-krynn/)
 - [Death Knights of Krynn：PC-98 截圖集](https://www.mobygames.com/game/2219/death-knights-of-krynn/screenshots/pc98/)
+- [Pool of Radiance：PC-98 截圖集（26 張）](https://www.mobygames.com/game/502/pool-of-radiance/screenshots/pc98/)
+- [Curse of the Azure Bonds：PC-98 截圖集（25 張）](https://www.mobygames.com/game/503/curse-of-the-azure-bonds/screenshots/pc98/)
+- [Secret of the Silver Blades：PC-98 截圖集](https://www.mobygames.com/game/504/secret-of-the-silver-blades/screenshots/pc98/)
+- [Pools of Darkness：PC-98 截圖集](https://www.mobygames.com/game/505/pools-of-darkness/screenshots/pc98/)
 
 本 repo 不重發第三方截圖；以下數值由上述 640×400 畫面量測，因網站預覽有
 3 倍 nearest-neighbor 放大，邊界可能有約 1 個原生像素的誤差。
@@ -79,6 +96,22 @@
 所以正文繼續用 20 px 行距，不為了表面一致硬壓回 16 px。固定表格與短命令列
 才使用 16 px 行距。
 
+### 2.4 六款系列畫面的共同語法
+
+擴大樣本後，最穩定的不是某一套框線，而是下列資訊優先順序：
+
+1. 探索、對話、商店和戰鬥可以重組主內容區，但隊伍狀態始終留在可預期位置。
+2. 戰鬥畫面把戰場留給空間判讀，當前單位／目標數值集中在側欄，戰報與命令
+   放在另一區；不以漂浮提示覆蓋棋盤。
+3. 日文敘事採短段落、明確換頁提示。即使畫布容得下，也不把正文壓成滿屏小字。
+4. 商店、營地、建角等高資訊量畫面改用整齊表列；探索 HUD 的裝飾不妨礙欄位對齊。
+5. 同一套引擎可容納城鎮插畫、第一人稱探索、automap 與俯視戰場，因此
+   《冬之魔》Modern EGA 應統一框、色彩角色與字級，而非把所有狀態硬套同一格版面。
+
+對《冬之魔》最直接的新裁決是：世界／地城、一般戰鬥與海戰應共享資訊層級，
+但允許各自保留適合玩法的主視窗比例。這比追求三種模式外框逐像素一致更接近
+PC-98 Gold Box 的成熟做法。
+
 ## 3. 對目前中文規劃的裁決
 
 ### 保留
@@ -115,4 +148,3 @@
 3. 世界、地城、戰鬥三種狀態都能一眼分出主內容、常駐狀態、情境訊息與命令。
 4. EGA／CGA／Modern EGA 三主題中，相同資訊角色使用一致語意。
 5. F8 切換只改 theme，不改斷行、欄寬、選取項目或遊戲狀態。
-

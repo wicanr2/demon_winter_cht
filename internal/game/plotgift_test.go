@@ -122,13 +122,14 @@ func TestArmoryGifts(t *testing.T) {
 		t.Errorf("冰藍短劍的附帶法術 %d 強度 %d，預期 15／4",
 			sword.SpellA, sword.SpellAPower)
 	}
-	// 釘頭鎚那組特效位元組照抄。**條件旗標 0x12 不是 WeaponEffect 認的 0x15**，
-	// 所以推導值是 0；攻略說它的效果是「恆常：速度 +2」（＝ 0x0c − 10），
-	// 語意還沒定案，不要在這裡硬湊（見 CONTEXT.md §7 的 C13）。
+	// 釘頭鎚的常駐效果是速度 +2；0x12 是類型，0x0c − 10 是數值。
 	mace, _ := plotGiftSpec(PlotGiftArmoryMace)
-	if mace.CondA != 0x12 || mace.EffectAByte != 0x0c {
+	if mace.EffectTypeA != scenario.EquipmentEffectSpeed || mace.EffectValueAByte != 0x0c {
 		t.Errorf("釘頭鎚的特效位元組 %#02x/%#02x，預期 0x12／0x0c",
-			mace.CondA, mace.EffectAByte)
+			mace.EffectTypeA, mace.EffectValueAByte)
+	}
+	if got := mace.EquipmentBonus(scenario.EquipmentEffectSpeed); got != 2 {
+		t.Errorf("釘頭鎚速度加成 = %d，預期 2", got)
 	}
 
 	// 四座各自獨立：拿了一座不影響其他三座。

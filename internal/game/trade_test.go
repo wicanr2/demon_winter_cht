@@ -3,6 +3,7 @@ package game
 import (
 	"testing"
 
+	"github.com/wicanr2/demon_winter_cht/internal/assets/gamedata"
 	"github.com/wicanr2/demon_winter_cht/internal/assets/scenario"
 )
 
@@ -170,6 +171,82 @@ func TestEquip_Swaps(t *testing.T) {
 	c.Equip(1)
 	if c.EquippedWeapon != 1 {
 		t.Errorf("換武器後索引 %d，預期 1", c.EquippedWeapon)
+	}
+}
+
+func TestEquip_RecomputesPassiveEffects(t *testing.T) {
+	c := Character{EquippedWeapon: -1, EquippedArmor: -1, MaxSP: 20}
+	c.Traits[gamedata.Speed] = 8
+	c.Traits[gamedata.Strength] = 9
+	c.Traits[gamedata.Skill] = 10
+	c.TraitsWithBonus.MaxSP = 20
+	for i := range c.Inventory {
+		c.Inventory[i] = scenario.InventorySlot{Type: scenario.SlotEmpty}
+	}
+	c.Inventory[0] = scenario.InventorySlot{
+		Type:             3,
+		EffectTypeA:      scenario.EquipmentEffectSpeed,
+		EffectValueAByte: 12, // +2
+		EffectTypeB:      scenario.EquipmentEffectStrength,
+		EffectValueBByte: 14, // +4
+	}
+	c.Inventory[1] = scenario.InventorySlot{
+		Type:             10,
+		EffectTypeA:      scenario.EquipmentEffectSkill,
+		EffectValueAByte: 13, // +3
+		EffectTypeB:      scenario.EquipmentEffectMaxSP,
+		EffectValueBByte: 15, // +5
+	}
+	c.Inventory[2] = scenario.InventorySlot{
+		Type:             5,
+		EffectTypeA:      scenario.EquipmentEffectSpeed,
+		EffectValueAByte: 7, // −3
+	}
+
+	if ok, why := c.Equip(0); !ok {
+		t.Fatalf("裝武器失敗：%s", why)
+	}
+	if ok, why := c.Equip(1); !ok {
+		t.Fatalf("穿護甲失敗：%s", why)
+	}
+	if got := int(c.TraitsWithBonus.Speed); got != 10 {
+		t.Errorf("速度 = %d，預期 8+2=10", got)
+	}
+	if got := int(c.TraitsWithBonus.Strength); got != 13 {
+		t.Errorf("力量 = %d，預期 9+4=13", got)
+	}
+	if got := int(c.TraitsWithBonus.Skill); got != 13 {
+		t.Errorf("技巧 = %d，預期 10+3=13", got)
+	}
+	if c.MaxSP != 25 {
+		t.Errorf("MaxSP = %d，預期 20+5=25", c.MaxSP)
+	}
+
+	// 換武器必須移除舊武器效果，再由天生值重算；護甲效果仍保留。
+	if ok, why := c.Equip(2); !ok {
+		t.Fatalf("換武器失敗：%s", why)
+	}
+	if got := int(c.TraitsWithBonus.Speed); got != 5 {
+		t.Errorf("換裝後速度 = %d，預期 8−3=5", got)
+	}
+	if got := int(c.TraitsWithBonus.Strength); got != 9 {
+		t.Errorf("舊武器力量效果未移除：%d", got)
+	}
+	if int(c.TraitsWithBonus.Skill) != 13 || c.MaxSP != 25 {
+		t.Errorf("護甲效果不應消失：技巧 %d MaxSP %d",
+			c.TraitsWithBonus.Skill, c.MaxSP)
+	}
+
+	u := c.CombatUnit(PlayerSlotStart, 0, 0, North)
+	if u.Speed != 5 || u.Strength != 9 || u.Skill != 13 || u.MaxSP != 25 {
+		t.Errorf("戰鬥沒有使用有效值：%+v", u)
+	}
+
+	var rec scenario.Character
+	c.ApplyTo(&rec)
+	if rec.SpeedBonus != 5 || rec.StrengthBonus != 9 ||
+		rec.SkillBonus != 13 || rec.MaxSPBonus != 25 || rec.MaxSPNatural != 20 {
+		t.Errorf("存檔常駐效果欄位錯誤：%+v", rec)
 	}
 }
 

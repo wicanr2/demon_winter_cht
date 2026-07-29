@@ -155,3 +155,72 @@ func TestBattleTerrain_NeedsAMap(t *testing.T) {
 		t.Error("沒有地圖應該回 error")
 	}
 }
+
+func tile4TestMap(t *testing.T, centre, east, south byte) *world.Map {
+	t.Helper()
+	m := &world.Map{}
+	const cx, cy = 32, 32
+	for y := cy - 1; y <= cy+1; y++ {
+		for x := cx - 1; x <= cx+1; x++ {
+			if err := m.SetTileAt(x, y, 7); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	for _, v := range []struct {
+		x, y int
+		tile byte
+	}{
+		{cx, cy, centre},
+		{cx + 1, cy, east},
+		{cx, cy + 1, south},
+	} {
+		if err := m.SetTileAt(v.x, v.y, v.tile); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return m
+}
+
+func TestBattleTerrain_Tile4HorizontalNarrowWay(t *testing.T) {
+	const cx, cy = 32, 32
+	bt, err := NewBattleTerrain(tile4TestMap(t, 4, 0, 9), cx, cy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ox, oy := BattleFieldMin+BattleBlockSize, BattleFieldMin+BattleBlockSize
+	for dy := 0; dy < BattleBlockSize; dy++ {
+		for dx := 0; dx < BattleBlockSize; dx++ {
+			want := byte(9)
+			if dy == BattleBlockSize/2 {
+				want = 0
+			}
+			if dx == BattleBlockSize/2 && dy == BattleBlockSize/2 {
+				want = 4
+			}
+			if got := bt.TileAt(ox+dx, oy+dy); got != want {
+				t.Fatalf("tile 4 橫向窄道 (%d,%d) = %d，預期 %d", dx, dy, got, want)
+			}
+		}
+	}
+}
+
+func TestBattleTerrain_Tile4VerticalNarrowWay(t *testing.T) {
+	const cx, cy = 32, 32
+	bt, err := NewBattleTerrain(tile4TestMap(t, 4, 8, 9), cx, cy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ox, oy := BattleFieldMin+BattleBlockSize, BattleFieldMin+BattleBlockSize
+	for dy := 0; dy < BattleBlockSize; dy++ {
+		for dx := 0; dx < BattleBlockSize; dx++ {
+			want := byte(4)
+			if dx == BattleBlockSize/2 && dy != BattleBlockSize/2 {
+				want = 0
+			}
+			if got := bt.TileAt(ox+dx, oy+dy); got != want {
+				t.Fatalf("tile 4 縱向窄道 (%d,%d) = %d，預期 %d", dx, dy, got, want)
+			}
+		}
+	}
+}

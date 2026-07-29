@@ -369,11 +369,11 @@ const (
 //
 // 兩輪各自擲一次通過機率，過了就寫一組。走哪一條分兩種：
 //
-//   - 不是詛咒品而且擲中四成 → 條件碼 0–7、值寫死 12（不生效的雜項）
-//   - 其餘 → 條件碼 17–21、值是一個隨等級爬升的級數（詛咒品取負）
+//   - 不是詛咒品而且擲中四成 → 類型碼 0–7、值寫死 12（技能映射另見 re/109）
+//   - 其餘 → 類型碼 17–21、值是一個隨等級爬升的級數（詛咒品取負）
 //
-// 只有條件碼 21 會讓值生效，而 21 對護甲是禁止的 ——
-// **所以護甲永遠拿不到會生效的特效**（`1990:19b7`）。
+// 17–20 是 MaxSP／速度／力量／技巧，21 是武器戰鬥特效；只有 21 對護甲
+// 禁止。舊註解把 17–20 誤判成不生效，已由 `sub_11CBF` 推翻（docs/re/109）。
 func rollConditions(r *rng.RNG, slot *scenario.InventorySlot, t1, level int, cursed bool) {
 	if t1 > lootArmourMax {
 		return
@@ -407,7 +407,7 @@ func rollConditions(r *rng.RNG, slot *scenario.InventorySlot, t1, level int, cur
 			if idx == condCodeDie && t1 > lootWeaponMax {
 				continue
 			}
-			if round != 0 && slot.CondA == idx+condCodeBase {
+			if round != 0 && slot.EffectTypeA == idx+condCodeBase {
 				continue
 			}
 			code = idx + condCodeBase
@@ -426,10 +426,10 @@ func rollConditions(r *rng.RNG, slot *scenario.InventorySlot, t1, level int, cur
 // setCondition 把一組（條件碼, 值）寫進第 round 組。
 func setCondition(slot *scenario.InventorySlot, round, code, value int) {
 	if round == 0 {
-		slot.CondA, slot.EffectAByte = code, value
+		slot.EffectTypeA, slot.EffectValueAByte = code, value
 		return
 	}
-	slot.CondB, slot.EffectBByte = code, value
+	slot.EffectTypeB, slot.EffectValueBByte = code, value
 }
 
 // rollItemSpells 擲出兩組附帶法術（`+0x01`–`+0x04`）。**只有武器有。**
@@ -584,7 +584,7 @@ func generateLoot(r *rng.RNG, t *gamedata.Tables, item gamedata.Item,
 // 那種東西不必給驅邪成功率。
 func lootDamaged(slot scenario.InventorySlot) bool {
 	return slot.SpellAPower != 0 || slot.SpellBPower != 0 || slot.Power != 0 ||
-		slot.EffectAByte != 0 || slot.EffectBByte != 0 || slot.Enchant < 0
+		slot.EffectValueAByte != 0 || slot.EffectValueBByte != 0 || slot.Enchant < 0
 }
 
 // rollEffect 擲出效果與強度。

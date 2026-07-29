@@ -169,6 +169,7 @@ func TestLevelUp_HPGainDistribution(t *testing.T) {
 	total := 0
 	for i := 0; i < iters; i++ {
 		c := Character{Race: gamedata.Human, Class: 0, MaxHP: 1, MaxSP: 1}
+		c.TraitsWithBonus.MaxSP = byte(c.MaxSP)
 		c.Traits[gamedata.Endurance] = 17
 		c.Traits[gamedata.Intellect] = 10
 		// 屬性總和遠低於上限總和，分配不會被跳過。
@@ -192,6 +193,7 @@ func TestLevelUp_DoesNotHeal(t *testing.T) {
 	r := rng.NewWithSeed(7)
 
 	c := Character{Race: gamedata.Human, MaxHP: 30, CurrentHP: 4, MaxSP: 20, CurrentSP: 2}
+	c.TraitsWithBonus.MaxSP = byte(c.MaxSP)
 	c.Traits[gamedata.Endurance] = 12
 	c.Traits[gamedata.Intellect] = 12
 
@@ -216,6 +218,7 @@ func TestLevelUp_SeparateCaps(t *testing.T) {
 	r := rng.NewWithSeed(3)
 
 	c := Character{Race: gamedata.Human, MaxHP: 254, MaxSP: 199}
+	c.TraitsWithBonus.MaxSP = byte(c.MaxSP)
 	c.Traits[gamedata.Endurance] = 30
 	c.Traits[gamedata.Intellect] = 30
 
@@ -238,6 +241,7 @@ func TestLevelUp_SkipsAllocationAtRacialCap(t *testing.T) {
 	r := rng.NewWithSeed(5)
 
 	c := Character{Race: gamedata.Troll, MaxHP: 10, MaxSP: 10}
+	c.TraitsWithBonus.MaxSP = byte(c.MaxSP)
 	for i := 0; i < gamedata.NumTraits; i++ {
 		m, err := tb.RaceMax(gamedata.Troll, gamedata.Trait(i))
 		if err != nil {
@@ -266,6 +270,7 @@ func TestLevelUp_AllocatesThreePointsWithinCaps(t *testing.T) {
 
 	for iter := 0; iter < 500; iter++ {
 		c := Character{Race: gamedata.Dwarf, MaxHP: 10, MaxSP: 10}
+		c.TraitsWithBonus.MaxSP = byte(c.MaxSP)
 		for i := 0; i < gamedata.NumTraits; i++ {
 			c.Traits[i] = 5
 		}
@@ -303,6 +308,7 @@ func TestCharacter_FromSaveApplyToRoundTrip(t *testing.T) {
 		MaxSPBonus: 29, CurrentSP: 17,
 		SpeedNatural: 11, StrengthNatural: 9, Intellect: 18,
 		Endurance: 12, SkillNatural: 14,
+		SpeedBonus: 11, StrengthBonus: 9, SkillBonus: 14, MaxSPNatural: 29,
 	}
 	orig.SkillFlags[gamedata.SkillPersuasion] = 1
 	orig.SkillFlags[gamedata.SkillBerserking] = 1
@@ -336,6 +342,7 @@ func TestCharacter_ApplyToLeavesUnknownFields(t *testing.T) {
 		Name: "X", WeaponSlotIndex: 3, ArmorSlotIndex: 8,
 		CombatStatus: scenario.StatusPoison, Unknown103: 0x5a,
 		StrengthBonus: 99, SkillBonus: 98, SpeedBonus: 97, MaxSPNatural: 96,
+		StrengthNatural: 99, SkillNatural: 98, SpeedNatural: 97, MaxSPBonus: 96,
 	}
 	before := rec
 	FromSave(rec).ApplyTo(&rec)
@@ -350,7 +357,7 @@ func TestCharacter_ApplyToLeavesUnknownFields(t *testing.T) {
 		rec.CombatStatus != before.CombatStatus {
 		t.Error("裝備槽／戰鬥狀態沒有原樣寫回")
 	}
-	// 「含裝備加成」的欄位由裝備推導，規則層不該直接寫。
+	// 這組已解欄位在沒有常駐效果時應原樣重建。
 	if rec.StrengthBonus != before.StrengthBonus ||
 		rec.SkillBonus != before.SkillBonus ||
 		rec.SpeedBonus != before.SpeedBonus ||
@@ -378,6 +385,7 @@ func TestCharacter_EquipmentToCombatUnit(t *testing.T) {
 	c.Inventory[1] = scenario.InventorySlot{Type: 10}
 	c.EquippedWeapon = 0
 	c.EquippedArmor = 1
+	c.RecomputeEquipmentBonuses()
 
 	u := c.CombatUnit(PlayerSlotStart, 8, 1, West)
 
@@ -395,6 +403,52 @@ func TestCharacter_EquipmentToCombatUnit(t *testing.T) {
 	}
 	if u.Status != UnitStatus(scenario.StatusPoison) {
 		t.Errorf("戰鬥狀態 = %d，預期中毒 %d", u.Status, scenario.StatusPoison)
+	}
+}
+
+func TestCharacter_EquipmentFlagEffectMapping(t *testing.T) {
+	var c Character
+	for i := range c.Inventory {
+		c.Inventory[i] = scenario.InventorySlot{Type: scenario.SlotEmpty}
+	}
+	c.EquippedWeapon, c.EquippedArmor = 0, 1
+	c.Inventory[0] = scenario.InventorySlot{
+		Type:             3,
+		EffectTypeA:      0, // 0 -> 技能 6
+		EffectValueAByte: 12,
+		EffectTypeB:      5, // 5 -> 技能 25
+		EffectValueBByte: 12,
+	}
+	c.Inventory[1] = scenario.InventorySlot{
+		Type:             10,
+		EffectTypeA:      6, // 6 -> 角色 +EB
+		EffectValueAByte: 12,
+		EffectTypeB:      7, // 7 -> 角色 +EC
+		EffectValueBByte: 12,
+	}
+	// 已學的技能 6 保留 1，不被寫成旗標 2。
+	c.Skills[6] = true
+	c.RecomputeEquipmentBonuses()
+
+	if c.CursedSkills[6] {
+		t.Error("已學技能 6 不應被效果旗標 2 覆寫")
+	}
+	if !c.CursedSkills[25] {
+		t.Error("類型 5 應映射到技能旗標 25 = 2")
+	}
+	if c.PrayChance != 2 || c.BindLevel != 2 {
+		t.Errorf("類型 6/7 應寫 +EB/+EC = 2，得到 %d/%d",
+			c.PrayChance, c.BindLevel)
+	}
+
+	// 移除裝備後，技能旗標 2 先清掉；+EB/+EC 不在原版的 31-byte 清除圈內。
+	c.EquippedWeapon, c.EquippedArmor = -1, -1
+	c.RecomputeEquipmentBonuses()
+	if c.CursedSkills[25] {
+		t.Error("脫裝後技能旗標 2 應清除")
+	}
+	if c.PrayChance != 2 || c.BindLevel != 2 {
+		t.Error("+EB/+EC 應照原版保留，不由技能旗標清除圈復原")
 	}
 }
 

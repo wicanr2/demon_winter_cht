@@ -166,8 +166,10 @@ C／U／T／P／L／ESC 標星號（代表結束回合），攻擊沒有。
 
 實作：`game.NewBattleTerrain`／`BattleTerrain.Visible`／`game.LightLevel`／`game.DungeonLight`。
 
-> **尚未實作的一個分支**：0x1739a 有個條件會把 tile `0x25` 換成 `0x5b`
-> （閘門是隊伍欄位 `+0xba` > 0x7f，語意未解）。目前照抄原 tile。
+> **後續已解並實作**：`0x1739a` 在隊伍欄位 `+0xba > 0x7f` 時，
+> 只在繪製緩衝把神殿 tile `0x25` 換成廢墟 `0x5b`，規則地圖不動。
+> remake 的 `ditheredTiles／applyTempleRuins` 與 `SiteFor` 已接上外觀與設施
+> 分派；欄位語意及唯一寫入端見 `docs/re/79`。
 
 ### 怪物 AI — DRAFT（決策樹已解，兩支子分支未實作）
 
