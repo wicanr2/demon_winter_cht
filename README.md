@@ -132,6 +132,14 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 第一波的同方向兩個步態目前共用視圖，方向與物種已完成，第二步動畫及其餘
 159 格仍待量產，不宣稱完整怪物 atlas。
 
+第二波接著完成不死戰士、骷髏法師、腐敗土丘、幽魂、蜘蛛、鼠、蝙蝠與
+Bugem；兩波合計覆寫率達 129/224
+（[`docs/playtest/37`](docs/playtest/37-modern-icon-battle-wave2.md)）：
+
+![Modern Icon 怪物第二波四向聯絡表](docs/design/img/modern-icon-m1-battle-wave2-contact.png)
+
+仍欠 95 個怪物 frame、兩步動畫差異、玩家職業與敵船，不宣稱完整。
+
 雙倍移動成本的丘陵 `0x0e/0x2b` 另以每索引四個正常／冬季變體完成無縫拼接，
 選圖只依座標、不碰遊戲 RNG（[`docs/playtest/32`](docs/playtest/32-modern-icon-hill-variants.md)）：
 
