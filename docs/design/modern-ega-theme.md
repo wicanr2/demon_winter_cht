@@ -49,6 +49,44 @@ Modern EGA 必須保留：
 
 ![Modern EGA B 方向原生尺寸壓縮證明](img/modern-ega-m0-terrain-study-b-runtime-proof.png)
 
+### 1.1 直接縮圖的 runtime 反證
+
+為避免只在 contact sheet 裡看起來合理，本輪把 B 的七格強制縮成 32×28，
+覆蓋到已由原版證明的少數 DEMON 索引，再經真正的 PNG manifest loader 進遊戲：
+
+![B 方向直接縮圖的失敗實機試片](img/modern-ega-b-direct-downscale-failed.png)
+
+這張是**失敗證據，不是候選成品**。它一次暴露三個問題：
+
+1. 同一張海岸大圖被塞入不同鄰接語意，tile 邊界產生明顯斷裂；
+2. 平原的高對比草點以 32×28 重複後形成規律噪音，搶過角色；
+3. 直式角色被壓進橫式格後縮得太小，戰場／世界 glyph 失去份量。
+
+裁決：保留 B 的低紋理、大形與色彩方向，但**禁止任何直接縮圖或一格套多索引**。
+正式 M1 必須：
+
+- 每個海岸方向／轉角依原版 index 分別畫，且四邊做 continuity 測試；
+- 平鋪地形使用低頻、邊界可接的紋理，不在每格放相同高亮點；
+- 人物依原版 1-bit silhouette 與 anchor 逐像素重建，不由直式概念圖變形。
+
+可重跑方法、觀察與清理邊界另記於
+[`docs/playtest/16`](../playtest/16-modern-ega-direct-downscale-rejection.md)。
+
+### 1.2 第一批原生 32×28 M1-B 試片
+
+`artwork/modern-ega/m1/` 已用手工像素 primitive 產生常態／冬季各九張原生
+32×28、不透明試片，並附 contact sheet 與 3×3 continuity proof。正式 runtime
+驗證只批准具有 code／data 語意證據的七個 index：森林 `0x01`、深水
+`0x14/0x62`、平原 `0x23`、城鎮 `0x2e`、北向隊伍 `0x1e/0x1f`；海岸
+`0x17` 與山峰 `0x63` 仍排除。
+
+![M1-B 七索引實機試片](img/modern-ega-m1-b-runtime-trial.png)
+
+結果：平原與深水的低頻邊界可平鋪，隊伍兩步 animation 共用中心／腳底 anchor，
+原生尺寸方法通過 bounded trial；但其餘 atlas 尚未替換，風格跳接仍明顯。
+因此這是可供使用者裁決 B 方向的第一張真正實機稿，**不是完整或核准的 theme**。
+可重跑證據見 [`docs/playtest/17`](../playtest/17-modern-ega-m1-b-bounded-runtime.md)。
+
 目前給使用者的裁決應是 A/B 方向選擇，而不是問「要不要 Modern EGA」：
 
 | 方向 | 優點 | 風險 | 建議 |
@@ -242,6 +280,11 @@ PNG 幾何、格數與 alpha；`cmd/demonwinter/moderntheme.go` 驗證 schema、
 `-modern-theme-dir <dir>` 可載入候選 atlas；留空仍使用完整調色預覽。
 範本在 `assets/themes/modern-ega/theme.example.json`。這只完成載入契約，
 不代表逐格美術已完成或核准。
+
+端到端證據見 [`docs/playtest/15`](../playtest/15-modern-ega-png-theme-loader.md)：
+五張預覽 atlas 經 manifest 路徑載入後，與原記憶體調色路徑的相同場景截圖
+SHA-256 完全相同且 `cmp` 回傳 0。匯出工具 `tools/modernpreview` 明確禁止提交
+由原版素材衍生的輸出。
 
 ## 5. 製作批次
 

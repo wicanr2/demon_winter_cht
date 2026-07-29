@@ -80,6 +80,18 @@ M0 試片把深水、岸線、平原、森林、山、城鎮與隊伍圖示作�
 B 在水岸、森林、山、城與角色剪影上較穩，建議作 M1 runtime 基準；兩張仍是
 候選審稿材料，不是可以直接切進遊戲的 atlas。
 
+並已真的把 B 強制縮圖裝進遊戲測過；結果出現海岸接縫、規律平原噪音與角色
+過小，因此那條路已明確否決。失敗畫面與逐項裁決收在
+[`Modern EGA 規格 §1.1`](docs/design/modern-ega-theme.md#11-直接縮圖的-runtime-反證)；
+後續只接受依原版索引逐格手工像素化的試片。
+
+第一批真正原生 32×28 的 M1-B 試片也已進正式 loader 實跑：平原、深水兩相位、
+森林、城鎮與北向隊伍兩步動畫共七個已證 index。低頻平鋪與角色 anchor 通過，
+但未替換索引仍會與新圖形成風格跳接，因此它是**可供過目的 bounded trial**，
+不是完成的 Modern EGA。詳見 [`docs/playtest/17`](docs/playtest/17-modern-ega-m1-b-bounded-runtime.md)。
+
+![Modern EGA M1-B 七索引實機試片](docs/design/img/modern-ega-m1-b-runtime-trial.png)
+
 ![Modern EGA 可玩調色預覽實機畫面](docs/images/09-remake-modern-world.png)
 
 詳見 [`Modern EGA 美術與整合規格`](docs/design/modern-ega-theme.md)。跨作品引擎則已完成
@@ -235,6 +247,9 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 | [`docs/design/retro-game-re-remake-lessons.md`](docs/design/retro-game-re-remake-lessons.md) | 從本作整理出的老遊戲反組譯、乾淨重寫、原版對拍與交接模板 |
 | [`docs/design/engine-extraction-study.md`](docs/design/engine-extraction-study.md) | 本作引擎可抽離範圍、第二款遊戲相容性門檻與分階段方案 |
 | [`skill-build/research-pc98-golden-box-ui/`](skill-build/research-pc98-golden-box-ui/) | PC-98 Golden Box CJK UI 共用 skill；同份已同步至 `~/.codex/skills` 與 `~/my_skill` |
+| [`docs/playtest/15-modern-ega-png-theme-loader.md`](docs/playtest/15-modern-ega-png-theme-loader.md) | Modern EGA 五張 PNG atlas 經 manifest 載入後，與記憶體調色預覽逐 byte 相同的端到端證據 |
+| [`docs/playtest/16-modern-ega-direct-downscale-rejection.md`](docs/playtest/16-modern-ega-direct-downscale-rejection.md) | B 方向稿強制縮入實機後的岸線接縫、重複噪音與角色比例反證，以及 M1 手工像素化裁決 |
+| [`docs/playtest/17-modern-ega-m1-b-bounded-runtime.md`](docs/playtest/17-modern-ega-m1-b-bounded-runtime.md) | 七個已證 terrain index 的真正 32×28 手工試片、正式 loader 實跑與隊伍兩步 anchor 證據 |
 | `docs/formats/` | 資料格式規格書（建置中） |
 | `docs/re/` | 反組譯筆記與 Ghidra 環境說明（建置中） |
 

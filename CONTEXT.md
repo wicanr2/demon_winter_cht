@@ -3579,6 +3579,19 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > loader／manifest 契約，會嚴格擋錯尺寸、錯格數、半透明與逃出 theme 目錄的
 > 路徑。`-modern-theme-dir` 可裝候選 atlas，留空仍走安全的完整調色預覽。
 > 這些是 P2 前置完成，不等於使用者已核准或逐格美術已量產。
+> PNG 路徑已再做端到端實機驗收：`tools/modernpreview` 匯出五張預覽 atlas，
+> `-modern-theme-dir` 載回後與原本記憶體調色路徑的 640×400 截圖 SHA-256
+> 完全相同且 `cmp=0`（`docs/playtest/15`）。衍生原版的暫存 atlas 驗後刪除，
+> 只保留工具與證據。
+> 接著把 B 審稿圖七格真的縮成 32×28、覆蓋少數已證索引並經 loader 進遊戲；
+> 實機立即抓到海岸接縫、平原高頻重複與角色被壓小三個失敗。畫面保留在
+> `docs/design/img/modern-ega-b-direct-downscale-failed.png` 作反證；
+> 裁決是保留 B 的大形／色彩方向，但 M1 必須依原版每個 index、邊界 continuity
+> 與 1-bit silhouette 手工像素化，禁止直接縮圖。
+> 第一批真正 32×28 的 M1-B bounded trial 已完成（`artwork/modern-ega/m1/`、
+> `docs/playtest/17`）：正式 loader 只覆蓋有語意證據的 `01/14/62/23/2e/1e/1f`，
+> 平原／深水平鋪與北向隊伍兩步 anchor 通過實機檢查。`17` 海岸與 `63` 山峰仍
+> 明列候選而未裝入。這證明製作方法可行，不等於完整 atlas 或美術核准。
 
 > **2026-07-27 收週更新。** 上一版寫「兩塊玩法整個缺席：地城道具與陷阱互動」
 > —— **兩塊都做完了**。陷阱在 A1，地城道具**六個指令全接**（`I` 於本輪收尾，
