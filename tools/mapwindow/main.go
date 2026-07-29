@@ -24,11 +24,13 @@ func main() {
 	y := flag.Int("y", 50, "中心 Y")
 	find := flag.String("find-tiles", "", "掃描所有地圖，找含指定十六進位 tile 的視窗")
 	inventory := flag.Bool("inventory", false, "列出所有地圖實際使用的 tile、總數與第一個座標")
+	minMap := flag.Int("min-map", 0, "掃描時只納入此編號以上的地圖（0 表示不限制）")
+	maxMap := flag.Int("max-map", 0, "掃描時只納入此編號以下的地圖（0 表示不限制）")
 	limit := flag.Int("limit", 12, "find-tiles 最多列出幾個視窗")
 	flag.Parse()
 
 	if *inventory {
-		if err := printInventory(*data); err != nil {
+		if err := printInventory(*data, *minMap, *maxMap); err != nil {
 			panic(err)
 		}
 		return
@@ -38,7 +40,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		if err := findWindows(*data, targets, *limit); err != nil {
+		if err := findWindows(*data, targets, *minMap, *maxMap, *limit); err != nil {
 			panic(err)
 		}
 		return
@@ -86,7 +88,7 @@ type tileUse struct {
 	mapID, x, y int
 }
 
-func printInventory(dataDir string) error {
+func printInventory(dataDir string, minMap, maxMap int) error {
 	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
 	if err != nil {
 		return err
@@ -95,6 +97,9 @@ func printInventory(dataDir string) error {
 	sort.Ints(ids)
 	uses := map[byte]tileUse{}
 	for _, id := range ids {
+		if !mapInRange(id, minMap, maxMap) {
+			continue
+		}
 		m, err := world.LoadByID("", dataDir, id)
 		if err != nil {
 			return err
@@ -149,7 +154,7 @@ func parseTileSet(s string) (map[byte]bool, error) {
 	return out, nil
 }
 
-func findWindows(dataDir string, targets map[byte]bool, limit int) error {
+func findWindows(dataDir string, targets map[byte]bool, minMap, maxMap, limit int) error {
 	sm, err := world.LoadSumMap(filepath.Join(dataDir, "SUM.MAP"))
 	if err != nil {
 		return err
@@ -159,6 +164,9 @@ func findWindows(dataDir string, targets map[byte]bool, limit int) error {
 	var hits []windowHit
 	halfX, halfY := layout.ViewTilesX/2, layout.ViewTilesY/2
 	for _, id := range ids {
+		if !mapInRange(id, minMap, maxMap) {
+			continue
+		}
 		m, err := world.LoadByID("", dataDir, id)
 		if err != nil {
 			return err
@@ -214,4 +222,8 @@ func findWindows(dataDir string, targets map[byte]bool, limit int) error {
 		fmt.Println()
 	}
 	return nil
+}
+
+func mapInRange(id, minMap, maxMap int) bool {
+	return (minMap == 0 || id >= minMap) && (maxMap == 0 || id <= maxMap)
 }

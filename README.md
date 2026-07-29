@@ -139,6 +139,14 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 
 其餘特殊索引與戰鬥素材仍待量產。
 
+世界地圖 `0x01–0x0c` 的森林套組也已補齊：既有單樹 `04`、雙樹 `07`、
+林緣 `0b` 保持獨立，其餘九個索引以不同冠層構圖完成正常／冬季版
+（[`docs/playtest/34`](docs/playtest/34-modern-icon-forest-suite.md)）：
+
+| 正常密林 | 冬季密林 |
+|---|---|
+| ![Modern Icon 正常密林](docs/design/img/modern-icon-m1-forest-suite-normal-runtime.png) | ![Modern Icon 冬季密林](docs/design/img/modern-icon-m1-forest-suite-winter-runtime.png) |
+
 ### 玩家操作與安全存檔
 
 預設使用方便的新式絕對方向操作與兩欄分組命令區；按 `F6` 可即時切回復古
