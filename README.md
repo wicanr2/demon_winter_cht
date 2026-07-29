@@ -132,12 +132,14 @@ tools/go.sh run ./cmd/demonwinter -scene armory -seed 11
 tools/go.sh run ./cmd/demonwinter -scene circle-light -glyphs -seed 11
 tools/go.sh run ./cmd/demonwinter -scene trap-pool -give-skill 27 -seed 7
 tools/go.sh run ./cmd/demonwinter -battle -battle-examine-fixture -give-skill 7,25 -seed 11
+tools/go.sh run ./cmd/demonwinter -battle -battle-illusion-fixture -seed 11
 ```
 
 清單涵蓋附魔工坊、恆世寶珠、惡魔水晶、兵器庫、活動牆、艾瑞戈爾、墓園、
 夜鐘、旅人的床、兩道密語、光之環與固定朝向的水池陷阱。`-give-skill`／
 `-remove-skill` 可重播技能有無的分支；戰鬥檢視 fixture 只補目標記憶與一隻
-召喚物，不替玩家行動。`-map/-x/-y/-event` 等底層旗標仍保留，
+召喚物，幻象 fixture 只固定下一次消失判定來截取訊息，兩者都不寫存檔。
+`-map/-x/-y/-event` 等底層旗標仍保留，
 供逐 byte 的逆向邊界實驗使用；正常玩家不需要任何這些旗標。
 
 ### 發行包

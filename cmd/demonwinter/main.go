@@ -1734,6 +1734,8 @@ func main() {
 		"測試戰鬥要放哪幾隻怪（MONSTER.DAT 索引，逗號分隔）。留空用預設那組")
 	battleExamineFixture := flag.Bool("battle-examine-fixture", false,
 		"偵錯：測試戰鬥加入一隻召喚物，並讓怪物記住目標（驗證 ? 面板）")
+	battleIllusionFixture := flag.Bool("battle-illusion-fixture", false,
+		"偵錯：測試戰鬥加入一隻下一次行動前必定消散的幻象（驗證幻象訊息）")
 	// 起始存檔裡每一件裝備的效果索引與強度都是 0，照原版規則在 Use 選單裡
 	// 一件都選不到 —— 沒有這個旗標就沒辦法驗「用道具真的會生效」。
 	// 英數的字模來源。`eten` 是預設，因為原版兩套 ASCII 字模都是粗筆畫的
@@ -2232,6 +2234,11 @@ func main() {
 		if *battleExamineFixture {
 			if err := a.debugBattleExamineFixture(); err != nil {
 				log.Fatalf("-battle-examine-fixture：%v", err)
+			}
+		}
+		if *battleIllusionFixture {
+			if err := a.debugBattleIllusionFixture(); err != nil {
+				log.Fatalf("-battle-illusion-fixture：%v", err)
 			}
 		}
 		if *battleWin {
