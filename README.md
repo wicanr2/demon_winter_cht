@@ -103,6 +103,13 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 [`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)。其餘方向岸線、
 城鎮、特殊格、隊伍方向及其他索引尚未重畫，因此仍不能稱為完整主題。
 
+劇情會把神殿替換成的 `0x5b` 毀壞廢墟也已完成正常／冬季配對：
+
+![Modern Icon 0x5b 廢墟正常／冬季實機對照](docs/design/img/modern-icon-m1-ruins-contact.png)
+
+它保留殘牆、折柱與中央燒灼空洞的同一構圖；規則語意與固定場景證據見
+[`docs/playtest/24`](docs/playtest/24-modern-icon-ruins-5b.md)。
+
 同一固定種子、座標與按鍵序列的三主題比較：
 
 | 原版 EGA 還原 | 原版 CGA 還原 | Modern Icon M1 |

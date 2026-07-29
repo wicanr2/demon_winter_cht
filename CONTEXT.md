@@ -3547,8 +3547,10 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > `AGENTS.md` 的 compact/restart 恢復順序已直接連回本節；往後每完成一批美術，
 > 必須先更新這份 worklist，避免 compact 後退回已否決的 Modern EGA／downscale 路線。
 > 樹木批次證據與索引裁決見 [`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)；
-> 下一批依序做城鎮／特殊格與全方向岸線，不把 `normal-forest.png` 重新掛回任何
-> 未裁決索引。
+> 劇情特殊格 `0x5b` 廢墟也已完成常態／冬季配對與固定場景驗收，證據見
+> [`docs/playtest/24`](docs/playtest/24-modern-icon-ruins-5b.md)。盤點同場景後確認
+> `0x1d` 是平原變體、`0x3b/3d/3e` 是岸線；下一批先成組補岸線，再做城鎮，
+> 不把 `normal-forest.png` 重新掛回任何未裁決索引。
 
 > **2026-07-29 最後收尾基準（取代本節底部過期的「建議下一步」）。**
 > A6 已完成「正常前期垂直切片＋後期高風險抽樣」，不是尚未開始；F2–F6

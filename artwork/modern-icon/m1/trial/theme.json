@@ -10,7 +10,8 @@
       "0x0b": "normal-woodland-0b.png",
       "0x14": "normal-ocean.png",
       "0x17": "normal-coast-17.png",
-      "0x23": "normal-plain.png"
+      "0x23": "normal-plain.png",
+      "0x5b": "normal-ruins-5b.png"
     },
     "winter": {
       "0x04": "winter-tree-04.png",
@@ -18,7 +19,8 @@
       "0x0b": "winter-woodland-0b.png",
       "0x14": "winter-ocean.png",
       "0x17": "winter-coast-17.png",
-      "0x23": "winter-plain.png"
+      "0x23": "winter-plain.png",
+      "0x5b": "winter-ruins-5b.png"
     }
   },
   "sprites": {
