@@ -303,6 +303,8 @@ func TestEncode_FieldsWriteExactBytes(t *testing.T) {
 			trailerStart + positionYOffset, 1},
 		{"面向", func(s *SaveGame) { s.Facing ^= 0xff },
 			trailerStart + facingOffset, 1},
+		{"保留 byte +09", func(s *SaveGame) { s.Reserved09 = 0xa5 },
+			trailerStart + reserved09Offset, 1},
 		// 用超過 24 bit 的值才測得出欄位是 3 還是 4 bytes 寬。
 		{"金幣（釘住 4 bytes 寬）", func(s *SaveGame) { s.Gold = 0x7FABCDEF },
 			trailerStart + goldOffset, goldLen},

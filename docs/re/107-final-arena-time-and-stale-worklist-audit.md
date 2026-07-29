@@ -82,8 +82,8 @@ remake 已用 `EXITS.DAT` 的第六 byte 更新 `MerchantBase`，這一格應結
   但仍值得做相鄰邊界注入。
 - ~~C5~~：後續找到 DS:`0A44` 的 11-word 間接搬移表，field 7／8
   確切寫到 `unit+24h/+1Ah`，已結案（`docs/re/111`）。
-- trailer `+09h`：位於九格 formation 與 32-bit gold 之間，兩份原版存檔皆 0，
-  沒有 consumer；remake 原樣 round-trip，不賦予玩法。
+- ~~trailer `+09h`~~：IDA 全檔稽核確認沒有 DOS gameplay consumer，列為
+  保留 byte；remake 原樣 round-trip，不賦予玩法（`docs/re/112`）。
 - ~~C13~~：**已由 `sub_11CBF` 結案**。`11h`–`14h` 分別修改
   MaxSP／速度／力量／技巧，`15h` 是獨立的武器戰鬥效果；兵器庫釘頭鎚
   `12h/0Ch` 因而確定是速度 +2（`docs/re/109`）。

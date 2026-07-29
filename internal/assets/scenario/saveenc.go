@@ -63,7 +63,7 @@ func (s *SaveGame) Encode() ([]byte, error) {
 	putByte(trailer[:], endingOfferedOffset, s.EndingOffered)
 	copy(trailer[plotGiftOffset:plotGiftOffset+PlotGiftCount], s.PlotGifts[:])
 	copy(trailer[formationOffset:], s.Formation[:])
-	putByte(trailer[:], unknown09Offset, s.Unknown09)
+	putByte(trailer[:], reserved09Offset, s.Reserved09)
 	copy(trailer[ldFlagsOffset:], s.LDFlags[:])
 	putLE4(trailer[:], goldOffset, s.Gold)
 

@@ -133,9 +133,10 @@ const (
 	formationOffset = 0x00
 	formationLen    = 9
 
-	// unknown09Offset 是陣型格與金幣之間那一個 byte。兩份存檔都是 0，
-	// 語意未解。**它原本被 formationOrderLen = 10 吃掉了。**
-	unknown09Offset = 0x09
+	// reserved09Offset 是陣型格與金幣之間的一個保留 byte。IDA 9.4 全檔
+	// consumer 稽核未找到 PARTY struct +0x09 的玩法讀寫；兩份原版存檔皆為
+	// 0。仍原樣 round-trip，不能推論其他平台或版本也未使用（docs/re/112）。
+	reserved09Offset = 0x09
 
 	// goldOffset：隊伍金幣，**4 bytes（0x0a–0x0d）**。
 	//
@@ -504,8 +505,9 @@ type SaveGame struct {
 	// Formation 是 3×3 陣型格（見 formationOffset 註解）。
 	Formation [formationLen]byte
 
-	// Unknown09 是陣型格與金幣之間那一個 byte，語意未解。
-	Unknown09 byte
+	// Reserved09 是陣型格與金幣之間的保留 byte。此 DOS 執行檔沒有玩法
+	// consumer；保留它是為了原版存檔的逐 byte round-trip（docs/re/112）。
+	Reserved09 byte
 
 	// Gold 是隊伍金幣（4 bytes little-endian，見 goldOffset 註解）。
 	Gold int
@@ -651,7 +653,7 @@ func LoadSaveGame(path string) (*SaveGame, error) {
 	trailer := data[trailerStart : trailerStart+trailerLen]
 	copy(save.TrailerRaw[:], trailer)
 	copy(save.Formation[:], trailer[formationOffset:formationOffset+formationLen])
-	save.Unknown09 = trailer[unknown09Offset]
+	save.Reserved09 = trailer[reserved09Offset]
 	save.Gold = le4(trailer[goldOffset : goldOffset+goldLen])
 	copy(save.LDFlags[:], trailer[ldFlagsOffset:ldFlagsOffset+ldFlagsLen])
 	save.MapID = trailer[mapIDOffset]

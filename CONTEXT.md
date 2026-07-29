@@ -3080,6 +3080,7 @@ oracle 優先序上反編譯在前，而我們連附魔在原版哪裡都還不�
 | [`36-battlefield-shape.md`](docs/re/36-battlefield-shape.md) | **戰場的形狀**：15×15 於 (6,6)–(20,20)、17×17 牆框、3×3 世界 tile 各放大 5×5、可走 = 與腳下同地形；訂正「戰場 9×9」與「光照內縮」|
 | [`35-battle-deployment.md`](docs/re/35-battle-deployment.md) | **開戰擺位**：隊伍照陣型站中央、怪物散在 ±2、地圖兼作佔位表；單位結構間距 38、玩家從槽位 7 起；9×9 是捲動視窗不是邊界 |
 | [`34-formation-grid.md`](docs/re/34-formation-grid.md) | **3×3 陣型格**（trailer `+0x00`–`+0x08`）：四個呼叫端、Reorder 是整張重填、佈陣的座標換算（讀出來但未接）|
+| [`112-party-trailer-reserved-09.md`](docs/re/112-party-trailer-reserved-09.md) | **C9 結案**：IDA 全檔稽核證明 trailer `+09h` 沒有 DOS gameplay consumer；四條陣型路徑上界都是 9，下一欄直接是 `+0Ah/+0Ch` 金幣；remake 保留非零值 round-trip |
 | [`33-camp-menu-items.md`](docs/re/33-camp-menu-items.md) | **紮營選單 14 項**的完整對照（名稱／快捷鍵／處理常式）＋ Drop 與 Trade 的規則；訂正 `docs/re/26` 的 13 項與「順序對不上」|
 | [`89-natural-vs-bonus-attributes.md`](docs/re/89-natural-vs-bonus-attributes.md) | **更正 `docs/re/88` §3**：`+0xe8`／`+0xe9`／`+0xf8`／`+0xfb` 不是未解欄位，是天生 vs 含裝備加成的力量／技巧 —— `save.go` 的屬性位移全部相對 `expOffset`（`0xc4`），所以 `0xe8` 的字面值從沒出現過，**拿字面值去搜一個算出來的值**必然落空。建角的兩處複製是「擲點結果從含加成抄回天生」。**順帶抓到 bug**：`ApplyTo` 不寫那四個 byte，新角色的存檔留著出貨那五個人的數字 —— 名冊是自己擲的點、存檔是別人的，重讀就換人 |
 | [`88-character-creation-record-init.md`](docs/re/88-character-creation-record-init.md) | **建角寫進角色記錄的四件事**：等級 1（`0x14dc5`）、十格背包 `Type = 0xff`（`0x150d1` 迴圈）、裝備武器／護甲槽 `0xff`（`0x150ed`／`0x150ff`）、trailer 人數 +1（`0x15109`）。**角色記錄的基底是 `ds:0x4c7e`（步長 `0x104`）**，不是 trailer 的 `ds:0x4c76`；`ds:0x548c` 全檔零 `les`，不是實際指標。收掉 `docs/re/87` §6 的「推論不是驗證」。道具槽長度 **17** —— 原版迴圈用 `shl 4` + `add i` 湊出來，只看 `shl 4` 會誤讀成 16。`+0xe8`／`+0xe9` 兩處複製語意未解 |
@@ -3534,8 +3535,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 都不能因偵錯或美化功能退步。
 >
 > **這不代表整個專案完成。** 本輪交付的是可發行基線；仍開著的工作包括
-> Modern EGA P1 使用者審稿及 P2–P4 逐格素材、C1 原版價格／戰鬥金幣 oracle、
-> C9 trailer `+09h`。
+> Modern EGA P1 使用者審稿及 P2–P4 逐格素材、C1 原版價格／戰鬥金幣 oracle。
 > 在這些項目結案前，狀態只能寫「本輪完成／專案進行中」，不可寫 goal achieved。
 >
 > **2026-07-29 程式碼收尾稽核新增一項並已修正：**怪物 AI 的 5×5 法術會
@@ -3678,7 +3678,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 | ~~C6~~ | ~~`MONSTER.DAT` 第 11 欄 `special`~~ | **完成**。`docs/re/23` 的 AI／吐息路徑已證明是種族／元素類型：8–11 為四種龍吐息，7 為冰系；載入單位 `+0x22`，並由免疫規則交叉驗證。舊 worklist 未隨文件更新 |
 | ~~C7~~ | ~~`ITEMS.DAT` 第二數值欄~~ | **完成（2026-07-29，`docs/re/110`）**。IDA 9.4 對 `ds:5300` 全部六個 consumer 的稽核只讀價格、charge kind 與四個效果類別，沒有任何 `record+2` 讀取。舊名 `WeaponSlot` 撤回為 `UnusedFlag`；parser 保留原值，但 DOS remake 不據此新增行為。 |
 | ~~C8~~ | ~~時間 wrap 值 `38/35/23`~~ | **結案（`docs/re/107` §2）**：IDA `sub_228B6`／`sub_22A53` 明確比較 `26h/23h/17h`，即 38/35/23；鐘要求 `hour >= 24`、床設 25 形成獨立交叉證據。手冊的 26 小時是 Apple II 描述，不能覆蓋 DOS 執行檔 |
-| C9 | 零星 trailer 欄位 | **只剩 `+0x09`，且無 gameplay consumer**；兩份原版存檔皆 0，remake 原樣 round-trip。舊稱「戶外商隊 size base `[0x4c90]`」已更正：`4C90` 是 `EXITS.DAT` arena 指標，商隊基準是 `+0xaf`／出口記錄參數（`docs/re/107` §3）。`+0xaa`＝水池次數；`+0xc1`＝成神抉擇閂鎖 |
+| ~~C9~~ | ~~零星 trailer 欄位~~ | **完成（2026-07-29，`docs/re/112`）**。最後的 `+09h` 經 IDA 全檔 consumer 稽核確認為此 DOS binary 未使用的保留 byte：literal `[bx+9]` 三處皆屬其他記錄，陣型索引四條路徑均嚴格 `<9`，下一欄直接是 `+0Ah/+0Ch` 金幣。remake 改名 `Reserved09` 並保留任意值 round-trip，不發明玩法。舊稱「戶外商隊 size base `[0x4c90]`」已更正：`4C90` 是 `EXITS.DAT` arena 指標，商隊基準是 `+0xaf`／出口記錄參數（`docs/re/107` §3）。`+0xaa`＝水池次數；`+0xc1`＝成神抉擇閂鎖 |
 | ~~C12~~ | ~~靈視技能一天三次還是一次~~ | **DOSBox 實跑已複核，3 才對**（2026-07-27，`docs/re/93` §4.1）。把存檔的 `+0xad` 預設成 **2** 按一次 `V` 照樣跑（`You see nothing`），預設成 **3** 就印 `Your psychic powers are weak`。兩個相鄰值配成一對 → 上限 ＝ 3。手冊的「一天一次」是 Apple II 版的規則。引擎的 `PsychicUsesPerDay = 3` 不必改。<br>**方法值得記**：原本要「連按四次 `V`」，但原版按一次顯示訊息、再按一次只是關訊息，靠送鍵時序數次數會飄（實測出現非交替序列）—— 改成**把計數器直接寫成邊界值再按一次**就一次過（`docs/re/93` §4.2）|
 | ~~C11~~ | ~~陷阱打死人時「全隊各掉 1 點」~~ | **靜態讀完就結案，不需要 DOSBox**（2026-07-27）。`FUN_222f_0619` 是「每走一步的 HP 結算」：模式 0 走**巨魔再生**（`+0xfd` 加到上限 `+0xfc`），模式 `0x80` 走**全隊各 −1**（`JG` 在檢查種族之前就跳走，所以**巨魔在這條路上照樣受傷**），扣到 0 就設 `+0x102 = 5` 並印死亡訊息。<br>陷阱那一側（`25be:1491`–`14f7`）的順序是：印死亡訊息 → `+0x102 = 5` → `+0xfd = 0` → 才呼叫 `0619`。所以**已死者在迴圈開頭就被跳過**（不會 `DEC 0 → 0xff`），而**其餘人各扣 1 點是真的** —— 原版是借用那支結算常式來跑死亡判定，`−1` 是共用的副作用而不是設計意圖。<br>`internal/game/steptick.go` 早就逐條照著實作（含跳過死者、巨魔在高模式照樣流血），**不必改** |
 | ~~C10~~ | ~~密門密道~~ | **實跑結案（`docs/playtest/13` §2）**：由地圖 1 鐵籠房間 (13,26) 依一般移動 `Down, Left×4, Up` 穿過外觀為牆的西側密門，到達 (9,26)；可重播腳本為 `a6-secret-door-smoke.txt` |

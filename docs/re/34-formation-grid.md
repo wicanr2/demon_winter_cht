@@ -22,7 +22,8 @@ Positions:
 ## 1. 四個呼叫端
 
 長度是 9 不是 10 —— 四處的迴圈上界都是 `cmp ax,9 / jl`。第 10 個 byte
-（trailer `+0x09`）是另一回事，兩份存檔都是 0，語意仍未解。
+（trailer `+0x09`）是另一回事；後續全檔 consumer 稽核確認這份 DOS
+執行檔不使用它，列為保留 byte（`docs/re/112`）。
 
 | 位址 | 做什麼 |
 |---|---|
@@ -124,7 +125,7 @@ c6c4      單位[成員].Y = row + 0x0d
 ## 5. 本專案的實作範圍
 
 - `internal/assets/scenario`：`SaveGame.Formation [9]byte`（原 `FormationOrder [10]`）
-  ＋ 新分出來的 `Unknown09`
+  ＋新分出來並原樣 round-trip 的 `Reserved09`
 - `internal/game/formation.go`：`Formation`、`CellLabel`／`ParseCellLabel`、
   `Clear`／`Place`／`Occupied`／`CellOf`、`RemoveMember`／`AddMember`、
   `FormationOffset`
