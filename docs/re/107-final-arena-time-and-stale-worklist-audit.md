@@ -78,8 +78,8 @@ remake 已用 `EXITS.DAT` 的第六 byte 更新 `MerchantBase`，這一格應結
 
 ## 5. 真正仍開著、但不該阻擋發行的證據缺口
 
-- C1：價格量級與戰鬥金幣的原版動態 oracle；remake 公式已有靜態強證據，
-  但仍值得做相鄰邊界注入。
+- ~~C1~~：Seaside 市集 dagger = 2 Gold，固定遭遇 Gold = 31
+  （remake 預測 26–33）；原版動態 oracle 已結案（`docs/re/113`）。
 - ~~C5~~：後續找到 DS:`0A44` 的 11-word 間接搬移表，field 7／8
   確切寫到 `unit+24h/+1Ah`，已結案（`docs/re/111`）。
 - ~~trailer `+09h`~~：IDA 全檔稽核確認沒有 DOS gameplay consumer，列為

@@ -32,6 +32,20 @@ func TestEnterTown_InlandHasNoDocks(t *testing.T) {
 	}
 }
 
+// DOSBox 的 Seaside 市集實機畫面顯示 dagger = 2 Gold
+// （workplace/dosbox/shots/t4-market.png，重現法見 docs/re/113）。
+// 匕首底價 2、Seaside E=10，隊伍有說服時初始議價層級 0，因此 remake
+// 必須同樣得到 2；這條是原版動態 oracle，不只是公式內部自洽。
+func TestSeasideDaggerPriceMatchesDOSBoxOracle(t *testing.T) {
+	var skilled Character
+	skilled.Skills[gamedata.SkillPersuasion] = true
+	v := EnterTown(gamedata.Town{Number: 1, Name: "Seaside", Economy: 10}, []Character{skilled})
+
+	if got := v.Price(0, 2); got != 2 {
+		t.Errorf("Seaside 匕首售價 = %d，DOSBox 原版顯示 2", got)
+	}
+}
+
 // 議價初值取決於隊伍有沒有人會說服，所以必須在進城當下決定。
 func TestEnterTown_HaggleInitialState(t *testing.T) {
 	var plain Character
