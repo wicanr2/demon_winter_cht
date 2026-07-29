@@ -12,6 +12,7 @@ func validModernIconManifest() modernIconManifest {
 	}
 	m.Tiles.Normal = map[string]string{"0x01": "normal-01.png"}
 	m.Tiles.Winter = map[string]string{"0x01": "winter-01.png"}
+	m.Sprites = map[string]string{"0x1e": "party-north-a.png"}
 	return m
 }
 
@@ -29,12 +30,16 @@ func TestValidateModernIconManifest(t *testing.T) {
 		{"height", func(m *modernIconManifest) { m.FrameHeight = 28 }},
 		{"empty", func(m *modernIconManifest) {
 			m.Tiles.Normal, m.Tiles.Winter = nil, nil
+			m.Sprites = nil
 		}},
 		{"index", func(m *modernIconManifest) {
 			m.Tiles.Normal = map[string]string{"0xff": "bad.png"}
 		}},
 		{"path", func(m *modernIconManifest) {
 			m.Tiles.Normal = map[string]string{"0x01": "../normal.png"}
+		}},
+		{"sprite path", func(m *modernIconManifest) {
+			m.Sprites = map[string]string{"0x1e": "../party.png"}
 		}},
 	}
 	for _, tc := range tests {

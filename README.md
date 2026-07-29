@@ -112,6 +112,13 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 雪原、冬季深海與 `0x17` 冬季岸線已實跑；尚未重畫的樹木、角色及其他岸線仍
 刻意顯示 WINTER.SHE 相容底稿。
 
+北向隊伍也改為透明高解析 overlay，不再帶原版整格 glyph 的黑色方框：
+
+![Modern Icon 北向隊伍兩步](docs/design/img/modern-icon-m1-party-steps.png)
+
+它會先畫腳下的真實 terrain，再疊角色；EGA/CGA 仍保留原版 glyph。透明契約、
+去背與兩步實機證據見 [`docs/playtest/22`](docs/playtest/22-modern-icon-transparent-party.md)。
+
 驗收採「前期完整垂直切片＋後期高風險串接抽樣」：新遊戲建角、購物與換裝，
 正常戰鬥／死亡／治療、狗頭人營地、升級、跨圖抵達加穆爾神殿均由可重播腳本實際跑通；
 後期另抽驗購船、密語輸入、三符印、頭目與結局序列。重複房間不逐格人工踏查，

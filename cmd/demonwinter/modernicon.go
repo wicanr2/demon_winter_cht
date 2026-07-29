@@ -26,6 +26,7 @@ const (
 // 索引；缺格就保留底下的相容預覽，不拿舊圖或假圖冒充完整新素材。
 type modernIconTheme struct {
 	normal, winter map[byte]*ebiten.Image
+	sprites        map[byte]*ebiten.Image
 }
 
 type modernIconManifest struct {
@@ -37,6 +38,7 @@ type modernIconManifest struct {
 		Normal map[string]string `json:"normal"`
 		Winter map[string]string `json:"winter"`
 	} `json:"tiles"`
+	Sprites map[string]string `json:"sprites"`
 }
 
 func loadModernIconTheme(dir string) (*modernIconTheme, error) {
@@ -51,14 +53,14 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 	if err := validateModernIconManifest(m); err != nil {
 		return nil, err
 	}
-	loadSet := func(label string, entries map[string]string) (map[byte]*ebiten.Image, error) {
+	loadSet := func(label string, entries map[string]string, allowAlpha bool) (map[byte]*ebiten.Image, error) {
 		out := make(map[byte]*ebiten.Image, len(entries))
 		for key, name := range entries {
 			index, err := parseModernIconIndex(key)
 			if err != nil {
 				return nil, fmt.Errorf("Modern Icon %s index %q：%w", label, key, err)
 			}
-			src, err := loadModernIconPNG(filepath.Join(dir, name))
+			src, err := loadModernIconPNG(filepath.Join(dir, name), allowAlpha)
 			if err != nil {
 				return nil, fmt.Errorf("Modern Icon %s[%#02x]：%w", label, index, err)
 			}
@@ -66,15 +68,19 @@ func loadModernIconTheme(dir string) (*modernIconTheme, error) {
 		}
 		return out, nil
 	}
-	normal, err := loadSet("normal", m.Tiles.Normal)
+	normal, err := loadSet("normal", m.Tiles.Normal, false)
 	if err != nil {
 		return nil, err
 	}
-	winter, err := loadSet("winter", m.Tiles.Winter)
+	winter, err := loadSet("winter", m.Tiles.Winter, false)
 	if err != nil {
 		return nil, err
 	}
-	return &modernIconTheme{normal: normal, winter: winter}, nil
+	sprites, err := loadSet("sprites", m.Sprites, true)
+	if err != nil {
+		return nil, err
+	}
+	return &modernIconTheme{normal: normal, winter: winter, sprites: sprites}, nil
 }
 
 func validateModernIconManifest(m modernIconManifest) error {
@@ -86,11 +92,11 @@ func validateModernIconManifest(m modernIconManifest) error {
 	case m.FrameWidth != modernIconWidth || m.FrameHeight != modernIconHeight:
 		return fmt.Errorf("Modern Icon frame = %dx%d，預期最終呈現尺寸 %dx%d",
 			m.FrameWidth, m.FrameHeight, modernIconWidth, modernIconHeight)
-	case len(m.Tiles.Normal)+len(m.Tiles.Winter) == 0:
+	case len(m.Tiles.Normal)+len(m.Tiles.Winter)+len(m.Sprites) == 0:
 		return fmt.Errorf("Modern Icon manifest 至少要列一張已重畫材質")
 	}
 	for label, entries := range map[string]map[string]string{
-		"normal": m.Tiles.Normal, "winter": m.Tiles.Winter,
+		"normal": m.Tiles.Normal, "winter": m.Tiles.Winter, "sprites": m.Sprites,
 	} {
 		for key, name := range entries {
 			if _, err := parseModernIconIndex(key); err != nil {
@@ -113,7 +119,7 @@ func parseModernIconIndex(s string) (byte, error) {
 	return byte(n), nil
 }
 
-func loadModernIconPNG(path string) (image.Image, error) {
+func loadModernIconPNG(path string, allowAlpha bool) (image.Image, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("開啟 %s：%w", path, err)
@@ -131,7 +137,7 @@ func loadModernIconPNG(path string) (image.Image, error) {
 	for y := b.Min.Y; y < b.Max.Y; y++ {
 		for x := b.Min.X; x < b.Max.X; x++ {
 			_, _, _, a := src.At(x, y).RGBA()
-			if a != 0xffff {
+			if !allowAlpha && a != 0xffff {
 				return nil, fmt.Errorf("%s 在 (%d,%d) 不是完全不透明", path, x-b.Min.X, y-b.Min.Y)
 			}
 		}
@@ -145,6 +151,8 @@ func (t *modernIconTheme) tile(winter bool, index byte) *ebiten.Image {
 	}
 	return t.normal[index]
 }
+
+func (t *modernIconTheme) sprite(index byte) *ebiten.Image { return t.sprites[index] }
 
 // drawModernIconWorld 在 1280×800 最終畫布直接畫 64×56 terrain。
 // 這不是把概念稿縮回 32×28；正式素材從一開始就以顯示尺寸重新繪製。
@@ -174,6 +182,17 @@ func (a *app) drawModernIconWorld(screen *ebiten.Image) {
 				tile = dungeonItemTile
 			}
 			if dx == halfX && dy == halfY {
+				if sprite := a.modernIcons.sprite(partyGlyph); sprite != nil {
+					x := (layout.MapOriginX + dx*gfx.EGATileWidth) * scale
+					y := (layout.MapOriginY + dy*gfx.EGATileHeight) * scale
+					if ground := a.modernIcons.tile(a.useWinter, tile); ground != nil {
+						ui.DrawImageAt(screen, ground, x, y)
+					} else if ground := a.tileset().Tile(tile); ground != nil {
+						ui.DrawImageScaled(screen, ground, x, y, scale)
+					}
+					ui.DrawImageAt(screen, sprite, x, y)
+					continue
+				}
 				tile = partyGlyph
 			}
 			img := a.modernIcons.tile(a.useWinter, tile)

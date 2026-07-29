@@ -10,5 +10,9 @@
     "winter": {
       "0x01": "winter-01.png"
     }
+  },
+  "sprites": {
+    "0x1e": "party-north-a.png",
+    "0x1f": "party-north-b.png"
   }
 }

@@ -6,8 +6,9 @@ changes. It complements `CONTEXT.md`; it does not replace evidence in `docs/re/`
 ## Recovery order after compact or handoff
 
 1. Read the newest user request.
-2. Read `CONTEXT.md` §7, especially the newest dated baseline at §7.0. Older “next step”
-   paragraphs are historical unless the newest baseline explicitly revives them.
+2. Read [`CONTEXT.md` §7 Worklist](CONTEXT.md#7-worklist狀態的單一真相來源),
+   especially the newest dated baseline at §7.0. Older “next step” paragraphs are historical
+   unless the newest baseline explicitly revives them.
 3. Inspect `git status --short`. Existing changes belong to the user/current task; do not reset
    or discard them.
 4. Read the directly relevant spec/research/playtest document. Do not reopen already settled
@@ -52,6 +53,9 @@ changes. It complements `CONTEXT.md`; it does not replace evidence in `docs/re/`
 - F8 order is EGA → CGA → Modern Icon → EGA. Theme changes must not mutate save, RNG, collision,
   secret-door visibility, combat, or story state.
 - The Eten 16×15 bold font remains shared by all themes.
+- Modern Icon 的當前逐項生產順序、完成證據與剩餘工作只認
+  [`CONTEXT.md` §7.0](CONTEXT.md#70-一句話現況)；每完成一批 terrain／character／
+  combat／monster／ship 素材，都必須先更新該 worklist，再提交程式與畫面證據。
 
 ## Debug and A6 verification
 

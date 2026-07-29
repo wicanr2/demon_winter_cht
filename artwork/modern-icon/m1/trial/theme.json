@@ -14,5 +14,9 @@
       "0x17": "winter-coast-17.png",
       "0x23": "winter-plain.png"
     }
+  },
+  "sprites": {
+    "0x1e": "party-north-a.png",
+    "0x1f": "party-north-b.png"
   }
 }
