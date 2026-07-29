@@ -96,6 +96,15 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 
 其餘方向岸線、樹木、城鎮、隊伍及其他索引尚未重畫，因此仍不能稱為完整主題。
 
+同一固定種子、座標與按鍵序列的三主題比較：
+
+| 原版 EGA 還原 | 原版 CGA 還原 | Modern Icon M1 |
+|---|---|---|
+| ![EGA 同狀態](docs/design/img/theme-compare-ega.png) | ![CGA 同狀態](docs/design/img/theme-compare-cga.png) | ![Modern Icon 同狀態](docs/design/img/theme-compare-modern-icon.png) |
+
+三圖的金幣、糧食、日期時間、隊伍數值與物件格位一致。重播方式與裁決見
+[`docs/playtest/21`](docs/playtest/21-three-theme-same-state-comparison.md)。
+
 驗收採「前期完整垂直切片＋後期高風險串接抽樣」：新遊戲建角、購物與換裝，
 正常戰鬥／死亡／治療、狗頭人營地、升級、跨圖抵達加穆爾神殿均由可重播腳本實際跑通；
 後期另抽驗購船、密語輸入、三符印、頭目與結局序列。重複房間不逐格人工踏查，
