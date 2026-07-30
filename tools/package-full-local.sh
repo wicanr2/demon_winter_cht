@@ -85,6 +85,16 @@ cat >"$windows_root/開始完整版.bat" <<'EOF'
 cd /d "%~dp0"
 demonwinter.exe -data "%~dp0original\DEM_DATA" -eten "%~dp0fonts\etan_font" %*
 EOF
+cp "$windows_root/開始完整版.bat" "$windows_root/start-full.bat"
+cat >>"$windows_root/README.md" <<'EOF'
+
+## Windows 完整版啟動
+
+解壓後請執行 `start-full.bat`。套件也保留同內容的 `開始完整版.bat`，但部分
+舊式解壓工具、非中文系統或相容層可能無法正確保留或辨識中文檔名，因此
+`start-full.bat` 是建議使用的相容入口。兩者都會以套件內的合法原版資料與
+倚天字型啟動遊戲。
+EOF
 (cd "$work" && zip -qr "$OUTPUT_DIR/$windows_name.zip" "$windows_name")
 
 package_mac() {
