@@ -38,7 +38,8 @@ EGA → CGA → Modern Icon，不改遊戲規則或存檔。
 [`docs/promo/demon-winter-epic-trailer-prompt.md`](docs/promo/demon-winter-epic-trailer-prompt.md)；
 可供其他經典 RPG remake 共用的配樂提示詞方法見
 [`docs/knowledge/rpg-remake-music-prompt-column.md`](docs/knowledge/rpg-remake-music-prompt-column.md)。
-新版配樂會標示為 remake 宣傳片專用新編曲；原版遊戲沒有背景音樂。
+原版遊戲沒有背景音樂；遊戲版新增的四組場景配樂與宣傳片配樂都明確標示為
+remake 新編曲，不冒充 1988 原版素材。遊戲中可按 `F7` 獨立開關配樂。
 
 ### 原版畫面、EGA／CGA 還原與 remake 差異
 
@@ -259,13 +260,29 @@ Bugem；兩波合計覆寫率達 129/224
 預設使用方便的新式絕對方向操作與兩欄分組命令區；按 `F6` 可即時切回復古
 相對轉向及原版紅色直式命令列，亦可用 `-controls modern|retro` 指定啟動模式。
 現代命令區使用固定欄距與「常用／探索／物品／系統」tab 式分組，不把所有按鈕
-擠成一條。`F1` 在各主要畫面固定開啟說明。
+擠成一條。`F1` 在各主要畫面固定開啟 Help。
 按視窗關閉鈕時會先寫入完整進度，任一存檔步驟失敗就留在遊戲並顯示錯誤；
 詳細按鍵、資料邊界與實機證據見
 [`操作模式、F1 說明與安全離開`](docs/ui/04-control-modes-and-safe-exit.md)。
 兩套命令的文字、復古順序、tab 與左右欄配置均由
 [`ui.json`](assets/lang/zh-Hant/ui.json) 驅動；遷移前後固定畫面像素差異為 0，
 見 [`docs/playtest/28`](docs/playtest/28-ui-json-data-separation.md)。
+
+#### remake 版本操作速查
+
+| 按鍵 | 功能 |
+|---|---|
+| `F1` | **Help／遊戲手札**；任何主要畫面都可開啟，`Esc` 返回 |
+| `F6` | 切換現代操作／復古操作；復古模式含原版紅色直式命令列 |
+| `F7` | 開／關 **Modern remake 新編配樂**；不影響原版 PC speaker 音效 |
+| `F8` | 依 EGA → CGA → Modern Icon 輪替畫面主題 |
+| `F10` | 離開；正常關閉會先自動保存完整進度 |
+| `方向鍵` | 現代模式朝絕對方向前進；復古模式 `←/→` 轉向、`↑` 前進、`↓` 轉身 |
+| `P/S/C/T/D/E/M/U/I/R/L/V/X` | 隊伍／存檔／紮營／拿取／丟棄／檢視／推開／使用／探查／重讀／陷阱／觀室／鑑物 |
+
+啟動參數可用 `-controls modern|retro`、`-video ega|cga|modern`、
+`-volume 0–1` 與 `-music-volume 0–1` 指定偏好。發行包內亦附同一份
+`README.md` 與精簡的 `開始遊戲.txt`。
 
 實際樹木索引 `0x04` 單株古樹、`0x07` 前後雙樹、`0x0b` 低矮林緣已各自重畫，
 並完成常態／冬季配對；它們不是共用一張森林圖：
@@ -275,8 +292,8 @@ Bugem；兩波合計覆寫率達 129/224
 完整固定場景與裁決見
 [`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)。沙地／森林岸線、
 城鎮、緋紅符印、隊伍四向、航海圖示、其餘特殊索引與戰鬥素材均已在後續
-批次完成。Modern Icon 尚不能稱為全主題完成，現在的真實缺口是地城
-`dungeonTiles` 量產與使用者最終審圖，而不是世界或怪物覆蓋。
+批次完成。Modern Icon 的地城 `dungeonTiles` 亦已完成 59／59 客觀覆蓋；
+目前只剩使用者 P4 最終審圖，不能把「客觀覆蓋完成」冒充「觀感已核准」。
 
 劇情會把神殿替換成的 `0x5b` 毀壞廢墟也已完成正常／冬季配對：
 
@@ -354,25 +371,27 @@ tools/go.sh run ./cmd/demonwinter -battle -battle-illusion-fixture -seed 11
 
 ### 發行包
 
-A6 抽樣與完整測試通過後，可建立不含原版資料／倚天字型的 Linux amd64
-或 Windows amd64 包：
+A6 抽樣與完整測試通過後，可建立不含原版資料／倚天字型的 Linux AppImage
+與 Windows amd64 DLL 稽核 ZIP：
 
 ```bash
-tools/package-release.sh 2026.07.30                 # Linux amd64
-tools/package-release.sh 2026.07.30 windows amd64  # Windows amd64
+docker build -t demonwinter-release docker/release
+docker run --rm --network none --memory 3g --cpus 2 --pids-limit 384 \
+  -e HOME=/tmp -e GOMODCACHE=/gomod -e GOCACHE=/gocache \
+  -e VERSION=0.1.0 -e OUTPUT_DIR=/src/dist -v "$PWD:/src" \
+  -v dw-gomod:/gomod -v dw-gobuild:/gocache -w /src demonwinter-release \
+  bash -c 'tools/package-appimage.sh && tools/package-windows.sh'
 ```
 
-產物與 SHA-256 放在 `dist/`。玩家解壓後依 `開始遊戲.txt` 指向自己的合法
+產物與 SHA-256 放在 `dist/`。玩家依包內 `README.md`／`開始遊戲.txt` 指向自己的合法
 `DEM_DATA` 與倚天 16×15 字型目錄；翻譯、遊戲內手札、三主題引擎與本專案
 自製的 Modern Icon 素材已包含在包內。
 
 macOS 的 Ebiten／Metal 需要 Apple SDK，不能由 Linux Docker 假交叉編譯。
-[`跨平台候選發行包`](.github/workflows/cross-platform-release.yml) 會在原生
+[`跨平台正式發行包`](.github/workflows/cross-platform-release.yml) 會在原生
 `macos-15-intel` 與 `macos-15` runner 分別產生 amd64／arm64 包，兩者共用
-同一個 [`package-release-inner.sh`](tools/package-release-inner.sh) 白名單與
-原版素材禁入閘門；首次
-[雙架構執行](https://github.com/wicanr2/demon_winter_cht/actions/runs/30514815112)
-已完成建置、禁入複核與 artifact 上傳。
+`.app` staging、簽署檢查與原版素材禁入閘門。舊 run 只證明 tar 候選包；
+新版 `.app` workflow 必須重新全綠，不能沿用舊證據。
 
 ---
 
@@ -387,8 +406,8 @@ macOS 的 Ebiten／Metal 需要 Apple SDK，不能由 Linux Docker 假交叉編�
 | 社群攻略繁中版 | 完成（1,914 行）|
 | 反組譯筆記 | 116 篇；主線、海戰、時間進位、arena、命中修正、營地法術、魔法物品充能、幻象消失與怪物繞障移動均有位址證據 |
 | 資料格式 | 地圖、事件、道具、怪物、存檔、字型、圖形、音效皆已解 |
-| Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、PC speaker 音效；原版沒有背景配樂，完整 XREF、吐息勘誤與可試聽 WAV 見 [`docs/re/117`](docs/re/117-audio-xrefs-and-breath-correction.md) |
-| 遊戲內文字中文化 | **500/500（100%）** 原版資料字串；另有 **836 條** JSON 介面文案，畫面層與規則層硬編玩家中文 0 條 |
+| Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、PC speaker 音效，以及探索／休整／戰鬥／終局四組 remake 新編場景配樂；原版音效 XREF 與吐息勘誤見 [`docs/re/117`](docs/re/117-audio-xrefs-and-breath-correction.md) |
+| 遊戲內文字中文化 | **500/500（100%）** 原版資料字串；另有 **839 條** JSON 介面文案，畫面層與規則層硬編玩家中文 0 條 |
 | 試玩驗收 | **完成前期垂直切片與後期高風險抽樣**；可重播腳本與 trace 工具在 `tools/playthrough/` |
 | 歷次需求驗收 | [`docs/playtest/50-completion-requirement-matrix.md`](docs/playtest/50-completion-requirement-matrix.md)；逐項區分完成、證據強度與仍待使用者審圖項目 |
 
@@ -428,14 +447,14 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 | 檔案 | 內容 |
 |---|---|
 | [`translations/glossary.md`](translations/glossary.md) | 統一譯名表。種族、職業、技能、法術、裝備、附魔、神祇、城鎮、介面指令等。全專案唯一的譯名真相來源 |
-| [`assets/lang/zh-Hant/ui.json`](assets/lang/zh-Hant/ui.json) | 836 條玩家介面文案；Go 只保留 key、格式參數、熱鍵與 action |
+| [`assets/lang/zh-Hant/ui.json`](assets/lang/zh-Hant/ui.json) | 839 條玩家介面文案；Go 只保留 key、格式參數、熱鍵與 action |
 | [`docs/i18n/ui-catalog.md`](docs/i18n/ui-catalog.md) | JSON schema、嚴格缺 key 行為與 `uicheck` 發行閘門 |
 
 譯名以 `DEMON.INT` 內的實際字串為準，因此收錄的是原版拼字（`Shamen`、`Xorcise`、`Small ax`），
 而非手冊上的正確拼法。手冊與遊戲用語不同處（例如 Apple II 版 `Sense magic` 對 DOS 版 `Detect aura`）
 兩者都收，並註明各自屬於哪個版本。
 
-### 音效試聽
+### 音效與 remake 新編配樂
 
 原版 DOS 沒有背景配樂；聲音庫是八個 PC speaker 單音與一段死亡短旋律。
 以下 WAV 由 remake 的同一套合成器產生，不是外加配樂：
@@ -449,6 +468,11 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 [`A3 原版未使用`](docs/audio/07-a3.wav) ·
 [`B3 原版未使用`](docs/audio/08-b3.wav) ·
 [`C4 命中／扣血`](docs/audio/09-c4.wav)
+
+遊戲另有完全由程式合成、未使用 SoundFont 或第三方取樣庫的四組原創循環配樂：
+探索、城鎮／休息、戰鬥、魔王／終局。預設低音量播放，`F7` 可獨立開關，
+`-music-volume 0–1` 可調整；戰鬥選單的 Sound 開關仍只控制原版 PC speaker
+效果，兩者的來源與控制互不混淆。
 
 ### 畫面改版
 
@@ -489,6 +513,11 @@ Icon 世界、單位與地城素材客觀覆蓋均已完成，觀感面尚待使
 
 | 檔案 | 內容 |
 |---|---|
+| [`docs/engineering/README.md`](docs/engineering/README.md) | **工程文件總索引**：遊戲 AI、公式數值、引擎／資料架構、測試與三平台發行 |
+| [`docs/engineering/game-ai.md`](docs/engineering/game-ai.md) | 戰鬥選招、範圍法術、繞障、遭遇、部署、海戰 AI 與證據邊界 |
+| [`docs/engineering/formulas-and-values.md`](docs/engineering/formulas-and-values.md) | 亂數、命中、傷害、法術、經濟、掉寶、時間、海戰與建角公式索引 |
+| [`docs/engineering/architecture-and-release.md`](docs/engineering/architecture-and-release.md) | 引擎／資料分離、主題、音訊、存檔、驗證與 AppImage／Windows／macOS 發行契約 |
+| [`docs/playtest/57-remake-music-and-release-packages.md`](docs/playtest/57-remake-music-and-release-packages.md) | 四組 remake 場景配樂、F7／F1 Help、AppImage、Windows DLL 稽核與 macOS 發行證據 |
 | [`PLAN.md`](PLAN.md) | 專案計畫：偵查事實、待驗證假設、架構決策、階段分解、驗收準則、風險 |
 | [`docs/ui/`](docs/ui/) | 畫面評估與改版計畫（見上一節） |
 | [`docs/design/retro-game-re-remake-lessons.md`](docs/design/retro-game-re-remake-lessons.md) | 從本作整理出的老遊戲反組譯、乾淨重寫、原版對拍與交接模板 |

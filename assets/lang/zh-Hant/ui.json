@@ -19,6 +19,7 @@
         "world.menu.viewitem",
         "world.menu.manual",
         "world.menu.controls",
+        "world.menu.music",
         "world.menu.quit"
       ],
       "groups": [
@@ -40,7 +41,7 @@
         {
           "titleKey": "command.tab.system",
           "column": 1,
-          "items": ["world.menu.manual", "world.menu.controls", "world.menu.quit"]
+          "items": ["world.menu.manual", "world.menu.controls", "world.menu.music", "world.menu.quit"]
         }
       ]
     },
@@ -3512,6 +3513,18 @@
     {
       "key": "world.menu.moveitem",
       "text": "[M] 推開"
+    },
+    {
+      "key": "world.menu.music",
+      "text": "[F7] 配樂"
+    },
+    {
+      "key": "music.off",
+      "text": "remake 配樂：關"
+    },
+    {
+      "key": "music.on",
+      "text": "remake 配樂：開"
     },
     {
       "key": "world.menu.party",

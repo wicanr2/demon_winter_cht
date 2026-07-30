@@ -322,7 +322,10 @@ var keyFacing = []struct {
 func (a *app) Update() error {
 	// 軌跡在每一幀結束時取樣。放在最外層而不是各畫面裡，
 	// 是為了不必在二十個 update 函式各插一行 —— 漏掉一個就會有一段黑洞。
-	defer func() { a.trace.state(a.traceState()) }()
+	defer func() {
+		a.syncMusic()
+		a.trace.state(a.traceState())
+	}()
 	return a.update()
 }
 
@@ -349,6 +352,13 @@ func (a *app) update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyF6) {
 		a.controls = a.controls.next()
 		a.message = fmt.Sprintf(a.tr.UI("controls.changed"), a.tr.UI(a.controls.labelKey()))
+	}
+	if inpututil.IsKeyJustPressed(ebiten.KeyF7) {
+		if a.toggleMusic() {
+			a.message = a.tr.UI("music.on")
+		} else {
+			a.message = a.tr.UI("music.off")
+		}
 	}
 	// F1 永遠是玩家說明。它刻意放在各畫面分派之前，因此戰鬥、城鎮、
 	// 地城與其他模態中都能開啟，關掉後回到原畫面。
@@ -1549,6 +1559,7 @@ var worldMenuLabels = []uiLabel{
 	{"world.menu.viewitem"},
 	{"world.menu.manual"},
 	{"world.menu.controls"},
+	{"world.menu.music"},
 	{"world.menu.quit"},
 }
 
@@ -1763,6 +1774,8 @@ func main() {
 		"亂數種子。0 = 依時間。指定固定值可讓截圖驗收重跑得到同一結果")
 	volume := flag.Float64("volume", 0.25,
 		"音效音量 0–1。原版沒有音量控制（喇叭只有開關），這是體貼現代耳朵")
+	musicVolume := flag.Float64("music-volume", 0.18,
+		"remake 新編背景配樂音量 0–1；0 代表停用，原版 DOS 沒有背景配樂")
 	savePath := flag.String("save", "workplace/save/PARTY.DAT",
 		"進度存檔路徑。刻意不預設在原版資料目錄，免得蓋掉玩家的原版存檔")
 	manualPath := flag.String("manual", "assets/manual/zh-Hant/manual.txt",
@@ -2191,7 +2204,7 @@ func main() {
 		modernIcons:    initialTheme.icons,
 		font:           font,
 		gotFont:        gotFont,
-		speaker:        ui.NewSpeaker(*volume),
+		speaker:        ui.NewSpeaker(*volume, *musicVolume),
 		title:          loadTitle(*dataDir),
 		runeFont:       loadRuneFont(*dataDir),
 		save:           save,

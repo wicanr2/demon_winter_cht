@@ -3553,6 +3553,17 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 解壓執行抽樣，含 466 張 Modern Icon PNG、487 個檔案，SHA-256：
 > `c13024eec3f51cb0c954ce5d41d5beff1e2353618365457fb703da218027f226`。
 >
+> **2026-07-30 第一版正式 release 新增閘門：**使用者要求包內加入 Modern
+> remake 新編配樂、所有遊戲修正 worklist 全綠、AI／公式／工程 Markdown
+> 與 README 索引，並輸出 AppImage、Windows DLL 完整包及 macOS `.app`。
+> 現已新增探索／休整／戰鬥／終局四組程式合成配樂，`F7` 獨立開關，
+> `F1` Help 手札首章與 README 操作速查均已補上；原版說明後續章節全保留。
+> 完整 Go、500/500、`uicheck` 839/839／硬編 0 通過。RC1 AppImage 與
+> Windows ZIP 已建立並通過 README、Help、開始說明、禁入、SHA-256 及
+> AppRun 免 FUSE smoke；Windows PE 只有系統 DLL import，第三方 DLL 為 0。
+> 證據見 `docs/playtest/57`。**尚未完成：有聲裝置聽測、macOS 新 `.app`
+> workflow、最後 A6 重跑、P4 使用者審圖與正式 release 上傳；不得打包結案。**
+>
 > **同日獨立音訊稽核勘誤：**原版無 BGM，八個單音與死亡旋律的合成完成；
 > 但觸發不能稱為完成。怪物噴吐在零死亡時會誤播死亡旋律，非戰鬥全滅與
 > effect 3／6／7 呼叫端仍待原版交叉引用清查；既有 A6 使用 `-volume 0`，
@@ -3991,7 +4002,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 | 建角 + 新遊戲 | 接上（`docs/re/87`／`88`／`89`）；起點是世界地圖 34 的 (28,50)|
 | 紮營 14 項 | 全接（`docs/re/33`）|
 | 城鎮八設施 + 市集六指令 | 全接（`docs/re/19`；碼頭買船修船也已接，舊註解說「只有報價」是過期斷言）|
-| 戰鬥九指令 | 全接，**只缺 `?`**（見 A3）|
+| 戰鬥九指令 | **全接**；`?` 檢視亦已由 A3 接上並完成實機閉合（`docs/re/92`、`docs/playtest/18`）|
 | 劇情文字中譯 | 368/368（100%）|
 
 ---
@@ -4020,7 +4031,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 
 | # | 項目 | 現況 |
 |---|---|---|
-| D1 | ~~介面／規則文案硬編在 Go~~ **✅ JSON 資料分離完成並補強閘門（2026-07-30）** | 836 條玩家文案由 `assets/lang/zh-Hant/ui.json` 載入；規則層只回傳 `reason.*` key／`ReasonArgs`，介面層才組句。`uicheck` 現同時掃 `cmd/demonwinter` 與 `internal/game`，且硬編數量會真正令驗收失敗；現況 836/836、硬編玩家中文 0。命令標籤與復古／現代模式排版也維持 JSON 驅動（`docs/playtest/47`、`docs/i18n/ui-key-conventions.md`）。|
+| D1 | ~~介面／規則文案硬編在 Go~~ **✅ JSON 資料分離完成並補強閘門（2026-07-30）** | 839 條玩家文案由 `assets/lang/zh-Hant/ui.json` 載入；規則層只回傳 `reason.*` key／`ReasonArgs`，介面層才組句。`uicheck` 現同時掃 `cmd/demonwinter` 與 `internal/game`，且硬編數量會真正令驗收失敗；現況 839/839、硬編玩家中文 0。命令標籤與復古／現代模式排版也維持 JSON 驅動（`docs/playtest/47`、`docs/i18n/ui-key-conventions.md`）。|
 | D2 | 密語提示 **定案不翻** | 符文是要玩家自己建對照表的解謎機制，答案要用英文輸入。施力點放在手冊與提示（`docs/re/72` §6）|
 | D3 | 標題花體 logo **定案不重繪** | 1988 年的美術與署名是歷史紀錄（`rulebook/83`／`93`）|
 | D4 | ~~`Bungei` 待譯~~ **✅ 完成** | 官方英文手冊的 `Punji pit` 明列 50% 跌落、1–6 傷害，與 executable case 2 逐項相同；`A Bungei pit!` 是誤拼，不是專名。原文 key 保留，繁中依 glossary 譯「竹籤陷阱」（`docs/re/68` §5）|

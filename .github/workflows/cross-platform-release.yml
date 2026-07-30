@@ -1,4 +1,4 @@
-name: 跨平台候選發行包
+name: 跨平台正式發行包
 
 on:
   workflow_dispatch:
@@ -15,6 +15,10 @@ on:
       - "assets/**"
       - "artwork/modern-icon/m1/trial/**"
       - "packaging/**"
+      - "docker/release/**"
+      - "tools/package-appimage.sh"
+      - "tools/package-windows.sh"
+      - "tools/package-macos.sh"
       - "tools/package-release-inner.sh"
       - ".github/workflows/cross-platform-release.yml"
       - "go.mod"
@@ -24,6 +28,46 @@ permissions:
   contents: read
 
 jobs:
+  linux-windows:
+    name: AppImage 與 Windows ZIP
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: 建置釘選發行工具鏈
+        run: docker build -t demonwinter-release docker/release
+      - name: AppImage 與 Windows 完整包
+        env:
+          VERSION: ${{ inputs.version || 'dev' }}
+        run: |
+          # 第一次建置需要下載 go.sum 釘選模組；工具本身與 AppImage runtime
+          # 已由 Dockerfile 雜湊釘選，封裝階段不再臨時抓未固定二進位。
+          docker run --rm --memory 3g --cpus 2 --pids-limit 384 \
+            -u "$(id -u):$(id -g)" -e HOME=/tmp \
+            -e VERSION="$VERSION" -e OUTPUT_DIR=/src/dist \
+            -v "$PWD:/src" -w /src demonwinter-release \
+            bash -c 'tools/package-appimage.sh && tools/package-windows.sh'
+      - name: 格式、禁入與自解壓 smoke
+        run: |
+          file dist/*.AppImage dist/*.zip
+          chmod +x dist/*.AppImage
+          dist/*.AppImage --appimage-extract >/dev/null
+          test -x squashfs-root/usr/bin/demonwinter
+          squashfs-root/usr/bin/demonwinter -list-scenes >/dev/null
+          APPIMAGE_EXTRACT_AND_RUN=1 dist/*.AppImage -list-scenes >/dev/null
+          test -z "$(find squashfs-root -type f \( -iname '*.DAT' -o -iname '*.DTT' -o -iname '*.SHE' -o -iname '*.SHP' -o -iname '*.PIE' -o -iname '*.PIC' -o -iname 'STDFONT.15' -o -iname 'SPCFONT.15' \) -print -quit)"
+          unzip -q dist/*windows*.zip -d windows-unpacked
+          test -s windows-unpacked/*/demonwinter.exe
+          test -f windows-unpacked/*/README.md
+          test -f windows-unpacked/*/第三方DLL說明.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demonwinter-linux-windows
+          path: |
+            dist/*.AppImage
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error
+
   macos:
     name: macOS ${{ matrix.goarch }}
     strategy:
@@ -43,22 +87,23 @@ jobs:
           cache: true
       - name: 建置與封裝
         env:
-          RELEASE_NAME: demonwinter-zh-Hant-${{ inputs.version || 'dev' }}-darwin-${{ matrix.goarch }}
-          TARGET_GOOS: darwin
+          VERSION: ${{ inputs.version || 'dev' }}
           TARGET_GOARCH: ${{ matrix.goarch }}
-          TARGET_CGO: "1"
           OUTPUT_DIR: ${{ github.workspace }}/dist
-        run: bash tools/package-release-inner.sh
+        run: bash tools/package-macos.sh
       - name: 原版素材禁入複核
         run: |
           stage="$(mktemp -d)"
           trap 'rm -rf "$stage"' EXIT
-          tar -xzf dist/*.tar.gz -C "$stage"
+          ditto -x -k dist/*.zip "$stage"
+          test -d "$stage/DemonWinter.app"
+          codesign --verify --deep --strict "$stage/DemonWinter.app"
+          test -f "$stage/DemonWinter.app/Contents/Resources/README.md"
           test -z "$(find "$stage" -type f \( -iname '*.DAT' -o -iname '*.DTT' -o -iname '*.SHE' -o -iname '*.SHP' -o -iname '*.PIE' -o -iname '*.PIC' -o -iname 'STDFONT.15' -o -iname 'SPCFONT.15' \) -print -quit)"
       - uses: actions/upload-artifact@v4
         with:
           name: demonwinter-darwin-${{ matrix.goarch }}
           path: |
-            dist/*.tar.gz
+            dist/*.zip
             dist/*.sha256
           if-no-files-found: error

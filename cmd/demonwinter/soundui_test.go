@@ -1,15 +1,24 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/wicanr2/demon_winter_cht/internal/audio/music"
+)
 
 type soundSpy struct {
-	enabled bool
-	played  []int
+	enabled      bool
+	played       []int
+	musicEnabled bool
+	scene        music.Scene
 }
 
-func (s *soundSpy) Play(id int)        { s.played = append(s.played, id) }
-func (s *soundSpy) SetEnabled(on bool) { s.enabled = on }
-func (s *soundSpy) Enabled() bool      { return s.enabled }
+func (s *soundSpy) Play(id int)                { s.played = append(s.played, id) }
+func (s *soundSpy) SetEnabled(on bool)         { s.enabled = on }
+func (s *soundSpy) Enabled() bool              { return s.enabled }
+func (s *soundSpy) SetMusic(scene music.Scene) { s.scene = scene }
+func (s *soundSpy) SetMusicEnabled(on bool)    { s.musicEnabled = on }
+func (s *soundSpy) MusicEnabled() bool         { return s.musicEnabled }
 
 func TestSoundOutputIsObservableWithoutAudioDevice(t *testing.T) {
 	spy := &soundSpy{enabled: true}

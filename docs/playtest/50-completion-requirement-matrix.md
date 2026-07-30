@@ -20,7 +20,8 @@
 | 關閉視窗前自動存檔 | 完成 | 失敗即關閉（fail-closed）：任一步寫檔失敗就留在遊戲；[`docs/ui/04`](../ui/04-control-modes-and-safe-exit.md) |
 | 場景跳轉與攻略輔助除錯 | 完成 | `-scene`、`-list-scenes`、技能與戰鬥 fixture；不偷設劇情旗標。README「開發者場景書籤」 |
 | 倚天 16×15 粗體中文 | 完成 | [`docs/re/17`](../re/17-font-format.md)；字型由玩家自行提供，未納入版本控制或發行包 |
-| 音效與音樂 | **完成，使用者已核准** | 原版沒有背景配樂；八個單音與死亡旋律已合成。獨立稽核發現的吐息錯誤已修，IDA 證實非戰鬥死亡不播、effect 3/6/7 為未使用音階；九個 WAV 技術重驗後，使用者於 2026-07-30 回覆音樂 ok。見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)、[`docs/playtest/54`](54-independent-audio-music-audit.md) |
+| 原版音效 | **完成，使用者已核准** | 原版沒有背景配樂；八個單音與死亡旋律已合成。吐息錯誤已修，IDA 證實非戰鬥死亡不播、effect 3/6/7 為未使用音階；見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)、[`docs/playtest/54`](54-independent-audio-music-audit.md) |
+| remake 遊戲配樂 | **程式與單元測試完成，待實際錄音／三平台聽測** | 探索、休整、戰鬥、終局四組原創程式合成循環；無 SoundFont／第三方取樣，`F7` 與 `-music-volume` 獨立控制，不冒充原版 BGM。封裝前仍需有聲裝置動態驗收 |
 | 跨平台候選包 | 技術建置完成 | Linux amd64 解壓執行、Windows amd64 PE／build info 通過；macOS amd64／arm64 原生 CI 的建置、禁入與 artifact 上傳全綠。實機顯示／音效仍由各平台玩家驗收；見 [`docs/playtest/44`](44-release-package-a6-sample.md) |
 | 宣傳影片 | 完成 | [`短版 MP4`](../promo/demon-winter-cht-promo.mp4)；為 remake 實機畫面剪輯，不含原版資料檔或字型檔 |
 
@@ -28,7 +29,7 @@
 
 | 要求 | 狀態 | 證據／邊界 |
 |---|---|---|
-| 玩家文字不可硬編在 Go | 完成 | 原版資料字串 500/500；介面與規則原因共 836 條 JSON，玩家中文硬編 0。見 [`docs/playtest/47`](47-rule-reason-json-separation.md) |
+| 玩家文字不可硬編在 Go | 完成 | 原版資料字串 500/500；介面與規則原因共 839 條 JSON，玩家中文硬編 0。見 [`docs/playtest/47`](47-rule-reason-json-separation.md) |
 | 引擎與資料分離 | 完成目前範圍 | `assets/lang/zh-Hant/ui.json` 保存介面文字、順序、分組與格式；Go 只持有 key、參數、熱鍵與 action。缺 key 失敗即關閉，`dwstrings uicheck` 是發行閘門 |
 | 少數逆向缺口整理成 Markdown | 持續以證據強度管理 | `docs/re/` 現有 118 篇編號研究；怪物繞障見 [`docs/re/116`](../re/116-monster-obstacle-aware-pathing.md)，音效 XREF 見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)，未使用水紋 frame 見 [`docs/re/118`](../re/118-unused-terrain-frame-101.md)。同長路線 tie-break 尚未逐步動態對拍，標為強證據而非完全相同 |
 | 反組譯＋remake 通用範本／skill | 完成 | `reverse-engineer-retro-game-remake` 同步於 `~/.codex/skills/` 與 `~/my_skill/`；repo 內可重建來源由 README 索引 |
@@ -40,7 +41,12 @@
 
 1. 使用者審閱 59／59 地城 atlas 與
    [`P4 三主題五類場景畫板`](55-p4-three-theme-review-board.md)。
-上述項目需要使用者作最終視覺決定，不能由代理自行宣告通過。音訊已由
-使用者核准；P4 的 15 張可重播技術證據亦已完成。其餘程式變更仍
+2. remake 新編配樂在有聲裝置上驗證 `F7`、四場景切換及原版短音效疊加。
+3. 新版 macOS amd64／arm64 `.app` 原生 workflow 全綠。
+4. 上述變更後最後一次 A6 抽樣、三平台包禁入／解壓 smoke 與正式 release 上傳。
+
+P4 項目需要使用者作最終視覺決定，不能由代理自行宣告通過；其 15 張可重播
+技術證據已完成。原版音效已由使用者核准，但後來新增的 remake BGM 是獨立
+交付，不能沿用舊核准。其餘程式變更仍
 必須通過完整 Go、500/500、`uicheck`、A6 抽樣、禁入掃描、解壓後執行檔與
 Docker 清理閘門；本文件不取代那些測試記錄。

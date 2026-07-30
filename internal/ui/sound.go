@@ -9,6 +9,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
 
+	"github.com/wicanr2/demon_winter_cht/internal/audio/music"
 	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 )
 
@@ -26,11 +27,14 @@ const SampleRate = 44100
 type Speaker struct {
 	// ready 由背景 goroutine 在 players 準備好之後設起來。
 	// 用 atomic 發布，主迴圈只在它為 1 時才碰 players。
-	ready   atomic.Bool
-	players map[int]*audio.Player
+	ready        atomic.Bool
+	players      map[int]*audio.Player
+	musicPlayers map[music.Scene]*audio.Player
+	scene        music.Scene
 
 	// enabled 對應原版的 `[0x1585]` 音效開關（戰鬥選單有 Sound off 指令）。
-	enabled atomic.Bool
+	enabled      atomic.Bool
+	musicEnabled atomic.Bool
 }
 
 // allEffects 是原版跳表涵蓋的全部效果編號。
@@ -44,13 +48,14 @@ var allEffects = []int{
 //
 // volume 是 0–1；**0 代表完全不碰音效裝置**（回傳 nil，所有方法都是 no-op），
 // 無頭測試與截圖用得上。原版沒有音量控制，這個參數純粹是體貼。
-func NewSpeaker(volume float64) *Speaker {
+func NewSpeaker(volume, musicVolume float64) *Speaker {
 	if volume <= 0 || !audioDeviceAvailable() {
 		return nil
 	}
 
-	s := &Speaker{players: map[int]*audio.Player{}}
+	s := &Speaker{players: map[int]*audio.Player{}, musicPlayers: map[music.Scene]*audio.Player{}}
 	s.enabled.Store(true)
+	s.musicEnabled.Store(musicVolume > 0)
 
 	// 波形合成很快，但開音效裝置可能很慢，所以整段丟到背景。
 	go func() {
@@ -68,12 +73,55 @@ func NewSpeaker(volume float64) *Speaker {
 			}
 			players[id] = p
 		}
+		musicPlayers := make(map[music.Scene]*audio.Player)
+		for _, scene := range []music.Scene{music.Exploration, music.Sanctuary, music.Battle, music.Finale} {
+			pcm := music.Render(scene, musicVolume)
+			if len(pcm) == 0 {
+				continue
+			}
+			p, err := ctx.NewPlayer(audio.NewInfiniteLoop(bytes.NewReader(pcm), int64(len(pcm))))
+			if err != nil {
+				return
+			}
+			musicPlayers[scene] = p
+		}
 		s.players = players
+		s.musicPlayers = musicPlayers
 		s.ready.Store(true)
 	}()
 
 	return s
 }
+
+// SetMusic 切換 remake 新編曲；同場景不重頭播放。
+func (s *Speaker) SetMusic(scene music.Scene) {
+	if s == nil || !s.ready.Load() || scene == s.scene {
+		return
+	}
+	for _, p := range s.musicPlayers {
+		p.Pause()
+	}
+	s.scene = scene
+	if !s.musicEnabled.Load() || scene == music.Silent {
+		return
+	}
+	if p := s.musicPlayers[scene]; p != nil {
+		_ = p.Rewind()
+		p.Play()
+	}
+}
+
+func (s *Speaker) SetMusicEnabled(on bool) {
+	if s == nil {
+		return
+	}
+	s.musicEnabled.Store(on)
+	scene := s.scene
+	s.scene = music.Silent
+	s.SetMusic(scene)
+}
+
+func (s *Speaker) MusicEnabled() bool { return s != nil && s.musicEnabled.Load() }
 
 // SetEnabled 開關音效，對應原版戰鬥選單的 Sound on／Sound off。
 func (s *Speaker) SetEnabled(on bool) {
