@@ -399,6 +399,25 @@ macOS 的 Ebiten／Metal 需要 Apple SDK，不能由 Linux Docker 假交叉編�
 意外發布。玩家向發行說明見
 [`packaging/RELEASE-NOTES-zh-Hant.md`](packaging/RELEASE-NOTES-zh-Hant.md)。
 
+`vX.Y.Z` tag 亦會走同一條驗證後發布流程。**GitHub 永遠只放乾淨版**：
+不含原版遊戲資料與倚天字型。本機可在取得四平台公開包後，用
+`tools/package-full-local.sh` 將合法原版 `DEM_DATA` 與完整倚天
+`STDFONT.15`／`SPCFONT.15` 注入獨立的 `dist-all/`：
+
+```bash
+docker run --rm --network none --memory 2g --cpus 1 --pids-limit 192 \
+  -u 1000:1000 -e VERSION=0.1.0 \
+  -e PUBLIC_DIST_DIR=/src/dist-public \
+  -e ORIGINAL_DATA_DIR=/src/workplace/orig/demwin/DEM_DATA \
+  -e ETEN_FONT_DIR=/src/workplace/eten \
+  -e OUTPUT_DIR=/src/dist-all \
+  -v "$PWD:/src" -w /src demonwinter-release \
+  bash tools/package-full-local.sh
+```
+
+`dist-all/` 已由 Git 忽略且不會進入 CI artifact／GitHub Release；其中的 Linux、
+Windows、macOS Intel 與 macOS Apple Silicon 包各有本地啟動器及共同 SHA-256。
+
 ---
 
 ## 現況

@@ -14,6 +14,7 @@ on:
         default: false
   push:
     branches: [main]
+    tags: ["v*.*.*"]
     paths:
       - "cmd/**"
       - "internal/**"
@@ -38,11 +39,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: 決定產物版本
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version || 'dev' }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF_NAME#v}" >>"$GITHUB_OUTPUT"
+          else
+            echo "value=$INPUT_VERSION" >>"$GITHUB_OUTPUT"
+          fi
       - name: 建置釘選發行工具鏈
         run: docker build -t demonwinter-release docker/release
       - name: AppImage 與 Windows 完整包
         env:
-          VERSION: ${{ inputs.version || 'dev' }}
+          VERSION: ${{ steps.version.outputs.value }}
         run: |
           # 第一次建置需要下載 go.sum 釘選模組；工具本身與 AppImage runtime
           # 已由 Dockerfile 雜湊釘選，封裝階段不再臨時抓未固定二進位。
@@ -99,13 +110,23 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
+      - name: 決定產物版本
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version || 'dev' }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF_NAME#v}" >>"$GITHUB_OUTPUT"
+          else
+            echo "value=$INPUT_VERSION" >>"$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           cache: true
       - name: 建置與封裝
         env:
-          VERSION: ${{ inputs.version || 'dev' }}
+          VERSION: ${{ steps.version.outputs.value }}
           TARGET_GOARCH: ${{ matrix.goarch }}
           OUTPUT_DIR: ${{ github.workspace }}/dist
         run: bash tools/package-macos.sh
@@ -138,13 +159,25 @@ jobs:
 
   publish:
     name: 建立正式 GitHub Release
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_release
+    if: >-
+      (github.event_name == 'workflow_dispatch' && inputs.publish_release) ||
+      startsWith(github.ref, 'refs/tags/v')
     needs: [linux-windows, macos]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - name: 決定正式版本
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version || 'dev' }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF_NAME#v}" >>"$GITHUB_OUTPUT"
+          else
+            echo "value=$INPUT_VERSION" >>"$GITHUB_OUTPUT"
+          fi
       - uses: actions/download-artifact@v4
         with:
           pattern: demonwinter-*
@@ -152,7 +185,7 @@ jobs:
           merge-multiple: true
       - name: 版本號、產物與校驗碼閘門
         env:
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ steps.version.outputs.value }}
         run: |
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "正式發行版本必須是 X.Y.Z：$VERSION" >&2
@@ -173,7 +206,7 @@ jobs:
       - name: 發布第一版
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ inputs.version }}
+          VERSION: ${{ steps.version.outputs.value }}
         run: |
           tag="v${VERSION}"
           gh release create "$tag" \
