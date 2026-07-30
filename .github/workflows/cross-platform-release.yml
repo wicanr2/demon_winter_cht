@@ -92,8 +92,10 @@ jobs:
         include:
           - runner: macos-15-intel
             goarch: amd64
+            macharch: x86_64
           - runner: macos-15
             goarch: arm64
+            macharch: arm64
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
@@ -117,6 +119,11 @@ jobs:
           test -f "$stage/DemonWinter.app/Contents/Resources/README.md"
           test -f "$stage/DemonWinter.app/Contents/Resources/開始遊戲.txt"
           test -f "$stage/DemonWinter.app/Contents/Resources/packaging/RELEASE-NOTES-zh-Hant.md"
+          test -s "$stage/DemonWinter.app/Contents/Resources/macOS相依函式庫清單.txt"
+          test "$(lipo -archs "$stage/DemonWinter.app/Contents/MacOS/demonwinter-bin")" = \
+            "${{ matrix.macharch }}"
+          test -z "$(grep -Ev '^(/System/Library/|/usr/lib/)' \
+            "$stage/DemonWinter.app/Contents/Resources/macOS相依函式庫清單.txt" || true)"
           cmp assets/manual/zh-Hant/manual.txt \
             "$stage/DemonWinter.app/Contents/Resources/assets/manual/zh-Hant/manual.txt"
           test "$(find "$stage" -type f -name 'remake-*.wav' | wc -l)" -eq 4

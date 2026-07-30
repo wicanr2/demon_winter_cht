@@ -16,6 +16,27 @@ mkdir -p "$app/Contents/MacOS" "$res/assets/lang/zh-Hant" \
 
 CGO_ENABLED=1 GOOS=darwin GOARCH="$TARGET_GOARCH" go build -trimpath -ldflags="-s -w" \
   -o "$app/Contents/MacOS/demonwinter-bin" ./cmd/demonwinter
+expected_arch="$TARGET_GOARCH"
+if [[ "$TARGET_GOARCH" == "amd64" ]]; then
+  expected_arch="x86_64"
+fi
+binary_archs="$(lipo -archs "$app/Contents/MacOS/demonwinter-bin")"
+if [[ "$binary_archs" != "$expected_arch" ]]; then
+  echo "拒絕打包：預期 $expected_arch，實際 Mach-O 架構為 $binary_archs" >&2
+  exit 1
+fi
+deps="$res/macOS相依函式庫清單.txt"
+otool -L "$app/Contents/MacOS/demonwinter-bin" |
+  tail -n +2 | awk '{print $1}' | sort -u >"$deps"
+while IFS= read -r dep; do
+  case "$dep" in
+    /System/Library/*|/usr/lib/*) ;;
+    *)
+      echo "拒絕打包：macOS 執行檔依賴未隨系統提供的路徑：$dep" >&2
+      exit 1
+      ;;
+  esac
+done <"$deps"
 cp assets/lang/zh-Hant/* "$res/assets/lang/zh-Hant/"
 cp assets/manual/zh-Hant/* "$res/assets/manual/zh-Hant/"
 cp artwork/modern-icon/m1/trial/* "$res/artwork/modern-icon/m1/trial/"

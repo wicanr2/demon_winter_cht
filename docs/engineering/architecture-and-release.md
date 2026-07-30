@@ -43,7 +43,10 @@ EGA、CGA 是原版主題；Modern Icon 是可選的高解析 remake 呈現層�
 - Windows：ZIP 需包含所有非 Windows 系統 DLL；PE import 由 allowlist
   檢查。若沒有第三方 DLL，文件要明列「零個需附第三方 DLL」，不能只說已含。
 - macOS：只能由原生 macOS runner 建置與測試 `.app`；每個架構需有
-  `Info.plist`、Resources、簽署檢查及可啟動 smoke。Linux 交叉編出檔案不算證據。
+  `Info.plist`、Resources、簽署檢查及可啟動 smoke。`lipo -archs` 必須與
+  目標架構相同；`otool -L` 只允許 `/System/Library` 與 `/usr/lib`，拒絕
+  Homebrew、`@rpath` 或建置目錄相依，清單須隨包附上。Linux 交叉編出檔案
+  不算證據。
 
 所有包都必須排除原版 `.DAT/.DTT/.SHE/.SHP/.PIC/.PIE` 與倚天
 `STDFONT.15`、`SPCFONT.15`。完成矩陣見

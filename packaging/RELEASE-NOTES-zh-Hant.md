@@ -11,7 +11,8 @@
 - macOS Apple Silicon：`macOS-arm64.zip`。
 
 每個產物旁皆附 `.sha256` 校驗檔。解壓後請先閱讀包內的 `開始遊戲.txt` 與
-`README.md`。
+`README.md`。macOS 包另附實際動態相依清單；正式包只允許 macOS 系統
+Framework 與 `/usr/lib`，不依賴打包機的 Homebrew 或 `@rpath` 私有函式庫。
 
 ## 玩家需要自行準備的檔案
 
