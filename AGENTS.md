@@ -16,16 +16,6 @@ changes. It complements `CONTEXT.md`; it does not replace evidence in `docs/re/`
 5. Before claiming completion, rerun proportional tests and record material visual/playtest
    evidence in Markdown.
 
-## 外部知識按需路由（link-only）
-
-- 不在 session 啟動時預讀 `~/.claude/knowledge-base/retro-cht/`，也不複製到
-  `~/.codex/skills`；只在下列關鍵字出現時按連結讀取，避免浪費 token。
-- 遇到 `dev-setup`、開發接續包、bootstrap、私人重建包或 Git bundle 打包：
-  先讀 `~/.claude/knowledge-base/retro-cht/retro-game-remake/SKILL.md`，再只讀
-  其 `references/06-packaging.md`；專案實作以 `docs/DEV_SETUP.md` 為準。
-- 若上述文件仍無法裁決格式，才按需參考 `~/scummvm/` 內現成的
-  `DEV_SETUP.md`／`dev_setup.sh`；不得掃描或載入無關專案。
-
 ## Product goal and fidelity boundary
 
 - Goal: preserve this 1988 classic as a clean, maintainable Traditional Chinese remake that
