@@ -136,6 +136,7 @@ func checkDungeonReview(path string) error {
 	}
 	ids := map[string]bool{}
 	positions := map[[2]int]bool{}
+	allApproved := true
 	for i, e := range review.Elements {
 		if e.ID == "" || e.Label == "" || e.Batch == "" {
 			return fmt.Errorf("地城審稿元素 %d 缺 id、label 或 batch", i+1)
@@ -155,9 +156,18 @@ func checkDungeonReview(path string) error {
 		if !validReviewDecision(e.Decision) {
 			return fmt.Errorf("地城審稿 %q decision %q 無效", e.ID, e.Decision)
 		}
+		if e.Decision != "approved" {
+			allApproved = false
+		}
 		if len(e.MustPreserve) == 0 {
 			return fmt.Errorf("地城審稿 %q 缺 mustPreserve", e.ID)
 		}
+	}
+	if review.Status == "approved" && !allApproved {
+		return fmt.Errorf("地城審稿總狀態 approved，但仍有元素未核准")
+	}
+	if review.Status != "approved" && allApproved {
+		return fmt.Errorf("地城審稿十二格均已核准，但總狀態仍是 %q", review.Status)
 	}
 	return nil
 }

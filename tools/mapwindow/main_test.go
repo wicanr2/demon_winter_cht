@@ -128,6 +128,29 @@ func TestCheckDungeonReviewRejectsDuplicateGridCell(t *testing.T) {
 	}
 }
 
+func TestCheckDungeonReviewRejectsInconsistentApproval(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "review.json")
+	var elements []string
+	for i := 0; i < 12; i++ {
+		decision := "approved"
+		if i == 11 {
+			decision = "pending"
+		}
+		elements = append(elements, fmt.Sprintf(
+			`{"id":"e%d","label":"元素","row":%d,"column":%d,`+
+				`"decision":%q,"batch":"D1","mustPreserve":["規則"]}`,
+			i, i/4+1, i%4+1, decision))
+	}
+	raw := fmt.Sprintf(`{"schema":1,"directionImage":"direction.png",`+
+		`"status":"approved","elements":[%s]}`, strings.Join(elements, ","))
+	if err := os.WriteFile(path, []byte(raw), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkDungeonReview(path); err == nil {
+		t.Fatal("總狀態 approved 與 pending 元素不一致時沒有被拒絕")
+	}
+}
+
 func TestMissingThemeCoverageDoesNotCrossNamespaces(t *testing.T) {
 	keys := []int{0x01, 0x0d, 0x23}
 	worldUses := map[byte]bool{0x01: true, 0x23: true}

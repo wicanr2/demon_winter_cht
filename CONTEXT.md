@@ -3640,9 +3640,9 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 >
 > **2026-07-30 最終重打包：**打包全流程已移入無網路、具資源限制的一次性
 > Docker；修正 checksum 曾寫入容器絕對路徑的不可攜問題。解壓後 F8／F6／F1
-> 重新實跑並人工檢視；補入 `0x5a` 凍土後為 442 張 Modern Icon、
-> 836 UI key、463 檔，禁入掃描通過。SHA-256 為
-> `3699a819b7078e64db347a5288a82deb464f230648e06afd1a2f8fb0bad3206e`
+> 重新實跑並人工檢視；地城第一批納入後為 446 張 Modern Icon、
+> 836 UI key、467 檔，禁入掃描通過。SHA-256 為
+> `0d8ba6e8415598a892d1c5109e2f31c57e84664882cbcc27decb3fc4e5d0b6fe`
 >（[`docs/playtest/44`](docs/playtest/44-release-package-a6-sample.md)）。
 >
 > **2026-07-30 Modern Icon 地城邊界稽核：**最終畫布的世界覆寫原本只依
@@ -3687,15 +3687,24 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 因此「世界差集為零」的範圍不完整；全 SUM.MAP namespace 掃描抓出 map 21
 > 的 `0x5a` 凍土。現已依核准 Modern Icon 世界方向重畫正常／冬季母稿，
 > 各輸出八個無接縫變體，map 21 `(47,27)` 同狀態 runtime 已人工檢視。
-> 所有 SUM.MAP 世界段兩季現均為 `missing: none`；地城仍誠實缺 59 格
+> 所有 SUM.MAP 世界段兩季現均為 `missing: none`；當時地城仍誠實缺 59 格
 >（[`docs/playtest/51`](docs/playtest/51-modern-icon-tundra-and-dungeon-inventory.md)）。
 >
 > **2026-07-30 地城審稿入口收斂：**方向稿十二格已依 3×4 位置編號，
 > 名稱、D1–D4 批次、核准狀態與不可破壞規則集中在
 > `artwork/modern-icon/m1/dungeon-review.json`，不是寫死於引擎。
 > `mapwindow -review-check` 會拒絕缺格、重複格位、無效決定或空規則。
-> README 已提供最短回覆格式；目前 12 格均維持 `pending`，仍須使用者明確
-> 核准後才能進入 59 索引量產。
+> README 已提供最短回覆格式；此段建立時 12 格均為 `pending`，現已由下一段
+> 的使用者核准與第一批量產狀態取代。
+>
+> **2026-07-30 地城方向已核准，第一批 25/59：**使用者明確回覆
+> 「modern icon 地城風格 ok」，十二格 JSON 均改為 `approved`。新畫
+> `0x00/0x56` 暗石板、`0x13` 緋紅磚面與高頻阻擋牆 `0x0d`；MAP1–MAP5
+> 內確實是森林、岸線、平原、沙地、凍土或水面的索引，則在
+> `dungeonTiles` 明列重用已核准世界素材。完成度由 0/59 到 **25/59**，
+> 仍誠實列 34 格缺口。使用者另指出 EGA/CGA 人物黑格；同場景原版原生圖
+> 證明原版也以人物 glyph 整格取代地形，因此歷史主題不改透明，透明疊圖只
+> 屬 Modern Icon（[`docs/playtest/52`](docs/playtest/52-modern-icon-dungeon-approval-and-d1.md)）。
 >
 > **操作體驗新增，已完成程式與固定場景抽樣、等待使用者畫面審查：** `F6`
 > 切換整套復古／現代模式：復古恢復原版紅底直式命令列與相對轉向；現代使用

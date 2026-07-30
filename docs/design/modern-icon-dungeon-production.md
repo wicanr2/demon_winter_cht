@@ -1,7 +1,7 @@
 # Modern Icon 地城逐索引量產規格
 
 日期：2026-07-30
-狀態：客觀資料與工具閘門完成；視覺方向待使用者審查
+狀態：視覺方向已核准；逐索引量產 25/59
 
 ## 0. 方向稿十二格審查
 
@@ -15,9 +15,8 @@
 
 審查決定與不可破壞的規則保存在
 [`dungeon-review.json`](../../artwork/modern-icon/m1/dungeon-review.json)，不硬寫在
-工具程式裡。使用者可直接回覆「**1–12 全部核准**」，或例如
-「**3、7 需修改：牆角再清楚；密牆不要有裂縫**」。在收到明確決定前，JSON
-維持 `pending`，不得啟動 59 格量產或把方向稿稱為核准。
+工具程式裡。使用者於 2026-07-30 明確核准方向，JSON 現為 `approved`；任何
+後續修改仍須逐格記錄，不用聊天記憶取代資料。
 
 可重複驗證審稿資料：
 
@@ -42,7 +41,7 @@ go run ./tools/mapwindow \
 | `submap-floor` | 2 | `0x14/0x62` 在子地圖是可走例外，不能套世界海面語意 |
 | `terrain-0` | 12 | 原版 atlas 的森林套組；是否沿用已核准世界構圖須逐場景審查 |
 | `terrain-1` | 5 | 平原／岸線類，需保留原始拓樸 |
-| `terrain-4` | 3 | 地城 A 地板：`0x00/0x13/0x53` |
+| `terrain-4` | 3 | 只表示通行類別；原圖 `0x00/0x13/0x53` 分別是黑地、緋紅磚面與單格物件，不能共用地板 |
 | `terrain-5/6/7` | 各 1 | 凍土、地城 B、沙地 |
 
 因此量產不能以「所有 `blocked` 共用一張牆」或「所有 `exit` 共用一張樓梯」
@@ -107,11 +106,12 @@ go run ./tools/mapwindow \
   -theme artwork/modern-icon/m1/trial/theme.json
 ```
 
-目前 `dungeonTiles` 為空，所以必須列出 59 個 `theme dungeon missing` 並失敗。
+目前已明列 25 格，必須列出剩餘 34 個 `theme dungeon missing` 並失敗。
 只有這份清單變成 `none`，且上述畫面都經人工審查，P3-D 才能改成完成。
 
 ## 5. 本輪不越過的決策
 
 [`modern-icon-dungeon-direction-v1.png`](img/modern-icon-dungeon-direction-v1.png)
-尚待使用者審查。本輪只完成資料、工具、批次與 fail-closed 閘門；不把方向稿
-切成 runtime tile，也不自行宣告其色彩、材質或構圖已核准。
+已獲使用者核准。量產仍以新母稿逐索引重畫，不把方向稿切成 runtime tile；
+第一批與 EGA／CGA 人物黑格裁決見
+[`docs/playtest/52`](../playtest/52-modern-icon-dungeon-approval-and-d1.md)。

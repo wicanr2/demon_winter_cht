@@ -89,7 +89,7 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 | P1 視覺方向審查 | **已核准** | 以 `modern-ega-concept.png` 為主、M0-B 為輔；主題定名 Modern Icon，否決縮圖與像素化路線 |
 | P2 高解析代表素材與呈現層 | **完成** | 世界 terrain、隊伍、怪物與船均已進 1280×800 高解析呈現層 |
 | P3 世界與單位量產 | **完成** | 世界正常／冬季差集皆為零；怪物 224/224、隊員 24/24、海戰 runtime 24/24 |
-| P3-D 地城素材 | **資料契約完成、美術待審** | 已分出 `dungeonTiles` JSON namespace 並阻止世界索引誤覆寫；方向稿待審後才逐格量產 |
+| P3-D 地城素材 | **方向已核准，25/59** | 已分出 `dungeonTiles` JSON namespace；新畫暗石板、緋紅磚面與高頻牆，並明列重用語意相同的戶外素材，尚餘 34 格 |
 | P4 最終視覺驗收 | **待使用者審查** | 世界、冬季、地城、戰鬥、海戰同狀態三主題截圖；密門、陷阱、黑色地形與色弱辨識抽樣 |
 
 完整呈現架構、素材分批與驗收門檻，以
@@ -104,10 +104,13 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 |---|---|
 | [![Modern Icon 地城方向稿](docs/design/img/modern-icon-dungeon-direction-v1.png)](docs/design/modern-icon-dungeon-production.md) | [![Modern Icon 地城安全底稿](docs/design/img/modern-icon-dungeon-fallback-runtime.png)](docs/playtest/49-modern-icon-dungeon-namespace.md) |
 
-方向稿由左至右、由上至下編為 1–12；可回覆「**1–12 全部核准**」，或列出
-需修改的編號與原因。逐格名稱、製作批次與不可破壞的規則集中在
+方向稿由左至右、由上至下編為 1–12，已於 2026-07-30 獲使用者核准。
+逐格名稱、製作批次與不可破壞的規則集中在
 [`dungeon-review.json`](artwork/modern-icon/m1/dungeon-review.json)，並由工具驗證，
-不硬寫在引擎程式中。未收到明確核准前，P3-D 維持「美術待審」。
+不硬寫在引擎程式中。第一批素材、實機圖與剩餘 34 格見
+[`docs/playtest/52`](docs/playtest/52-modern-icon-dungeon-approval-and-d1.md)。
+
+![Modern Icon 地城 D1／D5 第一批](docs/design/img/modern-icon-dungeon-d1-contact.png)
 
 全域檢查也修正了早期世界盤點的範圍漏洞：map 21 的 `0x5a` 凍土先前不在
 33–64 掃描範圍內。現已補成正常／冬季各八變體，全部 SUM.MAP 世界段的
@@ -277,6 +280,9 @@ Bugem；兩波合計覆寫率達 129/224
 
 三圖的金幣、糧食、日期時間、隊伍數值與物件格位一致。重播方式與裁決見
 [`docs/playtest/21`](docs/playtest/21-three-theme-same-state-comparison.md)。
+EGA／CGA 人物周圍的黑格也是原版行為：原程式會用人物 glyph 整格取代腳下
+地形；Modern Icon 才改成透明疊圖。原版／remake 同場景證據見
+[`docs/playtest/52`](docs/playtest/52-modern-icon-dungeon-approval-and-d1.md)。
 
 同三個索引也已有冬季一一對應版本：
 
