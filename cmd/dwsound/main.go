@@ -26,12 +26,12 @@ var effects = []struct {
 }{
 	{pcspeaker.EffectDeath, "death", "單位陣亡（唯一的多音符旋律，約 1.5 秒）"},
 	{pcspeaker.EffectC3, "c3", "攻擊未命中（近戰）"},
-	{pcspeaker.EffectD3, "d3", "音階 D3"},
-	{pcspeaker.EffectE3, "e3", "音階 E3"},
+	{pcspeaker.EffectD3, "d3", "戰鬥行動點不足"},
+	{pcspeaker.EffectE3, "e3", "原版庫內未使用音階 E3"},
 	{pcspeaker.EffectF3, "f3", "攻擊未命中（遠端）"},
 	{pcspeaker.EffectG3, "g3", "攻擊命中（近戰）"},
-	{pcspeaker.EffectA3, "a3", "音階 A3"},
-	{pcspeaker.EffectB3, "b3", "音階 B3"},
+	{pcspeaker.EffectA3, "a3", "原版庫內未使用音階 A3"},
+	{pcspeaker.EffectB3, "b3", "原版庫內未使用音階 B3"},
 	{pcspeaker.EffectC4, "c4", "攻擊命中（遠端）／扣血提示"},
 }
 

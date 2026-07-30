@@ -20,7 +20,7 @@
 | 關閉視窗前自動存檔 | 完成 | 失敗即關閉（fail-closed）：任一步寫檔失敗就留在遊戲；[`docs/ui/04`](../ui/04-control-modes-and-safe-exit.md) |
 | 場景跳轉與攻略輔助除錯 | 完成 | `-scene`、`-list-scenes`、技能與戰鬥 fixture；不偷設劇情旗標。README「開發者場景書籤」 |
 | 倚天 16×15 粗體中文 | 完成 | [`docs/re/17`](../re/17-font-format.md)；字型由玩家自行提供，未納入版本控制或發行包 |
-| 音效與音樂 | **合成完成，觸發未閉合** | 原版沒有背景配樂；八個單音與死亡旋律已合成，但獨立稽核發現噴吐誤播死亡旋律、非戰鬥死亡及三個零呼叫效果仍待清查，也沒有動態聽測。見 [`docs/playtest/54`](54-independent-audio-music-audit.md) |
+| 音效與音樂 | **原版範圍完成，待使用者試聽** | 原版沒有背景配樂；八個單音與死亡旋律已合成。獨立稽核發現的吐息錯誤已修，IDA 證實非戰鬥死亡不播、effect 3/6/7 為未使用音階；九個 WAV 可直接試聽。見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)、[`docs/playtest/54`](54-independent-audio-music-audit.md) |
 | 宣傳影片 | 完成 | [`短版 MP4`](../promo/demon-winter-cht-promo.mp4)；為 remake 實機畫面剪輯，不含原版資料檔或字型檔 |
 
 ## 二、引擎、資料與研究

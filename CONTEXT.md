@@ -3553,6 +3553,14 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 也沒有動態聽測。詳見
 > [`docs/playtest/54`](docs/playtest/54-independent-audio-music-audit.md)。
 >
+> **音訊稽核後續已收斂：**IDA 9.4 對 selector `sub_20485` 列出完整 14 個
+> 直接 XREF。effect 3／6／7 是原版未使用音階，非戰鬥全滅原版也不播死亡
+> 旋律；兩者都不虛構補接。已修正吐息零死亡誤播 -1，新增可注入音效 spy，
+> 並修正不同 player 疊音為真正單聲道。九個 WAV 已放在 `docs/audio/` 供
+> 使用者試聽；證據見 [`docs/re/117`](docs/re/117-audio-xrefs-and-breath-correction.md)。
+> 音效修正後候選發行包已重建並通過解壓 smoke，SHA-256：
+> `fe8b855b1eac57fd450d42dbd95a0b42f8d9bf9fea47045b7b08ef041a1df905`。
+>
 > **2026-07-29 使用者最新優先序：先完成美術 polish；操作體驗列為同輪產品工作。**
 > 聲音合成已完整、非戰鬥觸發缺口已盤點，但目前暫停，不得搶在美術之前。
 > Modern Icon worklist 依序為：

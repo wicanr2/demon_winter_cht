@@ -360,7 +360,7 @@ tools/package-release.sh 2026.07.30
 | 社群攻略繁中版 | 完成（1,914 行）|
 | 反組譯筆記 | 116 篇；主線、海戰、時間進位、arena、命中修正、營地法術、魔法物品充能、幻象消失與怪物繞障移動均有位址證據 |
 | 資料格式 | 地圖、事件、道具、怪物、存檔、字型、圖形、音效皆已解 |
-| Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、PC speaker 音效；原版沒有背景配樂，死亡短旋律與已確認觸發見 [`docs/playtest/43`](docs/playtest/43-audio-trigger-closure.md) |
+| Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、PC speaker 音效；原版沒有背景配樂，完整 XREF、吐息勘誤與可試聽 WAV 見 [`docs/re/117`](docs/re/117-audio-xrefs-and-breath-correction.md) |
 | 遊戲內文字中文化 | **500/500（100%）** 原版資料字串；另有 **836 條** JSON 介面文案，畫面層與規則層硬編玩家中文 0 條 |
 | 試玩驗收 | **完成前期垂直切片與後期高風險抽樣**；可重播腳本與 trace 工具在 `tools/playthrough/` |
 | 歷次需求驗收 | [`docs/playtest/50-completion-requirement-matrix.md`](docs/playtest/50-completion-requirement-matrix.md)；逐項區分完成、證據強度與仍待使用者審圖項目 |
@@ -407,6 +407,21 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 譯名以 `DEMON.INT` 內的實際字串為準，因此收錄的是原版拼字（`Shamen`、`Xorcise`、`Small ax`），
 而非手冊上的正確拼法。手冊與遊戲用語不同處（例如 Apple II 版 `Sense magic` 對 DOS 版 `Detect aura`）
 兩者都收，並註明各自屬於哪個版本。
+
+### 音效試聽
+
+原版 DOS 沒有背景配樂；聲音庫是八個 PC speaker 單音與一段死亡短旋律。
+以下 WAV 由 remake 的同一套合成器產生，不是外加配樂：
+
+[`死亡旋律`](docs/audio/00-death.wav) ·
+[`C3 未命中`](docs/audio/02-c3.wav) ·
+[`D3 行動點不足`](docs/audio/03-d3.wav) ·
+[`E3 原版未使用`](docs/audio/04-e3.wav) ·
+[`F3 未命中`](docs/audio/05-f3.wav) ·
+[`G3 命中`](docs/audio/06-g3.wav) ·
+[`A3 原版未使用`](docs/audio/07-a3.wav) ·
+[`B3 原版未使用`](docs/audio/08-b3.wav) ·
+[`C4 命中／扣血`](docs/audio/09-c4.wav)
 
 ### 畫面改版
 

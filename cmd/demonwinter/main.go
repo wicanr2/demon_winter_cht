@@ -121,7 +121,7 @@ type app struct {
 	canvas *ebiten.Image
 
 	// speaker 播原版的 PC speaker 音效。原版沒有配樂，只有這幾段短音效。
-	speaker *ui.Speaker
+	speaker soundOutput
 
 	normal, winter *ui.Tileset
 	useWinter      bool
@@ -541,7 +541,7 @@ func (a *app) update() error {
 			// 航行撞到非海面障礙時，原版走 2000:03f2 →
 			// FUN_1d9f_2a02，固定播放 effect 1（docs/re/31）。
 			if effect := moveBlockedEffect(a.party.Sailing()); effect != 0 {
-				a.speaker.Play(effect)
+				a.playSound(effect)
 			}
 		case game.MoveExitedSubmap:
 			a.message = a.tr.UI("world.leftsubmap")

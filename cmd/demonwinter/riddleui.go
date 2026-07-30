@@ -104,7 +104,7 @@ func (a *app) answerRiddle(s *riddleScreen) {
 	}
 
 	// 原版兩題答對後都呼叫 effect 8（docs/re/84）。
-	a.speaker.Play(pcspeaker.EffectC4)
+	a.playSound(pcspeaker.EffectC4)
 	switch s.plotCase {
 	case game.RiddleCaseSpectralPriest:
 		// 答對沒有台詞，只有把牆打開。**而且牆是真的開著的** ——

@@ -44,6 +44,14 @@ c13024eec3f51cb0c954ce5d41d5beff1e2353618365457fb703da218027f226  demonwinter-zh
 
 上方 446／467 與舊雜湊保留為第一批歷史基線，不是最新版。
 
+音效 XREF 收尾、吐息修正、可注入測試與 README 試聽索引納入後再次重建；
+解壓後 `-list-scenes`、466 張 Modern Icon PNG、487 檔與禁入掃描通過。
+最新 SHA-256：
+
+```text
+fe8b855b1eac57fd450d42dbd95a0b42f8d9bf9fea47045b7b08ef041a1df905  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
+```
+
 | Modern Icon 與現代命令卡 | 復古紅色命令列 | F1 手札 |
 |---|---|---|
 | ![發行包 Modern Icon](../design/img/release-a6-modern-icon.png) | ![發行包復古介面](../design/img/release-a6-retro-ui.png) | ![發行包 F1 手札](../design/img/release-a6-help.png) |

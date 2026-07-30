@@ -101,7 +101,11 @@ func (s *Speaker) Play(id int) {
 	if !ok {
 		return
 	}
-	p.Pause()
+	// 原版只有一條 PC speaker 通道；新效果會取代目前聲音，不能讓不同
+	// effect 的 audio.Player 疊在一起變成原版不存在的和弦。
+	for _, other := range s.players {
+		other.Pause()
+	}
 	if err := p.Rewind(); err != nil {
 		return
 	}

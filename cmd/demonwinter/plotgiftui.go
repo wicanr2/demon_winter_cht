@@ -200,11 +200,11 @@ func (a *app) drawPlotGift(dst *ebiten.Image) {
 func (a *app) openOrb() {
 	switch game.OrbAvailable(a.save) {
 	case game.OrbAlreadyTaken:
-		a.speaker.Play(pcspeaker.EffectF3)
+		a.playSound(pcspeaker.EffectF3)
 		a.trace.note("恆世寶珠：拿過了")
 		return
 	case game.OrbNotYet:
-		a.speaker.Play(pcspeaker.EffectF3)
+		a.playSound(pcspeaker.EffectF3)
 		a.trace.note("恆世寶珠：十間試煉室還沒全過")
 		return
 	}

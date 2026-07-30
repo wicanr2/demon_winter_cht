@@ -513,7 +513,7 @@ func (a *app) applySpellAt(caster, target *game.Unit, e spellEntry, sp, areaX, a
 		}
 		if game.CastInstantDeath(a.rng, sp, e.spell, target) {
 			a.battle.Kill(target)
-			a.speaker.Play(pcspeaker.EffectDeath)
+			a.playSound(pcspeaker.EffectDeath)
 			a.logf(a.tr.UI("battle.msg.spellkilled"), caster.Name, e.name, target.Name)
 		} else {
 			a.logf(a.tr.UI("battle.msg.spellnoeffect"), caster.Name, e.name)
@@ -590,7 +590,7 @@ func (a *app) applySpellAt(caster, target *game.Unit, e spellEntry, sp, areaX, a
 			case h.Resisted:
 				a.logf(a.tr.UI("battle.msg.immune.indent"), h.Unit.Name)
 			case h.Killed:
-				a.speaker.Play(pcspeaker.EffectDeath)
+				a.playSound(pcspeaker.EffectDeath)
 				a.logf(a.tr.UI("battle.msg.fell.indent"), h.Unit.Name)
 			case h.Delta < 0:
 				a.logf(a.tr.UI("battle.msg.decrease.indent"), h.Unit.Name, -h.Delta)
@@ -626,7 +626,7 @@ func (a *app) applySpellAt(caster, target *game.Unit, e spellEntry, sp, areaX, a
 			a.logf(a.tr.UI("battle.msg.debuff"), caster.Name, e.name, who.Name, -delta)
 			if !who.Alive() {
 				a.battle.Kill(who)
-				a.speaker.Play(pcspeaker.EffectDeath)
+				a.playSound(pcspeaker.EffectDeath)
 				a.logf(a.tr.UI("battle.msg.fell"), who.Name)
 			}
 		default:
@@ -932,7 +932,7 @@ func (a *app) faceToward(u *game.Unit, want game.Facing) {
 
 // reportNoAP 還原原版各戰鬥指令在行動點不足時共用的 effect 2。
 func (a *app) reportNoAP(u *game.Unit) {
-	a.speaker.Play(pcspeaker.EffectD3)
+	a.playSound(pcspeaker.EffectD3)
 	a.logf(a.tr.UI("battle.msg.noap"), u.Name)
 }
 
@@ -1023,8 +1023,7 @@ func (a *app) runPlayerAction(u *game.Unit, act game.Action) {
 
 	case game.ActionSound:
 		// 對應原版的 Sound on／Sound off（旗標 [0x1585]）。不耗行動點。
-		a.speaker.SetEnabled(!a.speaker.Enabled())
-		if a.speaker.Enabled() {
+		if a.toggleSound() {
 			a.logLine(a.tr.UI("battle.msg.soundon"))
 		} else {
 			a.logLine(a.tr.UI("battle.msg.soundoff"))
@@ -1104,7 +1103,7 @@ func (a *app) monsterBreathe(u *game.Unit) bool {
 		return false
 	}
 	a.breath = &breathAnim{cells: cone, tile: a.battle.LastBreathTile()}
-	a.speaker.Play(pcspeaker.EffectDeath)
+	a.playSound(breathEffect(hits))
 	a.logf(a.tr.UI("battle.msg.breath"), u.Name, len(hits))
 	for _, h := range hits {
 		switch {
@@ -1117,6 +1116,21 @@ func (a *app) monsterBreathe(u *game.Unit) bool {
 		}
 	}
 	return true
+}
+
+// breathEffect 對應原版 FUN_138d_17b8：每個實際扣血格先播 effect 8，
+// 只有目標死亡後轉進 FUN_138d_165d 才會以 effect -1 取代它。
+//
+// remake 的播放器是單聲道即時提示，因此一輪只送出最後可聽結果：
+// 至少一人死亡就播死亡旋律，否則是吐息／扣血的 C4。不能再把「有命中」
+// 誤當成「有人死亡」。
+func breathEffect(hits []game.BreathHit) int {
+	for _, hit := range hits {
+		if hit.Killed {
+			return pcspeaker.EffectDeath
+		}
+	}
+	return pcspeaker.EffectC4
 }
 
 // monsterCast 讓會法術的怪物有機會施法，回報這一回合是否已經用掉。
@@ -1249,15 +1263,15 @@ func turnActionToward(cur, want game.Facing) game.Action {
 func (a *app) reportAttack(attacker, target *game.Unit, res game.AttackResult) {
 	switch {
 	case !res.Hit:
-		a.speaker.Play(attackMissEffect(attacker))
+		a.playSound(attackMissEffect(attacker))
 		a.logf(a.tr.UI("battle.msg.miss"), attacker.Name)
 	case res.NoEffect:
 		a.logf(a.tr.UI("battle.msg.noeffect"), attacker.Name, target.Name)
 	case res.Killed:
-		a.speaker.Play(pcspeaker.EffectDeath)
+		a.playSound(pcspeaker.EffectDeath)
 		a.logf(a.tr.UI("battle.msg.killed"), attacker.Name, target.Name, res.Damage)
 	default:
-		a.speaker.Play(attackHitEffect(attacker))
+		a.playSound(attackHitEffect(attacker))
 		verb := a.tr.UI("battle.hit.normal")
 		if res.Critical {
 			verb = a.tr.UI("battle.hit.critical")

@@ -30,6 +30,26 @@ func TestAttackEffectsMatchOriginalBranches(t *testing.T) {
 	}
 }
 
+func TestBreathEffectOnlyUsesDeathMelodyForFatalHit(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		hits []game.BreathHit
+		want int
+	}{
+		{"受傷", []game.BreathHit{{Damage: 3}}, pcspeaker.EffectC4},
+		{"免疫", []game.BreathHit{{Damage: 0}}, pcspeaker.EffectC4},
+		{"其中一人死亡", []game.BreathHit{
+			{Damage: 2}, {Damage: 8, Killed: true},
+		}, pcspeaker.EffectDeath},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := breathEffect(tc.hits); got != tc.want {
+				t.Fatalf("吐息音效 = %d，預期 %d", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestUnitToCharacterUsesSlotNotDuplicateName(t *testing.T) {
 	members := []game.Character{{Name: "同名"}, {Name: "同名"}}
 	u := &game.Unit{Name: "同名", Slot: game.PlayerSlotStart + 1}
