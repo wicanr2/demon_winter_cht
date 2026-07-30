@@ -1,0 +1,12 @@
+# Modern Icon 地城探索；具名書籤不自動解謎。
+wait 1
+key Return
+wait 1
+shot 00-armory
+key Up
+wait 1
+key Right
+wait 1
+key Down
+wait 1
+shot 01-armory-moved

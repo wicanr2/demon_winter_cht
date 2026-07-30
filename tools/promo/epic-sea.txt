@@ -1,0 +1,7 @@
+# 海戰實機片段。
+wait 1
+key Return
+wait 2
+shot 00-sea
+wait 9
+shot 01-sea-progress

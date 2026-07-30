@@ -88,14 +88,20 @@ EGA → CGA → Modern Icon，不改遊戲規則或存檔。
 [`Demon's Winter 冬之魔繁中 remake 宣傳影片（MP4）`](docs/promo/demon-winter-cht-promo.mp4)。
 影片是 remake 執行畫面的剪輯成品；不含可抽取的原版資料檔或倚天字型檔。
 
-第二支「冰封史詩／決戰倒數」宣傳片正在製作，會刻意避開第一支影片反覆使用的
-置中字卡版型，改採 1988 年歷史規模、三主題甦醒與澤瑞斯決戰的三幕實機混剪。
-專屬導演提示詞、逐鏡分鏡與配樂規格見
+第二支「冰封史詩／決戰倒數」宣傳片已完成：
+[`觀看／下載 72 秒史詩宣傳片（MP4）`](docs/promo/demon-winter-epic-trailer.mp4)。
+它刻意避開第一支反覆使用的置中字卡，改採 Modern 新片頭、1988 年歷史規模、
+同一局實按 `F8` 的 EGA → CGA → Modern Icon → EGA、地城／城鎮／Xeres 戰鬥／
+海戰實機，以及已核准的新編配樂。專屬導演提示詞、逐鏡分鏡與配樂規格見
 [`docs/promo/demon-winter-epic-trailer-prompt.md`](docs/promo/demon-winter-epic-trailer-prompt.md)；
+母帶、trace、影音規格、響度與九宮格驗收見
+[`docs/playtest/58`](docs/playtest/58-epic-trailer-production.md)。
 可供其他經典 RPG remake 共用的配樂提示詞方法見
 [`docs/knowledge/rpg-remake-music-prompt-column.md`](docs/knowledge/rpg-remake-music-prompt-column.md)。
 原版遊戲沒有背景音樂；遊戲版新增的四組場景配樂與宣傳片配樂都明確標示為
 remake 新編曲，不冒充 1988 原版素材。遊戲中可按 `F7` 獨立開關配樂。
+
+![第二支史詩宣傳片九宮格驗收](docs/promo/demon-winter-epic-review.png)
 
 ### 原版畫面、EGA／CGA 還原與 remake 差異
 

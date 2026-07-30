@@ -3556,6 +3556,13 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > remake／宣傳片新編配樂與遊戲音效；任一缺少都不得稱為正式第二支宣傳片。
 > 新片頭同時用於三秒開場揭幕與六秒片尾完整主視覺，禁止影片模型重新拼寫
 > 標題。完整逐鏡與驗收表見 `docs/promo/demon-winter-epic-trailer-prompt.md`。
+>
+> **2026-07-30 第二支宣傳片第一版完成：**成品
+> `docs/promo/demon-winter-epic-trailer.mp4` 為 H.264 1280×720／25 fps、
+> AAC 48 kHz stereo、影音皆 72.000 秒。Modern 新片頭、目前 HEAD 實機、
+> 同一局連續 `F8` 四態與核准配樂四項全數入鏡；整合響度 `-15.2 LUFS`、
+> 真峰值 `-1.7 dBFS`。五段未剪輯母帶、trace 與關鍵 PNG 留在 Git 忽略的
+> `workplace/promo/epic/`；可重播腳本及完整證據見 `docs/playtest/58`。
 
 > **2026-07-30 最新基線（取代下方 25／59 舊進度）：Modern Icon 地城
 > P3-D 已達 59／59。** MAP1–MAP5 的實際 inventory 與 `dungeonTiles`

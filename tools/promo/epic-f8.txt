@@ -1,0 +1,22 @@
+# 同一局不中斷錄製：世界行走與 F8 EGA → CGA → Modern Icon → EGA。
+wait 1
+key Return
+wait 1
+key Up
+wait 1
+key Right
+wait 1
+shot 00-ega
+key F8
+wait 2
+shot 01-cga
+key F8
+wait 2
+shot 02-modern
+key Up
+wait 1
+key Left
+wait 1
+key F8
+wait 2
+shot 03-ega-return

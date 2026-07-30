@@ -1,0 +1,8 @@
+# 現代操作的兩欄城鎮選單與市集入口。
+wait 2
+shot 00-town
+key m
+wait 3
+shot 01-market
+key Escape
+wait 1

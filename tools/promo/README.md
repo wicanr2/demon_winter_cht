@@ -48,3 +48,22 @@ tools/promo/score.sh
 11 音陣亡旋律的 `B–A–B–C–G–C` 輪廓作辨識動機，其餘和聲、節奏與配器都是
 宣傳片新作。MIDI、WAV 與分析輸出均在 gitignored 的
 `workplace/promo/score/`。
+
+## 4. 第二支史詩宣傳片
+
+先錄製五段目前 HEAD 的實機母帶：
+
+```sh
+bash tools/promo/capture-epic.sh
+```
+
+這會保留同一局連續 `F8`、Modern Icon 地城／城鎮、Xeres 代表戰鬥與海戰的
+MP4、trace 及關鍵 PNG。接著以核准的新片頭與 72 秒配樂合成：
+
+```sh
+bash tools/promo/make-epic.sh
+```
+
+本機成品為
+`workplace/promo/epic/out/demon-winter-epic-trailer.mp4`。剪輯腳本會強制檢查
+72 秒影音長度，並輸出 EBU R128 響度與真峰值摘要。

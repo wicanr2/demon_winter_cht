@@ -1,0 +1,7 @@
+# Xeres 與最終四組高風險怪物的實際戰鬥。
+wait 1
+key Return
+wait 2
+shot 00-boss
+wait 10
+shot 01-boss-progress
