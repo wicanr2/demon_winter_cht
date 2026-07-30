@@ -8,6 +8,14 @@ SSI《Demon's Winter》（1988, DOS）的引擎逆向與繁體中文化專案。
 原版遊戲的執行檔、資料檔、美術與音樂都不在本專案散布範圍內，玩家需自備合法副本。
 （下面的截圖是本專案的引擎讀取自備資料後跑出來的畫面，不含可再利用的原版素材。）
 
+## 下載第一版
+
+[`v0.1.0 AppImage／Windows／macOS 正式版`](https://github.com/wicanr2/demon_winter_cht/releases/tag/v0.1.0)
+
+GitHub Release 是不含原版資料與倚天字型的乾淨版；每個平台產物旁都附有
+SHA-256。包含合法原版素材與本機字型的完整版依使用者要求只保留在本機
+`dist-all/`，不會上傳 GitHub。
+
 ---
 
 ## 目前跑得起來的樣子
@@ -89,8 +97,7 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 
 ##### Modern Icon 規劃索引
 
-目前世界、角色、怪物、船與地城的客觀索引覆蓋已完成；尚待使用者作 P4
-最終畫面審查：
+世界、角色、怪物、船與地城的客觀索引覆蓋及 P4 最終畫面審查均已完成：
 
 | 階段 | 狀態 | 內容與驗收 |
 |---|---|---|
@@ -99,11 +106,12 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 | P2 高解析代表素材與呈現層 | **完成** | 世界 terrain、隊伍、怪物與船均已進 1280×800 高解析呈現層 |
 | P3 世界與單位量產 | **完成** | 世界正常／冬季差集皆為零；怪物 224/224、隊員 24/24、海戰 runtime 24/24 |
 | P3-D 地城素材 | **完成，59/59** | `dungeonTiles` 已逐一涵蓋 MAP1–MAP5 的 59 個實際索引；新畫門、閘、樓梯、冰牆、機關與轉角，只有語意相同者才明列重用 |
-| P4 最終視覺驗收 | **15 張技術證據完成，待使用者審查** | 世界、冬季、地城、戰鬥、海戰 × 三主題同狀態畫板已產生；密門、陷阱、黑色地形與色弱辨識另有前序抽樣 |
+| P4 最終視覺驗收 | **完成，使用者已核准** | 世界、冬季、地城、戰鬥、海戰 × 三主題同狀態畫板已產生；密門、陷阱、黑色地形與色弱辨識另有前序抽樣；2026-07-30 核准 |
 
 完整呈現架構、素材分批與驗收門檻，以
 [`docs/design/modern-ega-theme.md`](docs/design/modern-ega-theme.md) 為單一設計規格。
-在 P4 使用者驗收完成前，README 與發行說明不得把 Modern Icon 稱為完成重畫。
+P4 已於 2026-07-30 由使用者核准；README 與發行說明可將目前量產 atlas
+稱為第一版完成重畫。
 地城量產的客觀基線是 MAP1–MAP5 實際使用 **59 個索引**，不是方向稿中的
 12 個概念物件；頻率、逐地圖分布、通行值與完成度命令見
 [`Modern Icon 地城量產規格`](docs/design/modern-icon-dungeon-production.md)及
@@ -292,8 +300,8 @@ Bugem；兩波合計覆寫率達 129/224
 完整固定場景與裁決見
 [`docs/playtest/23`](docs/playtest/23-modern-icon-tree-indices.md)。沙地／森林岸線、
 城鎮、緋紅符印、隊伍四向、航海圖示、其餘特殊索引與戰鬥素材均已在後續
-批次完成。Modern Icon 的地城 `dungeonTiles` 亦已完成 59／59 客觀覆蓋；
-目前只剩使用者 P4 最終審圖，不能把「客觀覆蓋完成」冒充「觀感已核准」。
+批次完成。Modern Icon 的地城 `dungeonTiles` 亦已完成 59／59 客觀覆蓋，
+並已通過使用者 P4 最終審圖。
 
 劇情會把神殿替換成的 `0x5b` 毀壞廢墟也已完成正常／冬季配對：
 
@@ -434,7 +442,7 @@ Windows、macOS Intel 與 macOS Apple Silicon 包各有本地啟動器及共同 
 | Go / Ebiten 引擎 | **可遊玩**：探索、戰鬥、城鎮八設施、紮營 14 項、建角、存檔、PC speaker 音效，以及探索／休整／戰鬥／終局四組 remake 新編場景配樂；原版音效 XREF 與吐息勘誤見 [`docs/re/117`](docs/re/117-audio-xrefs-and-breath-correction.md) |
 | 遊戲內文字中文化 | **500/500（100%）** 原版資料字串；另有 **839 條** JSON 介面文案，畫面層與規則層硬編玩家中文 0 條 |
 | 試玩驗收 | **完成前期垂直切片與後期高風險抽樣**；可重播腳本與 trace 工具在 `tools/playthrough/` |
-| 歷次需求驗收 | [`docs/playtest/50-completion-requirement-matrix.md`](docs/playtest/50-completion-requirement-matrix.md)；逐項區分完成、證據強度與仍待使用者審圖項目 |
+| 歷次需求驗收 | [`docs/playtest/50-completion-requirement-matrix.md`](docs/playtest/50-completion-requirement-matrix.md)；逐項區分完成狀態與證據強度 |
 
 ---
 
@@ -507,8 +515,8 @@ Modern remake 配樂試聽：
 
 ### 畫面改版
 
-核心遊戲流程已可遊玩，仍以抽樣驗證與少數誠實標示的未知欄位持續收斂；Modern
-Icon 世界、單位與地城素材客觀覆蓋均已完成，觀感面尚待使用者作 P4 最終審查。
+核心遊戲流程已可遊玩，仍以抽樣驗證與少數誠實標示的未知欄位管理證據；
+Modern Icon 世界、單位與地城素材客觀覆蓋及 P4 最終審查均已完成。
 這一組文件把「差在哪、為什麼、怎麼改」量出來寫清楚，
 含逐張 SVG 對照圖。方向是**保留原版骨架、重做觀感**，
 而且**原版素材（sprite／tileset）一格不動** —— 只改外框、配色、字型與排版。

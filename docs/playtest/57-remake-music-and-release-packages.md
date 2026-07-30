@@ -1,8 +1,8 @@
 # remake 場景配樂與正式封裝證據
 
 日期：2026-07-30
-狀態：配樂程式、四段 WAV、Linux AppImage、Windows ZIP、macOS 原生 CI 與
-A6 正常玩家第一段完成；實際音訊裝置聽測尚待使用者
+狀態：配樂程式、四段 WAV、Linux AppImage、Windows ZIP、macOS 原生 CI、
+A6 正常玩家第一段、使用者聽感／P4 核准與 `v0.1.0` 正式發布均完成
 
 ## 配樂邊界
 
@@ -68,11 +68,13 @@ F1 開啟的手札只在最前方新增 remake 操作章；原有繁中說明、
 鎮、購買武器／護甲、離城與再次存檔均成功；產出四張實機截圖、`PARTY.DAT`、
 五張 `nSS.DAT` 與 `ITEMLOCB.DAT`。新增配樂同步及 Help 沒有改動正常流程。
 
-## 尚未通過的硬閘門
+## 硬閘門結果
 
-1. 使用者試聽四段 WAV，並於有聲裝置實際確認 F7 與原版音效疊加。
-2. 使用者 P4 最終視覺核准。
-3. 上述核准後，以正式版本號重建 artifact 並建立 GitHub Release。
+使用者已於 2026-07-30 核准四段 remake 配樂與 P4 最終畫面。正式 tag
+`v0.1.0` 隨後重建四平台乾淨包，版本、數量、SHA-256、禁入、完整手札、
+Windows DLL、macOS 架構／系統相依與解壓 smoke 全部通過：
+[run 30523970829](https://github.com/wicanr2/demon_winter_cht/actions/runs/30523970829)；
+[GitHub Release](https://github.com/wicanr2/demon_winter_cht/releases/tag/v0.1.0)。
 
 ## 正式發布路徑補齊
 
@@ -93,3 +95,36 @@ ZIP、Intel／Apple Silicon 各一份 macOS ZIP 與四份 SHA-256，逐份驗證
 - Windows 第三方 DLL 為 0，只有包內列出的 Windows 系統 DLL；
 - CI 新增逐位元組 `cmp`，確保包內 F1 手札與 repo 的完整手札相同，舊查詢
   訊息不會在 staging 過程遺失。
+
+## 本地完整版
+
+公開 Release 維持原版素材與倚天字型禁入。`tools/package-full-local.sh`
+只在 Docker 內將已下載且通過 SHA-256 的四份公開包，注入唯讀來源
+`workplace/orig/demwin/DEM_DATA` 與 `workplace/eten`，輸出到 Git 忽略的
+`dist-all/`。四包均逐檔比對 94 個原版資料檔與兩個字型的 SHA-256；兩個
+macOS `.app` 與公開版逐檔相同，只有包外增加本地資料與啟動器。Linux
+完整版另以固定 armory 場景實際啟動並讀取資料／字型。
+
+本地完整版 SHA-256：
+
+| 平台 | SHA-256 |
+|---|---|
+| Linux x86_64 | `931e01d9208b61554dfdd8915920fd28b519fbaa5f66abcea7c123b36eb10bc4` |
+| Windows x86_64 | `613bb468d865249fc242a544c925c9ea8f10a62b31ec8925af66f776df0e0583` |
+| macOS Intel | `bb5c88a699285ed36ae6fbc1d935fc60664ebe60be67748de686a85d4dba651f` |
+| macOS Apple Silicon | `ec65c2294b650067a11c8208a94c7a2bf1d2bebd94e867fb5dec4e8726322d14` |
+
+上述完整版只存在本地主機，不在 Git、GitHub Release 或 Actions artifact。
+
+## 結案重驗
+
+在目前 `main` HEAD 重新執行：
+
+- Docker／Xvfb 下 `go test ./...`：全數通過；
+- `dwstrings check`：500/500（100%）；
+- `dwstrings uicheck`：目錄 839/839、動態 key 135、玩家中文硬編 0；
+- `git diff --check`：通過；
+- Docker 批次結束後無冬之魔執行中／停止容器。
+
+這輪只重新驗證現況，不把先前 A6 正常玩家第一段冒充成逐房重玩；A6 的
+19 狀態節點與後期高風險抽樣邊界仍以上節及既有 playtest 文件為準。

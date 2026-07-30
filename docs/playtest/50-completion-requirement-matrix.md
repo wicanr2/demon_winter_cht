@@ -37,14 +37,13 @@
 | 遊戲引擎抽離評估 | 研究完成、抽離延後 | [`docs/design/engine-extraction-study.md`](../design/engine-extraction-study.md)；在第二款真實作品接入前，不把單一遊戲假定為通用 SSI 引擎 |
 | 長期記憶與主機衛生 | 完成 | `AGENTS.md` 連回 `CONTEXT.md` §7；建置、測試、抓圖與 IDA 僅在 Docker，結束檢查容器與專案映像 |
 
-## 三、目前真正未結案
+## 三、第一版結案
 
-配樂與 P4 已由使用者於 2026-07-30 核准。現在只剩：
+配樂與 P4 已由使用者於 2026-07-30 核准。`v0.1.0` GitHub 乾淨版已完成
+AppImage、Windows、macOS Intel／Apple Silicon 的正式重建與發布；公開包
+禁入原版素材與倚天字型。相同四平台產物另注入 94 個合法原版資料檔與完整
+字型對，建立只留在 Git 忽略 `dist-all/` 的本地完整版。
 
-1. 以 `v0.1.0` 正式版本號重建並建立 GitHub 乾淨版 Release；
-2. 將相同四平台公開產物注入合法原版資料與本機字型，建立只留在
-   `dist-all/` 的完整版；
-3. 逐包驗證 GitHub 禁入、本地素材完整度、SHA-256 與啟動路徑。
-
-公開版與本地完整版是兩條不可混用的發行路徑；後者不得上傳 GitHub、Actions
-artifact 或納入版控。
+公開版／本地完整版的 SHA-256、逐檔素材比對、Linux 實際啟動與正式 workflow
+證據見 [`docs/playtest/57`](57-remake-music-and-release-packages.md)。第一版
+要求目前沒有未結案項目。

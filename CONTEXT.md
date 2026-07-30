@@ -3543,8 +3543,8 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > [`docs/playtest/53`](docs/playtest/53-modern-icon-dungeon-atlas-complete.md)。
 > EGA／CGA 步行人物黑底的舊裁決已被使用者否決；現改為腳下地形＋透明人物，
 > 四方向與兩步索引不變，見 `docs/playtest/56`。
-> **原遊戲 remake 的產品結案閘仍只剩 P4 使用者最終視覺審查；使用者其後
-> 新增第二支史詩宣傳片，現亦為進行中交付，不得先宣告整個 goal 完成。**
+> **歷史基線（已由下方 2026-07-30 最終裁決取代）：**當時產品結案閘仍只剩
+> P4 使用者最終視覺審查，第二支史詩宣傳片亦列為進行中。
 > 宣傳片採「1988 歷史規模 → 三主題甦醒 → 澤瑞斯決戰」三幕；專屬逐鏡提示詞
 > 見 `docs/promo/demon-winter-epic-trailer-prompt.md`，跨專案配樂方法見
 > `docs/knowledge/rpg-remake-music-prompt-column.md`。第一版 72 秒 MIDI／WAV
@@ -3594,6 +3594,18 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 本機倚天字型的四平台完整版只准產生於被 Git 忽略的本機 `dist-all/`，
 > 不得進 Git、CI artifact 或 GitHub。`tools/package-full-local.sh` 以公開
 > 四平台包為基底注入資料，兩條 staging 路徑不共用放寬禁入掃描的開關。
+>
+> **第一版發布完成：**tag `v0.1.0` 指向 `ff4f2f7`；正式 workflow
+> [30523970829](https://github.com/wicanr2/demon_winter_cht/actions/runs/30523970829)
+> 四平台與發布 job 全綠，[GitHub Release](https://github.com/wicanr2/demon_winter_cht/releases/tag/v0.1.0)
+> 已建立。下載後四個公開包 SHA-256 全數通過，解包禁入掃描為 0。私有
+> `dist-all/` 四包亦完成：每包與來源逐檔相符的 94 個 `DEM_DATA` 檔及完整
+> `STDFONT.15`／`SPCFONT.15`；兩個 macOS `.app` 與公開版逐檔相同，Linux
+> 完整版 armory 固定場景實際啟動成功。私有包雜湊與完整證據見
+> [`docs/playtest/57`](docs/playtest/57-remake-music-and-release-packages.md)。
+> 結案時目前 HEAD 再跑完整 Go、500/500、`uicheck` 839/839／動態 key 135／
+> 硬編 0 與 `git diff --check` 均通過；A6 仍誠實標示為正常玩家前期垂直
+> 切片加後期高風險抽樣，不改稱逐房重玩。
 >
 > **同日獨立音訊稽核勘誤：**原版無 BGM，八個單音與死亡旋律的合成完成；
 > 但觸發不能稱為完成。怪物噴吐在零死亡時會誤播死亡旋律，非戰鬥全滅與

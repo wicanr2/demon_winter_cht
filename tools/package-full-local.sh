@@ -17,7 +17,8 @@ case "$OUTPUT_DIR" in
     exit 1
     ;;
 esac
-git check-ignore -q "$repo_root/dist-all" || {
+mkdir -p "$OUTPUT_DIR"
+git check-ignore -q "$repo_root/dist-all/.private-release-sentinel" || {
   echo "拒絕建立完整版：dist-all 未被 Git 忽略" >&2
   exit 1
 }
@@ -49,7 +50,6 @@ done
 
 work="$(mktemp -d /tmp/dw-full-local-XXXXXX)"
 trap 'rm -rf "$work"' EXIT INT TERM
-mkdir -p "$OUTPUT_DIR"
 
 copy_private_data() {
   local root="$1"
