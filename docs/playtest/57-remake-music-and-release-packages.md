@@ -47,8 +47,16 @@ GitHub 直接試聽；它們不是另一套人工後製音檔。
 
 `.github/workflows/cross-platform-release.yml` 已在原生 Intel／Apple Silicon runner
 建立各自 `.app` ZIP，包含 `Info.plist`、Resources、ad-hoc codesign 與
-`-list-scenes` smoke。兩架構與 AppImage／Windows job 全綠：
-[run 30522011200](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522011200)。
+`-list-scenes` smoke。包含四段 WAV 預覽的最終候選版，兩架構與
+AppImage／Windows job 全綠：
+[run 30522387676](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522387676)。
+
+## Help 與既有訊息保留
+
+F1 開啟的手札只在最前方新增 remake 操作章；原有繁中說明、規則提示、數值
+與查詢訊息仍完整接在後方。發行包同時放入 `README.md`、`開始遊戲.txt` 與
+`assets/manual/zh-Hant/manual.txt`，因此遊戲內、離線套件與 GitHub 三處都能
+查到操作方式，而不是用新版速查取代舊訊息。
 
 ## 最後 A6 抽樣
 

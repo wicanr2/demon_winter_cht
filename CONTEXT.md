@@ -3561,12 +3561,13 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 完整 Go、500/500、`uicheck` 839/839／硬編 0 通過。RC1 AppImage 與
 > Windows ZIP 已建立並通過 README、Help、開始說明、禁入、SHA-256 及
 > AppRun 免 FUSE smoke；Windows PE 只有系統 DLL import，第三方 DLL 為 0。
-> 證據見 `docs/playtest/57`。**尚未完成：有聲裝置聽測、macOS 新 `.app`
-> workflow、最後 A6 重跑、P4 使用者審圖與正式 release 上傳；不得打包結案。**
+> 證據見 `docs/playtest/57`。既有繁中說明與查詢訊息全部保留在 F1 手札；
+> 新版操作章只加在最前方，沒有覆蓋舊內容。
 >
 > **後續進度：**跨平台正式 workflow
-> [30522011200](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522011200)
-> 已全綠，含 AppImage、Windows ZIP、macOS amd64／arm64 `.app`；A6
+> [30522387676](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522387676)
+> 已全綠，含四段 WAV 預覽、AppImage、Windows ZIP、macOS
+> amd64／arm64 `.app`；A6
 > `a6-leg1.txt` 亦以新遊戲正常路徑重跑通過。四段 remake 配樂已輸出成
 > `docs/audio/remake-*.wav` 供使用者試聽。現在只剩配樂／F7 實際聽感核准、
 > P4 最終視覺核准，以及核准後用正式版本號建立 GitHub Release。
