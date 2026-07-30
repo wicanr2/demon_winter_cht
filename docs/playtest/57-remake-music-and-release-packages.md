@@ -1,8 +1,8 @@
 # remake 場景配樂與正式封裝證據
 
 日期：2026-07-30
-狀態：配樂程式、Linux AppImage、Windows ZIP 技術驗證完成；macOS 原生 CI 與
-實際音訊裝置聽測尚待執行
+狀態：配樂程式、四段 WAV、Linux AppImage、Windows ZIP、macOS 原生 CI 與
+A6 正常玩家第一段完成；實際音訊裝置聽測尚待使用者
 
 ## 配樂邊界
 
@@ -19,6 +19,8 @@
 `F7` 獨立切換配樂；`-music-volume 0–1` 控制音量。原版 PC speaker 音效仍走
 既有 Sound 旗標，兩者可同時存在。單元測試確認四組 PCM 非空、16-bit 對齊，
 零音量與 Silent 不產生波形；完整 Go 與 `uicheck` 839/839、硬編中文 0 通過。
+同一套合成器另輸出四段 44.1 kHz、16-bit、單聲道 WAV 至 `docs/audio/`，供
+GitHub 直接試聽；它們不是另一套人工後製音檔。
 
 ## Help 與包內文件
 
@@ -43,13 +45,20 @@
 
 ## macOS
 
-`.github/workflows/cross-platform-release.yml` 會在原生 Intel／Apple Silicon runner
+`.github/workflows/cross-platform-release.yml` 已在原生 Intel／Apple Silicon runner
 建立各自 `.app` ZIP，包含 `Info.plist`、Resources、ad-hoc codesign 與
-`-list-scenes` smoke。Linux 端不冒充 macOS 動態證據；CI 綠燈後才更新本節。
+`-list-scenes` smoke。兩架構與 AppImage／Windows job 全綠：
+[run 30522011200](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522011200)。
+
+## 最後 A6 抽樣
+
+`a6-leg1.txt` 以 `-newgame -autofight -seed 11` 重跑正常玩家第一段；沒有
+`-scene` 或劇情旗標。Trace 共 19 個狀態節點：五人建角、首次存檔、抵達海濱
+鎮、購買武器／護甲、離城與再次存檔均成功；產出四張實機截圖、`PARTY.DAT`、
+五張 `nSS.DAT` 與 `ITEMLOCB.DAT`。新增配樂同步及 Help 沒有改動正常流程。
 
 ## 尚未通過的硬閘門
 
-1. 有聲裝置實際聽測 F7、四場景切換及原版音效疊加。
-2. macOS amd64／arm64 原生 workflow。
-3. 使用者 P4 最終視覺核准。
-4. 上述完成後重跑 A6 抽樣、禁入、解壓 smoke，才可改稱第一版正式 release。
+1. 使用者試聽四段 WAV，並於有聲裝置實際確認 F7 與原版音效疊加。
+2. 使用者 P4 最終視覺核准。
+3. 上述核准後，以正式版本號重建 artifact 並建立 GitHub Release。

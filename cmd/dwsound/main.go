@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/wicanr2/demon_winter_cht/internal/audio/music"
 	"github.com/wicanr2/demon_winter_cht/internal/audio/pcspeaker"
 )
 
@@ -39,10 +40,34 @@ func main() {
 	outDir := flag.String("out", "workplace/sound", "WAV 輸出目錄")
 	rate := flag.Int("rate", 44100, "取樣率")
 	volume := flag.Float64("volume", 0.5, "音量 0–1")
+	renderMusic := flag.Bool("music", false, "改為輸出四組 remake 原創場景配樂")
 	flag.Parse()
 
 	if err := os.MkdirAll(*outDir, 0o755); err != nil {
 		fatal(err)
+	}
+
+	if *renderMusic {
+		tracks := []struct {
+			scene music.Scene
+			name  string
+			note  string
+		}{
+			{music.Exploration, "remake-exploration", "世界／地城探索"},
+			{music.Sanctuary, "remake-sanctuary", "標題／城鎮／營地"},
+			{music.Battle, "remake-battle", "戰鬥／海戰"},
+			{music.Finale, "remake-finale", "死亡／魔王／結局"},
+		}
+		for _, t := range tracks {
+			pcm := music.Render(t.scene, *volume)
+			path := filepath.Join(*outDir, t.name+".wav")
+			if err := writeWAV(path, pcm, music.SampleRate); err != nil {
+				fatal(err)
+			}
+			fmt.Printf("%-28s %s\n", filepath.Base(path), t.note)
+		}
+		fmt.Printf("\n輸出到 %s\n", *outDir)
+		return
 	}
 
 	for _, e := range effects {

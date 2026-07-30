@@ -474,6 +474,12 @@ SSI 原版隨盒手冊全譯，含所有規則、數值表與附錄。這是遊�
 `-music-volume 0–1` 可調整；戰鬥選單的 Sound 開關仍只控制原版 PC speaker
 效果，兩者的來源與控制互不混淆。
 
+Modern remake 配樂試聽：
+[`探索`](docs/audio/remake-exploration.wav) ·
+[`休整`](docs/audio/remake-sanctuary.wav) ·
+[`戰鬥`](docs/audio/remake-battle.wav) ·
+[`終局`](docs/audio/remake-finale.wav)
+
 ### 畫面改版
 
 核心遊戲流程已可遊玩，仍以抽樣驗證與少數誠實標示的未知欄位持續收斂；Modern

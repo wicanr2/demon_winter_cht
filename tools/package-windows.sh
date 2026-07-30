@@ -8,13 +8,14 @@ stage="$(mktemp -d /tmp/dw-windows-XXXXXX)"
 trap 'rm -rf "$stage"' EXIT INT TERM
 root="$stage/$name"
 mkdir -p "$root/assets/lang/zh-Hant" "$root/assets/manual/zh-Hant" \
-  "$root/artwork/modern-icon/m1/trial"
+  "$root/artwork/modern-icon/m1/trial" "$root/docs/audio"
 
 CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath -ldflags="-s -w" \
   -o "$root/demonwinter.exe" ./cmd/demonwinter
 cp assets/lang/zh-Hant/* "$root/assets/lang/zh-Hant/"
 cp assets/manual/zh-Hant/* "$root/assets/manual/zh-Hant/"
 cp artwork/modern-icon/m1/trial/* "$root/artwork/modern-icon/m1/trial/"
+cp docs/audio/remake-*.wav "$root/docs/audio/"
 cp README.md "$root/README.md"
 cp packaging/README-zh-Hant.txt "$root/開始遊戲.txt"
 

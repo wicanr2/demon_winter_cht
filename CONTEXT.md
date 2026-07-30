@@ -3564,6 +3564,13 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 證據見 `docs/playtest/57`。**尚未完成：有聲裝置聽測、macOS 新 `.app`
 > workflow、最後 A6 重跑、P4 使用者審圖與正式 release 上傳；不得打包結案。**
 >
+> **後續進度：**跨平台正式 workflow
+> [30522011200](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522011200)
+> 已全綠，含 AppImage、Windows ZIP、macOS amd64／arm64 `.app`；A6
+> `a6-leg1.txt` 亦以新遊戲正常路徑重跑通過。四段 remake 配樂已輸出成
+> `docs/audio/remake-*.wav` 供使用者試聽。現在只剩配樂／F7 實際聽感核准、
+> P4 最終視覺核准，以及核准後用正式版本號建立 GitHub Release。
+>
 > **同日獨立音訊稽核勘誤：**原版無 BGM，八個單音與死亡旋律的合成完成；
 > 但觸發不能稱為完成。怪物噴吐在零死亡時會誤播死亡旋律，非戰鬥全滅與
 > effect 3／6／7 呼叫端仍待原版交叉引用清查；既有 A6 使用 `-volume 0`，

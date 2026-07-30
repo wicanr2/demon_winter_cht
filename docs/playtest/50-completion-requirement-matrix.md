@@ -22,7 +22,7 @@
 | 倚天 16×15 粗體中文 | 完成 | [`docs/re/17`](../re/17-font-format.md)；字型由玩家自行提供，未納入版本控制或發行包 |
 | 原版音效 | **完成，使用者已核准** | 原版沒有背景配樂；八個單音與死亡旋律已合成。吐息錯誤已修，IDA 證實非戰鬥死亡不播、effect 3/6/7 為未使用音階；見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)、[`docs/playtest/54`](54-independent-audio-music-audit.md) |
 | remake 遊戲配樂 | **程式與單元測試完成，待實際錄音／三平台聽測** | 探索、休整、戰鬥、終局四組原創程式合成循環；無 SoundFont／第三方取樣，`F7` 與 `-music-volume` 獨立控制，不冒充原版 BGM。封裝前仍需有聲裝置動態驗收 |
-| 跨平台候選包 | 技術建置完成 | Linux amd64 解壓執行、Windows amd64 PE／build info 通過；macOS amd64／arm64 原生 CI 的建置、禁入與 artifact 上傳全綠。實機顯示／音效仍由各平台玩家驗收；見 [`docs/playtest/44`](44-release-package-a6-sample.md) |
+| 跨平台正式包工具鏈 | 完成 | Type 2 AppImage、Windows DLL 稽核 ZIP、macOS amd64／arm64 `.app` 均建置、禁入、smoke 與 artifact 上傳全綠；[run 30522011200](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522011200)、[`docs/playtest/57`](57-remake-music-and-release-packages.md) |
 | 宣傳影片 | 完成 | [`短版 MP4`](../promo/demon-winter-cht-promo.mp4)；為 remake 實機畫面剪輯，不含原版資料檔或字型檔 |
 
 ## 二、引擎、資料與研究
@@ -41,12 +41,11 @@
 
 1. 使用者審閱 59／59 地城 atlas 與
    [`P4 三主題五類場景畫板`](55-p4-three-theme-review-board.md)。
-2. remake 新編配樂在有聲裝置上驗證 `F7`、四場景切換及原版短音效疊加。
-3. 新版 macOS amd64／arm64 `.app` 原生 workflow 全綠。
-4. 上述變更後最後一次 A6 抽樣、三平台包禁入／解壓 smoke 與正式 release 上傳。
+2. 使用者試聽四段 remake 配樂，並在有聲裝置驗證 `F7` 與原版短音效疊加。
+3. 使用者核准後以正式版本號重建並建立 GitHub Release。
 
 P4 項目需要使用者作最終視覺決定，不能由代理自行宣告通過；其 15 張可重播
 技術證據已完成。原版音效已由使用者核准，但後來新增的 remake BGM 是獨立
-交付，不能沿用舊核准。其餘程式變更仍
+交付，不能沿用舊核准。新版 A6 第一段與三平台 workflow 已完成。其餘程式變更仍
 必須通過完整 Go、500/500、`uicheck`、A6 抽樣、禁入掃描、解壓後執行檔與
 Docker 清理閘門；本文件不取代那些測試記錄。
