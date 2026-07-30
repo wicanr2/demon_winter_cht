@@ -3563,6 +3563,14 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 同一局連續 `F8` 四態與核准配樂四項全數入鏡；整合響度 `-15.2 LUFS`、
 > 真峰值 `-1.7 dBFS`。五段未剪輯母帶、trace 與關鍵 PNG 留在 Git 忽略的
 > `workplace/promo/epic/`；可重播腳本及完整證據見 `docs/playtest/58`。
+>
+> **2026-07-30 私人 dev-setup：**依 `retro-cht` 打包規格及 ScummVM
+> Elvira／Waxworks／Monkey Island 2 慣例，新增 `docs/DEV_SETUP.md`、
+> `tools/dev-setup.sh` 與 `tools/package-dev-setup.sh`。公開 repo 只保存
+> Docker-only bootstrap、文件及封裝規則；本機 `dist-all/` 私人包才包含
+> 完整 Git bundle、合法原版 `DEMON.EXE`／`DEMON.INT`／94 個 `DEM_DATA`
+> 檔與倚天字型。封裝前工作樹必須乾淨，避免 bundle 落後於未提交工作；
+> 私人包不得進 GitHub、CI artifact 或公開雲端。
 
 > **2026-07-30 最新基線（取代下方 25／59 舊進度）：Modern Icon 地城
 > P3-D 已達 59／59。** MAP1–MAP5 的實際 inventory 與 `dungeonTiles`

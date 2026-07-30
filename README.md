@@ -627,6 +627,7 @@ Modern Icon 世界、單位與地城素材客觀覆蓋及 P4 最終審查均已�
 | [`docs/engineering/game-ai.md`](docs/engineering/game-ai.md) | 戰鬥選招、範圍法術、繞障、遭遇、部署、海戰 AI 與證據邊界 |
 | [`docs/engineering/formulas-and-values.md`](docs/engineering/formulas-and-values.md) | 亂數、命中、傷害、法術、經濟、掉寶、時間、海戰與建角公式索引 |
 | [`docs/engineering/architecture-and-release.md`](docs/engineering/architecture-and-release.md) | 引擎／資料分離、主題、音訊、存檔、驗證與 AppImage／Windows／macOS 發行契約 |
+| [`docs/DEV_SETUP.md`](docs/DEV_SETUP.md) | Docker-only 開發環境、私人原版 oracle／字型放置、一鍵驗證與本機 dev-setup 接續包還原指南 |
 | [`docs/playtest/57-remake-music-and-release-packages.md`](docs/playtest/57-remake-music-and-release-packages.md) | 四組 remake 場景配樂、F7／F1 Help、AppImage、Windows DLL 稽核與 macOS 發行證據 |
 | [`PLAN.md`](PLAN.md) | 專案計畫：偵查事實、待驗證假設、架構決策、階段分解、驗收準則、風險 |
 | [`docs/ui/`](docs/ui/) | 畫面評估與改版計畫（見上一節） |
