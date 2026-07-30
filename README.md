@@ -32,6 +32,14 @@ EGA → CGA → Modern Icon，不改遊戲規則或存檔。
 [`Demon's Winter 冬之魔繁中 remake 宣傳影片（MP4）`](docs/promo/demon-winter-cht-promo.mp4)。
 影片是 remake 執行畫面的剪輯成品；不含可抽取的原版資料檔或倚天字型檔。
 
+第二支「冰封史詩／決戰倒數」宣傳片正在製作，會刻意避開第一支影片反覆使用的
+置中字卡版型，改採 1988 年歷史規模、三主題甦醒與澤瑞斯決戰的三幕實機混剪。
+專屬導演提示詞、逐鏡分鏡與配樂規格見
+[`docs/promo/demon-winter-epic-trailer-prompt.md`](docs/promo/demon-winter-epic-trailer-prompt.md)；
+可供其他經典 RPG remake 共用的配樂提示詞方法見
+[`docs/knowledge/rpg-remake-music-prompt-column.md`](docs/knowledge/rpg-remake-music-prompt-column.md)。
+新版配樂會標示為 remake 宣傳片專用新編曲；原版遊戲沒有背景音樂。
+
 ### 原版畫面、EGA／CGA 還原與 remake 差異
 
 下列三張保留同一組原版初始隊伍（Gold 65、Provisions 8）作視覺基準。左圖是

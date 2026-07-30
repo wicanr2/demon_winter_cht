@@ -3543,8 +3543,13 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > [`docs/playtest/53`](docs/playtest/53-modern-icon-dungeon-atlas-complete.md)。
 > EGA／CGA 步行人物黑底的舊裁決已被使用者否決；現改為腳下地形＋透明人物，
 > 四方向與兩步索引不變，見 `docs/playtest/56`。
-> **目前真正未結案只剩 P4 使用者最終視覺審查；不得先宣告
-> 整個 goal 完成。** 59／59 納入後的候選發行包已通過
+> **原遊戲 remake 的產品結案閘仍只剩 P4 使用者最終視覺審查；使用者其後
+> 新增第二支史詩宣傳片，現亦為進行中交付，不得先宣告整個 goal 完成。**
+> 宣傳片採「1988 歷史規模 → 三主題甦醒 → 澤瑞斯決戰」三幕；專屬逐鏡提示詞
+> 見 `docs/promo/demon-winter-epic-trailer-prompt.md`，跨專案配樂方法見
+> `docs/knowledge/rpg-remake-music-prompt-column.md`。第一版 72 秒 MIDI／WAV
+> 配樂原型已生成，但尚未經使用者聽感核准，且必須標示為宣傳片新編曲，
+> 不能冒充原版 BGM。59／59 納入後的候選發行包已通過
 > 解壓執行抽樣，含 466 張 Modern Icon PNG、487 個檔案，SHA-256：
 > `c13024eec3f51cb0c954ce5d41d5beff1e2353618365457fb703da218027f226`。
 >
@@ -3569,6 +3574,8 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 動態測試；詳見 [`docs/playtest/54`](docs/playtest/54-independent-audio-music-audit.md)
 > 與 [`docs/re/117`](docs/re/117-audio-xrefs-and-breath-correction.md)。
 > 使用者其後回覆「音樂 ok」，音訊產品項正式核准，不再列為結案阻擋。
+> 這項核准指遊戲本體的原版音效範圍；後續新增的宣傳片新編曲是另一個交付，
+> 不得混為遊戲原版配樂。
 >
 > **以下同日期段落是依時間追加的歷史證據，不是新的待辦清單。** 若其中
 > 出現「尚待」「下一批」或舊雜湊，一律以上方最新基線及後續明列的取代段落

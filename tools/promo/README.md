@@ -3,8 +3,10 @@
 這裡只保存可重跑的擷取與剪輯腳本。實機錄影、原版圖像及 PC speaker WAV
 都放在 `workplace/promo/`，由 `.gitignore` 排除，不隨程式散布。
 
-原版沒有背景音樂；成片只使用引擎依反組譯資料還原的 PC speaker 音效，
-不加入 AI 音樂或仿作配樂。
+原版沒有背景音樂；第一支成片只使用引擎依反組譯資料還原的 PC speaker
+音效。第二支史詩宣傳片另有明確標示的 remake 新編曲，不冒充原版 BGM；
+作曲方向與逐鏡規格見
+[`docs/promo/demon-winter-epic-trailer-prompt.md`](../../docs/promo/demon-winter-epic-trailer-prompt.md)。
 
 ## 1. 擷取實機片段
 
@@ -34,3 +36,15 @@ H.264 veryfast、兩條執行緒；影片長度、影音串流與非靜音訊號
 
 目前產物只供本機預覽。若要公開上傳，原版圖像及音效仍有著作權風險，
 需先由專案持有人決定發布方式。
+
+## 3. 第二支宣傳片配樂原型
+
+```sh
+tools/promo/score.sh
+```
+
+這會由 `cmd/dwscore` 產生 72 秒 MIDI，再以 Debian 的 FluidR3 GM SoundFont
+渲染 24-bit／48 kHz WAV，檢查時長、響度、真峰值並輸出波形圖。配樂以原作
+11 音陣亡旋律的 `B–A–B–C–G–C` 輪廓作辨識動機，其餘和聲、節奏與配器都是
+宣傳片新作。MIDI、WAV 與分析輸出均在 gitignored 的
+`workplace/promo/score/`。
