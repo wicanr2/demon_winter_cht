@@ -3542,6 +3542,13 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > Android／Web 僅列為未來工作，分期、合法資料匯入、觸控、持久存檔、平台
 > 一致性與完成門檻見 `docs/design/android-web-roadmap.md`；不得在尖峰及 A6
 > 證據完成前標成已支援。
+>
+> **2026-07-30 README 舊圖汰換：**`03-event.png`、`04-battle.png`、
+> `05-town.png`、`06-manual.png` 已分別換成 P4 地城、目前 HEAD 的 Modern
+> Icon 戰鬥、現代兩欄城鎮選單與新版 F1 Help 實機圖。首頁世界圖與 EGA／CGA
+> 比較改指向 P4 同狀態畫面；早期 `modern-icon-m1-winter-runtime.png` 不再
+> 作為 README 現況代表，改用 `p4-winter-modern.png`。里程碑舊圖可留在
+> playtest／研究文件，但公開首頁不得把 M0／M1 試片誤標成完成版。
 
 > **2026-07-30 最新基線（取代下方 25／59 舊進度）：Modern Icon 地城
 > P3-D 已達 59／59。** MAP1–MAP5 的實際 inventory 與 `dungeonTiles`

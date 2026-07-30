@@ -77,12 +77,12 @@ EGA → CGA → Modern Icon，不改遊戲規則或存檔。
 
 | | |
 |---|---|
-| ![標題](docs/images/01-title.png) | ![大地圖](docs/images/02-world.png) |
-| **標題**　原版美術一格未動，中文標題「冬之魔」放在圖上方的黑邊 | **探索**　原版地圖與 EGA 圖塊、隊伍與船的走路 glyph、可通行性、日夜與時間推進 |
-| ![事件](docs/images/03-event.png) | ![戰鬥](docs/images/04-battle.png) |
-| **事件**　踩到特殊格觸發敘述，資料文字 500/500 全數中文化。地城的照明照原版：視窗固定 9×9，看得到多大一塊由光源決定（矮人的黑暗視覺 +1） | **戰鬥**　行動點、法術、地形與視線遮蔽，怪物 AI 照原版 |
+| ![標題](docs/images/01-title.png) | ![Modern Icon 大地圖最終版](docs/design/img/p4/p4-world-modern.png) |
+| **標題**　原版美術一格未動，中文標題「冬之魔」放在圖上方的黑邊 | **探索**　P4 核准後的 Modern Icon 最終世界畫面；可隨時按 `F8` 切回原版 EGA／CGA |
+| ![Modern Icon 地城探索](docs/images/03-event.png) | ![Modern Icon 戰鬥](docs/images/04-battle.png) |
+| **地城與事件**　P4 最終地城素材、固定 9×9 視窗與原版光源規則；房間敘述與事件資料文字 500/500 全數中文化 | **戰鬥**　目前 HEAD 實機重拍；高解析隊員與怪物、行動點、法術、地形、視線及原版怪物 AI |
 | ![城鎮](docs/images/05-town.png) | ![手札](docs/images/06-manual.png) |
-| **城鎮**　八種設施、市集議價、物價指數依城鎮不同 | **說明／手札**　原版印在紙本手冊上的資料搬進遊戲，任何時候按 `F1` 可查 |
+| **城鎮**　目前現代操作的兩欄分組選單；八種設施、市集議價與各城物價指數照原版規則 | **說明／手札**　新版 `F1` 首頁先列 remake 操作，再保留完整原版紙本手冊內容 |
 
 已完成一支實機錄製的短版宣傳影片，可直接下載觀看：
 [`Demon's Winter 冬之魔繁中 remake 宣傳影片（MP4）`](docs/promo/demon-winter-cht-promo.mp4)。
@@ -106,7 +106,7 @@ DOSBox 中的 1988 原版；中、右圖是 remake 在同一個戶外測試位�
 
 | 1988 DOS EGA 原版 | Remake：原版 EGA 素材 | Remake：原版 CGA 素材 |
 |---|---|---|
-| ![DOS 原版 EGA 畫面](docs/images/07-original-ega-world.png) | ![Remake EGA 畫面](docs/images/02-world.png) | ![Remake CGA 畫面](docs/images/08-remake-cga-world.png) |
+| ![DOS 原版 EGA 畫面](docs/images/07-original-ega-world.png) | ![Remake EGA 最終畫面](docs/design/img/p4/p4-world-ega.png) | ![Remake CGA 最終畫面](docs/design/img/p4/p4-world-cga.png) |
 | 640×350；288×252 地圖窗；英文哥德字與紅底直式命令列 | 640×400 中文邏輯畫布；讀取原版 `.SHE` 與遊戲實設 16 色調色盤 | 同一局讀取原版 `.SHP` 四色圖塊；16×16 frame 以整數倍顯示 |
 
 具體差異：
@@ -378,12 +378,13 @@ EGA／CGA 的原始人物 glyph 帶整格黑底；remake 依使用者原版畫�
 仍使用獨立高解析透明素材。修正裁決與兩步實機證據見
 [`docs/playtest/56`](docs/playtest/56-ega-cga-transparent-walking-party.md)。
 
-同三個索引也已有冬季一一對應版本：
+冬季世界的目前完成版：
 
-![Modern Icon 冬季 M1 實機試片](docs/design/img/modern-icon-m1-winter-runtime.png)
+![Modern Icon 冬季世界 P4 最終畫面](docs/design/img/p4/p4-winter-modern.png)
 
-這張是早期冬季試片；後續角色方向、城鎮、特殊格與其他岸線均已補齊，
-世界正常／冬季實際索引差集皆為零。
+這是 P4 核准後的同狀態實機圖；角色方向、城鎮、特殊格、岸線與完整冬季差集
+均已納入，世界正常／冬季實際索引差集皆為零。早期
+`modern-icon-m1-winter-runtime.png` 只保留於研究歷程，不再作為 README 現況圖。
 
 地城與世界使用相同 index 數字但不同語意，現已由 `dungeonTiles` JSON
 namespace 分開。未列地城素材時安全保留 EGA／CGA 底稿，不會把地城牆誤畫成
