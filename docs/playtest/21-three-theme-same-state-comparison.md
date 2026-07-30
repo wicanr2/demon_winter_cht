@@ -17,7 +17,10 @@ Return, Up
 
 | 原版 EGA 還原 | 原版 CGA 還原 | Modern Icon M1 |
 |---|---|---|
-| ![EGA 同狀態](../design/img/theme-compare-ega.png) | ![CGA 同狀態](../design/img/theme-compare-cga.png) | ![Modern Icon 同狀態](../design/img/theme-compare-modern-icon.png) |
+| ![EGA 同狀態](../design/img/p4/p4-world-ega.png) | ![CGA 同狀態](../design/img/p4/p4-world-cga.png) | ![Modern Icon 同狀態](../design/img/p4/p4-world-modern.png) |
+
+> 2026-07-30：表格改用 P4 重拍圖；EGA／CGA 步行人物已移除整格黑底，見
+> `docs/playtest/56`。舊 `theme-compare-*` 只保留為修正前歷史證據。
 
 ## 觀察
 

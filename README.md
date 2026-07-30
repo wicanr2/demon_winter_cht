@@ -287,13 +287,15 @@ Bugem；兩波合計覆寫率達 129/224
 
 | 原版 EGA 還原 | 原版 CGA 還原 | Modern Icon M1 |
 |---|---|---|
-| ![EGA 同狀態](docs/design/img/theme-compare-ega.png) | ![CGA 同狀態](docs/design/img/theme-compare-cga.png) | ![Modern Icon 同狀態](docs/design/img/theme-compare-modern-icon.png) |
+| ![EGA 同狀態](docs/design/img/p4/p4-world-ega.png) | ![CGA 同狀態](docs/design/img/p4/p4-world-cga.png) | ![Modern Icon 同狀態](docs/design/img/p4/p4-world-modern.png) |
 
 三圖的金幣、糧食、日期時間、隊伍數值與物件格位一致。重播方式與裁決見
-[`docs/playtest/21`](docs/playtest/21-three-theme-same-state-comparison.md)。
-EGA／CGA 人物周圍的黑格也是原版行為：原程式會用人物 glyph 整格取代腳下
-地形；Modern Icon 才改成透明疊圖。原版／remake 同場景證據見
-[`docs/playtest/52`](docs/playtest/52-modern-icon-dungeon-approval-and-d1.md)。
+[`docs/playtest/21`](docs/playtest/21-three-theme-same-state-comparison.md)；公開表格
+已於透明人物修正後重拍，見 [`docs/playtest/56`](docs/playtest/56-ega-cga-transparent-walking-party.md)。
+EGA／CGA 的原始人物 glyph 帶整格黑底；remake 依使用者原版畫面參考改為
+先畫腳下地形、再疊透明人物，四方向與座標奇偶兩步動畫不變。Modern Icon
+仍使用獨立高解析透明素材。修正裁決與兩步實機證據見
+[`docs/playtest/56`](docs/playtest/56-ega-cga-transparent-walking-party.md)。
 
 同三個索引也已有冬季一一對應版本：
 
@@ -311,8 +313,10 @@ namespace 分開。未列地城素材時安全保留 EGA／CGA 底稿，不會�
 
 ![Modern Icon 北向隊伍兩步](docs/design/img/modern-icon-m1-party-steps.png)
 
-它會先畫腳下的真實 terrain，再疊角色；EGA/CGA 仍保留原版 glyph。透明契約、
-去背與兩步實機證據見 [`docs/playtest/22`](docs/playtest/22-modern-icon-transparent-party.md)。
+它會先畫腳下的真實 terrain，再疊角色；EGA／CGA 現也使用透明合成，但保留
+各自原始 glyph。Modern Icon 去背與兩步證據見
+[`docs/playtest/22`](docs/playtest/22-modern-icon-transparent-party.md)，歷史主題
+修正見 [`docs/playtest/56`](docs/playtest/56-ega-cga-transparent-walking-party.md)。
 
 驗收採「前期完整垂直切片＋後期高風險串接抽樣」：新遊戲建角、購物與換裝，
 正常戰鬥／死亡／治療、狗頭人營地、升級、跨圖抵達加穆爾神殿均由可重播腳本實際跑通；

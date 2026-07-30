@@ -25,9 +25,10 @@ tools/p4-capture.sh
 ## 人工檢查
 
 - 五列的金幣、糧食、時日、隊員數值、戰鬥隊形與海戰船體在三欄一致。
-- EGA／CGA 保留原版整格人物 glyph 黑底；Modern Icon 是透明人物疊圖。
+- EGA／CGA 步行人物已依使用者裁決改成腳下地形＋透明人物；四方向／兩步
+  glyph 索引不變。Modern Icon 維持高解析透明人物，詳見 `docs/playtest/56`。
 - 正常／冬季三主題都有非零像素差異；CGA 差異較不顯眼但不是切換失效：
-  全畫布 AE 分別為 EGA 225,536、CGA 36,960、Modern Icon 289,650。
+  全畫布 AE 分別為 EGA 236,740、CGA 31,088、Modern Icon 289,905。
 - 地城仍依同一光源規則內縮；Modern Icon 沒有因高解析材質洩漏黑暗區域。
 - Modern Icon 戰鬥與海戰只換呈現素材，單位格位、面向與數值不變。
 

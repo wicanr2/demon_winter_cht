@@ -1,5 +1,9 @@
 # 22 — Modern Icon 透明隊伍 overlay 與兩步動畫
 
+> **2026-07-30 後續取代：**透明合成現也套用於 EGA／CGA 步行人物；本文
+> 「只有 Modern Icon 透明」是當時狀態，不再是產品裁決。見
+> `docs/playtest/56`。
+
 日期：2026-07-29
 
 ## 問題
@@ -13,7 +17,7 @@
 - terrain 仍要求完全不透明；
 - 世界地圖中央若有對應 Modern Icon 隊伍 sprite，先以腳下真實 tile index
   重畫地面，再疊透明角色；
-- EGA/CGA 完全不走這條路，仍忠實保留原版整格 glyph。
+- 當時 EGA/CGA 完全不走這條路；此歷史狀態已由 `docs/playtest/56` 取代。
 
 北向 `0x1e/0x1f` 以同一角色製作反相步伐；兩張母稿使用 imagegen 的純洋紅背景，
 再以共用 `remove_chroma_key.py` 去背。第一次 B 稿在縮覽後相位差不足而被退回，

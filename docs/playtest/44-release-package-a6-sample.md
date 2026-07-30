@@ -70,8 +70,8 @@ Go build info 均確認為 `GOOS=windows GOARCH=amd64`。兩包都通過 466 PNG
 487 檔及禁入原版素材 0；Linux 包另於 Xvfb 解壓執行 `-list-scenes`。
 
 ```text
-3ea9f5e9412bdd4c36612cfcf378fb7221f2cb28b65b35f6e7b1abe4908e7b80  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
-d3da99d2c4589addbacfec2b9545e692d1dc2dc6b14474de04899115d86fefbc  demonwinter-zh-Hant-2026.07.30-windows-amd64.tar.gz
+e2a388ee5da9d4837196c2edbce4e02bef3a9cebbb53dd0c677bb1a53b4af02c  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
+9a6d162ca6a560fd1d0c7d4fb17fca72b0bf85e9c1f4b40d7598b2797f76c13e  demonwinter-zh-Hant-2026.07.30-windows-amd64.tar.gz
 ```
 
 macOS 不能在 Linux 容器偽造成功：Ebiten 的 Metal／OpenGL backend 需要 Apple
@@ -80,6 +80,10 @@ SDK 與原生 CGO。因此 workflow 使用 GitHub 官方 `macos-15-intel` 與
 [跨平台 workflow run 30514815112](https://github.com/wicanr2/demon_winter_cht/actions/runs/30514815112)
 已完整成功：兩個架構的建置、封裝、原版素材禁入複核及 artifact 上傳全部
 綠燈。這證明原生可建置與包裝；實際 macOS 顯示／音效裝置仍屬玩家實機驗收。
+
+上述最新雜湊已納入 EGA／CGA 步行人物透明修正、重拍 P4 畫板與使用者音訊
+核准紀錄；Linux 解壓執行、Windows PE／build info、466 PNG／487 檔與禁入
+原版素材 0 均重新通過。
 
 | Modern Icon 與現代命令卡 | 復古紅色命令列 | F1 手札 |
 |---|---|---|

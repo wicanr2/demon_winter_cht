@@ -3541,8 +3541,9 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 冰牆／冰門、神龕、火盆、物資、瓦礫、雕面機關與四種轉角；同語意的戶外
 > 索引才明列重用。聯絡表及門／閘／冰區／轉角實機證據見
 > [`docs/playtest/53`](docs/playtest/53-modern-icon-dungeon-atlas-complete.md)。
-> EGA／CGA 人物黑底格與原版一致，歷史主題保留；透明人物只屬 Modern Icon。
-> **目前真正未結案只剩 P4 使用者最終視覺審查與人耳音效試聽；不得先宣告
+> EGA／CGA 步行人物黑底的舊裁決已被使用者否決；現改為腳下地形＋透明人物，
+> 四方向與兩步索引不變，見 `docs/playtest/56`。
+> **目前真正未結案只剩 P4 使用者最終視覺審查；不得先宣告
 > 整個 goal 完成。** 59／59 納入後的候選發行包已通過
 > 解壓執行抽樣，含 466 張 Modern Icon PNG、487 個檔案，SHA-256：
 > `c13024eec3f51cb0c954ce5d41d5beff1e2353618365457fb703da218027f226`。
@@ -3567,6 +3568,7 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > `soundOutput` spy 只直接測 `playSound`，不冒充所有 UI 呼叫鏈的端到端
 > 動態測試；詳見 [`docs/playtest/54`](docs/playtest/54-independent-audio-music-audit.md)
 > 與 [`docs/re/117`](docs/re/117-audio-xrefs-and-breath-correction.md)。
+> 使用者其後回覆「音樂 ok」，音訊產品項正式核准，不再列為結案阻擋。
 >
 > **以下同日期段落是依時間追加的歷史證據，不是新的待辦清單。** 若其中
 > 出現「尚待」「下一批」或舊雜湊，一律以上方最新基線及後續明列的取代段落
@@ -3589,8 +3591,8 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 改由原生 `macos-15-intel`／`macos-15` CI 建置 amd64／arm64；workflow
 > run `30514815112` 兩個架構的建置、禁入與 artifact 上傳均成功。最新
 > Linux／Windows SHA-256 分別為
-> `3ea9f5e9412bdd4c36612cfcf378fb7221f2cb28b65b35f6e7b1abe4908e7b80`、
-> `d3da99d2c4589addbacfec2b9545e692d1dc2dc6b14474de04899115d86fefbc`。
+> `e2a388ee5da9d4837196c2edbce4e02bef3a9cebbb53dd0c677bb1a53b4af02c`、
+> `9a6d162ca6a560fd1d0c7d4fb17fca72b0bf85e9c1f4b40d7598b2797f76c13e`。
 >
 > **逆向文件 stale 清理：**`OPEN.PIE` 早已解成 608×336 並接入標題畫面，
 > README／PLAN／graphics spec 的舊「未解」已回填。DEMON／WINTER index 101
@@ -3765,9 +3767,9 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > `0x00/0x56` 暗石板、`0x13` 緋紅磚面與高頻阻擋牆 `0x0d`；MAP1–MAP5
 > 內確實是森林、岸線、平原、沙地、凍土或水面的索引，則在
 > `dungeonTiles` 明列重用已核准世界素材。完成度由 0/59 到 **25/59**，
-> 仍誠實列 34 格缺口。使用者另指出 EGA/CGA 人物黑格；同場景原版原生圖
-> 證明原版也以人物 glyph 整格取代地形，因此歷史主題不改透明，透明疊圖只
-> 屬 Modern Icon（[`docs/playtest/52`](docs/playtest/52-modern-icon-dungeon-approval-and-d1.md)）。
+> 仍誠實列 34 格缺口。此段當時把 EGA／CGA 人物黑格判成保留項；該裁決
+> 後來已被使用者否決，最新透明合成與兩步證據見
+> [`docs/playtest/56`](docs/playtest/56-ega-cga-transparent-walking-party.md)。
 >
 > **操作體驗新增，已完成程式與固定場景抽樣、等待使用者畫面審查：** `F6`
 > 切換整套復古／現代模式：復古恢復原版紅底直式命令列與相對轉向；現代使用

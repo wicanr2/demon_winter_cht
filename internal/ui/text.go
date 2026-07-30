@@ -121,15 +121,23 @@ func (f *Font) glyphFor(ch rune) *ebiten.Image {
 
 // Tileset 是已上傳成 Ebiten 材質的地形圖塊集。
 type Tileset struct {
-	src   *gfx.Tileset
-	tiles []*ebiten.Image
+	src         *gfx.Tileset
+	tiles       []*ebiten.Image
+	transparent []*ebiten.Image
 }
 
 // NewTileset 把解好的圖塊集轉成 Ebiten 材質。
 func NewTileset(src *gfx.Tileset) *Tileset {
-	t := &Tileset{src: src, tiles: make([]*ebiten.Image, src.Len())}
+	t := &Tileset{
+		src:         src,
+		tiles:       make([]*ebiten.Image, src.Len()),
+		transparent: make([]*ebiten.Image, src.Len()),
+	}
+	black := color.RGBA{0, 0, 0, 0xff}
 	for i := 0; i < src.Len(); i++ {
-		t.tiles[i] = ebiten.NewImageFromImage(src.Tile(byte(i)))
+		tile := src.Tile(byte(i))
+		t.tiles[i] = ebiten.NewImageFromImage(tile)
+		t.transparent[i] = ebiten.NewImageFromImage(gfx.TransparentBackground(tile, black))
 	}
 	return t
 }
@@ -154,6 +162,15 @@ func (t *Tileset) Tile(v byte) *ebiten.Image {
 		return nil
 	}
 	return t.tiles[v]
+}
+
+// TransparentTile 回傳去除邊界連通黑底、但保留貼身黑色輪廓的圖塊。
+// 探索畫面的步行人物先畫腳下地形，再用這份材質疊上；一般地形仍用 Tile。
+func (t *Tileset) TransparentTile(v byte) *ebiten.Image {
+	if int(v) >= len(t.transparent) {
+		return nil
+	}
+	return t.transparent[v]
 }
 
 // DrawImageAt 在指定像素座標畫一張材質。

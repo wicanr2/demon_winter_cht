@@ -972,8 +972,9 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 		inspected[[2]byte{s.X, s.Y}] = true
 	}
 
-	// 隊伍 glyph 也是一個圖塊，與地形一起畫（原版 `222f:0bbc` 直接把索引
-	// 寫進繪製緩衝區）—— 所以它走同一條繪製路徑，不是疊在上面的裝飾。
+	// 原程式把隊伍 glyph 索引寫進繪製緩衝區；remake 顯示時仍保留該索引與
+	// 兩步動畫，但步行人物改為「腳下地形＋透明人物」，避免原始素材的整格
+	// 黑底遮住地形。船隻仍是完整圖塊。
 	partyGlyph := game.PartyGlyph(a.party.Facing(),
 		a.party.X(), a.party.Y(), a.party.Sailing())
 
@@ -993,6 +994,17 @@ func (a *app) drawWorld(dst *ebiten.Image) {
 			tile := a.drawTiles[my*game.MapWidth+mx] & 0x7f
 			if inspected[[2]byte{byte(mx), byte(my)}] {
 				tile = dungeonItemTile
+			}
+			if dx == halfX && dy == halfY && !a.party.Sailing() {
+				if ground := ts.Tile(tile); ground != nil {
+					ui.DrawImageScaled(dst, ground,
+						layout.MapOriginX+dx*cellW, layout.MapOriginY+dy*cellH, scale)
+				}
+				if person := ts.TransparentTile(partyGlyph); person != nil {
+					ui.DrawImageScaled(dst, person,
+						layout.MapOriginX+dx*cellW, layout.MapOriginY+dy*cellH, scale)
+				}
+				continue
 			}
 			if dx == halfX && dy == halfY {
 				tile = partyGlyph

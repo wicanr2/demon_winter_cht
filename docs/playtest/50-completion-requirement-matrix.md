@@ -20,7 +20,7 @@
 | 關閉視窗前自動存檔 | 完成 | 失敗即關閉（fail-closed）：任一步寫檔失敗就留在遊戲；[`docs/ui/04`](../ui/04-control-modes-and-safe-exit.md) |
 | 場景跳轉與攻略輔助除錯 | 完成 | `-scene`、`-list-scenes`、技能與戰鬥 fixture；不偷設劇情旗標。README「開發者場景書籤」 |
 | 倚天 16×15 粗體中文 | 完成 | [`docs/re/17`](../re/17-font-format.md)；字型由玩家自行提供，未納入版本控制或發行包 |
-| 音效與音樂 | **原版範圍完成，待使用者試聽** | 原版沒有背景配樂；八個單音與死亡旋律已合成。獨立稽核發現的吐息錯誤已修，IDA 證實非戰鬥死亡不播、effect 3/6/7 為未使用音階；九個 WAV 可直接試聽。見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)、[`docs/playtest/54`](54-independent-audio-music-audit.md) |
+| 音效與音樂 | **完成，使用者已核准** | 原版沒有背景配樂；八個單音與死亡旋律已合成。獨立稽核發現的吐息錯誤已修，IDA 證實非戰鬥死亡不播、effect 3/6/7 為未使用音階；九個 WAV 技術重驗後，使用者於 2026-07-30 回覆音樂 ok。見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)、[`docs/playtest/54`](54-independent-audio-music-audit.md) |
 | 跨平台候選包 | 技術建置完成 | Linux amd64 解壓執行、Windows amd64 PE／build info 通過；macOS amd64／arm64 原生 CI 的建置、禁入與 artifact 上傳全綠。實機顯示／音效仍由各平台玩家驗收；見 [`docs/playtest/44`](44-release-package-a6-sample.md) |
 | 宣傳影片 | 完成 | [`短版 MP4`](../promo/demon-winter-cht-promo.mp4)；為 remake 實機畫面剪輯，不含原版資料檔或字型檔 |
 
@@ -40,10 +40,7 @@
 
 1. 使用者審閱 59／59 地城 atlas 與
    [`P4 三主題五類場景畫板`](55-p4-three-theme-review-board.md)。
-2. 使用者試聽 [`docs/audio`](../audio/) 九份 WAV，並在實機確認預設音量、
-   死亡旋律節奏、連續效果的單聲道中斷、Sound on/off 與目標平台出聲。
-
-上述項目需要使用者作最終視覺／聽感決定，不能由代理自行宣告通過。P4 的
-15 張可重播技術證據與音訊技術重驗已完成；其餘程式變更仍
+上述項目需要使用者作最終視覺決定，不能由代理自行宣告通過。音訊已由
+使用者核准；P4 的 15 張可重播技術證據亦已完成。其餘程式變更仍
 必須通過完整 Go、500/500、`uicheck`、A6 抽樣、禁入掃描、解壓後執行檔與
 Docker 清理閘門；本文件不取代那些測試記錄。
