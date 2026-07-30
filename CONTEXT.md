@@ -3582,6 +3582,11 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 已由 GitHub 實際解析並全綠；一般 push 的發布 job 正確跳過，`v0.1.0`
 > 尚未建立。容器內無可用 GitHub API 權杖，故未另觸發 `0.1.0` 手動候選；
 > 核准後由 GitHub UI 勾選 `publish_release` 即可一次重建與正式發布。
+> macOS 可攜性再由
+> [30523217956](https://github.com/wicanr2/demon_winter_cht/actions/runs/30523217956)
+> 複核全綠：Intel／Apple Silicon 的 Mach-O 架構各自正確，`otool -L`
+> 只含 `/System/Library`／`/usr/lib`，拒絕 Homebrew、`@rpath` 與建置機
+> 私有路徑；實際相依清單隨 `.app` 附上。
 >
 > **同日獨立音訊稽核勘誤：**原版無 BGM，八個單音與死亡旋律的合成完成；
 > 但觸發不能稱為完成。怪物噴吐在零死亡時會誤播死亡旋律，非戰鬥全滅與

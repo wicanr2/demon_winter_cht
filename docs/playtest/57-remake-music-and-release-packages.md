@@ -49,7 +49,10 @@ GitHub 直接試聽；它們不是另一套人工後製音檔。
 建立各自 `.app` ZIP，包含 `Info.plist`、Resources、ad-hoc codesign 與
 `-list-scenes` smoke。包含四段 WAV 預覽的最終候選版，兩架構與
 AppImage／Windows job 全綠：
-[run 30522387676](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522387676)。
+[run 30523217956](https://github.com/wicanr2/demon_winter_cht/actions/runs/30523217956)。
+該輪另以 `lipo -archs` 驗證 Intel 為 `x86_64`、Apple Silicon 為
+`arm64`，並以 `otool -L` 拒絕 Homebrew、`@rpath` 或建置目錄相依；實際
+系統函式庫清單隨 `.app` 附上。
 
 ## Help 與既有訊息保留
 
