@@ -1,0 +1,64 @@
+name: 跨平台候選發行包
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 發行版本
+        required: true
+        default: dev
+  push:
+    branches: [main]
+    paths:
+      - "cmd/**"
+      - "internal/**"
+      - "assets/**"
+      - "artwork/modern-icon/m1/trial/**"
+      - "packaging/**"
+      - "tools/package-release-inner.sh"
+      - ".github/workflows/cross-platform-release.yml"
+      - "go.mod"
+      - "go.sum"
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    name: macOS ${{ matrix.goarch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            goarch: amd64
+          - runner: macos-15
+            goarch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: 建置與封裝
+        env:
+          RELEASE_NAME: demonwinter-zh-Hant-${{ inputs.version || 'dev' }}-darwin-${{ matrix.goarch }}
+          TARGET_GOOS: darwin
+          TARGET_GOARCH: ${{ matrix.goarch }}
+          TARGET_CGO: "1"
+          OUTPUT_DIR: ${{ github.workspace }}/dist
+        run: bash tools/package-release-inner.sh
+      - name: 原版素材禁入複核
+        run: |
+          stage="$(mktemp -d)"
+          trap 'rm -rf "$stage"' EXIT
+          tar -xzf dist/*.tar.gz -C "$stage"
+          test -z "$(find "$stage" -type f \( -iname '*.DAT' -o -iname '*.DTT' -o -iname '*.SHE' -o -iname '*.SHP' -o -iname '*.PIE' -o -iname '*.PIC' -o -iname 'STDFONT.15' -o -iname 'SPCFONT.15' \) -print -quit)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demonwinter-darwin-${{ matrix.goarch }}
+          path: |
+            dist/*.tar.gz
+            dist/*.sha256
+          if-no-files-found: error

@@ -315,7 +315,9 @@ state = (state × 125) mod 2796203
 - [x] 戰鬥系統(回合、移動點數、命中/傷害、法術)(M4)
 - [x] 角色系統(建角、屬性、技能、裝備、升級)(M3)
 - [x] 事件腳本**文字**直譯器 + 對話顯示(M2)
-- [ ] 事件**動作**分派(21 格跳表只解出約 5 格語意,引擎只支援「顯示文字 + 開戰」)
+- [x] 移動回傳碼／地點事件分派已拆清，主線、商隊、遭遇、城鎮、傳送、
+      陷阱與結局的正式 consumer 已接；舊稱「21 格事件動作表」已由
+      `docs/re/58` 勘誤，未知或不可達格不虛構用途。
 - [x] 存檔 / 讀檔(與原版 `PARTY.DAT` 雙向相容,byte-for-byte 驗過)
 - [x] 音效還原(依 V1,九個 PC speaker 效果)
 
@@ -324,25 +326,37 @@ state = (state × 125) mod 2796203
 
 ### 階段 4 — 繁體中文化
 
-- [ ] 從 `DEMON.INT` 抽出全部 UI 字串 → 翻譯表
+- [x] remake 玩家文案已資料分離：原版資料字串 500/500，另有 836 條
+      `ui.json` 介面／規則文案，Go 玩家中文硬編 0。`DEMON.INT` 全字串只作
+      oracle，不把未使用原文強塞進重製版目錄。
 - [x] 從 `*.TXT` 抽出劇情文本 → 翻譯表(七個目錄 356 條 100%)
 - [x] 16×15 倚天點陣字型(Big5 分區索引已驗證)
-- [ ] `GOT.FNE` 花體風格的中文標題處理
+- [x] `GOT.FNE`／英文花體 logo 定案保留為 1988 原作美術與署名；中文遊戲名
+      與提示另由倚天 16×15 呈現，不重繪歷史 logo（`CONTEXT.md` D3）。
 - [x] 統一譯名表 + 漂移掃描(`translations/glossary.md`,`dwstrings check` 自動閘)
 - [x] UI 版面重排以容納中文(640×400 畫布 + 排版格 + 標點禁則)
 - [x] 遊戲內標題畫面接上(`OPEN.PIE` + 中文提示字)
-- [ ] 標題**美術本身**仍是英文(花體 logo 沒重繪)
+- [x] 標題英文花體 logo 依上述歷史保存裁決不重繪；這是產品決定，不是缺漏。
 
 **驗收**:每個畫面截圖比對 — 無破框、無截字、無亂碼。譯名一致性掃描全過。
 
 ### 階段 5 — 驗證與打包
 
-- [ ] headless 確定性回歸測試
-- [ ] **正常玩家路徑實測**:新開檔 → 建角 → 走完主線 → 破關，全程不用任何 debug 捷徑
-- [ ] 世界可達性檢查(flood-fill:落點、城鎮、船必須連通)
-- [ ] 移除所有 debug hook 後重跑
-- [ ] Linux / Windows / macOS 打包(Docker build)
-- [ ] 玩家向 README(繁中)+ `ENGINEERING.md`(技術文件)分離
+- [x] 固定 seed 的 headless／Xvfb 回歸、`tools/playthrough.sh` assertion 與
+      規則單元測試已納入發行閘門。
+- [x] 驗收範圍由使用者定案為 A6 抽樣：正常玩家前期垂直切片＋後期高風險
+      場景；不冒充「逐房、全程不用書籤」重玩。見 `AGENTS.md` 與
+      `docs/playtest/13`、`48`。
+- [x] `dwroute -reachable-exits`／逐段 BFS 已驗證落點、城鎮、船與傳送鏈；
+      地城刻意依樓梯／傳送分段，不把單張 BFS 不可達誤判成壞圖。
+- [x] 偵錯入口依使用者要求保留為具名 `-scene`／fixture；書籤只定位，不偷設
+      謎題旗標，玩家流程不依賴它。舊「移除所有 debug hook」要求已撤回。
+- [ ] Linux／Windows／macOS 發行：Linux amd64 與 Windows amd64 已由同一
+      白名單／禁入流程產包；macOS amd64／arm64 原生 CI 已建立，待首次 runner
+      實際綠燈後才勾完。
+- [x] 玩家向繁中 README 作公開索引，逆向、格式、設計與驗收細節分流至
+      `docs/re`、`docs/formats`、`docs/design`、`docs/playtest`；不再另造會
+      與 README／CONTEXT 漂移的 `ENGINEERING.md`。
 
 ### 階段 6 — 攻略與文件
 
@@ -350,8 +364,10 @@ state = (state × 125) mod 2796203
 - [x] 官方遊戲手冊繁中版 `docs/manual/`(16 張掃描跨頁全數轉錄翻譯)
 - [x] 社群攻略繁中版 `docs/walkthrough/`(1,914 行,含附魔表與存檔欄位表)
 - [x] SSI 引擎架構研究報告 `docs/research/ssi-engine-architecture.md`
-- [ ] 整理既有《遊戲攻略:冬之魔》PDF 為繁中電子攻略
-- [ ] 資料格式規格書 `docs/formats/*.md`(4 份已完成,尚有未解項待補)
+- [x] 既有攻略已整理為 `docs/walkthrough/` 六章、1,914 行繁中 Markdown
+      電子攻略；不重新散布來源 PDF。
+- [x] `docs/formats/` 五份規格已涵蓋事件、資料表、圖像、資源索引與城鎮／
+      地圖；未知欄位明列證據強度並原樣往返，不為勾清單虛構語意。
 
 > 手冊與攻略的繁中化不只是「附加資料」:手冊定義了所有規則與數值,攻略提供可破關鏈與
 > 部分存檔欄位位移,兩者是階段 1 反組譯的**文件層 oracle**(優先序低於 DOSBox 實跑,

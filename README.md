@@ -342,15 +342,23 @@ tools/go.sh run ./cmd/demonwinter -battle -battle-illusion-fixture -seed 11
 
 ### 發行包
 
-A6 抽樣與完整測試通過後，可建立不含原版資料／倚天字型的 Linux amd64 包：
+A6 抽樣與完整測試通過後，可建立不含原版資料／倚天字型的 Linux amd64
+或 Windows amd64 包：
 
 ```bash
-tools/package-release.sh 2026.07.30
+tools/package-release.sh 2026.07.30                 # Linux amd64
+tools/package-release.sh 2026.07.30 windows amd64  # Windows amd64
 ```
 
 產物與 SHA-256 放在 `dist/`。玩家解壓後依 `開始遊戲.txt` 指向自己的合法
 `DEM_DATA` 與倚天 16×15 字型目錄；翻譯、遊戲內手札、三主題引擎與本專案
 自製的 Modern Icon 素材已包含在包內。
+
+macOS 的 Ebiten／Metal 需要 Apple SDK，不能由 Linux Docker 假交叉編譯。
+[`跨平台候選發行包`](.github/workflows/cross-platform-release.yml) 會在原生
+`macos-15-intel` 與 `macos-15` runner 分別產生 amd64／arm64 包，兩者共用
+同一個 [`package-release-inner.sh`](tools/package-release-inner.sh) 白名單與
+原版素材禁入閘門。
 
 ---
 

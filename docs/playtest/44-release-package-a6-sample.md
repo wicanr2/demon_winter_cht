@@ -61,6 +61,23 @@ P4 三主題審查板、`OPEN.PIE`／terrain index 101 文件勘誤，以及修�
 ee369e62d7f6a7ce8c5eb80c948989433404f9ba91266af9daab783ea6e14b08  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
 ```
 
+## 三平台封裝收斂
+
+封裝 staging、資產白名單、禁入掃描、壓縮與校驗已抽成
+`tools/package-release-inner.sh`。Linux amd64 保留 Docker／CGO 建置；
+Windows amd64 在同一 Docker 以 `CGO_ENABLED=0` 交叉建置，PE `MZ` 檔頭與
+Go build info 均確認為 `GOOS=windows GOARCH=amd64`。兩包都通過 466 PNG、
+487 檔及禁入原版素材 0；Linux 包另於 Xvfb 解壓執行 `-list-scenes`。
+
+```text
+0fa36c4257b3ff5f0356cbf163699b60f5c6ecfe7c6283bc46e86a9976b60210  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
+124c76637907f6c96b15ec99adf90b7e4315882520db17a5a6a7564bbee9309d  demonwinter-zh-Hant-2026.07.30-windows-amd64.tar.gz
+```
+
+macOS 不能在 Linux 容器偽造成功：Ebiten 的 Metal／OpenGL backend 需要 Apple
+SDK 與原生 CGO。因此 workflow 使用 GitHub 官方 `macos-15-intel` 與
+`macos-15` runner 產生 amd64／arm64，待首次 CI 綠燈後才算 macOS 發行驗證。
+
 | Modern Icon 與現代命令卡 | 復古紅色命令列 | F1 手札 |
 |---|---|---|
 | ![發行包 Modern Icon](../design/img/release-a6-modern-icon.png) | ![發行包復古介面](../design/img/release-a6-retro-ui.png) | ![發行包 F1 手札](../design/img/release-a6-help.png) |

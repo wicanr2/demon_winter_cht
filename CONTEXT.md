@@ -3582,6 +3582,15 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 最新 SHA-256：
 > `ee369e62d7f6a7ce8c5eb80c948989433404f9ba91266af9daab783ea6e14b08`。
 >
+> **跨平台封裝補洞：**舊腳本只有 Linux，與跨平台目標不符。共同 staging／
+> 白名單／禁入／校驗流程已抽成 `tools/package-release-inner.sh`；Linux
+> amd64 與 Windows amd64 均已產包並通過 466 PNG、487 檔、禁入 0，Linux
+> 解壓執行及 Windows PE／Go build info 亦通過。macOS Metal 需要 Apple SDK，
+> 改由原生 `macos-15-intel`／`macos-15` CI 建置 amd64／arm64；首次 CI
+> 綠燈前仍不得宣稱三平台包全數驗收。最新 Linux／Windows SHA-256 分別為
+> `0fa36c4257b3ff5f0356cbf163699b60f5c6ecfe7c6283bc46e86a9976b60210`、
+> `124c76637907f6c96b15ec99adf90b7e4315882520db17a5a6a7564bbee9309d`。
+>
 > **逆向文件 stale 清理：**`OPEN.PIE` 早已解成 608×336 並接入標題畫面，
 > README／PLAN／graphics spec 的舊「未解」已回填。DEMON／WINTER index 101
 > 則由四套 atlas、全地圖 inventory 與動態寫入鏈判為「強證據：runtime
