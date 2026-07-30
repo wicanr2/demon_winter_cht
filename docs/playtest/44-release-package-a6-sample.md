@@ -35,7 +35,14 @@ JSON 文字與 README 索引後重新打包；`sha256sum -c`、Xvfb 下直接執
 `demonwinter -list-scenes`、446 張 Modern Icon PNG、467 檔及禁入掃描均再次通過。
 新增的 16 張是 `0x5a` 正常／冬季各八個凍土變體；母稿與開發文件不進玩家包。
 其後納入使用者核准的地城第一批四張 runtime 素材與 README 審稿結果並再次
-重建；解壓後 `-list-scenes` 再次通過，以上雜湊是此最新版。
+重建。最後完成地城 atlas 59／59後又重建一次；解壓後 `-list-scenes`、校驗碼、
+禁入掃描再次通過。最新版包含 **466 張 Modern Icon PNG、487 個檔案**：
+
+```text
+c13024eec3f51cb0c954ce5d41d5beff1e2353618365457fb703da218027f226  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
+```
+
+上方 446／467 與舊雜湊保留為第一批歷史基線，不是最新版。
 
 | Modern Icon 與現代命令卡 | 復古紅色命令列 | F1 手札 |
 |---|---|---|

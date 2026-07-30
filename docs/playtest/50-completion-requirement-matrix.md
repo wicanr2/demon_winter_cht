@@ -14,13 +14,13 @@
 | 海戰系統 | 完成 | [`docs/re/105`](../re/105-ida94-sea-combat.md)、[`docs/playtest/45`](45-sailing-boundary-and-collision.md)；保留原版相對轉舵與耗點規則 |
 | EGA／CGA 還原與 `F8` 切換 | 完成 | README 同狀態比較、[`docs/playtest/13`](13-final-a6-sampling-and-three-themes.md)、[`docs/playtest/21`](21-three-theme-same-state-comparison.md) |
 | Modern Icon 世界、角色、怪物與船 | 客觀覆蓋完成 | 世界正常／冬季差集為零；怪物 224/224、隊員 24/24、海戰 runtime 24/24，見 [`docs/playtest/39–42`](39-modern-icon-monster-direction-complete.md) |
-| Modern Icon 地城 | **待使用者審方向** | `dungeonTiles` JSON namespace 與安全底稿已完成；[`方向稿`](../design/img/modern-icon-dungeon-direction-v1.png) 尚待審，審後才逐索引量產。見 [`docs/playtest/49`](49-modern-icon-dungeon-namespace.md) |
+| Modern Icon 地城 | **客觀覆蓋完成，待 P4 審圖** | 方向已核准；`dungeonTiles` 涵蓋 MAP1–MAP5 實際 59/59 索引，門、閘、樓梯、冰牆、機關與轉角已有實機證據。見 [`docs/playtest/53`](53-modern-icon-dungeon-atlas-complete.md) |
 | 復古／現代操作切換 | 完成、待持續視覺回歸 | `F6`；復古為原版紅色直式命令列與相對轉向，現代為兩欄分組命令卡與絕對方向。見 [`docs/ui/04`](../ui/04-control-modes-and-safe-exit.md) |
 | `F1` 固定說明 | 完成 | 各主要模式共用說明入口；[`docs/ui/04`](../ui/04-control-modes-and-safe-exit.md) |
 | 關閉視窗前自動存檔 | 完成 | 失敗即關閉（fail-closed）：任一步寫檔失敗就留在遊戲；[`docs/ui/04`](../ui/04-control-modes-and-safe-exit.md) |
 | 場景跳轉與攻略輔助除錯 | 完成 | `-scene`、`-list-scenes`、技能與戰鬥 fixture；不偷設劇情旗標。README「開發者場景書籤」 |
 | 倚天 16×15 粗體中文 | 完成 | [`docs/re/17`](../re/17-font-format.md)；字型由玩家自行提供，未納入版本控制或發行包 |
-| 音效與音樂 | 完成已證實範圍 | 原版沒有背景配樂；PC speaker 效果與死亡旋律觸發見 [`docs/playtest/43`](43-audio-trigger-closure.md)，不虛構新配樂 |
+| 音效與音樂 | **合成完成，觸發未閉合** | 原版沒有背景配樂；八個單音與死亡旋律已合成，但獨立稽核發現噴吐誤播死亡旋律、非戰鬥死亡及三個零呼叫效果仍待清查，也沒有動態聽測。見 [`docs/playtest/54`](54-independent-audio-music-audit.md) |
 | 宣傳影片 | 完成 | [`短版 MP4`](../promo/demon-winter-cht-promo.mp4)；為 remake 實機畫面剪輯，不含原版資料檔或字型檔 |
 
 ## 二、引擎、資料與研究
@@ -37,10 +37,9 @@
 
 ## 三、目前真正未結案
 
-1. 使用者審閱 Modern Icon 地城方向稿。
-2. 依核准方向製作地城逐索引素材、聯絡表與代表 runtime 截圖。
-3. 執行 P4 同狀態 EGA／CGA／Modern Icon 最終視覺驗收。
+1. 使用者審閱 59／59 地城 atlas 的代表實機畫面。
+2. 執行 P4 同狀態 EGA／CGA／Modern Icon 最終視覺驗收。
 
-上述三項會改變美術方向，不能由代理在未審稿時自行宣告通過。其餘程式變更仍
+上述項目需要使用者作最終視覺決定，不能由代理自行宣告通過。其餘程式變更仍
 必須通過完整 Go、500/500、`uicheck`、A6 抽樣、禁入掃描、解壓後執行檔與
 Docker 清理閘門；本文件不取代那些測試記錄。

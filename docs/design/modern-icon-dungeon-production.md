@@ -1,7 +1,7 @@
 # Modern Icon 地城逐索引量產規格
 
 日期：2026-07-30
-狀態：視覺方向已核准；逐索引量產 25/59
+狀態：視覺方向已核准；逐索引量產 59/59；待 P4 使用者最終畫面審查
 
 ## 0. 方向稿十二格審查
 
@@ -106,8 +106,9 @@ go run ./tools/mapwindow \
   -theme artwork/modern-icon/m1/trial/theme.json
 ```
 
-目前已明列 25 格，必須列出剩餘 34 個 `theme dungeon missing` 並失敗。
-只有這份清單變成 `none`，且上述畫面都經人工審查，P3-D 才能改成完成。
+目前已明列 59 格，輸出為 `theme dungeon missing: none`。載入器測試也會把
+實際 inventory 與隨附 theme 作精確集合比對，缺格、多格、錯誤 PNG 尺寸或
+透明度都會失敗。
 
 ## 5. 本輪不越過的決策
 
@@ -115,3 +116,5 @@ go run ./tools/mapwindow \
 已獲使用者核准。量產仍以新母稿逐索引重畫，不把方向稿切成 runtime tile；
 第一批與 EGA／CGA 人物黑格裁決見
 [`docs/playtest/52`](../playtest/52-modern-icon-dungeon-approval-and-d1.md)。
+後續 D2–D4 的新母稿、明列重用、59／59 完成度與實機證據見
+[`docs/playtest/53`](../playtest/53-modern-icon-dungeon-atlas-complete.md)。

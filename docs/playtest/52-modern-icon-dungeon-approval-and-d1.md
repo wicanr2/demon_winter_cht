@@ -51,3 +51,6 @@ go run ./tools/mapwindow \
 
 第二支目前應列出 34 個 `theme dungeon missing` 並以非零狀態結束；這是
 失敗即關閉（fail-closed）的正確結果。
+
+> 本文件記錄第一批當時的歷史基線；後續已完成 59／59，請以
+> [`docs/playtest/53`](53-modern-icon-dungeon-atlas-complete.md) 為最新狀態。

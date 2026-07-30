@@ -3535,6 +3535,24 @@ CGA sprite 32×16 vs 16×32、`.SHE` 16×56 vs 32×28、
 SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 **主線從開局到結局的每一段都實機跑過**（`docs/re/64`）。
 
+> **2026-07-30 最新基線（取代下方 25／59 舊進度）：Modern Icon 地城
+> P3-D 已達 59／59。** MAP1–MAP5 的實際 inventory 與 `dungeonTiles`
+> 精確集合相符，`theme dungeon missing: none`。D2–D4 已補門、閘、樓梯、
+> 冰牆／冰門、神龕、火盆、物資、瓦礫、雕面機關與四種轉角；同語意的戶外
+> 索引才明列重用。聯絡表及門／閘／冰區／轉角實機證據見
+> [`docs/playtest/53`](docs/playtest/53-modern-icon-dungeon-atlas-complete.md)。
+> EGA／CGA 人物黑底格與原版一致，歷史主題保留；透明人物只屬 Modern Icon。
+> **目前真正未結案只剩 P4 使用者最終視覺審查，以及審查後的完整回歸與
+> 最終回歸；不得先宣告整個 goal 完成。59／59 納入後的候選發行包已通過
+> 解壓執行抽樣，含 466 張 Modern Icon PNG、487 個檔案，SHA-256：
+> `c13024eec3f51cb0c954ce5d41d5beff1e2353618365457fb703da218027f226`。
+>
+> **同日獨立音訊稽核勘誤：**原版無 BGM，八個單音與死亡旋律的合成完成；
+> 但觸發不能稱為完成。怪物噴吐在零死亡時會誤播死亡旋律，非戰鬥全滅與
+> effect 3／6／7 呼叫端仍待原版交叉引用清查；既有 A6 使用 `-volume 0`，
+> 也沒有動態聽測。詳見
+> [`docs/playtest/54`](docs/playtest/54-independent-audio-music-audit.md)。
+>
 > **2026-07-29 使用者最新優先序：先完成美術 polish；操作體驗列為同輪產品工作。**
 > 聲音合成已完整、非戰鬥觸發缺口已盤點，但目前暫停，不得搶在美術之前。
 > Modern Icon worklist 依序為：

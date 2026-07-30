@@ -1,6 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -171,5 +175,40 @@ func TestModernIconRejectsLegacyFrameSize(t *testing.T) {
 	err := validateModernIconManifest(m)
 	if err == nil || !strings.Contains(err.Error(), "64x56") {
 		t.Fatalf("32×28 拒絕訊息 = %v", err)
+	}
+}
+
+func TestBundledModernIconDungeonMatchesInventory(t *testing.T) {
+	root := filepath.Join("..", "..")
+	theme, err := loadModernIconTheme(filepath.Join(
+		root, "artwork", "modern-icon", "m1", "trial"))
+	if err != nil {
+		t.Fatalf("載入隨附 Modern Icon：%v", err)
+	}
+	raw, err := os.ReadFile(filepath.Join(
+		root, "artwork", "modern-icon", "m1", "dungeon-inventory.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var inventory struct {
+		Tiles []struct {
+			Index string `json:"index"`
+		} `json:"tiles"`
+	}
+	if err := json.Unmarshal(raw, &inventory); err != nil {
+		t.Fatal(err)
+	}
+	if len(theme.dungeon) != len(inventory.Tiles) {
+		t.Fatalf("dungeonTiles=%d，實際使用索引=%d",
+			len(theme.dungeon), len(inventory.Tiles))
+	}
+	for _, tile := range inventory.Tiles {
+		v, err := strconv.ParseUint(strings.TrimPrefix(tile.Index, "0x"), 16, 8)
+		if err != nil {
+			t.Fatalf("inventory index %q：%v", tile.Index, err)
+		}
+		if theme.dungeon[byte(v)] == nil {
+			t.Errorf("dungeonTiles 缺 %s", tile.Index)
+		}
 	}
 }
