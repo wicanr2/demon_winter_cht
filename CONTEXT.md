@@ -3549,6 +3549,13 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 比較改指向 P4 同狀態畫面；早期 `modern-icon-m1-winter-runtime.png` 不再
 > 作為 README 現況代表，改用 `p4-winter-modern.png`。里程碑舊圖可留在
 > playtest／研究文件，但公開首頁不得把 M0／M1 試片誤標成完成版。
+>
+> **2026-07-30 第二支宣傳片硬閘門再確認：**成片必須同時包含
+> `demon-winter-modern-title-v1.png` Modern 新片頭、目前 HEAD 實際遊玩、
+> 同一局不中斷錄下的 `F8` EGA → CGA → Modern Icon → EGA，以及已核准的
+> remake／宣傳片新編配樂與遊戲音效；任一缺少都不得稱為正式第二支宣傳片。
+> 新片頭同時用於三秒開場揭幕與六秒片尾完整主視覺，禁止影片模型重新拼寫
+> 標題。完整逐鏡與驗收表見 `docs/promo/demon-winter-epic-trailer-prompt.md`。
 
 > **2026-07-30 最新基線（取代下方 25／59 舊進度）：Modern Icon 地城
 > P3-D 已達 59／59。** MAP1–MAP5 的實際 inventory 與 `dungeonTiles`
