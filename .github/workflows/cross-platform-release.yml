@@ -52,8 +52,8 @@ jobs:
           chmod +x dist/*.AppImage
           dist/*.AppImage --appimage-extract >/dev/null
           test -x squashfs-root/usr/bin/demonwinter
-          squashfs-root/usr/bin/demonwinter -list-scenes >/dev/null
-          APPIMAGE_EXTRACT_AND_RUN=1 dist/*.AppImage -list-scenes >/dev/null
+          xvfb-run -a squashfs-root/usr/bin/demonwinter -list-scenes >/dev/null
+          APPIMAGE_EXTRACT_AND_RUN=1 xvfb-run -a dist/*.AppImage -list-scenes >/dev/null
           test -z "$(find squashfs-root -type f \( -iname '*.DAT' -o -iname '*.DTT' -o -iname '*.SHE' -o -iname '*.SHP' -o -iname '*.PIE' -o -iname '*.PIC' -o -iname 'STDFONT.15' -o -iname 'SPCFONT.15' \) -print -quit)"
           unzip -q dist/*windows*.zip -d windows-unpacked
           test -s windows-unpacked/*/demonwinter.exe
