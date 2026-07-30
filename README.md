@@ -89,7 +89,8 @@ EGA → CGA → Modern Icon，不改遊戲規則或存檔。
 影片是 remake 執行畫面的剪輯成品；不含可抽取的原版資料檔或倚天字型檔。
 
 第二支「冰封史詩／決戰倒數」宣傳片已完成：
-[`觀看／下載 72 秒史詩宣傳片（MP4）`](docs/promo/demon-winter-epic-trailer.mp4)。
+**[在 YouTube 觀看 72 秒史詩宣傳片](https://youtu.be/X0HeKJX764I)**；
+亦可[`直接下載 MP4`](docs/promo/demon-winter-epic-trailer.mp4)。
 它刻意避開第一支反覆使用的置中字卡，改採 Modern 新片頭、1988 年歷史規模、
 同一局實按 `F8` 的 EGA → CGA → Modern Icon → EGA、地城／城鎮／Xeres 戰鬥／
 海戰實機，以及已核准的新編配樂。專屬導演提示詞、逐鏡分鏡與配樂規格見
