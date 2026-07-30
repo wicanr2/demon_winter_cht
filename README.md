@@ -358,7 +358,9 @@ macOS 的 Ebiten／Metal 需要 Apple SDK，不能由 Linux Docker 假交叉編�
 [`跨平台候選發行包`](.github/workflows/cross-platform-release.yml) 會在原生
 `macos-15-intel` 與 `macos-15` runner 分別產生 amd64／arm64 包，兩者共用
 同一個 [`package-release-inner.sh`](tools/package-release-inner.sh) 白名單與
-原版素材禁入閘門。
+原版素材禁入閘門；首次
+[雙架構執行](https://github.com/wicanr2/demon_winter_cht/actions/runs/30514815112)
+已完成建置、禁入複核與 artifact 上傳。
 
 ---
 

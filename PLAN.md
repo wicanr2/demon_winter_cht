@@ -351,9 +351,10 @@ state = (state × 125) mod 2796203
       地城刻意依樓梯／傳送分段，不把單張 BFS 不可達誤判成壞圖。
 - [x] 偵錯入口依使用者要求保留為具名 `-scene`／fixture；書籤只定位，不偷設
       謎題旗標，玩家流程不依賴它。舊「移除所有 debug hook」要求已撤回。
-- [ ] Linux／Windows／macOS 發行：Linux amd64 與 Windows amd64 已由同一
-      白名單／禁入流程產包；macOS amd64／arm64 原生 CI 已建立，待首次 runner
-      實際綠燈後才勾完。
+- [x] Linux／Windows／macOS 發行：Linux amd64、Windows amd64 與 macOS
+      amd64／arm64 共用白名單／禁入流程；GitHub Actions run
+      `30514815112` 的兩個原生 macOS runner 均完成建置、禁入複核與 artifact
+      上傳。Linux 另通過解壓執行，Windows 通過 PE／Go build info。
 - [x] 玩家向繁中 README 作公開索引，逆向、格式、設計與驗收細節分流至
       `docs/re`、`docs/formats`、`docs/design`、`docs/playtest`；不再另造會
       與 README／CONTEXT 漂移的 `ENGINEERING.md`。

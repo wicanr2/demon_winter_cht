@@ -21,6 +21,7 @@
 | 場景跳轉與攻略輔助除錯 | 完成 | `-scene`、`-list-scenes`、技能與戰鬥 fixture；不偷設劇情旗標。README「開發者場景書籤」 |
 | 倚天 16×15 粗體中文 | 完成 | [`docs/re/17`](../re/17-font-format.md)；字型由玩家自行提供，未納入版本控制或發行包 |
 | 音效與音樂 | **原版範圍完成，待使用者試聽** | 原版沒有背景配樂；八個單音與死亡旋律已合成。獨立稽核發現的吐息錯誤已修，IDA 證實非戰鬥死亡不播、effect 3/6/7 為未使用音階；九個 WAV 可直接試聽。見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)、[`docs/playtest/54`](54-independent-audio-music-audit.md) |
+| 跨平台候選包 | 技術建置完成 | Linux amd64 解壓執行、Windows amd64 PE／build info 通過；macOS amd64／arm64 原生 CI 的建置、禁入與 artifact 上傳全綠。實機顯示／音效仍由各平台玩家驗收；見 [`docs/playtest/44`](44-release-package-a6-sample.md) |
 | 宣傳影片 | 完成 | [`短版 MP4`](../promo/demon-winter-cht-promo.mp4)；為 remake 實機畫面剪輯，不含原版資料檔或字型檔 |
 
 ## 二、引擎、資料與研究

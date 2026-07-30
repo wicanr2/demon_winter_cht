@@ -3586,10 +3586,11 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 白名單／禁入／校驗流程已抽成 `tools/package-release-inner.sh`；Linux
 > amd64 與 Windows amd64 均已產包並通過 466 PNG、487 檔、禁入 0，Linux
 > 解壓執行及 Windows PE／Go build info 亦通過。macOS Metal 需要 Apple SDK，
-> 改由原生 `macos-15-intel`／`macos-15` CI 建置 amd64／arm64；首次 CI
-> 綠燈前仍不得宣稱三平台包全數驗收。最新 Linux／Windows SHA-256 分別為
-> `0fa36c4257b3ff5f0356cbf163699b60f5c6ecfe7c6283bc46e86a9976b60210`、
-> `124c76637907f6c96b15ec99adf90b7e4315882520db17a5a6a7564bbee9309d`。
+> 改由原生 `macos-15-intel`／`macos-15` CI 建置 amd64／arm64；workflow
+> run `30514815112` 兩個架構的建置、禁入與 artifact 上傳均成功。最新
+> Linux／Windows SHA-256 分別為
+> `3ea9f5e9412bdd4c36612cfcf378fb7221f2cb28b65b35f6e7b1abe4908e7b80`、
+> `d3da99d2c4589addbacfec2b9545e692d1dc2dc6b14474de04899115d86fefbc`。
 >
 > **逆向文件 stale 清理：**`OPEN.PIE` 早已解成 608×336 並接入標題畫面，
 > README／PLAN／graphics spec 的舊「未解」已回填。DEMON／WINTER index 101
