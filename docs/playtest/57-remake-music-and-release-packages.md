@@ -73,7 +73,9 @@ F1 開啟的手札只在最前方新增 remake 操作章；原有繁中說明、
 
 ## 正式發布路徑補齊
 
-`cross-platform-release.yml` 不再只停在短期 artifact。手動執行時可輸入正式
+`cross-platform-release.yml` 不再只停在短期 artifact。更新後的候選 workflow
+[run 30522874027](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522874027)
+已由 GitHub 實際解析並全綠；一般 push 中發布 job 如設計般跳過。手動執行時可輸入正式
 `X.Y.Z` 版本並勾選 `publish_release`；只有 Linux／Windows 與兩個 macOS job
 全部成功後，發布 job 才會執行。它會先斷言恰有一份 AppImage、一份 Windows
 ZIP、Intel／Apple Silicon 各一份 macOS ZIP 與四份 SHA-256，逐份驗證校驗碼

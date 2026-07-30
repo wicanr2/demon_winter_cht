@@ -3577,6 +3577,11 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 複核四段 WAV、466 張 Modern Icon PNG、README／開始說明／發行說明、
 > 禁入 0、第三方 DLL 0，AppImage `-list-scenes` 實際啟動通過。CI 並以
 > `cmp` 保證發行包手札與 repo 完整手札逐位元組相同，舊查詢訊息不遺失。
+> 更新後 workflow
+> [30522874027](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522874027)
+> 已由 GitHub 實際解析並全綠；一般 push 的發布 job 正確跳過，`v0.1.0`
+> 尚未建立。容器內無可用 GitHub API 權杖，故未另觸發 `0.1.0` 手動候選；
+> 核准後由 GitHub UI 勾選 `publish_release` 即可一次重建與正式發布。
 >
 > **同日獨立音訊稽核勘誤：**原版無 BGM，八個單音與死亡旋律的合成完成；
 > 但觸發不能稱為完成。怪物噴吐在零死亡時會誤播死亡旋律，非戰鬥全滅與
