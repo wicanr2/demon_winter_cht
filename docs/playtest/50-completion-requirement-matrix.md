@@ -29,7 +29,7 @@
 |---|---|---|
 | 玩家文字不可硬編在 Go | 完成 | 原版資料字串 500/500；介面與規則原因共 836 條 JSON，玩家中文硬編 0。見 [`docs/playtest/47`](47-rule-reason-json-separation.md) |
 | 引擎與資料分離 | 完成目前範圍 | `assets/lang/zh-Hant/ui.json` 保存介面文字、順序、分組與格式；Go 只持有 key、參數、熱鍵與 action。缺 key 失敗即關閉，`dwstrings uicheck` 是發行閘門 |
-| 少數逆向缺口整理成 Markdown | 持續以證據強度管理 | `docs/re/` 現有 116 篇；怪物繞障見 [`docs/re/116`](../re/116-monster-obstacle-aware-pathing.md)。同長路線 tie-break 尚未逐步動態對拍，標為強證據而非完全相同 |
+| 少數逆向缺口整理成 Markdown | 持續以證據強度管理 | `docs/re/` 現有 118 篇編號研究；怪物繞障見 [`docs/re/116`](../re/116-monster-obstacle-aware-pathing.md)，音效 XREF 見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)，未使用水紋 frame 見 [`docs/re/118`](../re/118-unused-terrain-frame-101.md)。同長路線 tie-break 尚未逐步動態對拍，標為強證據而非完全相同 |
 | 反組譯＋remake 通用範本／skill | 完成 | `reverse-engineer-retro-game-remake` 同步於 `~/.codex/skills/` 與 `~/my_skill/`；repo 內可重建來源由 README 索引 |
 | PC-98 Golden Box 通用 knowledge base | 完成 | `research-pc98-golden-box-ui` 以關鍵字觸發；內容在 `~/my_skill/knowledge-base/retro-cht/`，`~/.codex/skills` 使用連結，不要求每次啟動全讀 |
 | 遊戲引擎抽離評估 | 研究完成、抽離延後 | [`docs/design/engine-extraction-study.md`](../design/engine-extraction-study.md)；在第二款真實作品接入前，不把單一遊戲假定為通用 SSI 引擎 |
@@ -37,9 +37,12 @@
 
 ## 三、目前真正未結案
 
-1. 使用者審閱 59／59 地城 atlas 的代表實機畫面。
-2. 執行 P4 同狀態 EGA／CGA／Modern Icon 最終視覺驗收。
+1. 使用者審閱 59／59 地城 atlas 與
+   [`P4 三主題五類場景畫板`](55-p4-three-theme-review-board.md)。
+2. 使用者試聽 [`docs/audio`](../audio/) 九份 WAV，並在實機確認預設音量、
+   死亡旋律節奏、連續效果的單聲道中斷、Sound on/off 與目標平台出聲。
 
-上述項目需要使用者作最終視覺決定，不能由代理自行宣告通過。其餘程式變更仍
+上述項目需要使用者作最終視覺／聽感決定，不能由代理自行宣告通過。P4 的
+15 張可重播技術證據與音訊技術重驗已完成；其餘程式變更仍
 必須通過完整 Go、500/500、`uicheck`、A6 抽樣、禁入掃描、解壓後執行檔與
 Docker 清理閘門；本文件不取代那些測試記錄。

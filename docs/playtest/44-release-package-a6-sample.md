@@ -52,6 +52,15 @@ c13024eec3f51cb0c954ce5d41d5beff1e2353618365457fb703da218027f226  demonwinter-zh
 fe8b855b1eac57fd450d42dbd95a0b42f8d9bf9fea47045b7b08ef041a1df905  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
 ```
 
+P4 三主題審查板、`OPEN.PIE`／terrain index 101 文件勘誤，以及修正後獨立
+音訊重驗紀錄納入 README 後再次重建。全套 Go／字串／素材覆蓋閘門先通過，
+解壓包再於 Xvfb 執行 `-list-scenes`；466 張 Modern Icon PNG、487 個檔案、
+禁入原版素材 0，校驗碼通過。最新 SHA-256：
+
+```text
+ee369e62d7f6a7ce8c5eb80c948989433404f9ba91266af9daab783ea6e14b08  demonwinter-zh-Hant-2026.07.30-linux-amd64.tar.gz
+```
+
 | Modern Icon 與現代命令卡 | 復古紅色命令列 | F1 手札 |
 |---|---|---|
 | ![發行包 Modern Icon](../design/img/release-a6-modern-icon.png) | ![發行包復古介面](../design/img/release-a6-retro-ui.png) | ![發行包 F1 手札](../design/img/release-a6-help.png) |

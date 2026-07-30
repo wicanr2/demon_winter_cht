@@ -90,11 +90,11 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 | P2 高解析代表素材與呈現層 | **完成** | 世界 terrain、隊伍、怪物與船均已進 1280×800 高解析呈現層 |
 | P3 世界與單位量產 | **完成** | 世界正常／冬季差集皆為零；怪物 224/224、隊員 24/24、海戰 runtime 24/24 |
 | P3-D 地城素材 | **完成，59/59** | `dungeonTiles` 已逐一涵蓋 MAP1–MAP5 的 59 個實際索引；新畫門、閘、樓梯、冰牆、機關與轉角，只有語意相同者才明列重用 |
-| P4 最終視覺驗收 | **待使用者審查** | 世界、冬季、地城、戰鬥、海戰同狀態三主題截圖；密門、陷阱、黑色地形與色弱辨識抽樣 |
+| P4 最終視覺驗收 | **15 張技術證據完成，待使用者審查** | 世界、冬季、地城、戰鬥、海戰 × 三主題同狀態畫板已產生；密門、陷阱、黑色地形與色弱辨識另有前序抽樣 |
 
 完整呈現架構、素材分批與驗收門檻，以
 [`docs/design/modern-ega-theme.md`](docs/design/modern-ega-theme.md) 為單一設計規格。
-在 P2–P4 完成前，README 與發行說明不得把 Modern Icon 稱為完成重畫。
+在 P4 使用者驗收完成前，README 與發行說明不得把 Modern Icon 稱為完成重畫。
 地城量產的客觀基線是 MAP1–MAP5 實際使用 **59 個索引**，不是方向稿中的
 12 個概念物件；頻率、逐地圖分布、通行值與完成度命令見
 [`Modern Icon 地城量產規格`](docs/design/modern-icon-dungeon-production.md)及
@@ -111,6 +111,11 @@ SSI 通用引擎（[`研究報告`](docs/design/engine-extraction-study.md)）�
 [`docs/playtest/52`](docs/playtest/52-modern-icon-dungeon-approval-and-d1.md)，
 59／59 完整度、實機門／閘／冰區與轉角證據見
 [`docs/playtest/53`](docs/playtest/53-modern-icon-dungeon-atlas-complete.md)。
+
+![P4 三主題五類場景審查板](docs/design/img/p4-review-board.png)
+
+完整 15 張原圖、固定條件與像素差異見
+[`docs/playtest/55`](docs/playtest/55-p4-three-theme-review-board.md)。
 
 ![Modern Icon 地城 D1／D5 第一批](docs/design/img/modern-icon-dungeon-d1-contact.png)
 
@@ -510,7 +515,7 @@ CGA 與 EGA 素材檔的大小呈精確 3.5 倍對應（1728→6048、2048→716
 | CGA `.PIC` / `.SHP` | **已驗證**。`OPEN.PIC` 是 320×200 2bpp **linear**（不是硬體 odd/even 交錯）；人像框 144×144；sprite frame **16×16**（64 B）|
 | EGA `.PIE` 全螢幕圖／人像框 | **已驗證**。16 bytes 內嵌調色盤 + 4-plane sequential、MSB-first；檔內 144×252，畫到畫面上是 288×252 |
 | EGA `.SHE` 精靈圖 | **已驗證**。檔內 frame **16×28**（224 B）、4-plane 列內分塊；載入時水平加倍成 32×28（448 B）|
-| `OPEN.PIE`（102,160 B）| **未解**。確認不符 3.5 倍規律 |
+| `OPEN.PIE`（102,160 B）| **已驗證**。608×336；16 B 調色盤後為 336 列 × 每列 4 plane × 76 B，是不套用 3.5 倍／半寬規律的開場圖例外 |
 
 EGA 素材的通則是「**檔案存半寬、顯示時寬度 ×2、高度 ×1.75**」，
 差別只在加倍發生於載入時（`.SHE`）或 blit 時（`.PIE`）。

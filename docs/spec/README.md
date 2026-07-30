@@ -85,7 +85,7 @@
 | [`04-movement.md`](04-movement.md) — 移動與模式切換 | **READY** | `docs/re/08`、`04`、`22` |
 | [`05-character.md`](05-character.md) — 角色建立與升級 | **READY**（基礎骰分佈標假設）| `docs/re/10`、`19`、`21` |
 | [`06-time.md`](06-time.md) — 時間系統 | **READY** | `docs/re/04`、`08` + 手冊原文 |
-| [`07-graphics.md`](07-graphics.md) — 素材格式與渲染 | **READY**（`OPEN.PIE` 未解，有 CGA 版可替代）| `docs/formats/graphics.md`、`docs/re/07` |
+| [`07-graphics.md`](07-graphics.md) — 素材格式與渲染 | **READY**（含 `OPEN.PIE` 608×336 例外）| `docs/formats/graphics.md`、`docs/re/07` |
 | [`08-town-economy.md`](08-town-economy.md) — 城鎮與經濟 | **READY** | `docs/re/19`、`21` |
 | [`09-fonts.md`](09-fonts.md) — 字型與中文化 | **READY** | `docs/re/17` |
 

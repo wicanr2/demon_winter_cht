@@ -3542,8 +3542,8 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 索引才明列重用。聯絡表及門／閘／冰區／轉角實機證據見
 > [`docs/playtest/53`](docs/playtest/53-modern-icon-dungeon-atlas-complete.md)。
 > EGA／CGA 人物黑底格與原版一致，歷史主題保留；透明人物只屬 Modern Icon。
-> **目前真正未結案只剩 P4 使用者最終視覺審查，以及審查後的完整回歸與
-> 最終回歸；不得先宣告整個 goal 完成。59／59 納入後的候選發行包已通過
+> **目前真正未結案只剩 P4 使用者最終視覺審查與人耳音效試聽；不得先宣告
+> 整個 goal 完成。** 59／59 納入後的候選發行包已通過
 > 解壓執行抽樣，含 466 張 Modern Icon PNG、487 個檔案，SHA-256：
 > `c13024eec3f51cb0c954ce5d41d5beff1e2353618365457fb703da218027f226`。
 >
@@ -3560,6 +3560,33 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > 使用者試聽；證據見 [`docs/re/117`](docs/re/117-audio-xrefs-and-breath-correction.md)。
 > 音效修正後候選發行包已重建並通過解壓 smoke，SHA-256：
 > `fe8b855b1eac57fd450d42dbd95a0b42f8d9bf9fea47045b7b08ef041a1df905`。
+>
+> **修正後獨立音訊重驗：**另一個 subagent 唯讀重跑 IDA、WAV 位元組重建、
+> 格式／峰值／靜音檢查與觸發抽樣，未發現重大功能錯誤。最新裁決是「原版
+> 音訊範圍與技術實作完成，玩家聽感及三平台真實裝置驗收未完成」。現有
+> `soundOutput` spy 只直接測 `playSound`，不冒充所有 UI 呼叫鏈的端到端
+> 動態測試；詳見 [`docs/playtest/54`](docs/playtest/54-independent-audio-music-audit.md)
+> 與 [`docs/re/117`](docs/re/117-audio-xrefs-and-breath-correction.md)。
+>
+> **以下同日期段落是依時間追加的歷史證據，不是新的待辦清單。** 若其中
+> 出現「尚待」「下一批」或舊雜湊，一律以上方最新基線及後續明列的取代段落
+> 為準。
+>
+> **P4 技術證據已完成：**`tools/p4-capture.sh` 一次建置後拍攝世界、冬季、
+> 地城、戰鬥、海戰 × EGA／CGA／Modern Icon 共 15 張同狀態實機圖；代理已
+> 人工檢視，數值／格位一致，正常／冬季三主題皆有非零差異。審查板與原圖見
+> [`docs/playtest/55`](docs/playtest/55-p4-three-theme-review-board.md)。
+> 仍待使用者作最終視覺核准。上述文件與獨立音訊重驗納入後，完整 Go、
+> 500/500、`uicheck` 836/836／硬編 0、世界／地城差集及審稿 JSON 均重跑
+> 通過；候選包解壓 `-list-scenes`、466 PNG／487 檔與禁入掃描也通過。
+> 最新 SHA-256：
+> `ee369e62d7f6a7ce8c5eb80c948989433404f9ba91266af9daab783ea6e14b08`。
+>
+> **逆向文件 stale 清理：**`OPEN.PIE` 早已解成 608×336 並接入標題畫面，
+> README／PLAN／graphics spec 的舊「未解」已回填。DEMON／WINTER index 101
+> 則由四套 atlas、全地圖 inventory 與動態寫入鏈判為「強證據：runtime
+> 未使用的額外水紋 frame」；保留解碼但不替 Modern Icon 虛構用途，見
+> [`docs/re/118`](docs/re/118-unused-terrain-frame-101.md)。
 >
 > **2026-07-29 使用者最新優先序：先完成美術 polish；操作體驗列為同輪產品工作。**
 > 聲音合成已完整、非戰鬥觸發缺口已盤點，但目前暫停，不得搶在美術之前。

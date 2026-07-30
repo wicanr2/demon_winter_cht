@@ -30,8 +30,8 @@ var BlackTiles = [...]byte{0, 17, 86, 92}
 // TerrainTileCount 是地形圖塊集的圖塊數。
 //
 // DEMON.SHP／WINTER.SHP 各 6528 bytes ÷ 64 bytes/frame = 102。
-// 與 FILES.DAT 可通行性表的有效範圍（tile 0–100，101 項）相符，
-// 最後一格 101 未被該表涵蓋。
+// FILES.DAT 可通行性表與所有地圖只消費 tile 0–100；最後一格 101 是
+// runtime 未使用的額外水紋 frame，仍保留解碼（docs/re/118）。
 const TerrainTileCount = 102
 
 // TerrainSet 指定要載入哪一套地形圖塊。
