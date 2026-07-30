@@ -7,6 +7,11 @@ on:
         description: 發行版本
         required: true
         default: dev
+      publish_release:
+        description: 通過人工驗收後建立正式 GitHub Release
+        required: true
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -52,12 +57,23 @@ jobs:
           chmod +x dist/*.AppImage
           dist/*.AppImage --appimage-extract >/dev/null
           test -x squashfs-root/usr/bin/demonwinter
+          test -f squashfs-root/usr/share/demonwinter/README.md
+          test -f squashfs-root/usr/share/demonwinter/開始遊戲.txt
+          test -f squashfs-root/usr/share/demonwinter/packaging/RELEASE-NOTES-zh-Hant.md
+          cmp assets/manual/zh-Hant/manual.txt \
+            squashfs-root/usr/share/demonwinter/assets/manual/zh-Hant/manual.txt
+          test "$(find squashfs-root -type f -name 'remake-*.wav' | wc -l)" -eq 4
           xvfb-run -a squashfs-root/usr/bin/demonwinter -list-scenes >/dev/null
           APPIMAGE_EXTRACT_AND_RUN=1 xvfb-run -a dist/*.AppImage -list-scenes >/dev/null
           test -z "$(find squashfs-root -type f \( -iname '*.DAT' -o -iname '*.DTT' -o -iname '*.SHE' -o -iname '*.SHP' -o -iname '*.PIE' -o -iname '*.PIC' -o -iname 'STDFONT.15' -o -iname 'SPCFONT.15' \) -print -quit)"
           unzip -q dist/*windows*.zip -d windows-unpacked
           test -s windows-unpacked/*/demonwinter.exe
           test -f windows-unpacked/*/README.md
+          test -f windows-unpacked/*/開始遊戲.txt
+          test -f windows-unpacked/*/packaging/RELEASE-NOTES-zh-Hant.md
+          cmp assets/manual/zh-Hant/manual.txt \
+            windows-unpacked/*/assets/manual/zh-Hant/manual.txt
+          test "$(find windows-unpacked -type f -name 'remake-*.wav' | wc -l)" -eq 4
           test -f windows-unpacked/*/第三方DLL說明.txt
       - uses: actions/upload-artifact@v4
         with:
@@ -99,6 +115,11 @@ jobs:
           test -d "$stage/DemonWinter.app"
           codesign --verify --deep --strict "$stage/DemonWinter.app"
           test -f "$stage/DemonWinter.app/Contents/Resources/README.md"
+          test -f "$stage/DemonWinter.app/Contents/Resources/開始遊戲.txt"
+          test -f "$stage/DemonWinter.app/Contents/Resources/packaging/RELEASE-NOTES-zh-Hant.md"
+          cmp assets/manual/zh-Hant/manual.txt \
+            "$stage/DemonWinter.app/Contents/Resources/assets/manual/zh-Hant/manual.txt"
+          test "$(find "$stage" -type f -name 'remake-*.wav' | wc -l)" -eq 4
           test -z "$(find "$stage" -type f \( -iname '*.DAT' -o -iname '*.DTT' -o -iname '*.SHE' -o -iname '*.SHP' -o -iname '*.PIE' -o -iname '*.PIC' -o -iname 'STDFONT.15' -o -iname 'SPCFONT.15' \) -print -quit)"
       - uses: actions/upload-artifact@v4
         with:
@@ -107,3 +128,49 @@ jobs:
             dist/*.zip
             dist/*.sha256
           if-no-files-found: error
+
+  publish:
+    name: 建立正式 GitHub Release
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_release
+    needs: [linux-windows, macos]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: demonwinter-*
+          path: dist
+          merge-multiple: true
+      - name: 版本號、產物與校驗碼閘門
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "正式發行版本必須是 X.Y.Z：$VERSION" >&2
+            exit 1
+          fi
+          test "$(find dist -maxdepth 1 -type f -name '*.AppImage' | wc -l)" -eq 1
+          test "$(find dist -maxdepth 1 -type f -name '*windows-x86_64.zip' | wc -l)" -eq 1
+          test "$(find dist -maxdepth 1 -type f -name '*macOS-amd64.zip' | wc -l)" -eq 1
+          test "$(find dist -maxdepth 1 -type f -name '*macOS-arm64.zip' | wc -l)" -eq 1
+          test "$(find dist -maxdepth 1 -type f -name '*.sha256' | wc -l)" -eq 4
+          test -z "$(find dist -maxdepth 1 -type f ! -name "*-${VERSION}-*" -print -quit)"
+          (
+            cd dist
+            for checksum in *.sha256; do
+              sha256sum -c "$checksum"
+            done
+          )
+      - name: 發布第一版
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          tag="v${VERSION}"
+          gh release create "$tag" \
+            dist/*.AppImage dist/*.zip dist/*.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "Demon's Winter 冬之魔繁中 remake ${tag}" \
+            --notes-file packaging/RELEASE-NOTES-zh-Hant.md

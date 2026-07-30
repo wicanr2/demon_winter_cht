@@ -393,6 +393,12 @@ macOS 的 Ebiten／Metal 需要 Apple SDK，不能由 Linux Docker 假交叉編�
 `.app` staging、簽署檢查與原版素材禁入閘門。舊 run 只證明 tar 候選包；
 新版 `.app` workflow 必須重新全綠，不能沿用舊證據。
 
+正式發行只由手動執行 workflow 並勾選 `publish_release` 觸發；流程會先確認
+版本號、AppImage、Windows ZIP、兩種 macOS ZIP 與四份 SHA-256 均完整吻合，
+才建立對應 `vX.Y.Z` GitHub Release。一般 push 只重建候選 artifact，不會
+意外發布。玩家向發行說明見
+[`packaging/RELEASE-NOTES-zh-Hant.md`](packaging/RELEASE-NOTES-zh-Hant.md)。
+
 ---
 
 ## 現況

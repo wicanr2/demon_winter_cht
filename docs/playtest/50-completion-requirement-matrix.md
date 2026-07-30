@@ -22,7 +22,7 @@
 | 倚天 16×15 粗體中文 | 完成 | [`docs/re/17`](../re/17-font-format.md)；字型由玩家自行提供，未納入版本控制或發行包 |
 | 原版音效 | **完成，使用者已核准** | 原版沒有背景配樂；八個單音與死亡旋律已合成。吐息錯誤已修，IDA 證實非戰鬥死亡不播、effect 3/6/7 為未使用音階；見 [`docs/re/117`](../re/117-audio-xrefs-and-breath-correction.md)、[`docs/playtest/54`](54-independent-audio-music-audit.md) |
 | remake 遊戲配樂 | **程式與單元測試完成，待實際錄音／三平台聽測** | 探索、休整、戰鬥、終局四組原創程式合成循環；無 SoundFont／第三方取樣，`F7` 與 `-music-volume` 獨立控制，不冒充原版 BGM。封裝前仍需有聲裝置動態驗收 |
-| 跨平台正式包工具鏈 | 完成 | Type 2 AppImage、Windows DLL 稽核 ZIP、macOS amd64／arm64 `.app` 均建置、禁入、smoke 與 artifact 上傳全綠；[run 30522011200](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522011200)、[`docs/playtest/57`](57-remake-music-and-release-packages.md) |
+| 跨平台正式包工具鏈 | 完成 | Type 2 AppImage、Windows DLL 稽核 ZIP、macOS amd64／arm64 `.app` 均建置、禁入、smoke 與 artifact 上傳全綠；[run 30522387676](https://github.com/wicanr2/demon_winter_cht/actions/runs/30522387676)、[`docs/playtest/57`](57-remake-music-and-release-packages.md)。正式發布另有手動布林閘門、四產物數量與 SHA-256 驗證 |
 | 宣傳影片 | 完成 | [`短版 MP4`](../promo/demon-winter-cht-promo.mp4)；為 remake 實機畫面剪輯，不含原版資料檔或字型檔 |
 
 ## 二、引擎、資料與研究

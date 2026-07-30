@@ -70,3 +70,21 @@ F1 開啟的手札只在最前方新增 remake 操作章；原有繁中說明、
 1. 使用者試聽四段 WAV，並於有聲裝置實際確認 F7 與原版音效疊加。
 2. 使用者 P4 最終視覺核准。
 3. 上述核准後，以正式版本號重建 artifact 並建立 GitHub Release。
+
+## 正式發布路徑補齊
+
+`cross-platform-release.yml` 不再只停在短期 artifact。手動執行時可輸入正式
+`X.Y.Z` 版本並勾選 `publish_release`；只有 Linux／Windows 與兩個 macOS job
+全部成功後，發布 job 才會執行。它會先斷言恰有一份 AppImage、一份 Windows
+ZIP、Intel／Apple Silicon 各一份 macOS ZIP 與四份 SHA-256，逐份驗證校驗碼
+及版本名，再建立 `vX.Y.Z` GitHub Release。一般 push 不會發布。
+
+2026-07-30 RC3 本機封裝抽樣另確認：
+
+- AppImage 與 Windows ZIP 的 SHA-256 均通過；
+- AppImage 實際以 `-list-scenes` 啟動成功；
+- 兩包各含四段配樂 WAV、466 張 Modern Icon PNG、README、開始說明與發行說明；
+- 原版資料／原版圖檔／倚天字型禁入掃描為零；
+- Windows 第三方 DLL 為 0，只有包內列出的 Windows 系統 DLL；
+- CI 新增逐位元組 `cmp`，確保包內 F1 手札與 repo 的完整手札相同，舊查詢
+  訊息不會在 staging 過程遺失。

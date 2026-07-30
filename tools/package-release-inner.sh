@@ -22,6 +22,7 @@ trap cleanup EXIT INT TERM
 root="$stage/$RELEASE_NAME"
 mkdir -p "$root/assets/lang/zh-Hant" "$root/assets/manual/zh-Hant"
 mkdir -p "$root/artwork/modern-icon/m1/trial"
+mkdir -p "$root/packaging"
 
 CGO_ENABLED="$TARGET_CGO" GOOS="$TARGET_GOOS" GOARCH="$TARGET_GOARCH" \
   go build -trimpath -ldflags="-s -w" -o "$root/$binary" ./cmd/demonwinter
@@ -32,6 +33,7 @@ fi
 
 cp README.md "$root/README.md"
 cp packaging/README-zh-Hant.txt "$root/開始遊戲.txt"
+cp packaging/RELEASE-NOTES-zh-Hant.md "$root/packaging/"
 cp assets/lang/zh-Hant/* "$root/assets/lang/zh-Hant/"
 cp assets/manual/zh-Hant/* "$root/assets/manual/zh-Hant/"
 cp artwork/modern-icon/m1/trial/* "$root/artwork/modern-icon/m1/trial/"

@@ -3571,6 +3571,12 @@ SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 > `a6-leg1.txt` 亦以新遊戲正常路徑重跑通過。四段 remake 配樂已輸出成
 > `docs/audio/remake-*.wav` 供使用者試聽。現在只剩配樂／F7 實際聽感核准、
 > P4 最終視覺核准，以及核准後用正式版本號建立 GitHub Release。
+> 正式發布路徑亦已補齊：手動 workflow 的 `publish_release` 布林閘門只在
+> 四平台 job 全綠後執行，先驗證 `X.Y.Z`、四份產物與四份 SHA-256，再建立
+> `vX.Y.Z` Release；一般 push 絕不發布。RC3 AppImage／Windows ZIP 已解包
+> 複核四段 WAV、466 張 Modern Icon PNG、README／開始說明／發行說明、
+> 禁入 0、第三方 DLL 0，AppImage `-list-scenes` 實際啟動通過。CI 並以
+> `cmp` 保證發行包手札與 repo 完整手札逐位元組相同，舊查詢訊息不遺失。
 >
 > **同日獨立音訊稽核勘誤：**原版無 BGM，八個單音與死亡旋律的合成完成；
 > 但觸發不能稱為完成。怪物噴吐在零死亡時會誤播死亡旋律，非戰鬥全滅與

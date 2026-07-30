@@ -11,7 +11,8 @@ trap 'rm -rf "$stage"' EXIT INT TERM
 app="$stage/DemonWinter.app"
 res="$app/Contents/Resources"
 mkdir -p "$app/Contents/MacOS" "$res/assets/lang/zh-Hant" \
-  "$res/assets/manual/zh-Hant" "$res/artwork/modern-icon/m1/trial" "$res/docs/audio"
+  "$res/assets/manual/zh-Hant" "$res/artwork/modern-icon/m1/trial" \
+  "$res/docs/audio" "$res/packaging"
 
 CGO_ENABLED=1 GOOS=darwin GOARCH="$TARGET_GOARCH" go build -trimpath -ldflags="-s -w" \
   -o "$app/Contents/MacOS/demonwinter-bin" ./cmd/demonwinter
@@ -21,6 +22,7 @@ cp artwork/modern-icon/m1/trial/* "$res/artwork/modern-icon/m1/trial/"
 cp docs/audio/remake-*.wav "$res/docs/audio/"
 cp README.md "$res/README.md"
 cp packaging/README-zh-Hant.txt "$res/開始遊戲.txt"
+cp packaging/RELEASE-NOTES-zh-Hant.md "$res/packaging/"
 cat >"$app/Contents/MacOS/demonwinter" <<'EOF'
 #!/bin/sh
 set -eu

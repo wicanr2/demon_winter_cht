@@ -10,7 +10,7 @@ appdir="$stage/DemonWinter.AppDir"
 payload="$appdir/usr/share/demonwinter"
 mkdir -p "$appdir/usr/bin" "$appdir/usr/lib" "$payload/assets/lang/zh-Hant" \
   "$payload/assets/manual/zh-Hant" "$payload/artwork/modern-icon/m1/trial" \
-  "$payload/docs/audio"
+  "$payload/docs/audio" "$payload/packaging"
 
 CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" \
   -o "$appdir/usr/bin/demonwinter" ./cmd/demonwinter
@@ -20,6 +20,7 @@ cp artwork/modern-icon/m1/trial/* "$payload/artwork/modern-icon/m1/trial/"
 cp docs/audio/remake-*.wav "$payload/docs/audio/"
 cp README.md "$payload/README.md"
 cp packaging/README-zh-Hant.txt "$payload/開始遊戲.txt"
+cp packaging/RELEASE-NOTES-zh-Hant.md "$payload/packaging/"
 cp packaging/demonwinter.svg "$appdir/demonwinter.svg"
 ln -s demonwinter.svg "$appdir/.DirIcon"
 
