@@ -1,12 +1,60 @@
-# Demon's Winter 冬之魔 — 繁體中文化
+# Demon's Winter 冬之魔 — 經典繁體中文 remake
 
-SSI《Demon's Winter》（1988, DOS）的引擎逆向與繁體中文化專案。
+> **寶石月第七天，伊得琳村。**
+>
+> 如血絲般的殘霞佈滿天空。日頭沉入山頭的那一剎那，遠處傳來陣陣蹄聲。
+> 村民奮力抵抗，終究敵不過；伊得琳村到處染滿鮮血，不一會就成了一處廢墟。
+>
+> 翌日，逃過一劫的孩童耳中，只剩父兄彌留的那句話——<br>
+> **「⋯為我復仇⋯為我復仇⋯」**
 
-目標有兩層：先透過反組譯理解原版引擎的行為，在 Go / Ebiten 上重寫一套跨平台可執行的引擎；
-再基於這套引擎完成介面與劇情文本的中文化，讓這款 1988 年的 CRPG 能用中文玩完。
+## 當冬天不再結束
 
-原版遊戲的執行檔、資料檔、美術與音樂都不在本專案散布範圍內，玩家需自備合法副本。
-（下面的截圖是本專案的引擎讀取自備資料後跑出來的畫面，不含可再利用的原版素材。）
+這不是一段從王宮出發的英雄傳說。你的冒險始於一座被狗頭人踏平的村莊，以及
+五名幾乎一無所有、卻決定追查災厄根源的倖存者。
+
+大惡魔馬利馮（Malifon）的陰影越過伊姆洛斯（Ymros）：海洋染紅，寒冬吞沒大地，
+怪物從荒野與地底湧出。五名冒險者必須走遍平原、森林、凍土與沙漠，渡海尋找失落
+線索，深入有密門、陷阱與謎語的地城；還要學習符文法術、取得眾神援助，最後面對
+那個讓世界停止在冬季的存在。
+
+《Demon's Winter》在 1988 年首度推出，是《Shard of Spring》的續作。它把伊姆洛斯
+擴張為前作 **32 倍**，把種族、十種職業、技能、神祇、符文魔法、議價、狩獵、航海、
+戰術戰鬥與「以物品解謎」塞進一款當年的電腦角色扮演遊戲。畫面或許節制，但世界並
+不小；它要求玩家觀察房間敘述、記住傳聞、在資源耗盡前作出選擇。這正是本 remake
+想交給 2010 年後世代玩家的經典：不是只看一張懷舊截圖，而是能以繁體中文真正走完
+這趟復仇、遠征與終結永冬的旅程。
+
+開場引文整理自本專案收錄的
+[`1990 年《軟體世界》繁中說明書轉錄`](assets/manual/zh-Hant/manual.txt)；作品年代、
+世界規模與系統概觀另參照
+[`MobyGames 遊戲資料`](https://www.mobygames.com/game/986/demons-winter/)及
+[`原文說明書掃描`](https://www.mocagh.org/ssi/dwinter-manual.pdf)。
+
+### 三個時代，看見同一場永冬
+
+<table>
+  <tr>
+    <th width="36%">原版遊戲標題</th>
+    <th width="18%">原版盒裝海報</th>
+    <th width="46%">Modern remake 新設計</th>
+  </tr>
+  <tr>
+    <td><img src="docs/images/01-title.png" alt="remake 實機呈現的原版 EGA 標題畫面"></td>
+    <td><img src="https://upload.wikimedia.org/wikipedia/en/c/cf/Demon%27s_Winter_Coverart.png" alt="Demon's Winter 1988 原版盒裝封面"></td>
+    <td><img src="docs/design/img/demon-winter-modern-title-v1.png" alt="冬之魔 Modern remake 新設計標題圖"></td>
+  </tr>
+  <tr>
+    <td>原版 EGA 美術一格未動；繁中標題置於遊戲畫布外。</td>
+    <td>1988 年盒裝封面，作為歷史展示的外部連結；著作權屬原權利人。</td>
+    <td>沿用「破鏈而出的冬之魔」意象，以 Modern Icon 的高解析語彙重新創作；不是原版素材。</td>
+  </tr>
+</table>
+
+本專案透過反組譯確認 DOS 執行檔行為，再以 Go／Ebiten 重寫跨平台引擎；介面、手札
+與 500 段資料文字均已繁體中文化。原版遊戲執行檔、資料檔、美術與音樂不在公開專案
+的散布範圍內，玩家需自備合法副本。下方原版主題截圖，都是 remake 引擎讀取使用者
+自備資料後的實機畫面。
 
 ## 下載第一版
 
@@ -446,6 +494,22 @@ Windows、macOS Intel 與 macOS Apple Silicon 包各有本地啟動器及共同 
 
 ---
 
+## 未來：讓經典走進瀏覽器與手機
+
+桌面第一版不是保存工作的終點。下一階段規劃讓玩家在 Web 直接啟動，或在 Android
+手機／平板上以適合 CRPG 的分組觸控命令遊玩；兩者都沿用同一套規則引擎、繁中資料、
+存檔與三主題，不另做一個規則縮水版。
+
+| Web | Android |
+|---|---|
+| WebAssembly、合法資料包本機匯入、瀏覽器持久存檔、離線漸進式網頁應用（PWA） | 原生外殼、系統文件選擇器、方向與命令分區、背景切換自動保存、真機耗電／中斷驗收 |
+| 先做編譯尖峰，找出桌面檔案與音訊假設 | 共用平台介面穩定後，再做 `.aar` 與觸控層 |
+
+這兩個平台目前是**規劃，不是已發布功能**。分期、風險、授權邊界及完成定義見
+[`Android／Web 版未來規劃`](docs/design/android-web-roadmap.md)。
+
+---
+
 ## 文件索引
 
 ### 官方遊戲手冊（繁體中文）
@@ -561,6 +625,7 @@ Modern Icon 世界、單位與地城素材客觀覆蓋及 P4 最終審查均已�
 | [`docs/ui/`](docs/ui/) | 畫面評估與改版計畫（見上一節） |
 | [`docs/design/retro-game-re-remake-lessons.md`](docs/design/retro-game-re-remake-lessons.md) | 從本作整理出的老遊戲反組譯、乾淨重寫、原版對拍與交接模板 |
 | [`docs/design/engine-extraction-study.md`](docs/design/engine-extraction-study.md) | 本作引擎可抽離範圍、第二款遊戲相容性門檻與分階段方案 |
+| [`docs/design/android-web-roadmap.md`](docs/design/android-web-roadmap.md) | Android／Web 未來版的共用前置、合法素材匯入、觸控、離線存檔、分期與完成定義 |
 | [`skill-build/research-pc98-golden-box-ui/`](skill-build/research-pc98-golden-box-ui/) | PC-98 Golden Box CJK UI 共用 skill；同份已同步至 `~/.codex/skills` 與 `~/my_skill` |
 | [`docs/playtest/15-modern-ega-png-theme-loader.md`](docs/playtest/15-modern-ega-png-theme-loader.md) | Modern EGA 五張 PNG atlas 經 manifest 載入後，與記憶體調色預覽逐 byte 相同的端到端證據 |
 | [`docs/playtest/16-modern-ega-direct-downscale-rejection.md`](docs/playtest/16-modern-ega-direct-downscale-rejection.md) | B 方向稿強制縮入實機後的岸線接縫、重複噪音與角色比例反證，以及 M1 手工像素化裁決 |

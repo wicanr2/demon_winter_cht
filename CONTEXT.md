@@ -3535,6 +3535,14 @@ CGA sprite 32×16 vs 16×32、`.SHE` 16×56 vs 32×28、
 SDD 的規格階段結束（九份 spec 全 READY），引擎 M1–M5 完成，
 **主線從開局到結局的每一段都實機跑過**（`docs/re/64`）。
 
+> **2026-07-30 README 敘事與未來平台規劃：**公開首頁已引用繁中說明書的
+> 伊得琳村開場，補上伊姆洛斯、馬利馮、五人遠征與 32 倍世界的圖文遊戲概觀；
+> 並以原版實機標題、外連原版盒裝海報及全新 Modern remake 標題圖呈現三個
+> 時代。新圖是依已核准 Modern Icon 語彙生成的 remake 美術，不屬於原版還原。
+> Android／Web 僅列為未來工作，分期、合法資料匯入、觸控、持久存檔、平台
+> 一致性與完成門檻見 `docs/design/android-web-roadmap.md`；不得在尖峰及 A6
+> 證據完成前標成已支援。
+
 > **2026-07-30 最新基線（取代下方 25／59 舊進度）：Modern Icon 地城
 > P3-D 已達 59／59。** MAP1–MAP5 的實際 inventory 與 `dungeonTiles`
 > 精確集合相符，`theme dungeon missing: none`。D2–D4 已補門、閘、樓梯、
